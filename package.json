@@ -1,0 +1,19 @@
+{
+  "name": "smartvms-test-manager",
+  "version": "2.0.0",
+  "private": true,
+  "description": "SmartVMS Test Manager — Online Testing & QA Platform with Supabase Realtime & Vercel",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "node --check app.js"
+  },
+  "keywords": [
+    "smartvms",
+    "qa",
+    "test-manager",
+    "supabase",
+    "vercel"
+  ],
+  "author": "SmartVMS Team",
+  "license": "MIT"
+}

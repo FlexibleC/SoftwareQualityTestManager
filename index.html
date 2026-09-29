@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartVMS Test Manager — Hệ thống Quản lý Kiểm thử</title>
+  <meta name="description" content="Phần mềm quản lý kịch bản kiểm thử chuyên nghiệp cho hệ thống SmartVMS Local" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-overlay">
+    <div class="login-box card">
+      <div class="login-header">
+        <div class="logo-icon">⚡</div>
+        <h2>SmartVMS Test Manager</h2>
+        <p>Đăng nhập hệ thống quản lý kiểm thử</p>
+      </div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Tài khoản</label>
+          <input type="text" id="login-username" placeholder="Nhập admin hoặc tester" required autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input type="password" id="login-password" placeholder="Mật khẩu là 123" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center">Đăng nhập</button>
+      </form>
+      <div style="margin-top:20px; font-size:13px; color:var(--text-muted)">
+        <strong>Tài khoản Demo:</strong><br/>
+        Admin: admin / 123 (hoặc admin123)<br/>
+        Tester: tester / 123
+      </div>
+    </div>
+  </div>
+
+  <div id="app" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">
+          <span class="logo-title">SmartVMS</span>
+          <span class="logo-sub">Test Manager</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="testcases" onclick="navigate('testcases')">
+          <span class="nav-icon">📋</span>
+          <span>Test Cases</span>
+          <span class="nav-badge" id="badge-total">0</span>
+        </a>
+        <a class="nav-item" data-page="execute" onclick="navigate('execute')">
+          <span class="nav-icon">▶️</span>
+          <span>Thực thi Test</span>
+        </a>
+        <a class="nav-item" data-page="report" onclick="navigate('report')">
+          <span class="nav-icon">📈</span>
+          <span>Báo cáo</span>
+        </a>
+        <a class="nav-item" data-page="settings" id="nav-settings" onclick="navigate('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span>Cài đặt</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="version-info">v1.0.0 · SmartVMS Local 2.0</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+          <div class="breadcrumb" id="breadcrumb">Dashboard</div>
+        </div>
+        <div class="header-right">
+          <div class="user-info" style="margin-right: 12px; font-weight: 500;">
+            👋 Xin chào, <span id="current-user-name" style="color: var(--accent-light)">...</span>
+            <span id="current-user-role" class="module-tag" style="margin-left: 6px">...</span>
+          </div>
+          <div class="cloud-status-badge" id="cloud-status-badge" onclick="navigate('settings')" title="Trạng thái kết nối Supabase Cloud (Click để cấu hình)">
+            <span class="cloud-dot disconnected" id="cloud-dot"></span>
+            <span id="cloud-status-text">Cloud: Chưa kết nối</span>
+          </div>
+          <div class="session-info" id="session-info">
+            <span class="dot dot-green"></span>
+            <span id="session-name">Chưa có phiên test</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển đổi giao diện Sáng / Tối">☀️ Sáng</button>
+          <button class="btn btn-primary btn-sm" onclick="openNewSessionModal()">+ Tạo phiên test</button>
+          <button class="btn btn-outline btn-sm" onclick="exportReport()">⬇ Xuất báo cáo</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:8px;" onclick="handleLogout()">Đăng xuất</button>
+        </div>
+      </header>
+
+      <!-- Pages -->
+      <div class="page-content">
+
+        <!-- ==================== DASHBOARD PAGE ==================== -->
+        <div id="page-dashboard" class="page active">
+          <div class="page-title">
+            <h1>Dashboard Kiểm thử</h1>
+            <p>Tổng quan tiến độ kiểm thử hệ thống SmartVMS Local</p>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="stats-grid" id="stats-grid">
+            <div class="stat-card stat-total">
+              <div class="stat-icon">📋</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Tổng Test Cases</div>
+              </div>
+            </div>
+            <div class="stat-card stat-pass">
+              <div class="stat-icon">✅</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-pass">0</div>
+                <div class="stat-label">Passed</div>
+              </div>
+            </div>
+            <div class="stat-card stat-fail">
+              <div class="stat-icon">❌</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-fail">0</div>
+                <div class="stat-label">Failed</div>
+              </div>
+            </div>
+            <div class="stat-card stat-skip">
+              <div class="stat-icon">⏭️</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-skip">0</div>
+                <div class="stat-label">Skipped</div>
+              </div>
+            </div>
+            <div class="stat-card stat-pending">
+              <div class="stat-icon">⏳</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-pending">0</div>
+                <div class="stat-label">Chưa chạy</div>
+              </div>
+            </div>
+            <div class="stat-card stat-progress">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-progress">0%</div>
+                <div class="stat-label">Tỷ lệ Pass</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="card mt-20">
+            <div class="card-header">
+              <h3>Tiến độ tổng thể</h3>
+              <span id="overall-pct" class="pct-badge">0%</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" id="main-progress-bar" style="width:0%"></div>
+            </div>
+            <div class="progress-legend">
+              <span class="legend-item"><span class="dot dot-green"></span> Passed</span>
+              <span class="legend-item"><span class="dot dot-red"></span> Failed</span>
+              <span class="legend-item"><span class="dot dot-yellow"></span> Skipped</span>
+              <span class="legend-item"><span class="dot dot-gray"></span> Chưa chạy</span>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-grid">
+            <div class="card">
+              <div class="card-header"><h3>Phân bố theo Module</h3></div>
+              <div class="chart-wrapper"><canvas id="chartModule"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Kết quả theo Mức ưu tiên</h3></div>
+              <div class="chart-wrapper"><canvas id="chartPriority"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Module Status Table -->
+          <div class="card mt-20">
+            <div class="card-header"><h3>Chi tiết theo Module</h3></div>
+            <div class="table-responsive">
+              <table class="data-table" id="module-summary-table">
+                <thead>
+                  <tr>
+                    <th>Module</th>
+                    <th>Tổng</th>
+                    <th>Passed</th>
+                    <th>Failed</th>
+                    <th>Skipped</th>
+                    <th>Chưa chạy</th>
+                    <th>Tiến độ</th>
+                  </tr>
+                </thead>
+                <tbody id="module-summary-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recent Executions -->
+          <div class="card mt-20">
+            <div class="card-header"><h3>Kết quả gần đây</h3></div>
+            <div id="recent-executions">
+              <div class="empty-state">Chưa có kết quả test nào. Hãy bắt đầu thực thi test!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== TEST CASES PAGE ==================== -->
+        <div id="page-testcases" class="page">
+          <div class="page-title-row">
+            <div class="page-title">
+              <h1>Danh sách Test Cases</h1>
+              <p id="tc-page-subtitle">Quản lý toàn bộ test cases theo module và mức ưu tiên</p>
+            </div>
+            <div class="page-title-actions">
+              <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="navigate('settings')" title="Đi tới cấu hình danh mục Modules">📁 Quản lý Modules</button>
+              <button class="btn btn-primary admin-only" id="btn-add-tc" onclick="openAddTcModal()">➕ Thêm Test Case mới</button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filter-bar card">
+            <div class="filter-group">
+              <label>Module</label>
+              <select id="filter-module" onchange="applyFilters()">
+                <option value="">Tất cả modules</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Mức ưu tiên</label>
+              <select id="filter-priority" onchange="applyFilters()">
+                <option value="">Tất cả</option>
+                <option value="P1">🔴 P1 - Critical</option>
+                <option value="P2">🟠 P2 - Important</option>
+                <option value="P3">🟡 P3 - Medium</option>
+                <option value="P4">🟢 P4 - Low</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Trạng thái</label>
+              <select id="filter-status" onchange="applyFilters()">
+                <option value="">Tất cả</option>
+                <option value="Not Run">⏳ Chưa chạy</option>
+                <option value="Pass">✅ Passed</option>
+                <option value="Fail">❌ Failed</option>
+                <option value="Skip">⏭️ Skipped</option>
+                <option value="In Progress">🔄 Đang chạy</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Phân loại</label>
+              <select id="filter-type" onchange="applyFilters()">
+                <option value="">Tất cả</option>
+                <option value="builtin">📦 Bộ chuẩn gốc (157)</option>
+                <option value="custom">✨ Tùy chỉnh (Đã thêm)</option>
+              </select>
+            </div>
+            <div class="filter-group filter-search">
+              <label>Tìm kiếm</label>
+              <input type="text" id="filter-search" placeholder="Nhập tên TC, mã TC, mô tả..." oninput="applyFilters()" />
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="resetFilters()">↺ Đặt lại</button>
+          </div>
+
+          <!-- TC Count -->
+          <div class="tc-count" id="tc-count">Đang tải...</div>
+
+          <!-- Test Cases Table -->
+          <div class="card">
+            <div class="table-responsive">
+              <table class="data-table tc-table">
+                <thead>
+                  <tr>
+                    <th style="width:130px">Mã TC</th>
+                    <th style="width:60px">Ưu tiên</th>
+                    <th style="width:110px">Module</th>
+                    <th>Tên / Mô tả</th>
+                    <th style="width:100px">Phân loại</th>
+                    <th style="width:120px">Trạng thái</th>
+                    <th style="width:90px">Người test</th>
+                    <th style="width:90px">Ngày chạy</th>
+                    <th style="width:150px">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="tc-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== EXECUTE PAGE ==================== -->
+        <div id="page-execute" class="page">
+          <div class="page-title">
+            <h1>Thực thi Test</h1>
+            <p>Chọn test case và nhập kết quả kiểm thử</p>
+          </div>
+
+          <div class="execute-layout">
+            <!-- Left: TC List -->
+            <div class="execute-list card">
+              <div class="execute-list-header">
+                <input type="text" id="exec-search" placeholder="🔍 Tìm test case..." oninput="filterExecList()" />
+                <select id="exec-filter-module" onchange="filterExecList()">
+                  <option value="">Tất cả modules</option>
+                </select>
+                <select id="exec-filter-status" onchange="filterExecList()">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="Not Run">Chưa chạy</option>
+                  <option value="Pass">Passed</option>
+                  <option value="Fail">Failed</option>
+                  <option value="Skip">Skipped</option>
+                </select>
+              </div>
+              <div class="execute-tc-list" id="exec-tc-list"></div>
+            </div>
+
+            <!-- Right: Execution Form -->
+            <div class="execute-form-wrapper">
+              <div class="card" id="exec-detail-card">
+                <div class="empty-state exec-empty">
+                  <div class="empty-icon">👈</div>
+                  <div>Chọn một test case từ danh sách bên trái để nhập kết quả</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== REPORT PAGE ==================== -->
+        <div id="page-report" class="page">
+          <div class="page-title">
+            <h1>Báo cáo Kiểm thử</h1>
+            <p>Thống kê chi tiết và phân tích kết quả</p>
+          </div>
+
+          <!-- Report Header -->
+          <div class="report-header card">
+            <div class="report-meta">
+              <div><strong>Dự án:</strong> SmartVMS Local 2.0 — Offline Standalone</div>
+              <div><strong>Phiên test:</strong> <span id="rpt-session">Chưa có phiên</span></div>
+              <div><strong>Ngày tạo:</strong> <span id="rpt-date"></span></div>
+              <div><strong>Người phụ trách:</strong> <span id="rpt-owner">QA Team</span></div>
+            </div>
+            <div class="report-actions">
+              <button class="btn btn-primary" onclick="exportReport()">⬇ Xuất HTML</button>
+              <button class="btn btn-outline" onclick="printReport()">🖨 In báo cáo</button>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="stats-grid mt-20" id="report-stats-grid"></div>
+
+          <!-- Charts -->
+          <div class="charts-grid mt-20">
+            <div class="card">
+              <div class="card-header"><h3>Tổng quan kết quả</h3></div>
+              <div class="chart-wrapper"><canvas id="chartReportPie"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Kết quả theo Module</h3></div>
+              <div class="chart-wrapper"><canvas id="chartReportBar"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Failed TCs -->
+          <div class="card mt-20">
+            <div class="card-header">
+              <h3>❌ Test Cases bị FAIL</h3>
+              <span id="fail-count-badge" class="pct-badge pct-fail">0</span>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="fail-table">
+                <thead>
+                  <tr><th>Mã TC</th><th>Module</th><th>Tên</th><th>Lý do thất bại</th><th>Người test</th><th>Ngày</th></tr>
+                </thead>
+                <tbody id="fail-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Module Report -->
+          <div class="card mt-20">
+            <div class="card-header"><h3>Báo cáo theo Module</h3></div>
+            <div class="table-responsive">
+              <table class="data-table" id="report-module-table">
+                <thead>
+                  <tr><th>Module</th><th>Tổng</th><th>Pass</th><th>Fail</th><th>Skip</th><th>Chưa chạy</th><th>Pass Rate</th><th>Trạng thái</th></tr>
+                </thead>
+                <tbody id="report-module-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== SETTINGS PAGE ==================== -->
+        <div id="page-settings" class="page">
+          <div class="page-title">
+            <h1>Cài đặt</h1>
+            <p>Cấu hình phiên test và tùy chọn hiển thị</p>
+          </div>
+
+          <div class="settings-grid">
+            <div class="card">
+              <div class="card-header"><h3>Thông tin Phiên test</h3></div>
+              <div class="form-group">
+                <label>Tên phiên test</label>
+                <input type="text" id="set-session-name" placeholder="VD: Sprint 1 - Regression Test" />
+              </div>
+              <div class="form-group">
+                <label>Người phụ trách</label>
+                <input type="text" id="set-owner" placeholder="Tên QA Engineer" />
+              </div>
+              <div class="form-group">
+                <label>Phiên bản phần mềm</label>
+                <input type="text" id="set-version" placeholder="VD: v2.0.1" value="SmartVMS Local v2.0" />
+              </div>
+              <div class="form-group">
+                <label>Ghi chú phiên</label>
+                <textarea id="set-notes" placeholder="Mô tả mục tiêu phiên test này..."></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="saveSettings()">💾 Lưu cài đặt</button>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>Quản lý Dữ liệu</h3></div>
+              <div class="setting-actions">
+                <div class="setting-action-item">
+                  <div>
+                    <strong>Xuất dữ liệu</strong>
+                    <p>Tải xuống toàn bộ kết quả dưới dạng JSON</p>
+                  </div>
+                  <button class="btn btn-outline" onclick="exportData()">⬇ Export JSON</button>
+                </div>
+                <div class="setting-action-item">
+                  <div>
+                    <strong>Import dữ liệu</strong>
+                    <p>Nạp lại dữ liệu từ file JSON đã export</p>
+                  </div>
+                  <label class="btn btn-outline" for="import-file">⬆ Import JSON</label>
+                  <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display:none" />
+                </div>
+                <div class="setting-action-item danger">
+                  <div>
+                    <strong>Reset kết quả</strong>
+                    <p>Xóa toàn bộ kết quả test, giữ nguyên test cases</p>
+                  </div>
+                  <button class="btn btn-danger" onclick="resetResults()">🗑 Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>Thống kê lưu trữ</h3></div>
+              <div id="storage-stats"></div>
+            </div>
+
+            <!-- Kết nối Supabase Cloud & Realtime Sync -->
+            <div class="card card-full" style="border: 1px solid var(--accent); background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(168,85,247,0.03));">
+              <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <h3 style="display:flex; align-items:center; gap:8px;">
+                    <span>⚡ Kết nối Supabase Cloud (Đồng bộ Realtime Online)</span>
+                    <span id="supabase-status-pill" class="badge badge-nr" style="font-size:12px;">Chưa kết nối</span>
+                  </h3>
+                  <p style="font-size:12.5px; color:var(--text-secondary); margin-top:2px;">
+                    Lưu trữ kết quả test tập trung trên đám mây PostgreSQL và tự động đồng bộ thời gian thực giữa nhiều thiết bị/nhân viên test
+                  </p>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-outline btn-sm" onclick="pullSupabaseToLocal()" title="Tải toàn bộ kết quả test từ Cloud về máy">⬇ Kéo dữ liệu từ Cloud (Pull)</button>
+                  <button class="btn btn-outline btn-sm" onclick="pushLocalToSupabase()" title="Đẩy toàn bộ kết quả test hiện tại lên Cloud">🔄 Đẩy lên Cloud (Push)</button>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-top:10px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label style="font-weight:600;">Supabase Project URL</label>
+                  <input type="url" id="sb-url" placeholder="https://xyzcompany.supabase.co" autocomplete="off" />
+                  <small style="color:var(--text-muted); font-size:11.5px;">Lấy tại: Supabase Dashboard > Settings > API > Project URL</small>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label style="font-weight:600;">Supabase Anon / Public Key</label>
+                  <input type="password" id="sb-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off" />
+                  <small style="color:var(--text-muted); font-size:11.5px;">Lấy tại: Supabase Dashboard > Settings > API > Project API Keys (anon public)</small>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; font-weight:500;">
+                  <input type="checkbox" id="sb-auto-sync" checked style="width:16px; height:16px; accent-color:var(--accent);" />
+                  Tự động đồng bộ lên Cloud khi Test (Auto Sync on Pass/Fail) & Lắng nghe Realtime
+                </label>
+                <div style="margin-left:auto; display:flex; gap:10px;">
+                  <button class="btn btn-outline btn-sm" onclick="disconnectSupabase()">🔌 Ngắt kết nối</button>
+                  <button class="btn btn-primary btn-sm" onclick="saveAndConnectSupabase()">💾 Lưu & Kết nối Supabase</button>
+                </div>
+              </div>
+
+              <div class="cloud-guide-box">
+                <strong>📌 Hướng dẫn 3 bước kết nối Supabase Cloud:</strong>
+                <ol>
+                  <li>Tạo dự án mới miễn phí tại <a href="https://supabase.com" target="_blank" style="color:var(--accent); font-weight:600;">supabase.com</a>.</li>
+                  <li>Vào mục <strong>SQL Editor</strong>, mở file <code>supabase_schema.sql</code> (đã tạo sẵn trong dự án) -> Copy & Paste vào rồi bấm <strong>Run</strong> để tạo bảng & bật Realtime.</li>
+                  <li>Vào <strong>Project Settings > API</strong>, copy <strong>Project URL</strong> và <strong>anon key</strong> dán vào ô bên trên rồi bấm <strong>Lưu & Kết nối</strong>.</li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- Thiết lập Danh mục Modules -->
+            <div class="card card-full">
+              <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <h3>📁 Thiết lập Danh mục Modules (<span id="module-count">11</span>)</h3>
+                  <p style="font-size:12.5px;color:var(--text-secondary);margin-top:2px;">Tùy biến, thêm mới, sửa tên hoặc xóa bớt module kiểm thử theo nhu cầu dự án</p>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-outline btn-sm" onclick="resetModulesToDefault()">🔄 Khôi phục mặc định</button>
+                  <button class="btn btn-primary btn-sm" onclick="openAddModuleModal()">➕ Thêm Module mới</button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width:110px;">Mã Module</th>
+                      <th>Tên đầy đủ</th>
+                      <th style="width:160px;">Tên viết tắt</th>
+                      <th style="width:140px;text-align:center;">Số Test Cases</th>
+                      <th style="width:130px;text-align:center;">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modules-settings-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- TC Detail Modal -->
+  <div class="modal-overlay" id="modal-tc" onclick="closeModal('modal-tc')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-tc-title">Chi tiết Test Case</h2>
+        <button class="modal-close" onclick="closeModal('modal-tc')">✕</button>
+      </div>
+      <div class="modal-body" id="modal-tc-body"></div>
+    </div>
+  </div>
+
+  <!-- Add / Edit TC Modal -->
+  <div class="modal-overlay" id="modal-tc-form" onclick="closeModal('modal-tc-form')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-tc-form-title">➕ Thêm Test Case mới</h2>
+        <button class="modal-close" onclick="closeModal('modal-tc-form')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tc-form-mode" value="add" />
+        <input type="hidden" id="tc-form-orig-id" value="" />
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Mã Test Case *</label>
+            <input type="text" id="tc-form-id" placeholder="VD: TC-CUSTOM-001" />
+          </div>
+          <div class="form-group">
+            <label>Module *</label>
+            <select id="tc-form-module"></select>
+          </div>
+          <div class="form-group">
+            <label>Mức ưu tiên *</label>
+            <select id="tc-form-priority">
+              <option value="P1">🔴 P1 - Critical</option>
+              <option value="P2" selected>🟠 P2 - Important</option>
+              <option value="P3">🟡 P3 - Medium</option>
+              <option value="P4">🟢 P4 - Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Nền tảng / Môi trường Test *</label>
+            <select id="tc-form-platform">
+              <option value="Giao diện Web UI">Giao diện Web UI</option>
+              <option value="Giao diện Quản trị">Giao diện Quản trị</option>
+              <option value="Thiết bị & Cổng gác">Thiết bị & Cổng gác</option>
+              <option value="API / Postman">API / Postman</option>
+              <option value="Hệ thống (Background)">Hệ thống (Background)</option>
+              <option value="Phần cứng">Phần cứng</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Dữ liệu Đầu vào (Test Data)</label>
+            <input type="text" id="tc-form-testdata" placeholder="VD: Tài khoản: admin, CCCD: 00109..." />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tên / Mục tiêu Test Case *</label>
+          <input type="text" id="tc-form-name" placeholder="Mô tả ngắn gọn mục đích của test case..." />
+        </div>
+        <div class="form-group">
+          <label>Điều kiện tiên quyết (Precondition)</label>
+          <input type="text" id="tc-form-precondition" placeholder="VD: Đã đăng nhập ca trực, station hoạt động..." />
+        </div>
+        <div class="form-group">
+          <label>Các bước thực hiện (Mỗi bước trên 1 dòng)</label>
+          <textarea id="tc-form-steps" rows="3" placeholder="1. Mở màn hình check-in&#10;2. Quét CCCD hoặc nhập thông tin...&#10;3. Nhấn Xác nhận"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Kết quả mong đợi (Mỗi kết quả trên 1 dòng) *</label>
+          <textarea id="tc-form-expected" rows="3" placeholder="1. HTTP 200 OK&#10;2. Dữ liệu lưu vào DB thành công"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú kỹ thuật (Tùy chọn)</label>
+          <textarea id="tc-form-notes" rows="2" placeholder="Ghi chú API endpoint, lưu ý đặc biệt, rollback..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" onclick="closeModal('modal-tc-form')">Hủy bỏ</button>
+          <button class="btn btn-primary" onclick="saveTcForm()">💾 Lưu Test Case</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Session Modal -->
+  <div class="modal-overlay" id="modal-session" onclick="closeModal('modal-session')">
+    <div class="modal modal-sm" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Tạo phiên test mới</h2>
+        <button class="modal-close" onclick="closeModal('modal-session')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Tên phiên *</label>
+          <input type="text" id="new-session-name" placeholder="VD: Sprint 1 Regression" />
+        </div>
+        <div class="form-group">
+          <label>Người phụ trách *</label>
+          <input type="text" id="new-session-owner" placeholder="Tên QA Engineer" />
+        </div>
+        <div class="form-group">
+          <label>Phiên bản</label>
+          <input type="text" id="new-session-version" value="SmartVMS Local v2.0" />
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" onclick="closeModal('modal-session')">Hủy</button>
+          <button class="btn btn-primary" onclick="createNewSession()">✓ Tạo phiên</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module Form Modal -->
+  <div class="modal-overlay" id="modal-module-form" onclick="closeModal('modal-module-form')">
+    <div class="modal modal-sm" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-module-title">➕ Thêm Module mới</h2>
+        <button class="modal-close" onclick="closeModal('modal-module-form')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="module-form-mode" value="add" />
+        <div class="form-group">
+          <label>Mã Module * (VD: M12, SEC, API...)</label>
+          <input type="text" id="module-form-id" placeholder="VD: M12" />
+        </div>
+        <div class="form-group">
+          <label>Tên đầy đủ của Module *</label>
+          <input type="text" id="module-form-name" placeholder="VD: Bảo mật & Mã hóa dữ liệu" />
+        </div>
+        <div class="form-group">
+          <label>Tên viết tắt * (hiển thị trên biểu đồ & nhãn)</label>
+          <input type="text" id="module-form-short" placeholder="VD: Bảo mật" />
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" onclick="closeModal('modal-module-form')">Hủy</button>
+          <button class="btn btn-primary" onclick="saveModuleForm()">💾 Lưu Module</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
