@@ -244,7 +244,7 @@
         <!-- ==================== TEST CASES PAGE ==================== -->
         <div id="page-testcases" class="page">
           <div class="page-title-actions" style="justify-content: flex-end; margin-bottom: 16px;">
-            <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="navigate('settings')"
+            <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="openModulesSettingTab()"
               title="Đi tới cấu hình danh mục Modules">📁 Quản lý Modules</button>
             <button class="btn btn-primary admin-only" id="btn-add-tc" onclick="openAddTcModal()">➕ Thêm Test Case
               mới</button>
@@ -427,87 +427,90 @@
                   <tr>
                     <th>Module</th>
                     <th>Tổng</th>
-                    <th>Pass</th>
-                    <th>Fail</th>
-                    <th>Skip</th>
-                    <th>Chưa chạy</th>
-                    <th>Pass Rate</th>
-                    <th>Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody id="report-module-body"></tbody>
-              </table>
+                       <!-- Sub-tabs Navigation Bar for Settings -->
+          <div class="settings-nav-tabs">
+            <button class="settings-tab-btn active" data-subtab="settings-session" onclick="switchSettingsTab('settings-session')">
+              ⚙️ Thông tin Phiên & Quản lý Dữ liệu
+            </button>
+            <button class="settings-tab-btn" data-subtab="settings-cloud" onclick="switchSettingsTab('settings-cloud')">
+              ⚡ Đồng bộ Supabase Cloud
+              <span id="sb-status-badge-tab" class="badge badge-nr" style="margin-left:6px;font-size:11px">Chưa kết nối</span>
+            </button>
+            <button class="settings-tab-btn" data-subtab="settings-modules" onclick="switchSettingsTab('settings-modules')">
+              📁 Danh mục Modules (<span id="module-count-badge">12</span>)
+            </button>
+          </div>
+
+          <!-- PANE 1: Phiên test & Quản lý Dữ liệu -->
+          <div id="tab-pane-settings-session" class="settings-tab-pane active">
+            <div class="settings-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>🎯 Thông tin Phiên test</h3>
+                </div>
+                <div class="form-group">
+                  <label>Tên phiên test</label>
+                  <input type="text" id="set-session-name" placeholder="VD: Sprint 1 - Regression Test" />
+                </div>
+                <div class="form-group">
+                  <label>Người phụ trách</label>
+                  <input type="text" id="set-owner" placeholder="Tên QA Engineer" />
+                </div>
+                <div class="form-group">
+                  <label>Phiên bản phần mềm</label>
+                  <input type="text" id="set-version" placeholder="VD: v2.0.1" value="SmartVMS Local v2.0" />
+                </div>
+                <div class="form-group">
+                  <label>Ghi chú phiên</label>
+                  <textarea id="set-notes" placeholder="Mô tả mục tiêu phiên test này..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Lưu cài đặt</button>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:16px;">
+                <div class="card">
+                  <div class="card-header">
+                    <h3>💾 Quản lý Dữ liệu Local</h3>
+                  </div>
+                  <div class="setting-actions">
+                    <div class="setting-action-item">
+                      <div>
+                        <strong>Xuất dữ liệu</strong>
+                        <p>Tải xuống toàn bộ kết quả dưới dạng JSON</p>
+                      </div>
+                      <button class="btn btn-outline" onclick="exportData()">⬇ Export JSON</button>
+                    </div>
+                    <div class="setting-action-item">
+                      <div>
+                        <strong>Import dữ liệu</strong>
+                        <p>Nạp lại dữ liệu từ file JSON đã export</p>
+                      </div>
+                      <label class="btn btn-outline" for="import-file">⬆ Import JSON</label>
+                      <input type="file" id="import-file" accept=".json" onchange="importData(event)"
+                        style="display:none" />
+                    </div>
+                    <div class="setting-action-item danger">
+                      <div>
+                        <strong>Reset kết quả</strong>
+                        <p>Xóa toàn bộ kết quả test, giữ nguyên test cases</p>
+                      </div>
+                      <button class="btn btn-danger" onclick="resetResults()">🗑 Reset</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header">
+                    <h3>📊 Thống kê lưu trữ</h3>
+                  </div>
+                  <div id="storage-stats"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- ==================== SETTINGS PAGE ==================== -->
-        <div id="page-settings" class="page">
-
-
-          <div class="settings-grid">
-            <div class="card">
-              <div class="card-header">
-                <h3>Thông tin Phiên test</h3>
-              </div>
-              <div class="form-group">
-                <label>Tên phiên test</label>
-                <input type="text" id="set-session-name" placeholder="VD: Sprint 1 - Regression Test" />
-              </div>
-              <div class="form-group">
-                <label>Người phụ trách</label>
-                <input type="text" id="set-owner" placeholder="Tên QA Engineer" />
-              </div>
-              <div class="form-group">
-                <label>Phiên bản phần mềm</label>
-                <input type="text" id="set-version" placeholder="VD: v2.0.1" value="SmartVMS Local v2.0" />
-              </div>
-              <div class="form-group">
-                <label>Ghi chú phiên</label>
-                <textarea id="set-notes" placeholder="Mô tả mục tiêu phiên test này..."></textarea>
-              </div>
-              <button class="btn btn-primary" onclick="saveSettings()">💾 Lưu cài đặt</button>
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <h3>Quản lý Dữ liệu</h3>
-              </div>
-              <div class="setting-actions">
-                <div class="setting-action-item">
-                  <div>
-                    <strong>Xuất dữ liệu</strong>
-                    <p>Tải xuống toàn bộ kết quả dưới dạng JSON</p>
-                  </div>
-                  <button class="btn btn-outline" onclick="exportData()">⬇ Export JSON</button>
-                </div>
-                <div class="setting-action-item">
-                  <div>
-                    <strong>Import dữ liệu</strong>
-                    <p>Nạp lại dữ liệu từ file JSON đã export</p>
-                  </div>
-                  <label class="btn btn-outline" for="import-file">⬆ Import JSON</label>
-                  <input type="file" id="import-file" accept=".json" onchange="importData(event)"
-                    style="display:none" />
-                </div>
-                <div class="setting-action-item danger">
-                  <div>
-                    <strong>Reset kết quả</strong>
-                    <p>Xóa toàn bộ kết quả test, giữ nguyên test cases</p>
-                  </div>
-                  <button class="btn btn-danger" onclick="resetResults()">🗑 Reset</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <h3>Thống kê lưu trữ</h3>
-              </div>
-              <div id="storage-stats"></div>
-            </div>
-
-            <!-- Kết nối Supabase Cloud & Realtime Sync -->
+          <!-- PANE 2: Kết nối Supabase Cloud & Realtime Sync -->
+          <div id="tab-pane-settings-cloud" class="settings-tab-pane">
             <div class="card card-full"
               style="border: 1px solid var(--accent); background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(168,85,247,0.03));">
               <div class="card-header"
@@ -573,8 +576,10 @@
                 </ol>
               </div>
             </div>
+          </div>
 
-            <!-- Thiết lập Danh mục Modules -->
+          <!-- PANE 3: Thiết lập Danh mục Modules -->
+          <div id="tab-pane-settings-modules" class="settings-tab-pane">
             <div class="card card-full">
               <div class="card-header"
                 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">

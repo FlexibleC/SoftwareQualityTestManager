@@ -3612,6 +3612,33 @@ function selectExecTc(tcId) {
   renderExecDetail(tcId);
 }
 
+function switchExecTab(tcId, subtab) {
+  state.execActiveSubtab = subtab;
+  const card = document.getElementById('exec-detail-card');
+  if (!card) return;
+  card.querySelectorAll('.exec-subtab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-subtab') === subtab);
+  });
+  card.querySelectorAll('.exec-subtab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.getAttribute('data-subtab') === subtab);
+  });
+}
+
+function switchSettingsTab(subtab) {
+  state.settingsActiveTab = subtab;
+  document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-subtab') === subtab);
+  });
+  document.querySelectorAll('.settings-tab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === `tab-pane-${subtab}`);
+  });
+}
+
+function openModulesSettingTab() {
+  navigate('settings');
+  switchSettingsTab('settings-modules');
+}
+
 function renderExecDetail(tcId) {
   const tc = getAllTcs().find(t => t.id === tcId);
   if (!tc) return;
@@ -3622,189 +3649,254 @@ function renderExecDetail(tcId) {
   const evidences = r.evidences || [];
 
   const isFailed = r.status === 'Fail' || (r.defectStatus && r.defectStatus !== 'None');
+  const currentSubtab = state.execActiveSubtab || 'steps';
 
-  card.innerHTML = `<div class="exec-detail">
-    <div class="exec-tc-header">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div class="exec-tc-header-code">${tc.id}</div>
-        ${isCustom ? '<span class="badge-custom">✨ Test Case Tùy chỉnh</span>' : '<span class="badge-builtin">📦 Bộ chuẩn gốc</span>'}
-      </div>
-      <div class="exec-tc-header-name">${tc.name}</div>
-      <div class="exec-tc-header-module">${getModuleName(tc.module)} · ${priorityBadge(tc.priority)} ${tc.platform ? `· <span style="color:#4338ca;font-weight:600">💻 ${tc.platform}</span>` : ''}</div>
-    </div>
-
-    ${tc.testData ? `<div class="exec-section" style="background:#f1f5f9;padding:12px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:16px">
-      <div style="font-size:11.5px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px">Dữ liệu đầu vào (Test Data)</div>
-      <div style="font-family:monospace;font-size:13px;color:#0f172a;white-space:pre-wrap;word-break:break-word">${tc.testData}</div>
-    </div>` : ''}
-
-    ${tc.precondition ? `<div class="exec-section">
-      <div class="exec-section-title">⚙️ Điều kiện tiên quyết</div>
-      <div class="exec-section-content">${tc.precondition}</div>
-    </div>` : ''}
-
-    ${tc.steps ? `<div class="exec-section">
-      <div class="exec-section-title">📝 Các bước thực hiện</div>
-      <div class="exec-section-content"><ul>${tc.steps.map(s=>`<li>${s}</li>`).join('')}</ul></div>
-    </div>` : ''}
-
-    <div class="exec-section">
-      <div class="exec-section-title">✅ Kết quả mong đợi</div>
-      <div class="exec-section-content"><ul>${(tc.expected||[]).map(e=>`<li>${e}</li>`).join('')}</ul></div>
-    </div>
-
-    ${tc.notes ? `<div class="exec-section">
-      <div class="exec-section-title">📌 Ghi chú kỹ thuật</div>
-      <div class="exec-section-content">${tc.notes}</div>
-    </div>` : ''}
-
-    <!-- Kết quả thực tế -->
-    <div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🎯 Kết quả thực tế đợt này</div>
-      <div class="status-selector" id="status-sel-${tcId}">
-        ${['Pass','Fail','Skip','In Progress'].map(s => {
-          const cls = s.replace(' ','');
-          const active = r.status === s ? 'active' : '';
-          return `<button class="btn btn-${cls.toLowerCase()} ${active}" onclick="setStatus('${tcId}','${s}')">${s==='Pass'?'✅':s==='Fail'?'❌':s==='Skip'?'⏭':'🔄'} ${s}</button>`;
-        }).join('')}
-      </div>
-    </div>
-
-    <div class="exec-form">
-      <div class="form-row-2">
-        <div class="form-group">
-          <label>Người thực hiện test</label>
-          <input type="text" id="ef-tester" value="${r.tester || (state.currentUser ? state.currentUser.name : '')}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
-        </div>
-        <div class="form-group">
-          <label>Thời điểm thực thi</label>
-          <input type="text" value="${r.runAt ? new Date(r.runAt).toLocaleString('vi-VN') : 'Chưa chạy'}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Lý do lỗi (khi Fail)</label>
-        <input type="text" id="ef-fail" placeholder="Mô tả ngắn gọn lỗi thực tế gặp phải..." value="${r.failReason||''}" onchange="updateTcField('${tcId}','failReason',this.value)" />
-      </div>
-
-      <!-- VÒNG ĐỜI LỖI (DEFECT LIFECYCLE) NẾU CÓ LỖI -->
-      ${isFailed ? `
-      <div class="defect-box">
-        <div class="defect-box-title">
-          <span>🐞 Vòng Đời Lỗi (Defect Tracking Lifecycle)</span>
-          <span class="status-badge" style="background:#fee2e2;color:#dc2626">${r.defectStatus || 'New'}</span>
-        </div>
-        <div class="form-row-3">
-          <div class="form-group">
-            <label>Mức độ nghiêm trọng (Severity)</label>
-            <select id="ef-sev" onchange="updateTcField('${tcId}','severity',this.value)">
-              <option value="Blocker" ${r.severity==='Blocker'?'selected':''}>🔴 Blocker (Chặn đứng)</option>
-              <option value="Critical" ${r.severity==='Critical'||!r.severity?'selected':''}>🟠 Critical (Nghiêm trọng)</option>
-              <option value="Major" ${r.severity==='Major'?'selected':''}>🟡 Major (Lớn)</option>
-              <option value="Minor" ${r.severity==='Minor'?'selected':''}>🟢 Minor (Nhẹ / Giao diện)</option>
-            </select>
+  card.innerHTML = `<div class="exec-detail-container">
+    <!-- STICKY TOP HEADER -->
+    <div class="exec-card-header">
+      <div class="exec-top-info">
+        <div class="exec-top-id-row">
+          <div class="exec-id-tags">
+            <span class="exec-tc-header-code">${tc.id}</span>
+            ${isCustom ? '<span class="badge-custom">✨ Tùy chỉnh</span>' : '<span class="badge-builtin">📦 Chuẩn gốc</span>'}
+            ${priorityBadge(tc.priority)}
+            <span class="exec-top-module">📁 ${getModuleName(tc.module)}</span>
+            ${tc.platform ? `<span class="exec-top-platform">💻 ${tc.platform}</span>` : ''}
           </div>
-          <div class="form-group">
-            <label>Lập trình viên phụ trách (Assigned Dev)</label>
-            <input type="text" id="ef-dev" placeholder="VD: Trần Quốc Tuấn" value="${r.assignedDev||'Trần Quốc Tuấn (Dev)'}" onchange="updateTcField('${tcId}','assignedDev',this.value)" />
-          </div>
-          <div class="form-group">
-            <label>Bản build sửa lỗi (Fix Version)</label>
-            <input type="text" id="ef-fixver" placeholder="VD: v2.1.2-build.8" value="${r.fixVersion||''}" onchange="updateTcField('${tcId}','fixVersion',this.value)" />
+          <div class="exec-top-actions">
+            <button class="btn btn-outline btn-xs" onclick="prevTc('${tcId}')" title="Test case trước (Phím tắt: Alt + ←)">← Trước</button>
+            <button class="btn btn-outline btn-xs" onclick="nextTc('${tcId}')" title="Test case tiếp theo (Phím tắt: Alt + →)">Tiếp →</button>
+            <button class="btn btn-outline btn-xs" onclick="openEditTcModal('${tcId}')" title="Sửa nội dung test case">✏️ Sửa</button>
+            ${isOverriddenTc(tcId) ? `<button class="btn btn-outline btn-xs" onclick="resetBuiltinTc('${tcId}')" style="color:#d97706" title="Khôi phục nguyên bản">🔄 Gốc</button>` : ''}
+            <button class="btn btn-outline btn-xs" onclick="openCloneTcModal('${tcId}')" title="Nhân bản test case này">📋 Nhân bản</button>
           </div>
         </div>
+        <h2 class="exec-tc-header-name">${tc.name}</h2>
+      </div>
 
-        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:8px">Chuyển trạng thái xử lý:</div>
-        <div class="defect-actions-bar">
-          <button class="btn-defect btn-defect-inprog" onclick="updateDefectStatus('${tcId}', 'In Progress')">👨‍💻 Dev: Đang sửa</button>
-          <button class="btn-defect btn-defect-resolved" onclick="updateDefectStatus('${tcId}', 'Resolved')">🔧 Dev: Đã sửa (Chờ Retest)</button>
-          <button class="btn-defect btn-defect-retest-ok" onclick="updateDefectStatus('${tcId}', 'Retest Passed')">✅ Tester: Retest Pass (Đóng lỗi)</button>
-          <button class="btn-defect btn-defect-reopen" onclick="updateDefectStatus('${tcId}', 'Reopened')">🔄 Tester: Retest Fail (Mở lại)</button>
+      <!-- QUICK EVALUATION TOOLBAR -->
+      <div class="exec-action-toolbar">
+        <div class="exec-status-group">
+          <span class="toolbar-label">Đánh giá kết quả:</span>
+          <div class="status-selector-compact" id="status-sel-${tcId}">
+            <button class="btn-stat btn-stat-pass ${r.status==='Pass'?'active':''}" onclick="setStatus('${tcId}','Pass')">
+              ✅ Pass
+            </button>
+            <button class="btn-stat btn-stat-fail ${r.status==='Fail'?'active':''}" onclick="setStatus('${tcId}','Fail')">
+              ❌ Fail
+            </button>
+            <button class="btn-stat btn-stat-skip ${r.status==='Skip'?'active':''}" onclick="setStatus('${tcId}','Skip')">
+              ⏭ Skip
+            </button>
+            <button class="btn-stat btn-stat-inprog ${r.status==='In Progress'?'active':''}" onclick="setStatus('${tcId}','In Progress')">
+              🔄 Đang test
+            </button>
+          </div>
         </div>
-      </div>` : ''}
-
-      <!-- BẰNG CHỨNG HÌNH ẢNH (EVIDENCES & SCREENSHOTS) -->
-      <div class="evidence-section">
-        <div class="evidence-section-title">
-          <span>📸 Bằng chứng kiểm thử & Ảnh chụp màn hình</span>
-          <span style="font-size:11px;color:var(--accent-light);font-weight:normal">${evidences.length} ảnh đính kèm</span>
+        <div class="exec-meta-info">
+          <span>👤 <strong>${r.tester || (state.currentUser ? state.currentUser.name : 'Tester')}</strong></span>
+          <span>⏱️ ${r.runAt ? new Date(r.runAt).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'}) + ' ' + new Date(r.runAt).toLocaleDateString('vi-VN') : 'Chưa chạy'}</span>
         </div>
+      </div>
 
-        <!-- CÁC NÚT CHỤP MÀN HÌNH CHUYÊN NGHIỆP -->
-        <div class="evidence-btn-group">
-          <button type="button" class="btn btn-primary btn-sm" onclick="startScreenSnip('${tcId}')" title="Khoanh vùng một phần màn hình máy tính để chụp ảnh lỗi">
-            ✂️ Chụp một phần màn hình (Snip Tool)
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" onclick="captureFullScreen('${tcId}')" title="Chụp toàn bộ cửa sổ hoặc màn hình">
-            🖥️ Chụp toàn màn hình
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ev-file-${tcId}').click()" title="Chọn tệp ảnh từ máy">
-            📁 Tải file ảnh
-          </button>
-        </div>
+      <!-- SUB-TABS NAVIGATION -->
+      <div class="exec-subtabs-nav">
+        <button class="exec-subtab-btn ${currentSubtab==='steps'?'active':''}" data-subtab="steps" onclick="switchExecTab('${tcId}','steps')">
+          📋 1. Kịch bản & Các bước
+        </button>
+        <button class="exec-subtab-btn ${currentSubtab==='defect'?'active':''}" data-subtab="defect" onclick="switchExecTab('${tcId}','defect')">
+          🎯 2. Kết quả & Lỗi ${isFailed ? `<span class="tab-defect-badge">🐞 ${r.defectStatus||'Lỗi'}</span>` : ''}
+        </button>
+        <button class="exec-subtab-btn ${currentSubtab==='evidence'?'active':''}" data-subtab="evidence" onclick="switchExecTab('${tcId}','evidence')">
+          📸 3. Bằng chứng ảnh <span class="tab-count-badge">${evidences.length}</span>
+        </button>
+        <button class="exec-subtab-btn ${currentSubtab==='discuss'?'active':''}" data-subtab="discuss" onclick="switchExecTab('${tcId}','discuss')">
+          💬 4. Trao đổi QA & Dev <span class="tab-count-badge">${comments.length}</span>
+        </button>
+      </div>
+    </div>
 
-        <div class="evidence-dropzone" id="dz-${tcId}" onclick="document.getElementById('ev-file-${tcId}').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEvidenceUpload('${tcId}', event.dataTransfer.files)">
-          <div class="dz-icon">📸</div>
-          <div><strong>Kéo thả ảnh vào đây</strong> hoặc bấm chọn file</div>
-          <div class="dz-hint">💡 Có thể dùng nút <strong>✂️ Chụp một phần màn hình</strong> ở trên, hoặc bấm <strong>Ctrl + V</strong> để dán ảnh trực tiếp!</div>
-          <input type="file" id="ev-file-${tcId}" accept="image/*" multiple style="display:none" onchange="handleEvidenceUpload('${tcId}', this.files)" />
-        </div>
+    <!-- SCROLLABLE SUB-TAB BODY -->
+    <div class="exec-tab-body">
+      <!-- PANE 1: KỊCH BẢN & CÁC BƯỚC -->
+      <div class="exec-subtab-pane ${currentSubtab==='steps'?'active':''}" data-subtab="steps">
+        ${tc.testData ? `
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px 14px;">
+          <div style="font-size:11.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Dữ liệu đầu vào (Test Data)</div>
+          <div style="font-family:monospace;font-size:13px;color:#0f172a;white-space:pre-wrap;word-break:break-word">${tc.testData}</div>
+        </div>` : ''}
 
-        ${evidences.length > 0 ? `
-        <div class="evidence-grid">
-          ${evidences.map(ev => `
-            <div class="evidence-card" title="${ev.name}">
-              <img src="${ev.url}" onclick="openLightbox('${ev.url}', '${ev.name}')" alt="Screenshot" />
-              <button class="evidence-delete" onclick="removeEvidence('${tcId}', '${ev.id}')" title="Xóa ảnh">✕</button>
-              <div class="evidence-caption">${ev.name}</div>
-            </div>
-          `).join('')}
+        ${tc.precondition ? `
+        <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px 14px;">
+          <div style="font-size:11.5px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">⚙️ Điều kiện tiên quyết (Precondition)</div>
+          <div style="font-size:13px;color:#0c4a6e;line-height:1.5">${tc.precondition}</div>
+        </div>` : ''}
+
+        ${tc.steps && tc.steps.length ? `
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">📝 Các bước thực hiện (${tc.steps.length} bước)</div>
+          <div>
+            ${tc.steps.map((s, idx) => `
+              <div class="step-card">
+                <div class="step-num">${idx + 1}</div>
+                <div class="step-desc">${s}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+
+        ${tc.expected && tc.expected.length ? `
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">✅ Kết quả mong đợi</div>
+          <div>
+            ${tc.expected.map(e => `
+              <div class="expected-card">
+                <span class="expected-icon">✅</span>
+                <div class="expected-text">${e}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+
+        ${tc.notes ? `
+        <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px;">
+          <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">📌 Ghi chú kỹ thuật gốc</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">${tc.notes}</div>
         </div>` : ''}
       </div>
 
-      <!-- TRAO ĐỔI THẢO LUẬN 2 CHIỀU (QA - DEV DISCUSSION) -->
-      <div class="comments-section">
-        <div class="comments-header">
-          <span>💬 Thảo luận & Phản hồi kỹ thuật (${comments.length})</span>
-          <span style="font-size:11px;color:var(--text-muted);font-weight:normal">Phản hồi giữa Tester, Dev và QA Lead</span>
+      <!-- PANE 2: KẾT QUẢ & LỖI (DEFECT) -->
+      <div class="exec-subtab-pane ${currentSubtab==='defect'?'active':''}" data-subtab="defect">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Người thực hiện test</label>
+            <input type="text" id="ef-tester" value="${r.tester || (state.currentUser ? state.currentUser.name : '')}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
+          </div>
+          <div class="form-group">
+            <label>Thời điểm thực thi</label>
+            <input type="text" value="${r.runAt ? new Date(r.runAt).toLocaleString('vi-VN') : 'Chưa chạy'}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
+          </div>
         </div>
 
-        <div class="comment-feed" id="comment-feed-${tcId}">
-          ${comments.length === 0 ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;padding:8px 0">Chưa có trao đổi nào. Hãy để lại ghi chú hoặc phản hồi cho đội ngũ phát triển.</div>` :
-            comments.map(c => {
-              const roleClass = c.role === 'developer' ? 'role-tag-dev' : c.role === 'admin' ? 'role-tag-lead' : 'role-tag-tester';
-              const roleName = c.role === 'developer' ? 'Developer' : c.role === 'admin' ? 'QA Lead' : 'Tester';
-              return `<div class="comment-item">
-                <div class="comment-meta">
-                  <div class="comment-author">
-                    <span>${c.author || 'Thành viên'}</span>
-                    <span class="comment-role-tag ${roleClass}">${roleName}</span>
+        <div class="form-group">
+          <label style="font-weight:600; color:#dc2626">Lý do thất bại / Lỗi phát hiện (khi Fail) *</label>
+          <input type="text" id="ef-fail" placeholder="Mô tả ngắn gọn lỗi thực tế gặp phải (bắt buộc khi đánh Fail)..." value="${r.failReason||''}" onchange="updateTcField('${tcId}','failReason',this.value)" />
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú thực thi bổ sung (Môi trường, Account, Payload...)</label>
+          <textarea id="ef-note" rows="2" placeholder="Ghi chú thêm về ca test này..." onchange="updateTcField('${tcId}','note',this.value)">${r.note||''}</textarea>
+        </div>
+
+        <!-- DEFECT LIFECYCLE BOX -->
+        <div class="defect-box" style="margin-top:4px;">
+          <div class="defect-box-title">
+            <span>🐞 Vòng Đời Lỗi (Defect Tracking Lifecycle)</span>
+            <span class="status-badge" style="background:#fee2e2;color:#dc2626">${r.defectStatus || (isFailed ? 'New' : 'Chưa có lỗi')}</span>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Mức độ nghiêm trọng (Severity)</label>
+              <select id="ef-sev" onchange="updateTcField('${tcId}','severity',this.value)">
+                <option value="Blocker" ${r.severity==='Blocker'?'selected':''}>🔴 Blocker (Chặn đứng)</option>
+                <option value="Critical" ${r.severity==='Critical'||!r.severity?'selected':''}>🟠 Critical (Nghiêm trọng)</option>
+                <option value="Major" ${r.severity==='Major'?'selected':''}>🟡 Major (Lớn)</option>
+                <option value="Minor" ${r.severity==='Minor'?'selected':''}>🟢 Minor (Nhẹ / Giao diện)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Lập trình viên phụ trách (Assigned Dev)</label>
+              <input type="text" id="ef-dev" placeholder="VD: Trần Quốc Tuấn (Dev)" value="${r.assignedDev||'Trần Quốc Tuấn (Dev)'}" onchange="updateTcField('${tcId}','assignedDev',this.value)" />
+            </div>
+            <div class="form-group">
+              <label>Bản build sửa lỗi (Fix Version)</label>
+              <input type="text" id="ef-fixver" placeholder="VD: v2.1.2-build.8" value="${r.fixVersion||''}" onchange="updateTcField('${tcId}','fixVersion',this.value)" />
+            </div>
+          </div>
+
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:8px">Chuyển trạng thái xử lý lỗi:</div>
+          <div class="defect-actions-bar">
+            <button class="btn-defect btn-defect-inprog" onclick="updateDefectStatus('${tcId}', 'In Progress')">👨‍💻 Dev: Đang sửa</button>
+            <button class="btn-defect btn-defect-resolved" onclick="updateDefectStatus('${tcId}', 'Resolved')">🔧 Dev: Đã sửa (Chờ Retest)</button>
+            <button class="btn-defect btn-defect-retest-ok" onclick="updateDefectStatus('${tcId}', 'Retest Passed')">✅ Tester: Retest Pass (Đóng lỗi)</button>
+            <button class="btn-defect btn-defect-reopen" onclick="updateDefectStatus('${tcId}', 'Retest Fail')">🔄 Tester: Retest Fail (Mở lại)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 3: BẰNG CHỨNG ẢNH & CHỤP MÀN HÌNH -->
+      <div class="exec-subtab-pane ${currentSubtab==='evidence'?'active':''}" data-subtab="evidence">
+        <div class="evidence-section" style="margin-top:0">
+          <div class="evidence-section-title">
+            <span>📸 Bằng chứng kiểm thử & Ảnh chụp màn hình</span>
+            <span style="font-size:12px;color:var(--accent-light);font-weight:bold">${evidences.length} ảnh đính kèm</span>
+          </div>
+
+          <!-- BỘ CÔNG CỤ CHỤP MÀN HÌNH CHUYÊN NGHIỆP -->
+          <div class="evidence-btn-group">
+            <button type="button" class="btn btn-primary btn-sm" onclick="startScreenSnip('${tcId}')" title="Khoanh vùng một phần màn hình máy tính để chụp ảnh lỗi">
+              ✂️ Chụp một phần màn hình (Snip Tool)
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="captureFullScreen('${tcId}')" title="Chụp toàn bộ cửa sổ hoặc màn hình">
+              🖥️ Chụp toàn màn hình
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ev-file-${tcId}').click()" title="Chọn tệp ảnh từ máy">
+              📁 Tải file ảnh
+            </button>
+          </div>
+
+          <div class="evidence-dropzone" id="dz-${tcId}" onclick="document.getElementById('ev-file-${tcId}').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEvidenceUpload('${tcId}', event.dataTransfer.files)">
+            <div class="dz-icon">📸</div>
+            <div><strong>Kéo thả ảnh vào đây</strong> hoặc bấm chọn file</div>
+            <div class="dz-hint">💡 Có thể dùng nút <strong>✂️ Chụp một phần màn hình</strong> ở trên, hoặc bấm <strong>Ctrl + V</strong> để dán ảnh trực tiếp từ Clipboard!</div>
+            <input type="file" id="ev-file-${tcId}" accept="image/*" multiple style="display:none" onchange="handleEvidenceUpload('${tcId}', this.files)" />
+          </div>
+
+          ${evidences.length > 0 ? `
+          <div class="evidence-grid" style="margin-top:14px">
+            ${evidences.map(ev => `
+              <div class="evidence-card" title="${ev.name}">
+                <img src="${ev.url}" onclick="openLightbox('${ev.url}', '${ev.name}')" alt="Screenshot" />
+                <button class="evidence-delete" onclick="removeEvidence('${tcId}', '${ev.id}')" title="Xóa ảnh">✕</button>
+                <div class="evidence-caption">${ev.name}</div>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        </div>
+      </div>
+
+      <!-- PANE 4: TRAO ĐỔI THẢO LUẬN QA & DEV -->
+      <div class="exec-subtab-pane ${currentSubtab==='discuss'?'active':''}" data-subtab="discuss">
+        <div class="comments-section" style="margin-top:0">
+          <div class="comments-header">
+            <span>💬 Thảo luận & Phản hồi kỹ thuật (${comments.length})</span>
+            <span style="font-size:11.5px;color:var(--text-muted);font-weight:normal">Trao đổi 2 chiều giữa Tester, Dev và QA Lead</span>
+          </div>
+
+          <div class="comment-feed" id="comment-feed-${tcId}">
+            ${comments.length === 0 ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;padding:12px 0">Chưa có trao đổi nào. Hãy để lại ghi chú, commit hash hoặc câu hỏi cho Dev.</div>` :
+              comments.map(c => {
+                const roleClass = c.role === 'developer' ? 'role-tag-dev' : c.role === 'admin' ? 'role-tag-lead' : 'role-tag-tester';
+                const roleName = c.role === 'developer' ? 'Developer' : c.role === 'admin' ? 'QA Lead' : 'Tester';
+                return `<div class="comment-item">
+                  <div class="comment-meta">
+                    <div class="comment-author">
+                      <span>${c.author || 'Thành viên'}</span>
+                      <span class="comment-role-tag ${roleClass}">${roleName}</span>
+                    </div>
+                    <div class="comment-time">${new Date(c.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'})} · ${new Date(c.createdAt).toLocaleDateString('vi-VN')}</div>
                   </div>
-                  <div class="comment-time">${new Date(c.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'})} · ${new Date(c.createdAt).toLocaleDateString('vi-VN')}</div>
-                </div>
-                <div class="comment-body">${c.content}</div>
-              </div>`;
-            }).join('')
-          }
+                  <div class="comment-body">${c.content}</div>
+                </div>`;
+              }).join('')
+            }
+          </div>
+
+          <div class="comment-input-box">
+            <textarea id="comment-input-${tcId}" placeholder="Nhập bình luận, phản hồi commit fix, yêu cầu kiểm tra lại... (Bấm Ctrl + Enter để gửi nhanh)" onkeydown="if(event.ctrlKey && event.key==='Enter'){ addComment('${tcId}'); }"></textarea>
+            <button class="btn btn-primary" onclick="addComment('${tcId}')" style="height:58px;padding:0 16px">Gửi 💬</button>
+          </div>
         </div>
-
-        <div class="comment-input-box">
-          <textarea id="comment-input-${tcId}" placeholder="Nhập bình luận, phản hồi commit fix, yêu cầu kiểm tra lại..."></textarea>
-          <button class="btn btn-primary" onclick="addComment('${tcId}')" style="height:58px;padding:0 16px">Gửi 💬</button>
-        </div>
-      </div>
-
-      <div class="form-group" style="margin-top:14px">
-        <label>Ghi chú kỹ thuật bổ sung</label>
-        <textarea id="ef-note" placeholder="Ghi chú, môi trường test, lưu ý bổ sung..." onchange="updateTcField('${tcId}','note',this.value)">${r.note||''}</textarea>
-      </div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-        <button class="btn btn-outline" onclick="prevTc('${tcId}')">← TC trước</button>
-        <button class="btn btn-outline" onclick="nextTc('${tcId}')">TC tiếp →</button>
-        <button class="btn btn-outline" onclick="openEditTcModal('${tcId}')">✏️ ${isCustom ? 'Sửa TC này' : 'Hiệu đính TC này'}</button>
-        ${isOverriddenTc(tcId) ? `<button class="btn btn-outline" onclick="resetBuiltinTc('${tcId}')" style="color:#d97706">🔄 Khôi phục gốc</button>` : ''}
-        <button class="btn btn-outline" onclick="openCloneTcModal('${tcId}')">📋 Nhân bản</button>
       </div>
     </div>
   </div>`;
@@ -3812,9 +3904,13 @@ function renderExecDetail(tcId) {
 
 function setStatus(tcId, status) {
   const failEl = document.getElementById('ef-fail');
-  if (status === 'Fail' && (!failEl || !failEl.value.trim())) {
+  const failReason = failEl ? failEl.value.trim() : ((state.results[tcId] && state.results[tcId].failReason) || '').trim();
+  if (status === 'Fail' && !failReason) {
+    state.execActiveSubtab = 'defect';
+    renderExecDetail(tcId);
     showToast('⚠️ Vui lòng nhập lý do lỗi trước khi đánh Fail!', 'error');
-    if (failEl) failEl.focus();
+    const targetEl = document.getElementById('ef-fail');
+    if (targetEl) targetEl.focus();
     return;
   }
   
@@ -4358,6 +4454,23 @@ function updateSupabaseStatusUI(status, label) {
       pill.textContent = '⚪ Chưa kết nối';
     }
   }
+
+  const tabBadge = document.getElementById('sb-status-badge-tab');
+  if (tabBadge) {
+    if (status === 'connected') {
+      tabBadge.className = 'badge badge-pass';
+      tabBadge.textContent = '🟢 Đã kết nối';
+    } else if (status === 'connecting') {
+      tabBadge.className = 'badge badge-skip';
+      tabBadge.textContent = '🟡 Đang nối...';
+    } else if (status === 'error') {
+      tabBadge.className = 'badge badge-fail';
+      tabBadge.textContent = '🔴 Lỗi kết nối';
+    } else {
+      tabBadge.className = 'badge badge-nr';
+      tabBadge.textContent = '⚪ Chưa kết nối';
+    }
+  }
 }
 
 async function initSupabase(silent = false) {
@@ -4853,6 +4966,8 @@ function renderSettingsModules() {
   const allTcs = getAllTcs();
   const countEl = document.getElementById('module-count');
   if (countEl) countEl.textContent = mods.length;
+  const badgeEl = document.getElementById('module-count-badge');
+  if (badgeEl) badgeEl.textContent = mods.length;
 
   tbody.innerHTML = mods.map(m => {
     const count = allTcs.filter(t => t.module === m.id).length;
@@ -5222,6 +5337,7 @@ function handleEvidenceUpload(tcId, files) {
           createdAt: new Date().toISOString()
         };
         r.evidences.push(evidence);
+        state.execActiveSubtab = 'evidence';
         saveState();
         renderExecDetail(tcId);
         syncSingleResultToSupabase(tcId);
@@ -5575,6 +5691,7 @@ function finalizeCrop(rect) {
     createdAt: now.toISOString()
   });
   
+  state.execActiveSubtab = 'evidence';
   saveState();
   cancelScreenSnip();
   renderExecDetail(tcId);
@@ -5649,6 +5766,7 @@ async function captureFullScreen(tcId) {
       createdAt: new Date().toISOString()
     });
     
+    state.execActiveSubtab = 'evidence';
     saveState();
     renderExecDetail(tcId);
     syncSingleResultToSupabase(tcId);
