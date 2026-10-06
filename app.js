@@ -93,8 +93,8 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Đăng nhập Trạm gác hợp lệ bằng tài khoản trạm (Không mật khẩu)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Tài khoản nhân viên trạm: Nv001a1 (hoặc NV001)",
-    "precondition": "Nhân viên đang kích hoạt (Active) trong CSDL",
+    "testData": "Tên đăng nhập: \"Nv001a1\" (không cần mật khẩu).",
+    "precondition": "Backend API đang chạy; Cán bộ \"NV001\" (Nguyễn Văn Huy) có trạng thái kích hoạt trong CSDL.",
     "steps": [
       "1. Truy cập trang web Trạm gác (/staff.html).",
       "2. Nhập Tên đăng nhập trạm (vd: Nv001a1), nhấn Đăng nhập (hệ thống trạm không yêu cầu mật khẩu)."
@@ -110,14 +110,15 @@ const ALL_TCS = [
     "priority": "P4",
     "name": "Đăng nhập trạm không phân biệt hoa/thường",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập \"NV001A1\", \"nv001a1\" hoặc \"Nv001A1\"",
+    "testData": "Nhập xen kẽ hoa thường: \"NV001A1\", \"nv001a1\", hoặc \"Nv001a1\".",
     "steps": [
       "1. Nhập username xen kẽ chữ hoa chữ thường.",
       "2. Nhấn nút Đăng nhập."
     ],
     "expected": [
       "Hệ thống tự động chuẩn hóa chữ thường và đăng nhập thành công, không phát sinh lỗi."
-    ]
+    ],
+    "precondition": "Trang đăng nhập trạm (/staff.html) đang mở."
   },
   {
     "id": "TC-AUTH-003",
@@ -125,14 +126,15 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Đăng nhập trạm thất bại: Tên tài khoản không tồn tại",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Tài khoản không tồn tại: \"khongtontai\"",
+    "testData": "Tên đăng nhập không tồn tại: \"khongtontai999\".",
     "steps": [
       "1. Nhập tài khoản không tồn tại trong hệ thống.",
       "2. Nhấn Đăng nhập."
     ],
     "expected": [
       "Hệ thống chặn lại và hiển thị thông báo: \"User không hợp lệ hoặc nhân viên chưa được kích hoạt.\""
-    ]
+    ],
+    "precondition": "Trang đăng nhập trạm (/staff.html) đang mở."
   },
   {
     "id": "TC-AUTH-004",
@@ -140,14 +142,15 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Đăng nhập trạm thất bại: Tài khoản bị khóa (Inactive)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Tài khoản nhân viên đã bị tắt kích hoạt (IsActive = false)",
+    "testData": "Tên đăng nhập của nhân viên bị khóa.",
     "steps": [
       "1. Nhập tài khoản nhân viên đã bị vô hiệu hóa.",
       "2. Nhấn Đăng nhập."
     ],
     "expected": [
       "Hệ thống từ chối đăng nhập, hiển thị thông báo: \"User không hợp lệ hoặc nhân viên chưa được kích hoạt.\""
-    ]
+    ],
+    "precondition": "Tài khoản nhân viên đã bị tắt cờ IsActive (Inactive) trong Admin Staff Management."
   },
   {
     "id": "TC-AUTH-005",
@@ -155,7 +158,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Xử lý xung đột phiên trạm: Phát hiện trạm đang có phiên mở dở dang",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Trạm đang được giữ bởi phiên trực trước đó hoặc tài khoản khác",
+    "testData": "Tài khoản cán bộ nhận ca: \"Nv001a1\".",
     "steps": [
       "1. Đăng nhập vào trạm đang có phiên trực chưa được đóng hoàn tất.",
       "2. Quan sát nút hành động hiển thị trên màn hình đăng nhập."
@@ -163,7 +166,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống hiển thị nút màu đỏ \"Ép Bắt Đầu Ca Mới\".",
       "Khi nhân viên nhấn nút này, hệ thống tự động đóng phiên cũ và khởi tạo ca trực mới cho nhân viên."
-    ]
+    ],
+    "precondition": "Trạm gác \"STATION_A\" đang có 1 ca trực dở dang chưa được đóng bởi phiên trước."
   },
   {
     "id": "TC-AUTH-006",
@@ -171,8 +175,8 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Mở ca trực bằng Camera (Webcam): Live Preview & Lưu ảnh chứng thực",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Webcam PC đang hoạt động bình thường",
-    "precondition": "Đã hoàn tất bước nhập tài khoản trạm. Trạm bật cờ bắt buộc chụp ảnh mở ca.",
+    "testData": "Nhân viên trực ban đứng trước ống kính camera.",
+    "precondition": "Thiết bị Webcam đã kết nối máy trạm; Trực ban đã đăng nhập hợp lệ và popup mở ca hiện lên.",
     "steps": [
       "1. Tại popup \"Xác nhận chụp ảnh vào ca\", cấp quyền truy cập Camera nếu trình duyệt yêu cầu.",
       "2. Quan sát khung hình camera trực tiếp (Live Preview) hiển thị rõ nét khuôn mặt nhân viên.",
@@ -190,14 +194,15 @@ const ALL_TCS = [
     "priority": "P3",
     "name": "Lựa chọn thiết bị Camera khi mở ca (Đa camera)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Máy tính trạm gắn cả Webcam tích hợp và Camera USB ngoài",
+    "testData": "Dropdown chọn thiết bị Camera trong popup mở ca.",
     "steps": [
       "1. Tại popup Mở ca trực, quan sát dropdown danh sách camera khả dụng.",
       "2. Nhấp chọn camera khác trong danh sách dropdown."
     ],
     "expected": [
       "Khung Live Preview chuyển đổi nguồn video sang camera vừa chọn mượt mà, không bị treo trình duyệt."
-    ]
+    ],
+    "precondition": "Máy tính trạm gắn từ 2 Webcam trở lên (ví dụ Webcam tích hợp và Webcam USB ngoài)."
   },
   {
     "id": "TC-AUTH-008",
@@ -210,7 +215,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống hủy phiên đăng nhập trạm, giải phóng luồng camera và quay lại màn hình Đăng nhập ban đầu."
-    ]
+    ],
+    "precondition": "Popup \"Xác nhận chụp ảnh vào ca\" đang hiển thị.",
+    "testData": "Nhấp nút \"Hủy bỏ\" hoặc biểu tượng đóng ✕."
   },
   {
     "id": "TC-AUTH-009",
@@ -218,8 +225,8 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Mở ca trực dự phòng bằng thẻ CCCD gắn chip (Khi Camera hỏng)",
     "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Thẻ CCCD của nhân viên đăng nhập, tài khoản có quyền AllowCccdShiftAuth",
-    "precondition": "Admin đã kích hoạt quyền \"Cho phép dùng CCCD mở ca (AllowCccdShiftAuth)\" cho nhân viên này.",
+    "testData": "Thẻ CCCD chip số \"026088008100\" đặt lên đầu đọc.",
+    "precondition": "Camera trạm bị hỏng; Cờ \"AllowCccdShiftAuth\" được bật; Cán bộ NV001 có số CCCD \"026088008100\" trong hồ sơ.",
     "steps": [
       "1. Tại popup Mở ca, nhấn liên kết \"Dùng CCCD thay Camera\".",
       "2. Chuyển sang giao diện xác thực CCCD, đặt thẻ CCCD lên đầu đọc chip.",
@@ -236,14 +243,15 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Từ chối mở ca bằng thẻ CCCD của người khác",
     "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Quẹt thẻ CCCD của công dân khác không trùng hồ sơ nhân viên",
+    "testData": "Thẻ CCCD mang số \"001099000888\" (không khớp hồ sơ).",
     "steps": [
       "1. Chọn mở ca bằng CCCD dự phòng.",
       "2. Quẹt thẻ CCCD không trùng với số CCCD lưu trong hồ sơ tài khoản đang đăng nhập."
     ],
     "expected": [
       "Hệ thống từ chối mở ca và báo lỗi: \"Số CCCD không khớp với hồ sơ nhân viên trong hệ thống.\""
-    ]
+    ],
+    "precondition": "Cán bộ đăng nhập là NV001 (\"026088008100\"); Sử dụng thẻ CCCD người khác quẹt mở ca."
   },
   {
     "id": "TC-AUTH-011",
@@ -251,7 +259,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Tách biệt nghiệp vụ: \"Đăng xuất\" (thoát UI) vs \"Rời ca\" (kết thúc ca trực)",
     "platform": "Giao diện Web Trực ban",
-    "precondition": "Nhân viên đang trong ca trực.",
+    "precondition": "Trạm gác đang trong ca trực hoạt động (ShiftSession đang Active).",
     "steps": [
       "1. Nhấp nút \"Đăng xuất\" trên thanh Header (nút bên cạnh nút Rời ca màu đỏ).",
       "2. Kiểm tra thông báo và trạng thái phiên trực trên hệ thống."
@@ -259,7 +267,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống xóa token phiên giao diện và quay về màn hình Login.",
       "Ca trực (ShiftSession) vẫn tiếp tục DUY TRÌ chạy ngầm, không bị đóng để bàn giao ca tạm thời."
-    ]
+    ],
+    "testData": "Nhấp nút \"Đăng xuất\" (thoát giao diện, ca trực vẫn giữ nguyên)."
   },
   {
     "id": "TC-AUTH-012",
@@ -267,7 +276,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Kết thúc ca trực (\"Rời ca\"): Chụp ảnh bàn giao và đóng ShiftSession",
     "platform": "Giao diện Web Trực ban",
-    "precondition": "Nhân viên đang trong ca trực.",
+    "precondition": "Trạm gác đang trong ca trực hoạt động; Hết giờ ca trực cần bàn giao ca.",
     "steps": [
       "1. Nhấp nút màu đỏ \"Rời ca\" trên thanh Header.",
       "2. Popup \"Xác nhận rời ca trực\" hiển thị live webcam.",
@@ -277,7 +286,8 @@ const ALL_TCS = [
       "Hệ thống chụp ảnh kết thúc ca, gọi API /station/shift-sessions/end.",
       "ShiftSession cập nhật thời gian ra EndTime, chuyển trạng thái Ended.",
       "Màn hình tự động quay về trang Đăng nhập trạm."
-    ]
+    ],
+    "testData": "Nhấp nút \"Rời ca\" (EndShiftModal) -> chụp ảnh webcam xác nhận kết thúc ca."
   },
   {
     "id": "TC-AUTH-013",
@@ -285,14 +295,15 @@ const ALL_TCS = [
     "priority": "P3",
     "name": "Khôi phục ca trực sau Reload (F5) hoặc mở lại trình duyệt",
     "platform": "Giao diện Web Trực ban",
-    "precondition": "Nhân viên đang trong ca trực.",
+    "precondition": "Trạm gác đang trong ca trực hợp lệ.",
     "steps": [
       "1. Đang làm việc trên Dashboard trạm, nhấn phím F5 hoặc đóng tab và mở lại URL /staff.html."
     ],
     "expected": [
       "Hệ thống tự động đọc token lưu trong localStorage, gọi /station/auth/status và /station/shift-sessions/active.",
       "Hiển thị thẳng vào Dashboard làm việc, không bắt đăng nhập hay mở ca lại."
-    ]
+    ],
+    "testData": "Nhấn phím F5 hoặc đóng tab và mở lại URL /staff.html."
   },
   {
     "id": "TC-AUTH-014",
@@ -300,7 +311,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Đăng nhập Phân hệ Quản trị Admin: Yêu cầu Mật khẩu & Xử lý xung đột phiên",
     "platform": "Giao diện Quản trị Admin",
-    "testData": "Tài khoản: admin, Mật khẩu: 123456 (hoặc tài khoản quản trị hợp lệ)",
+    "testData": "Tài khoản Admin: \"admin\", Mật khẩu: \"admin123\".",
     "steps": [
       "1. Truy cập /admin.html (hoặc /staff.html?login_as=admin).",
       "2. Nhập tên tài khoản và mật khẩu admin.",
@@ -310,7 +321,8 @@ const ALL_TCS = [
       "Hệ thống xác thực mật khẩu qua thuật toán băm bảo mật.",
       "Nếu phát hiện tài khoản đang đăng nhập nơi khác, cung cấp nút \"Ép Đăng Xuất Phiên Cũ\".",
       "Đăng nhập thành công chuyển hướng vào trang Quản trị Admin với đầy đủ menu sidebar."
-    ]
+    ],
+    "precondition": "Trang Quản trị Admin (/index.html hoặc /admin.html) đang mở."
   },
   {
     "id": "TC-CKIN-001",
@@ -318,8 +330,8 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Check-in Khách đi bộ cơ bản: Nhập thủ công đầy đủ thông tin",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Họ tên: Nguyễn Văn An, CCCD: 001099000001, SĐT: 0988111222, Cơ quan: Cty ABC, Cán bộ tiếp: Đồng chí Nam, Mục đích: Làm việc chuyên môn",
-    "precondition": "Nhân viên đã mở ca trực tại trạm gác.",
+    "testData": "Họ tên: \"Trần Văn An\", CCCD: \"001099000111\", SĐT: \"0912345678\", Mục đích: \"Liên hệ công tác\", Cán bộ đón: \"Đ/c Trần Hưng\", Phòng ban: \"Ban Quản lý\".",
+    "precondition": "Ca trực trạm gác đang mở; Modal Check-in đang hiển thị.",
     "steps": [
       "1. Trên Dashboard trạm, nhấn nút \"+ Check-in khách mới\".",
       "2. Điền đầy đủ Họ tên, Số CCCD, Số điện thoại, Cơ quan, Người đón, Mục đích.",
@@ -338,7 +350,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Check-in tự động bằng đọc thẻ CCCD gắn chip qua DeviceService",
     "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Thẻ CCCD gắn chip thật, DeviceService đang chạy WebSocket ws://localhost:6025/ws",
+    "testData": "Thẻ CCCD gắn chip vật lý chuẩn BCA.",
     "steps": [
       "1. Mở modal Check-in.",
       "2. Đặt thẻ CCCD gắn chip lên đầu đọc thẻ PCSC.",
@@ -348,7 +360,8 @@ const ALL_TCS = [
       "DeviceService đọc chip và đẩy dữ liệu qua WebSocket.",
       "Form tự động điền: Họ tên, Số CCCD 12 số, Ngày sinh, Giới tính, Quê quán, Địa chỉ thường trú.",
       "Hiển thị huy hiệu xác thực chip màu xanh lá bảo đảm tính pháp lý."
-    ]
+    ],
+    "precondition": "DeviceService WebSocket online; Đầu đọc chip PCSC/NFC đã cắm thẻ CCCD gắn chip."
   },
   {
     "id": "TC-CKIN-003",
@@ -356,7 +369,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Check-in tự động bằng quét mã QR thẻ CCCD qua máy quét 2D",
     "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Máy quét mã vạch 2D kết nối cổng USB HID",
+    "testData": "Mã QR trên mặt thẻ CCCD (chuỗi chuẩn BCA phân tách bởi dấu gạch đứng |).",
     "steps": [
       "1. Mở modal Check-in.",
       "2. Đưa vùng mã QR trên thẻ CCCD qua luồng sáng của máy quét 2D."
@@ -364,7 +377,8 @@ const ALL_TCS = [
     "expected": [
       "Máy quét bíp và gửi chuỗi QR chuẩn Bộ Công An vào ứng dụng.",
       "Hệ thống tự động giải mã chuỗi chuẩn, bóc tách chính xác Số CCCD, CMND cũ, Họ tên, Ngày sinh, Giới tính, Địa chỉ."
-    ]
+    ],
+    "precondition": "Máy quét mã QR 2D đã kết nối cổng USB máy trạm."
   },
   {
     "id": "TC-CKIN-004",
@@ -379,7 +393,9 @@ const ALL_TCS = [
     "expected": [
       "Ảnh chân dung hiển thị ngay trong khung avatar của form Check-in.",
       "Sau khi lưu lượt khách, ảnh đại diện xuất hiện rõ ràng trên bảng danh sách của Dashboard."
-    ]
+    ],
+    "precondition": "Webcam trạm gác hoạt động; Modal Check-in đang mở.",
+    "testData": "Khách đứng trước ống kính; Nhấp nút chụp ảnh chân dung."
   },
   {
     "id": "TC-CKIN-005",
@@ -395,7 +411,9 @@ const ALL_TCS = [
     "expected": [
       "Danh sách các ảnh chụp thêm hiển thị dưới dạng carousel thu nhỏ trong form Check-in.",
       "Các đường dẫn ảnh được lưu vào trường AdditionalPhotoPaths trong CSDL."
-    ]
+    ],
+    "precondition": "Modal Check-in đang mở; Khách có mang theo giấy giới thiệu hoặc tài sản cần lưu ảnh.",
+    "testData": "MultiShotCameraModal: Chụp 2 ảnh giấy tờ tùy thân bổ sung."
   },
   {
     "id": "TC-CKIN-006",
@@ -403,7 +421,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Check-in cấp Thẻ Định Danh (RFID / Mã thẻ an ninh cụ thể)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Mã thẻ định danh: \"CARD-8801\"",
+    "testData": "Chọn loại thẻ: \"Thẻ định danh (Identity)\", Mã thẻ: \"CARD-001\".",
     "steps": [
       "1. Tại phần Cấp thẻ an ninh trên form Check-in, chọn loại thẻ \"Thẻ định danh (Identity)\".",
       "2. Nhập mã thẻ \"CARD-8801\" (hoặc quẹt thẻ qua đầu đọc RFID).",
@@ -412,7 +430,8 @@ const ALL_TCS = [
     "expected": [
       "Lượt khách lưu trường CardNumber = \"CARD-8801\", IsCardIssued = true, CardType = \"identity\".",
       "Trên bảng Dashboard hiển thị thông tin thẻ phát \"1\", trạng thái \"Giữ 1 thẻ\"."
-    ]
+    ],
+    "precondition": "Kho thẻ an ninh trạm có sẵn thẻ RFID chưa được cấp phát."
   },
   {
     "id": "TC-CKIN-007",
@@ -428,7 +447,9 @@ const ALL_TCS = [
     "expected": [
       "Lượt khách lưu trường CardType = \"regular\", IsCardIssued = true, CardNumber = null.",
       "Dashboard ghi nhận đã phát 1 thẻ thường, tính vào số lượng thẻ cần thu hồi lúc ra về."
-    ]
+    ],
+    "precondition": "Modal Check-in đang mở.",
+    "testData": "Chọn loại thẻ: \"Thẻ thường (Regular)\" (hệ thống tăng bộ đếm số lượng, không cần nhập mã)."
   },
   {
     "id": "TC-CKIN-008",
@@ -443,7 +464,9 @@ const ALL_TCS = [
     "expected": [
       "Lưu lượt khách với CardType = \"none\", IsCardIssued = false.",
       "Cột thẻ trên Dashboard hiển thị \"Đã thu đủ thẻ\" (không nợ thẻ)."
-    ]
+    ],
+    "precondition": "Khu vực tiếp dân mở hoặc sảnh cơ quan không yêu cầu thẻ an ninh.",
+    "testData": "Chọn loại thẻ: \"Không cấp thẻ\"."
   },
   {
     "id": "TC-CKIN-009",
@@ -451,7 +474,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Check-in có Phương tiện: Đăng ký loại xe từ danh mục chuẩn hóa",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Loại xe: \"Ô tô 7 chỗ\", Biển số: \"30H-999.88\"",
+    "testData": "Loại xe: \"Ô tô 4 chỗ\", Biển số xe: \"30A-999.88\", Chủ xe: \"Khách đại diện\".",
     "steps": [
       "1. Chuyển sang tab Phương tiện trên form Check-in.",
       "2. Chọn loại xe từ danh mục chuẩn (STANDARD_VEHICLE_TYPES: Ô tô, Xe máy, Xe tải...).",
@@ -461,7 +484,8 @@ const ALL_TCS = [
     "expected": [
       "Bản ghi Vehicle được tạo liên kết với Visit, lưu PlateNumber = \"30H-999.88\", Type = \"Ô tô 7 chỗ\".",
       "Dashboard hiển thị thẻ biển số \"30H-999.88 (Ô tô 7 chỗ)\", đếm \"Xe: Đăng ký 1 — Còn bên trong: 1\"."
-    ]
+    ],
+    "precondition": "Khách di chuyển bằng phương tiện cơ giới vào cơ quan."
   },
   {
     "id": "TC-CKIN-010",
@@ -469,7 +493,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Validation Chặn trùng CCCD: Khách có số CCCD đang ở bên trong",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Số CCCD \"001099000001\" của khách đang ở trong cơ quan",
+    "testData": "Nhập số CCCD: \"001099000111\" để Check-in thêm lượt mới.",
     "steps": [
       "1. Mở modal Check-in khách mới.",
       "2. Nhập số CCCD \"001099000001\".",
@@ -478,7 +502,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống hiển thị cảnh báo đỏ ngay dưới ô nhập CCCD: \"Số CCCD này hiện đang có 1 lượt khách ở trong đơn vị chưa Checkout.\"",
       "Nút Check-in bị chặn, không cho phép gửi trùng lặp."
-    ]
+    ],
+    "precondition": "Khách mang số CCCD \"001099000111\" đang ở bên trong cơ quan (chưa Checkout)."
   },
   {
     "id": "TC-CKIN-011",
@@ -486,14 +511,15 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Validation Chặn trùng Thẻ An Ninh: Mã thẻ đang cấp cho lượt khác chưa trả",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Mã thẻ \"CARD-8801\" đang được khách khác giữ",
+    "testData": "Nhập mã thẻ an ninh: \"CARD-001\".",
     "steps": [
       "1. Mở modal Check-in, nhập mã thẻ \"CARD-8801\"."
     ],
     "expected": [
       "Hệ thống phát hiện mã thẻ đang active trong danh sách thẻ chưa trả.",
       "Hiển thị cảnh báo lỗi: \"Mã thẻ này đang được sử dụng bởi khách khác bên trong đơn vị.\""
-    ]
+    ],
+    "precondition": "Mã thẻ \"CARD-001\" đang được cấp cho 1 lượt khách khác đang inside chưa thu hồi."
   },
   {
     "id": "TC-CKIN-012",
@@ -501,13 +527,14 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Validation Chặn trùng Biển số xe: Phương tiện đang ở bên trong cơ quan",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Biển số xe \"30H-999.88\" đang trong đơn vị chưa ra",
+    "testData": "Nhập biển số xe: \"30A-999.88\" (hoặc \"30A99988\").",
     "steps": [
       "1. Mở modal Check-in, thêm phương tiện với biển số \"30H-999.88\"."
     ],
     "expected": [
       "Hệ thống cảnh báo: \"Biển số xe 30H-999.88 hiện đang ở trong đơn vị chưa Checkout.\""
-    ]
+    ],
+    "precondition": "Xe biển số \"30A-999.88\" đang gửi lại bên trong cơ quan chưa checkout."
   },
   {
     "id": "TC-CKIN-013",
@@ -520,7 +547,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống chặn submit, hiển thị tóm tắt lỗi các trường còn thiếu (Họ tên, CCCD, Mục đích, Người đón)."
-    ]
+    ],
+    "precondition": "Modal Check-in đang mở.",
+    "testData": "Để trống Họ tên, CCCD, Mục đích hoặc Cán bộ tiếp đón rồi nhấn Check-in."
   },
   {
     "id": "TC-CKIN-014",
@@ -528,7 +557,7 @@ const ALL_TCS = [
     "priority": "P3",
     "name": "Tự động Upsert gợi ý Khách quen khi nhập số CCCD cũ",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Số CCCD của khách đã từng đến làm việc tuần trước",
+    "testData": "Nhập đúng số CCCD đã từng vào: hệ thống tự động điền Họ tên, SĐT, Đơn vị công tác.",
     "steps": [
       "1. Mở modal Check-in, gõ số CCCD cũ.",
       "2. Rời tiêu điểm (blur) khỏi ô nhập CCCD."
@@ -536,7 +565,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống tự động tra cứu và điền sẵn Họ tên, Số điện thoại và Cơ quan của khách từ lịch sử.",
       "Tiết kiệm thời gian gõ phím cho nhân viên trực ban."
-    ]
+    ],
+    "precondition": "Khách đã từng đến cơ quan và thông tin đã được lưu trong bảng Visitors."
   },
   {
     "id": "TC-CKIN-015",
@@ -550,7 +580,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Ảnh xe được đính kèm vào phương tiện, lưu vào CSDL làm cơ sở đối soát lúc xe ra."
-    ]
+    ],
+    "precondition": "Khách Check-in có đăng ký phương tiện.",
+    "testData": "Chụp ảnh webcam đầu xe và biển số xe khi check-in."
   },
   {
     "id": "TC-COMP-001",
@@ -558,7 +590,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Tạo đoàn Check-in ban đầu: Thêm nhiều Người đi cùng có danh tính",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Trưởng đoàn + 2 người đi cùng (Trần Thị B, Lê Văn C)",
+    "testData": "Tab Người đi cùng: Thêm \"Lê Thị Bích\", CCCD: \"001188000222\", SĐT: \"0988111222\", Nữ.",
     "steps": [
       "1. Tại form Check-in, chuyển sang tab \"Người đi cùng (Companions)\".",
       "2. Nhấn nút \"+ Thêm người đi cùng\".",
@@ -569,7 +601,8 @@ const ALL_TCS = [
       "Lưu lượt thăm với TotalGuests = 3, InsideGuests = 3.",
       "Bảng danh sách Dashboard hiển thị huy hiệu \"3/3 khách\".",
       "Xem chi tiết hiển thị đầy đủ danh sách 2 người đi cùng."
-    ]
+    ],
+    "precondition": "Modal Check-in đang mở; Đoàn khách có từ 2 người trở lên."
   },
   {
     "id": "TC-COMP-002",
@@ -584,7 +617,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Thông tin cá nhân của thành viên thứ 2 được điền chính xác, không ghi đè vào thông tin của Trưởng đoàn."
-    ]
+    ],
+    "precondition": "Người đi cùng có mang theo thẻ CCCD gắn chip hoặc mã QR.",
+    "testData": "Nhấp biểu tượng Quét chip / QR riêng tại dòng của Người đi cùng."
   },
   {
     "id": "TC-COMP-003",
@@ -598,7 +633,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Ảnh của người đi cùng được lưu riêng biệt vào trường PhotoPath / DocumentPhoto của đối tượng AccompanyingPerson."
-    ]
+    ],
+    "precondition": "Đoàn khách yêu cầu nhận diện hình ảnh từng thành viên.",
+    "testData": "MultiShotCameraModal: Chụp ảnh chân dung riêng cho Người đi cùng."
   },
   {
     "id": "TC-COMP-004",
@@ -606,7 +643,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Cấp phát thẻ linh hoạt cho từng Người đi cùng",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Người 1 nhận thẻ định danh \"CARD-101\", Người 2 nhận thẻ thường, Trưởng đoàn nhận thẻ định danh \"CARD-100\"",
+    "testData": "Người 1: Thẻ định danh \"CARD-002\", Người 2: Thẻ thường, Người 3: Không cấp thẻ.",
     "steps": [
       "1. Thiết lập thẻ cho Trưởng đoàn và từng người đi cùng theo các cấu hình khác nhau.",
       "2. Hoàn tất Check-in."
@@ -614,7 +651,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống tính tổng số thẻ phát = 3 (2 thẻ định danh + 1 thẻ thường).",
       "Dashboard hiển thị chính xác: \"Thẻ: Phát 3 — Thu 0 | Đang giữ: 3\"."
-    ]
+    ],
+    "precondition": "Thành viên trong đoàn nhận các loại thẻ khác nhau theo vị trí làm việc."
   },
   {
     "id": "TC-COMP-005",
@@ -622,7 +660,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Khai báo Đoàn vô danh (Số lượng khách đi cùng không cần khai báo tên)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Đoàn công nhân xây dựng 10 người vô danh + 1 Trưởng đoàn",
+    "testData": "Tab Khách vô danh: Nhập số lượng khách vô danh = 5.",
     "steps": [
       "1. Tại tab \"Đoàn vô danh (Anonymous)\", nhập số lượng khách vô danh: 10.",
       "2. Không cần điền tên hay CCCD của 10 người này.",
@@ -631,7 +669,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống lưu TotalGuests = 11 (1 trưởng đoàn + 10 vô danh).",
       "Dashboard hiển thị \"11/11 khách\"."
-    ]
+    ],
+    "precondition": "Đoàn công nhân thi công hoặc đoàn du khách đông người không kiểm soát từng danh tính."
   },
   {
     "id": "TC-COMP-006",
@@ -639,7 +678,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Cấp phát thẻ cho Đoàn vô danh: Thẻ thường và Danh sách thẻ RFID",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Cấp 10 thẻ thường và thêm 2 thẻ định danh RFID cho khách trong đoàn vô danh",
+    "testData": "Cấp 3 thẻ thường + 2 thẻ định danh (\"CARD-003\", \"CARD-004\").",
     "steps": [
       "1. Nhập số lượng thẻ thường cho đoàn vô danh: 10.",
       "2. Nhập thêm danh sách mã thẻ RFID định danh: \"CARD-A1\", \"CARD-A2\".",
@@ -648,7 +687,8 @@ const ALL_TCS = [
     "expected": [
       "CSDL lưu AnonymousCardCount = 10, AnonymousIdentityCardNumbers = [\"CARD-A1\", \"CARD-A2\"].",
       "Tổng số thẻ an ninh đoàn đang giữ được tính toán chuẩn xác."
-    ]
+    ],
+    "precondition": "Khai báo khách vô danh = 5 người."
   },
   {
     "id": "TC-COMP-007",
@@ -656,7 +696,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Đăng ký nhiều Phương tiện cho đoàn: Gán chủ xe linh hoạt",
     "platform": "Giao diện Web Trực ban",
-    "testData": "1 xe khách 29 chỗ (chủ xe: Đoàn) + 1 xe ô tô 4 chỗ (chủ xe: Trưởng đoàn)",
+    "testData": "Xe 1: \"29B-123.45\" (Xe 16 chỗ), Xe 2: \"29A-678.90\" (Ô tô 4 chỗ); Gán chủ xe tương ứng.",
     "steps": [
       "1. Thêm 2 phương tiện trong tab Xe cộ.",
       "2. Gán xe 1 cho Trưởng đoàn, xe 2 cho Đoàn vô danh.",
@@ -665,7 +705,8 @@ const ALL_TCS = [
     "expected": [
       "Tạo 2 bản ghi Vehicle với OwnerType tương ứng (MAIN và ANONYMOUSGROUP).",
       "Dashboard hiển thị đầy đủ cả 2 biển số xe trên dòng lượt khách."
-    ]
+    ],
+    "precondition": "Đoàn đi nhiều xe khác nhau."
   },
   {
     "id": "TC-COMP-008",
@@ -673,7 +714,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Bổ sung Người đi cùng vào đoàn đang ở bên trong qua SupplementalCheckInModal",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Lượt khách đang inside, có thêm 2 thành viên đến muộn",
+    "testData": "SupplementalCheckInModal (tab companions): Thêm \"Phạm Văn C\", CCCD: \"001199000333\".",
     "steps": [
       "1. Trên dòng lượt khách đang inside, nhấn nút \"Thêm\" (hoặc mở Chi tiết -> Bổ sung).",
       "2. Modal \"SupplementalCheckInModal\" mở ra.",
@@ -684,7 +725,8 @@ const ALL_TCS = [
       "Gọi API /station/visits/accompanying-persons thành công.",
       "Quân số inside tăng thêm 2 người, tổng số khách tăng tương ứng.",
       "Lịch sử dòng thời gian Timeline ghi nhận đợt bổ sung mới."
-    ]
+    ],
+    "precondition": "Đoàn khách đang ở bên trong (Inside); Có thêm thành viên đến sau muốn vào đoàn."
   },
   {
     "id": "TC-COMP-009",
@@ -692,7 +734,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Bổ sung Phương tiện vào đoàn đang ở bên trong qua SupplementalCheckInModal",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Xe ô tô chở vật tư đến sau tham gia vào đoàn",
+    "testData": "SupplementalCheckInModal (tab vehicles): Thêm xe \"29C-555.66\" (Xe tải).",
     "steps": [
       "1. Mở SupplementalCheckInModal của lượt khách đang inside.",
       "2. Tại tab Xe cộ, thêm 1 xe ô tô tải biển số \"29C-123.45\".",
@@ -700,7 +742,8 @@ const ALL_TCS = [
     ],
     "expected": [
       "Phương tiện mới được gắn vào Visit, số lượng xe của lượt khách tăng lên, hiển thị biển số mới trên Dashboard."
-    ]
+    ],
+    "precondition": "Đoàn khách đang ở bên trong; Có thêm xe chở vật tư của đoàn đến bổ sung."
   },
   {
     "id": "TC-COMP-010",
@@ -708,7 +751,7 @@ const ALL_TCS = [
     "priority": "P3",
     "name": "Nghiệp vụ Cấp bù thẻ thiếu (Tab missing_cards trong SupplementalCheckInModal)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Thành viên lúc Check-in chưa được nhận thẻ, nay phát bù",
+    "testData": "SupplementalCheckInModal (tab missing_cards): Cấp bù mã thẻ định danh cho thành viên còn thiếu.",
     "steps": [
       "1. Mở SupplementalCheckInModal, chọn tab \"Cấp bù thẻ thiếu (missing_cards)\".",
       "2. Chọn thành viên đang thiếu thẻ, nhập mã thẻ mới cấp bù.",
@@ -717,7 +760,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống cập nhật thành viên sang trạng thái IsCardIssued = true kèm mã thẻ mới.",
       "Bộ đếm thẻ đang giữ của lượt khách tăng lên chính xác."
-    ]
+    ],
+    "precondition": "Đoàn khách ban đầu chưa được cấp đủ thẻ (ví dụ hết thẻ tạm thời lúc check-in)."
   },
   {
     "id": "TC-COMP-011",
@@ -732,7 +776,9 @@ const ALL_TCS = [
     "expected": [
       "CSDL cập nhật IsMultiDayVisit = true.",
       "Background Service Auto Checkout khi quét cuối ngày sẽ BỎ QUA lượt khách này, không tự động đóng ca khách."
-    ]
+    ],
+    "precondition": "Khách đến làm việc dự án kéo dài qua đêm hoặc nhiều ngày liên tục.",
+    "testData": "Tích chọn cờ \"Lưu trú qua đêm / nhiều ngày (isMultiDayVisit)\"."
   },
   {
     "id": "TC-COMP-012",
@@ -745,7 +791,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống báo lỗi trùng lặp nội bộ trong đoàn và chặn thao tác gửi dữ liệu."
-    ]
+    ],
+    "precondition": "Đang nhập danh sách Người đi cùng trong modal Check-in.",
+    "testData": "Nhập trùng số CCCD \"001099000111\" của Trưởng đoàn cho Người đi cùng."
   },
   {
     "id": "TC-COMP-013",
@@ -758,7 +806,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống kiểm tra ràng buộc chéo và báo lỗi trùng lặp, bảo đảm tính duy nhất của mã thẻ và phương tiện bên trong cơ quan."
-    ]
+    ],
+    "precondition": "Đang thực hiện bổ sung thành viên qua SupplementalCheckInModal.",
+    "testData": "Nhập CCCD của một người đang ở trong cơ quan thuộc một đoàn khác."
   },
   {
     "id": "TC-COMP-014",
@@ -772,7 +822,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hiển thị rõ các sự kiện \"ADD\" (Bổ sung) riêng biệt kèm đợt (Batch), thời gian, tên trạm và tên cán bộ thực hiện."
-    ]
+    ],
+    "precondition": "Đã hoàn tất một đợt bổ sung thành viên/xe qua SupplementalCheckInModal.",
+    "testData": "Quan sát dòng thời gian Timeline của lượt khách."
   },
   {
     "id": "TC-COUT-001",
@@ -780,7 +832,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Check-out Toàn bộ đoàn: Thu hồi tất cả thẻ và đóng lượt khách",
     "platform": "Giao diện Web Trực ban",
-    "precondition": "Lượt khách đang inside, đã có thẻ và phương tiện.",
+    "precondition": "Đoàn khách làm việc xong, toàn bộ thành viên và phương tiện cùng ra về.",
     "steps": [
       "1. Nhấn nút \"Checkout\" trên dòng lượt khách.",
       "2. Modal CheckOutModal mở ra.",
@@ -791,7 +843,8 @@ const ALL_TCS = [
       "Gọi API /station/visits/checkout thành công.",
       "Lượt khách chuyển trạng thái Status = 2 (Đã ra), ghi nhận CheckOutTime.",
       "Quân số inside giảm về 0, toàn bộ thẻ được thu hồi về kho."
-    ]
+    ],
+    "testData": "CheckOutModal: Nhấp nút \"Chọn tất cả\" -> Thu hồi toàn bộ thẻ -> Xác nhận Checkout."
   },
   {
     "id": "TC-COUT-002",
@@ -799,7 +852,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Check-out Từng phần: Một số thành viên về trước, người khác ở lại",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Đoàn 5 người, 2 người về trước, 3 người ở lại làm việc",
+    "testData": "CheckOutModal: Bỏ chọn trưởng đoàn (mainStillIn = true), chỉ tích chọn Người đi cùng về trước.",
     "steps": [
       "1. Mở CheckOutModal.",
       "2. Chỉ tích chọn 2 người cần checkout, bỏ tích Trưởng đoàn và các thành viên còn lại.",
@@ -809,7 +862,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống cập nhật CheckOutTime cho 2 thành viên được chọn, thu hồi thẻ của họ.",
       "Lượt khách VẪN GIỮ trạng thái \"Trong đơn vị\", quân số inside hiển thị \"3/5 khách\"."
-    ]
+    ],
+    "precondition": "Đoàn khách có một số người về trước, trưởng đoàn hoặc người khác ở lại làm việc tiếp."
   },
   {
     "id": "TC-COUT-003",
@@ -817,7 +871,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Check-out Xe riêng độc lập: Xe ra trước người (hoặc người ra xe ở lại)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Khách gửi xe ô tô trong bãi qua đêm, người đi taxi về trước",
+    "testData": "Thực hiện Checkout riêng cho phương tiện qua API /visits/vehicle-checkout.",
     "steps": [
       "1. Mở CheckOutModal, checkout toàn bộ người nhưng BỎ TÍCH ô xe ô tô (hoặc ngược lại: checkout xe riêng từ modal Chi tiết).",
       "2. Xác nhận."
@@ -825,7 +879,8 @@ const ALL_TCS = [
     "expected": [
       "Người đã ra về nhưng xe vẫn còn trong bãi.",
       "Dashboard hiển thị huy hiệu màu cam nhấp nháy: \"Chờ checkout xe\", lượt khách chưa bị đóng hoàn toàn."
-    ]
+    ],
+    "precondition": "Xe của khách ra về trước, hoặc khách về bằng phương tiện công cộng để xe lại bãi gửi."
   },
   {
     "id": "TC-COUT-004",
@@ -839,7 +894,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cập nhật IsCardReturned = true cho mã thẻ đó, mã thẻ được giải phóng để cấp cho lượt khách mới."
-    ]
+    ],
+    "precondition": "Khách được cấp Thẻ định danh \"CARD-001\" khi check-in; Khách trả thẻ tại bốt gác.",
+    "testData": "CheckOutModal: Trạng thái thẻ khách đại diện chọn \"Trả thẻ (RETURN)\"."
   },
   {
     "id": "TC-COUT-005",
@@ -847,7 +904,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Thu hồi Thẻ Thường (Đếm số lượng): Cho phép trả đủ hoặc trả 1 phần",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Đoàn giữ 5 thẻ thường, lúc về chỉ trả 3 thẻ",
+    "testData": "CheckOutModal: Ô số thẻ thu hồi nhập = 3 (cho phép nợ thẻ theo cấu hình).",
     "steps": [
       "1. Tại ô số lượng thẻ thường thu hồi, nhập 3 / 5 thẻ.",
       "2. Xác nhận Checkout."
@@ -855,7 +912,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống cập nhật AnonymousCardReturnedCount = 3.",
       "Dashboard hiển thị: \"Thẻ: Phát 5 — Thu 3 | Đang giữ: 2\"."
-    ]
+    ],
+    "precondition": "Đoàn mượn 5 thẻ thường; Lúc về trả 3 thẻ, nợ lại 2 thẻ để người sau mang ra."
   },
   {
     "id": "TC-COUT-006",
@@ -869,7 +927,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Danh sách returnedAnonymousIdentityCardNumbers được cập nhật trong CSDL, thẻ được hoàn trả kho an ninh."
-    ]
+    ],
+    "precondition": "Đoàn vô danh có cả thẻ thường và danh sách thẻ RFID.",
+    "testData": "CheckOutModal: Thu hồi đầy đủ số lượng thẻ thường và tích trả các thẻ RFID."
   },
   {
     "id": "TC-COUT-007",
@@ -882,7 +942,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống hiển thị hộp thoại cảnh báo: \"Lượt khách còn nợ thẻ an ninh. Bạn có muốn báo mất thẻ hay xác nhận khách nợ thẻ không?\""
-    ]
+    ],
+    "precondition": "Hệ thống cấu hình ALLOW_LATE_CARD_RETURN_NAMED = false (chặn nợ thẻ).",
+    "testData": "CheckOutModal: Chưa thu hồi thẻ mà nhấn Checkout."
   },
   {
     "id": "TC-COUT-008",
@@ -898,7 +960,9 @@ const ALL_TCS = [
     "expected": [
       "CSDL ghi nhận IsCardLost = true, LostAt = Now, LostNote = lý do.",
       "Lượt khách hiển thị huy hiệu \"Chờ thu thẻ\", được đưa vào danh sách Báo cáo Thẻ mất."
-    ]
+    ],
+    "precondition": "Khách làm rơi mất thẻ an ninh trong quá trình di chuyển trong đơn vị.",
+    "testData": "CheckOutModal: Chọn trạng thái thẻ \"Báo mất thẻ (LOST)\", nhập lý do mất thẻ."
   },
   {
     "id": "TC-COUT-009",
@@ -912,7 +976,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Ảnh checkout được lưu vào CSDL, hiển thị đối sánh trong modal Chi tiết lượt khách."
-    ]
+    ],
+    "precondition": "Modal Check-out đang mở; Bốt gác có camera giám sát lối ra.",
+    "testData": "Nhấp chụp ảnh webcam bàn giao thẻ và ra về."
   },
   {
     "id": "TC-COUT-010",
@@ -920,7 +986,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Nghiệp vụ THU HỒI THẺ MẤT: Tra cứu theo Mã số thẻ (RecoverLostCardModal)",
     "platform": "Giao diện Web Trực ban & Admin",
-    "testData": "Thẻ an ninh đã bị báo mất hôm qua được tìm thấy",
+    "testData": "RecoverLostCardModal (tab Identity): Nhập mã thẻ \"CARD-001\" -> Tra cứu.",
     "steps": [
       "1. Mở modal \"Thu hồi thẻ mất (RecoverLostCardModal)\" từ menu Tiện ích hoặc modal Chi tiết.",
       "2. Chọn tab \"Thẻ định danh (Identity)\".",
@@ -929,7 +995,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống tra cứu API /station/cards/lookup-lost (hoặc /admin/cards/lookup-lost).",
       "Hiển thị chính xác thông tin: Tên khách làm mất, CCCD, Ngày giờ báo mất, Trạm tiếp nhận."
-    ]
+    ],
+    "precondition": "Thẻ \"CARD-001\" bị báo mất hôm trước nay được tìm thấy và mang trả lại bốt gác."
   },
   {
     "id": "TC-COUT-011",
@@ -946,7 +1013,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống gọi API /visits/{id}/recover-cards thành công.",
       "Bộ đếm thẻ nợ giảm xuống, thẻ được hoàn trả về kho khả dụng."
-    ]
+    ],
+    "precondition": "Lượt khách đang có nợ thẻ thường trong danh sách nợ thẻ.",
+    "testData": "RecoverLostCardModal (tab Regular): Chọn lượt khách nợ thẻ, nhập số lượng thẻ thu hồi = 2."
   },
   {
     "id": "TC-COUT-012",
@@ -960,7 +1029,9 @@ const ALL_TCS = [
     "expected": [
       "Huy hiệu \"Chờ thu thẻ\" biến mất, lượt khách chuyển sang trạng thái hoàn tất thu đủ thẻ.",
       "Thẻ mất được gạch khỏi danh sách thất lạc trong Báo cáo Thẻ mất."
-    ]
+    ],
+    "precondition": "Đã hoàn tất lệnh thu hồi thẻ mất qua API /visits/{id}/recover-cards.",
+    "testData": "Quan sát trạng thái thẻ trong kho an ninh và lịch sử lượt khách."
   },
   {
     "id": "TC-COUT-013",
@@ -974,7 +1045,9 @@ const ALL_TCS = [
     "expected": [
       "Cột Trạng thái hiển thị huy hiệu viền cam: \"Chờ checkout xe\".",
       "Nút \"Checkout\" vẫn hiển thị để nhân viên cho xe ra khi chủ xe quay lại lấy."
-    ]
+    ],
+    "precondition": "Đoàn khách đã checkout hết người nhưng xe tải của đoàn gửi lại qua đêm.",
+    "testData": "Quan sát cột Trạng thái của dòng lượt khách trên Dashboard Trực ban."
   },
   {
     "id": "TC-COUT-014",
@@ -988,7 +1061,9 @@ const ALL_TCS = [
     "expected": [
       "Cột Trạng thái hiển thị huy hiệu viền vàng: \"Chờ thu thẻ\".",
       "Nút \"Checkout\" vẫn hiển thị để nhân viên thu hồi thẻ khi khách gửi trả."
-    ]
+    ],
+    "precondition": "Đoàn khách đã checkout hết người nhưng còn nợ thẻ an ninh chưa trả.",
+    "testData": "Quan sát cột Trạng thái của dòng lượt khách trên Dashboard Trực ban."
   },
   {
     "id": "TC-COUT-015",
@@ -1002,7 +1077,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống tự động chuyển trạng thái lượt khách thành \"Đã ra\" (Status = 2).",
       "Không còn hiển thị nút Thêm / Checkout trên dòng này."
-    ]
+    ],
+    "precondition": "Toàn bộ quân số, xe và thẻ của lượt khách đã được thu hồi và checkout đầy đủ.",
+    "testData": "Thu hồi chiếc thẻ cuối cùng hoặc checkout chiếc xe cuối cùng."
   },
   {
     "id": "TC-COUT-016",
@@ -1010,7 +1087,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Cập nhật Thông tin Lượt khách Đang Thăm (UpdateVisitModal)",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Khách đổi phương tiện hoặc đổi thẻ an ninh sau khi đã Check-in",
+    "testData": "UpdateVisitModal: Đổi mã thẻ, cập nhật biển số xe, tích chọn isMultiDayVisit -> Lưu cập nhật.",
     "steps": [
       "1. Tại danh sách khách đang ở trong (Inside), nhấp nút Cập nhật (hoặc icon Edit) để mở UpdateVisitModal.",
       "2. Chỉnh sửa mã thẻ khách đại diện hoặc điều chỉnh số thẻ cấp chung.",
@@ -1021,7 +1098,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống gọi API POST /api/station/visits/update với payload hợp lệ.",
       "Dữ liệu thẻ, phương tiện và cờ lưu trú được cập nhật ngay lập tức trên giao diện Trực ban mà không cần check-out/check-in lại."
-    ]
+    ],
+    "precondition": "Khách đang ở bên trong; Khách đổi xe, đổi thẻ hoặc xin lưu trú qua đêm sau khi đã check-in."
   },
   {
     "id": "TC-DASH-001",
@@ -1035,7 +1113,9 @@ const ALL_TCS = [
     "expected": [
       "Hiển thị chính xác Tên hệ thống, Tên trạm gác (MapPin), Thứ trong tuần, Ngày/tháng/năm và Giờ:phút:giây nhảy đều đặn từng giây.",
       "Avatar nhân viên có chấm xanh lá biểu thị trạng thái đang trong ca trực."
-    ]
+    ],
+    "precondition": "Giao diện Trực ban (/staff.html) đang mở trên trình duyệt.",
+    "testData": "Quan sát thanh Header phía trên cùng của màn hình."
   },
   {
     "id": "TC-DASH-002",
@@ -1043,7 +1123,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Live Search đa đối tượng thông minh: Lọc tức thì danh sách khách",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Gõ từ khóa: \"30H\", \"An\", \"001099\", \"CARD\", \"Huy\"",
+    "testData": "Ô Live Search: Gõ từ khóa \"30A\", \"Trần Văn An\", \"001099\", hoặc \"CARD\".",
     "steps": [
       "1. Nhấp vào ô tìm kiếm nhanh trên Dashboard trạm.",
       "2. Gõ từ khóa tìm kiếm bất kỳ."
@@ -1051,7 +1131,8 @@ const ALL_TCS = [
     "expected": [
       "Bảng danh sách lập tức lọc theo thời gian thực (Live Filter).",
       "Khớp với cả Tên khách, Số CCCD, Biển số xe, Mã thẻ an ninh, Cán bộ tiếp đón hoặc Mục đích làm việc."
-    ]
+    ],
+    "precondition": "Bảng danh sách khách có nhiều bản ghi với các thông tin đa dạng."
   },
   {
     "id": "TC-DASH-003",
@@ -1064,7 +1145,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Con trỏ chuột tự động focus vào ô tìm kiếm nhanh và bôi đen toàn bộ từ khóa hiện có để gõ mới ngay lập tức."
-    ]
+    ],
+    "precondition": "Đang thao tác chuột ở bất kỳ vị trí nào trên Dashboard Trực ban.",
+    "testData": "Nhấn tổ hợp phím tắt Ctrl + K (hoặc Cmd + K)."
   },
   {
     "id": "TC-DASH-004",
@@ -1079,7 +1162,9 @@ const ALL_TCS = [
     "expected": [
       "Popover hiển thị 5 nhóm đối tượng: Khách & Người đi cùng, Biển số & Phương tiện, Thẻ an ninh, Cán bộ & Phòng ban, Cơ quan & Mục đích.",
       "Cho phép tích chọn lọc trên từng nhóm mong muốn."
-    ]
+    ],
+    "precondition": "Đang nhập từ khóa tìm kiếm trên Dashboard.",
+    "testData": "Nhấp nút \"Chọn đối tượng\" để mở Popover lọc 5 nhóm."
   },
   {
     "id": "TC-DASH-005",
@@ -1087,14 +1172,15 @@ const ALL_TCS = [
     "priority": "P3",
     "name": "Bộ đếm kết quả khớp thời gian thực (Match counter badges) trong Popover",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Gõ từ khóa có trong cả biển xe và tên khách",
+    "testData": "Mở Popover lọc đối tượng và quan sát các huy hiệu đếm kết quả.",
     "steps": [
       "1. Gõ từ khóa và mở Popover lọc đối tượng."
     ],
     "expected": [
       "Mỗi nhóm đối tượng hiển thị huy hiệu đếm số lượng bản ghi khớp (vd: \"2 khớp\", \"5 khớp\").",
       "Người dùng dễ dàng biết từ khóa xuất hiện ở nhóm đối tượng nào."
-    ]
+    ],
+    "precondition": "Từ khóa tìm kiếm khớp với cả tên khách và biển số xe."
   },
   {
     "id": "TC-DASH-006",
@@ -1107,7 +1193,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Tất cả 5 nhóm đối tượng tự động đổi trạng thái checkbox tương ứng, danh sách kết quả cập nhật ngay lập tức."
-    ]
+    ],
+    "precondition": "Popover lọc 5 nhóm đối tượng đang mở.",
+    "testData": "Nhấp nút \"Bỏ chọn tất cả\", sau đó nhấp \"Chọn tất cả\"."
   },
   {
     "id": "TC-DASH-007",
@@ -1120,7 +1208,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cửa sổ AdvancedSearchModal mở ra với giao diện tra cứu chuyên sâu độc lập, không phụ thuộc vào bộ lọc của Dashboard."
-    ]
+    ],
+    "precondition": "Đang ở màn hình Trực ban (/staff.html).",
+    "testData": "Nhấn tổ hợp phím tắt Ctrl + Shift + K để mở AdvancedSearchModal."
   },
   {
     "id": "TC-DASH-008",
@@ -1135,7 +1225,9 @@ const ALL_TCS = [
     "expected": [
       "Gọi API tra cứu và trả về danh sách hồ sơ khớp chính xác.",
       "Có nút \"Chi tiết\" để mở xem hồ sơ trực tiếp từ kết quả tìm kiếm."
-    ]
+    ],
+    "precondition": "Cửa sổ AdvancedSearchModal đang mở.",
+    "testData": "Nhập đồng thời: Tên khách \"An\", Trạng thái \"Đang bên trong\", Khoảng ngày \"7 ngày qua\"."
   },
   {
     "id": "TC-DASH-009",
@@ -1150,7 +1242,9 @@ const ALL_TCS = [
     "expected": [
       "Khối thống kê thay đổi kích thước hoặc ẩn đi để tối đa hóa không gian bảng danh sách khách.",
       "Trạng thái được ghi nhớ vào localStorage (smartvms_stats_view_mode), không bị mất khi F5."
-    ]
+    ],
+    "precondition": "Thanh công cụ Dashboard có nút chuyển chế độ thống kê (Stats View Mode).",
+    "testData": "Chuyển đổi lần lượt giữa: \"Ẩn\", \"Tinh gọn (Compact)\", \"Chi tiết (Detailed)\"."
   },
   {
     "id": "TC-DASH-010",
@@ -1165,7 +1259,9 @@ const ALL_TCS = [
     "expected": [
       "Bảng ẩn avatar ảnh, giảm padding dòng, tăng số lượng lượt khách hiển thị trên màn hình.",
       "Chuyển về \"Chi tiết\" hiển thị lại ảnh avatar và các thông tin mở rộng."
-    ]
+    ],
+    "precondition": "Thanh công cụ Dashboard có nút chuyển chế độ bảng (Table Mode).",
+    "testData": "Chuyển đổi giữa: \"Thu gọn (Compact)\" và \"Chi tiết (Detailed)\"."
   },
   {
     "id": "TC-DASH-011",
@@ -1180,7 +1276,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Bảng danh sách khách đổi màu nền và vạch viền chỉ thị đúng theo bảng màu vừa cấu hình."
-    ]
+    ],
+    "precondition": "Nhấp menu Tiện ích -> chọn \"Cài đặt giao diện (DisplaySettingsModal)\".",
+    "testData": "Chọn màu nền hàng khách đang ở trong (#1e56e3) và điều chỉnh độ trong suốt (0.15)."
   },
   {
     "id": "TC-DASH-012",
@@ -1195,7 +1293,9 @@ const ALL_TCS = [
     "expected": [
       "Bảng chỉ hiển thị các lượt khách do nhân viên DataEntry tạo ra (có huy hiệu tím \"Sổ sách ngoại lệ\").",
       "Chọn \"Trực ban cổng (staff)\" chỉ hiển thị khách vào qua cổng trực tiếp."
-    ]
+    ],
+    "precondition": "Hệ thống có cả dữ liệu từ trạm gác và dữ liệu từ sổ sách DataEntry.",
+    "testData": "Dropdown Nguồn: Chọn lọc \"Chỉ Trực ban cổng\" hoặc \"Chỉ Sổ sách ngoại lệ\"."
   },
   {
     "id": "TC-DASH-013",
@@ -1210,7 +1310,9 @@ const ALL_TCS = [
     "expected": [
       "Hàm clampDateInputToToday tự động chặn không cho chọn ngày vượt quá hôm nay.",
       "Bảng dữ liệu làm mới chính xác theo khoảng ngày đã chọn."
-    ]
+    ],
+    "precondition": "Bộ lọc thời gian trên Dashboard Trực ban.",
+    "testData": "Thử nhập ngày đến ở tương lai (vượt quá ngày hôm nay)."
   },
   {
     "id": "TC-DASH-014",
@@ -1223,7 +1325,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Menu dropdown mở ra chứa gọn gàng 4 mục: Tra cứu hồ sơ nâng cao, Chế độ xem bảng, Cài đặt màu sắc, Thu hồi thẻ mất."
-    ]
+    ],
+    "precondition": "Thanh công cụ Dashboard Trực ban.",
+    "testData": "Nhấp icon SlidersHorizontal để mở menu gom nhóm Tiện ích."
   },
   {
     "id": "TC-VDET-001",
@@ -1236,7 +1340,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Modal VisitDetailsModal mở ra với 3 tab: TỔNG QUAN (Overview), DÒNG THỜI GIAN (Timeline), THÀNH VIÊN (Members)."
-    ]
+    ],
+    "precondition": "Danh sách khách có ít nhất 1 bản ghi lượt thăm.",
+    "testData": "Nhấp nút \"Chi tiết\" (Eye icon) trên dòng lượt khách."
   },
   {
     "id": "TC-VDET-002",
@@ -1250,7 +1356,9 @@ const ALL_TCS = [
     "expected": [
       "Hiển thị thông tin Khách đại diện, Cán bộ tiếp đón, Mục đích, Cơ quan.",
       "5 Thẻ KPI: Quân số hiện tại, Thẻ định danh đang giữ, Thẻ thường đang giữ, Phương tiện, Thẻ mất."
-    ]
+    ],
+    "precondition": "VisitDetailsModal đang mở.",
+    "testData": "Quan sát tab Tổng quan (Overview): Thẻ KPI quân số, xe, thẻ, người đón."
   },
   {
     "id": "TC-VDET-003",
@@ -1263,7 +1371,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cửa sổ con mở ra liệt kê danh sách từng người, giờ vào, giờ ra và trạng thái cụ thể."
-    ]
+    ],
+    "precondition": "Đoàn khách có cả Người đi cùng và khách vô danh.",
+    "testData": "Tại tab Overview, nhấp vào thẻ Quân số để mở popover chi tiết."
   },
   {
     "id": "TC-VDET-004",
@@ -1276,7 +1386,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cửa sổ con mở ra hiển thị bảng danh sách các mã thẻ đã cấp, người đang giữ, trạng thái đã thu hồi hay đang nợ."
-    ]
+    ],
+    "precondition": "Lượt khách được cấp cả thẻ định danh và thẻ thường.",
+    "testData": "Tại tab Overview, nhấp vào thẻ Thẻ an ninh để mở popover chi tiết."
   },
   {
     "id": "TC-VDET-005",
@@ -1290,7 +1402,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống gọi API /visits/vehicle-checkout, cập nhật giờ ra riêng cho xe đó ngay lập tức mà không ảnh hưởng tới người."
-    ]
+    ],
+    "precondition": "Đoàn khách có từ 2 phương tiện trở lên.",
+    "testData": "Tại tab Overview, nhấp vào thẻ Phương tiện -> Nhấp Checkout 1 xe cụ thể."
   },
   {
     "id": "TC-VDET-006",
@@ -1304,7 +1418,9 @@ const ALL_TCS = [
     "expected": [
       "Hiển thị chuỗi các mốc sự kiện theo chiều thời gian.",
       "Mỗi sự kiện có badge phân loại, thời gian thực hiện, cổng trạm và cán bộ thực thi."
-    ]
+    ],
+    "precondition": "Lượt khách đã trải qua nhiều sự kiện: Check-in, Bổ sung người, Checkout xe.",
+    "testData": "Chuyển sang tab Dòng thời gian (Timeline)."
   },
   {
     "id": "TC-VDET-007",
@@ -1317,7 +1433,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Danh sách sự kiện đảo chiều sắp xếp Newest First <-> Oldest First tức thì."
-    ]
+    ],
+    "precondition": "Tab Timeline đang hiển thị chuỗi sự kiện.",
+    "testData": "Nhấp nút đổi chiều sắp xếp (Mới nhất trước <-> Cũ nhất trước)."
   },
   {
     "id": "TC-VDET-008",
@@ -1330,7 +1448,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mở rộng xem chi tiết danh sách người vào/ra, xe vào/ra và thẻ thu hồi trong đợt đó."
-    ]
+    ],
+    "precondition": "Tab Timeline có các đợt sự kiện chi tiết.",
+    "testData": "Nhấp nút Thu gọn / Mở rộng chi tiết từng đợt sự kiện."
   },
   {
     "id": "TC-VDET-009",
@@ -1344,7 +1464,9 @@ const ALL_TCS = [
     "expected": [
       "Liệt kê đầy đủ Trưởng đoàn, Người đi cùng có danh tính và Khách vô danh.",
       "Hiển thị rõ ảnh chân dung, CCCD, mã thẻ đang giữ và trạng thái Vào/Ra."
-    ]
+    ],
+    "precondition": "Lượt khách là đoàn đông người.",
+    "testData": "Chuyển sang tab Thành viên (Members)."
   },
   {
     "id": "TC-VDET-010",
@@ -1359,7 +1481,9 @@ const ALL_TCS = [
     "expected": [
       "VisitPhotoGalleryModal mở ra hiển thị lưới tất cả ảnh (Chân dung, Giấy tờ, Xe cộ, Checkout).",
       "ZoomableImage cho phép phóng to, thu nhỏ và di chuyển xem chi tiết nét ảnh."
-    ]
+    ],
+    "precondition": "Lượt khách có nhiều ảnh chụp: chân dung, giấy tờ, xe, checkout.",
+    "testData": "Trong VisitDetailsModal, nhấp nút \"Thư viện ảnh (VisitPhotoGalleryModal)\"."
   },
   {
     "id": "TC-VDET-011",
@@ -1372,7 +1496,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mở modal thao tác tương ứng với lượt khách đã được chọn sẵn, không cần tìm lại trên bảng."
-    ]
+    ],
+    "precondition": "VisitDetailsModal đang mở cho lượt khách đang ở trong.",
+    "testData": "Nhấp các nút hành động nhanh: \"Bổ sung người\", \"Checkout\", hoặc \"Thu hồi thẻ\"."
   },
   {
     "id": "TC-VDET-012",
@@ -1385,7 +1511,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Modal đóng mượt mà, phục hồi lại vị trí scroll của bảng dữ liệu phía dưới."
-    ]
+    ],
+    "precondition": "VisitDetailsModal đang mở.",
+    "testData": "Nhấn phím Escape trên bàn phím hoặc nhấp nút ✕."
   },
   {
     "id": "TC-UIUX-013",
@@ -1400,7 +1528,9 @@ const ALL_TCS = [
     "expected": [
       "StaffSettingsModal mở ra hiển thị đầy đủ: Ảnh thẻ đại diện, Mã nhân viên, Họ tên, Ngày sinh, Số CCCD, Điện thoại, Bộ phận và Chức vụ.",
       "Đóng modal an toàn bằng nút đóng hoặc nhấp ra ngoài."
-    ]
+    ],
+    "precondition": "Cán bộ đang trong ca trực hợp lệ; Header trạm gác hiển thị tên cán bộ.",
+    "testData": "Nhấp vào avatar hoặc tên cán bộ trên Header trạm gác."
   },
   {
     "id": "TC-UIUX-014",
@@ -1415,7 +1545,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Công cụ ZoomableImage phản hồi mượt mà, cho phép cán bộ an ninh phóng to tối đa để soi rõ các ký tự trên giấy tờ tùy thân hoặc biển số xe."
-    ]
+    ],
+    "precondition": "Thư viện ảnh VisitPhotoGalleryModal đang mở.",
+    "testData": "Nhấp vào 1 ảnh bất kỳ -> Dùng con lăn chuột phóng to (zoom), kéo rê (pan) để soi chi tiết."
   },
   {
     "id": "TC-DENT-001",
@@ -1423,7 +1555,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Đăng nhập Phân hệ Sổ sách Ngoại lệ (/dataentry.html)",
     "platform": "Phân hệ Sổ sách DataEntry",
-    "testData": "Tài khoản: nhaplieu, Mật khẩu: 123456 (Role: DataEntry)",
+    "testData": "Truy cập /dataentry.html, đăng nhập: \"nhaplieu\" / \"123456\".",
     "steps": [
       "1. Đăng nhập tài khoản nhaplieu tại form đăng nhập.",
       "2. Hệ thống tự động chuyển hướng sang trang /dataentry.html."
@@ -1431,7 +1563,8 @@ const ALL_TCS = [
     "expected": [
       "Giao diện chuyên biệt của Phân hệ Nhập liệu Sổ sách Ngoại lệ hiển thị.",
       "Header hiển thị rõ tên nhân viên nhập liệu, địa điểm và các nút phím tắt F1, F3."
-    ]
+    ],
+    "precondition": "Tài khoản \"nhaplieu\" tồn tại trong CSDL với vai trò DataEntry."
   },
   {
     "id": "TC-DENT-002",
@@ -1446,7 +1579,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Các phím tắt hoạt động nhạy bén, ngăn chặn hành vi mặc định của trình duyệt (F1 help, F3 find)."
-    ]
+    ],
+    "precondition": "Đang ở giao diện Dashboard DataEntry.",
+    "testData": "Nhấn phím F1 (mở form nhập), Escape (đóng), F3 (mở hướng dẫn)."
   },
   {
     "id": "TC-DENT-003",
@@ -1454,7 +1589,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Form Nhập sổ sách ngoại lệ (DataEntryModal): Nhập hồi tố ngày giờ quá khứ",
     "platform": "Phân hệ Sổ sách DataEntry",
-    "testData": "Hồ sơ khách từ sổ giấy tuần trước: Giờ vào 08:30 ngày 01/10/2026",
+    "testData": "Giờ vào: 08:30 ngày 01/10/2026, Họ tên: \"Phạm Văn Đoàn\", CCCD: \"001099000555\".",
     "steps": [
       "1. Mở DataEntryModal (F1).",
       "2. Chọn ngày giờ vào trong quá khứ (Backdate).",
@@ -1462,7 +1597,8 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống cho phép lưu ngày giờ quá khứ hợp lệ, gán đúng trạm và cán bộ trực của thời điểm đó."
-    ]
+    ],
+    "precondition": "DataEntryModal (F1) đang mở; Cần nhập hồ sơ khách từ sổ giấy tuần trước."
   },
   {
     "id": "TC-DENT-004",
@@ -1470,7 +1606,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Nhập đồng thời cả Check-in và Check-out (Khách đã vào và ra trong quá khứ)",
     "platform": "Phân hệ Sổ sách DataEntry",
-    "testData": "Giờ vào 09:00, Giờ ra 11:30 ngày 02/10/2026",
+    "testData": "Tích chọn \"Đã check-out\", nhập Giờ ra: 11:30 ngày 01/10/2026.",
     "steps": [
       "1. Bật tùy chọn \"Đã hoàn tất Check-out (Khách đã ra về)\".",
       "2. Nhập giờ ra, chọn trạm ra và trạng thái thẻ (Đã trả / Nợ thẻ / Mất thẻ).",
@@ -1479,7 +1615,8 @@ const ALL_TCS = [
     "expected": [
       "Lưu lượt khách với Status = 2 (Đã ra), CheckInTime và CheckOutTime đầy đủ.",
       "Không làm tăng quân số inside hiện tại của cơ quan."
-    ]
+    ],
+    "precondition": "Khách trong sổ giấy đã vào và đã ra về trong quá khứ."
   },
   {
     "id": "TC-DENT-005",
@@ -1495,7 +1632,9 @@ const ALL_TCS = [
     "expected": [
       "Lượt khách được tạo với Status = 1 (Trong đơn vị).",
       "Quân số Inside toàn hệ thống cập nhật tăng lên, trạm gác và admin đều nhìn thấy."
-    ]
+    ],
+    "precondition": "Khách vào cơ quan qua đường ngoại lệ hiện vẫn đang ở bên trong.",
+    "testData": "Bỏ tích \"Đã check-out\", chỉ nhập giờ vào."
   },
   {
     "id": "TC-DENT-006",
@@ -1509,7 +1648,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Tạo đầy đủ cấu trúc đoàn, thành viên và phương tiện trong CSDL SQLite."
-    ]
+    ],
+    "precondition": "Sổ trực ghi nhận đoàn công tác 5 người và 2 ô tô.",
+    "testData": "DataEntryModal: Nhập trưởng đoàn, thêm Người đi cùng và 2 xe cơ giới."
   },
   {
     "id": "TC-DENT-007",
@@ -1523,7 +1664,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Bản ghi có CreatedByType = 1 (DataEntry), CreatedByName = \"nhaplieu\", CreatedLocation = phòng nhập, CreatedIpAddress = IP máy trạm."
-    ]
+    ],
+    "precondition": "Tài khoản nhaplieu vừa tạo thành công một bản ghi sổ sách ngoại lệ.",
+    "testData": "Kiểm tra bản ghi trong bảng VisitTransactions và Visits trong CSDL."
   },
   {
     "id": "TC-DENT-008",
@@ -1536,7 +1679,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Bảng danh sách lọc chính xác, hiển thị đầy đủ thông tin xuất xứ sổ sách."
-    ]
+    ],
+    "precondition": "Dashboard DataEntry có nhiều bản ghi hồ sơ ngoại lệ.",
+    "testData": "Sử dụng bộ lọc trạng thái (Inside / Outside) và bộ lọc thời gian."
   },
   {
     "id": "TC-DENT-009",
@@ -1550,7 +1695,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cập nhật bổ sung thành công, gắn nhãn do tài khoản DataEntry thực hiện."
-    ]
+    ],
+    "precondition": "Hồ sơ sổ sách đang ở trạng thái Inside; Cần bổ sung thành viên.",
+    "testData": "Nhấp nút \"Bổ sung\" -> DataEntrySupplementalModal."
   },
   {
     "id": "TC-DENT-010",
@@ -1564,7 +1711,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hồ sơ chuyển trạng thái CheckedOut thành công từ giao diện DataEntry."
-    ]
+    ],
+    "precondition": "Hồ sơ sổ sách đang ở trạng thái Inside; Khách làm thủ tục rời khỏi đơn vị.",
+    "testData": "Nhấp nút \"Checkout\" -> DataEntryCheckOutModal."
   },
   {
     "id": "TC-DENT-011",
@@ -1578,7 +1727,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Thẻ mất được thu hồi thành công, cập nhật kho thẻ dùng chung của đơn vị."
-    ]
+    ],
+    "precondition": "Hồ sơ sổ sách có nợ thẻ an ninh.",
+    "testData": "Nhấp nút \"Thu hồi thẻ mất\" trên thanh công cụ DataEntry."
   },
   {
     "id": "TC-DENT-012",
@@ -1591,7 +1742,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Tải về file Excel chứa toàn bộ danh sách hồ sơ sổ sách kèm người nhập, thời gian và địa điểm."
-    ]
+    ],
+    "precondition": "Dashboard DataEntry đang hiển thị danh sách hồ sơ.",
+    "testData": "Nhấp nút \"Xuất Excel\" trên Dashboard DataEntry."
   },
   {
     "id": "TC-DENT-013",
@@ -1604,7 +1757,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mở VisitDetailsModal hiển thị đầy đủ thông tin, timeline và thành viên đồng bộ như trạm gác."
-    ]
+    ],
+    "precondition": "Dashboard DataEntry đang hiển thị danh sách hồ sơ.",
+    "testData": "Nhấp nút \"Chi tiết\" trên 1 dòng hồ sơ DataEntry."
   },
   {
     "id": "TC-DENT-014",
@@ -1620,7 +1775,9 @@ const ALL_TCS = [
     "expected": [
       "Máy 1 ping API /admin/auth/status trả về 401 Unauthorized.",
       "Hệ thống bật thông báo phiên hết hạn và tự động chuyển về trang đăng nhập."
-    ]
+    ],
+    "precondition": "Đang mở phiên làm việc DataEntry trên máy 1.",
+    "testData": "Đăng nhập cùng tài khoản nhaplieu trên máy 2 để chiếm phiên; Quan sát máy 1."
   },
   {
     "id": "TC-DENT-015",
@@ -1634,7 +1791,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "DataEntryGuideTab hiển thị nội dung trực quan, có các ví dụ thực tế và quy chuẩn nhập liệu được định dạng rõ ràng."
-    ]
+    ],
+    "precondition": "Giao diện DataEntry đang mở.",
+    "testData": "Nhấp tab \"Hướng dẫn\" (hoặc nhấn phím F3) để mở DataEntryGuideTab."
   },
   {
     "id": "TC-DENT-016",
@@ -1649,7 +1808,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Bảng danh sách lọc chính xác theo trường createdByType và createdBy, hiển thị đúng các hồ sơ tương ứng."
-    ]
+    ],
+    "precondition": "Dashboard DataEntry đang hiển thị danh sách lượt khách.",
+    "testData": "Dropdown originFilter: Chọn lọc \"Chỉ Trạm gác\" hoặc \"Chỉ tài khoản nhaplieu\"."
   },
   {
     "id": "TC-ADMN-001",
@@ -1664,7 +1825,9 @@ const ALL_TCS = [
     "expected": [
       "Sidebar thu nhỏ mượt mà sang dạng icon (w-18) và mở rộng (w-64).",
       "Footer hiển thị chỉ thị Online với hiệu ứng pulsing xanh lá và đồng hồ thời gian thực."
-    ]
+    ],
+    "precondition": "Đăng nhập trang Quản trị Admin (/index.html hoặc /admin.html) thành công.",
+    "testData": "Nhấp nút thu gọn Sidebar (ChevronLeft) rồi mở rộng lại (ChevronRight)."
   },
   {
     "id": "TC-ADMN-002",
@@ -1679,7 +1842,9 @@ const ALL_TCS = [
     "expected": [
       "Bảng lịch sử Master-Detail tải nhanh chóng, phân trang mượt mà.",
       "Nhấp xem chi tiết mở modal VisitDetailsModal đầy đủ dữ liệu."
-    ]
+    ],
+    "precondition": "Hub Giám sát -> Tab \"Lịch sử Lượt thăm (HistoryTab)\" đang mở.",
+    "testData": "Nhập từ khóa tra cứu \"An\", chọn lọc ngày trong tuần."
   },
   {
     "id": "TC-ADMN-003",
@@ -1695,7 +1860,9 @@ const ALL_TCS = [
     "expected": [
       "Hiển thị rõ ràng: Tên trạm, Cán bộ trực, Giờ bắt đầu, Giờ kết thúc, Thời lượng ca trực.",
       "Ảnh chụp webcam lúc vào ca và ra ca hiển thị rõ nét, chứng minh cán bộ có mặt thực tế tại trạm."
-    ]
+    ],
+    "precondition": "Cán bộ trực ban đã mở và đóng ca trực kèm ảnh webcam.",
+    "testData": "Hub Giám sát -> Tab \"Giám sát Ca trực (ShiftsTab)\": Xem ảnh vào/ra ca."
   },
   {
     "id": "TC-ADMN-004",
@@ -1710,7 +1877,9 @@ const ALL_TCS = [
     "expected": [
       "Bảng hiển thị chi tiết: Người nhập (nhaplieu), Thời gian tạo, Địa chỉ IP, Vị trí máy trạm, Thông tin khách.",
       "Giúp cán bộ thanh tra phát hiện các sai lệch hoặc gian lận trong việc nhập khống hồ sơ sổ sách."
-    ]
+    ],
+    "precondition": "Nhân viên nhập liệu đã tạo các bản ghi ngoại lệ qua DataEntry.",
+    "testData": "Hub Giám sát -> Tab \"Đối soát Ngoại lệ (AuditEntryTab)\": Kiểm tra dấu vết kiểm toán."
   },
   {
     "id": "TC-ADMN-005",
@@ -1723,7 +1892,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Xuất thành công file báo cáo đối soát có tiêu đề \"Báo cáo Đối soát Hồ sơ Nhập liệu Sổ sách Ngoại lệ\" kèm metadata ngày giờ lọc."
-    ]
+    ],
+    "precondition": "Tab AuditEntryTab đang hiển thị danh sách hồ sơ đối soát.",
+    "testData": "Nhấp nút \"Xuất Excel\" và \"Xuất PDF\"."
   },
   {
     "id": "TC-ADMN-006",
@@ -1738,7 +1909,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Nhân viên mới được thêm vào danh sách, có thể dùng tài khoản này để đăng nhập tại trạm gác."
-    ]
+    ],
+    "precondition": "Hub Danh mục -> Tab \"Cán bộ Trực ban (StaffManagement)\" đang mở.",
+    "testData": "Thêm mới nhân viên: Mã \"NV004\", Họ tên \"Đỗ Minh Đức\", Tên đăng nhập \"Nv004a4\"."
   },
   {
     "id": "TC-ADMN-007",
@@ -1753,7 +1926,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Nhân viên này khi đăng nhập tại trạm sẽ có quyền dùng CCCD mở ca thay cho webcam."
-    ]
+    ],
+    "precondition": "Form hồ sơ nhân viên trong StaffManagement đang mở.",
+    "testData": "Tích chọn cờ \"Cho phép dùng CCCD mở ca dự phòng (AllowCccdShiftAuth)\"."
   },
   {
     "id": "TC-ADMN-008",
@@ -1767,7 +1942,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Ảnh thẻ được tải lên thư mục /uploads/staff/..., hiển thị trên Header trạm gác khi nhân viên trực."
-    ]
+    ],
+    "precondition": "Form hồ sơ nhân viên trong StaffManagement đang mở.",
+    "testData": "Tải lên file ảnh thẻ chân dung (avatar.jpg) từ máy tính cá nhân."
   },
   {
     "id": "TC-ADMN-009",
@@ -1782,7 +1959,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống đọc dữ liệu file Excel và thêm hàng loạt nhân viên vào hệ thống, hiển thị báo cáo số dòng thành công."
-    ]
+    ],
+    "precondition": "Có file Excel danh sách cán bộ theo mẫu chuẩn.",
+    "testData": "Nhấp nút \"Import Excel\" trong StaffManagement -> Chọn file Excel -> Thực hiện."
   },
   {
     "id": "TC-ADMN-010",
@@ -1796,7 +1975,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Các tài khoản nhân viên được xóa hoặc chuyển trạng thái không hoạt động an toàn."
-    ]
+    ],
+    "precondition": "Danh sách nhân viên có các nhân sự đã điều chuyển công tác.",
+    "testData": "Tích chọn nhiều nhân viên -> Nhấn nút \"Xóa đã chọn\" (Bulk Delete)."
   },
   {
     "id": "TC-ADMN-011",
@@ -1810,7 +1991,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Tạo tài khoản thành công với mật khẩu băm an toàn."
-    ]
+    ],
+    "precondition": "Hub Danh mục -> Tab \"Tài khoản Quản trị & Nhập liệu (AccountsTab)\" đang mở.",
+    "testData": "Thêm mới user: Username \"nhaplieu2\", Role \"DataEntry\", Password \"123456\"."
   },
   {
     "id": "TC-ADMN-012",
@@ -1824,7 +2007,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Đổi mật khẩu thành công, lần đăng nhập sau phải dùng mật khẩu mới."
-    ]
+    ],
+    "precondition": "Đang đăng nhập tài khoản Admin.",
+    "testData": "Nhấp \"Đổi mật khẩu\" trên Topbar hoặc Reset mật khẩu cho user khác."
   },
   {
     "id": "TC-ADMN-013",
@@ -1832,13 +2017,14 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Phân quyền vai trò DataEntry: Chặn truy cập cấu hình hệ thống và backup",
     "platform": "Giao diện Quản trị Admin & API",
-    "testData": "Tài khoản role DataEntry",
+    "testData": "Thử gọi API /admin/backup hoặc truy cập menu Cài đặt hệ thống.",
     "steps": [
       "1. Dùng token tài khoản DataEntry gọi API /admin/backup hoặc truy cập menu Cài đặt hệ thống."
     ],
     "expected": [
       "Hệ thống ẩn menu cấu hình hoặc phản hồi 403 Forbidden: Tài khoản DataEntry chỉ có quyền xem và nhập liệu."
-    ]
+    ],
+    "precondition": "Đăng nhập tài khoản vai trò DataEntry."
   },
   {
     "id": "TC-ADMN-014",
@@ -1852,7 +2038,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống từ chối đăng nhập với thông báo tài khoản bị khóa."
-    ]
+    ],
+    "precondition": "Tab AccountsTab đang mở.",
+    "testData": "Tắt công tắc kích hoạt (IsActive = false) của một tài khoản."
   },
   {
     "id": "TC-ADMN-015",
@@ -1860,7 +2048,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Cưỡng bức Check-out từ Phân hệ Quản trị Admin (InsideTab - handleForceCheckout)",
     "platform": "Giao diện Quản trị Admin",
-    "testData": "Khách đã rời khỏi cơ quan nhưng trạm gác quên đóng phiên hoặc trường hợp khẩn cấp",
+    "testData": "Admin InsideTab: Nhấp \"Cưỡng bức Check-out\" cho lượt khách -> Xác nhận.",
     "steps": [
       "1. Truy cập tab \"Khách trong đơn vị\" (InsideTab) trên Admin.",
       "2. Tìm lượt khách cần đóng cưỡng bức, nhấp nút \"Cưỡng bức Check-out\".",
@@ -1869,7 +2057,8 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống gọi API POST /admin/visits/{id}/checkout ghi nhận checkOutTime hiện tại và ghi chú cưỡng bức của Admin.",
       "Lượt khách được đóng trạng thái thành công, danh sách bên trong cập nhật thời gian thực."
-    ]
+    ],
+    "precondition": "Khách đã rời khỏi đơn vị nhưng trạm gác quên checkout hoặc trường hợp khẩn cấp."
   },
   {
     "id": "TC-ADMN-016",
@@ -1886,7 +2075,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống gọi API PUT /admin/stations/{id} thành công.",
       "Tên và thông tin trạm cập nhật tức thì trên toàn bộ hệ thống."
-    ]
+    ],
+    "precondition": "Hub Danh mục -> Tab \"Cổng & Trạm Trực ban (StationsTab)\" đang mở.",
+    "testData": "Sửa tên trạm \"STATION_A\" thành \"Cổng số 1 - Trực ban\", cập nhật vị trí -> Lưu."
   },
   {
     "id": "TC-ADMN-017",
@@ -1900,7 +2091,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống truy vấn API GET /admin/system/hardware-status, phản ánh chính xác trạng thái Online/Offline của: Đầu đọc chip CCCD, Đầu đọc thẻ RFID, Máy quét mã QR 2D và Camera."
-    ]
+    ],
+    "precondition": "Admin DashboardTab đang mở.",
+    "testData": "Quan sát card \"Hardware Status\" và nhấp mở modal chi tiết trạng thái thiết bị."
   },
   {
     "id": "TC-REPT-001",
@@ -1915,7 +2108,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống tự động tính toán chính xác ngày bắt đầu và ngày kết thúc tương ứng chu kỳ hành chính Việt Nam.",
       "Dữ liệu báo cáo cập nhật đồng bộ."
-    ]
+    ],
+    "precondition": "Admin -> Tab Trung tâm Báo cáo (ReportsTab) đang mở.",
+    "testData": "Dropdown chu kỳ: Chọn lần lượt \"Hôm nay\", \"Hôm qua\", \"Tuần này\", \"Tháng này\", \"Quý này\", \"Năm nay\"."
   },
   {
     "id": "TC-REPT-002",
@@ -1923,7 +2118,7 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Lọc theo Khoảng ngày tùy chọn và Lọc theo Nhiều ngày rời rạc (discrete_dates)",
     "platform": "Giao diện Quản trị Admin",
-    "testData": "Chọn 3 ngày ngắt quãng: 01/10/2026, 05/10/2026, 12/10/2026",
+    "testData": "Chọn chế độ \"Nhiều ngày rời rạc (discrete_dates)\": Chọn ngày 02/09 và ngày 30/04.",
     "steps": [
       "1. Chuyển chế độ lọc ngày sang \"Chọn nhiều ngày rời rạc (discrete_dates)\".",
       "2. Thêm từng ngày vào danh sách lọc.",
@@ -1931,7 +2126,8 @@ const ALL_TCS = [
     ],
     "expected": [
       "Báo cáo lọc chính xác các lượt khách ra/vào đúng trong 3 ngày đã chọn, bỏ qua các ngày xen giữa."
-    ]
+    ],
+    "precondition": "ReportsTab đang mở; Cần báo cáo cho các ngày lễ hội rời rạc."
   },
   {
     "id": "TC-REPT-003",
@@ -1946,7 +2142,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Bộ lọc đa chiều kết hợp chuẩn xác, đáp ứng yêu cầu thanh tra kiểm tra chuyên sâu."
-    ]
+    ],
+    "precondition": "ReportsTab đang mở.",
+    "testData": "Lọc kết hợp: Nguồn \"Sổ sách\", Trạng thái thẻ \"Nợ thẻ\", Phương tiện \"Có xe\"."
   },
   {
     "id": "TC-REPT-004",
@@ -1961,7 +2159,9 @@ const ALL_TCS = [
     "expected": [
       "Hiển thị danh sách tổng hợp toàn bộ các thẻ an ninh đang bị báo mất trên toàn hệ thống.",
       "Liệt kê chi tiết: Mã thẻ, Họ tên khách làm mất, CCCD, SĐT, Trạm tiếp nhận, Thời gian mất, Trạng thái thu hồi."
-    ]
+    ],
+    "precondition": "Trong đơn vị có các trường hợp báo mất thẻ an ninh.",
+    "testData": "Nhấp nút \"Báo cáo Thẻ mất\" để mở LostCardsReportModal."
   },
   {
     "id": "TC-REPT-005",
@@ -1975,7 +2175,9 @@ const ALL_TCS = [
     "expected": [
       "File Excel (.xlsx) được tạo với thư viện ExcelJS.",
       "Bảng tính có tiêu đề cơ quan, ngày lập báo cáo, khung viền bảng, định dạng căn giữa ngày giờ, tự động co giãn cột."
-    ]
+    ],
+    "precondition": "Bảng báo cáo đang hiển thị kết quả lọc.",
+    "testData": "Nhấp nút \"Xuất Excel\" (sử dụng thư viện ExcelJS định dạng bảng biểu chuyên nghiệp)."
   },
   {
     "id": "TC-REPT-006",
@@ -1989,7 +2191,9 @@ const ALL_TCS = [
     "expected": [
       "Tạo file PDF in ấn trực tiếp bằng jsPDF + autoTable.",
       "Nhúng font chữ tiếng Việt fontBase64, hiển thị hoàn toàn chuẩn xác không bị lỗi font chữ có dấu."
-    ]
+    ],
+    "precondition": "Bảng báo cáo đang hiển thị kết quả lọc.",
+    "testData": "Nhấp nút \"Xuất PDF\" (sử dụng jsPDF + fontBase64 tiếng Việt có dấu)."
   },
   {
     "id": "TC-REPT-007",
@@ -2002,7 +2206,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Tải về file Excel danh sách chi tiết các thẻ an ninh thất lạc để bàn giao cho bộ phận quản trị cơ sở vật chất."
-    ]
+    ],
+    "precondition": "Modal LostCardsReportModal đang mở.",
+    "testData": "Nhấp nút \"Xuất Excel\" trong modal Báo cáo thẻ mất."
   },
   {
     "id": "TC-REPT-008",
@@ -2015,7 +2221,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hiển thị đồ thị trực quan: Phân bố lưu lượng khách theo khung giờ trong ngày, tỷ lệ phương tiện xe ô tô/xe máy, tỷ lệ hoàn trả thẻ."
-    ]
+    ],
+    "precondition": "Admin DashboardTab đang mở.",
+    "testData": "Quan sát đồ thị Bar chart lưu lượng khách theo giờ và Doughnut chart cơ cấu xe."
   },
   {
     "id": "TC-REPT-009",
@@ -2028,7 +2236,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "File Excel xuất ra chứa chi tiết thời lượng từng ca trực, cán bộ trực để phòng tổ chức cán bộ đối soát chấm công."
-    ]
+    ],
+    "precondition": "Hub Giám sát -> Tab ShiftsTab đang mở.",
+    "testData": "Nhấp nút \"Xuất Excel\" danh sách ca trực."
   },
   {
     "id": "TC-REPT-010",
@@ -2041,7 +2251,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Dữ liệu báo cáo lọc tức thì theo từ khóa nhập vào."
-    ]
+    ],
+    "precondition": "ReportsTab đang mở.",
+    "testData": "Ô tìm kiếm từ khóa báo cáo: Gõ \"Bộ Công An\", \"30A-999\"."
   },
   {
     "id": "TC-REPT-011",
@@ -2054,7 +2266,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mở VisitDetailsModal của lượt khách đó với đầy đủ 3 tab Tổng quan, Timeline và Thành viên."
-    ]
+    ],
+    "precondition": "ReportsTab đang hiển thị danh sách kết quả.",
+    "testData": "Nhấp nút \"Chi tiết\" trên một dòng báo cáo bất kỳ."
   },
   {
     "id": "TC-REPT-012",
@@ -2067,7 +2281,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Tên file tuân thủ quy tắc chuẩn: \"SmartVMS_BaoCao_LichSu_[NgayLapp].xlsx\" hoặc \"SmartVMS_TheMat_[Ngay].xlsx\"."
-    ]
+    ],
+    "precondition": "Thực hiện xuất báo cáo ra file Excel hoặc PDF.",
+    "testData": "Quan sát tên file tải về trong thư mục Downloads của trình duyệt."
   },
   {
     "id": "TC-REPT-013",
@@ -2080,7 +2296,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Khối bộ lọc thu gọn lại, bảng dữ liệu mở rộng tối đa màn hình."
-    ]
+    ],
+    "precondition": "ReportsTab đang mở với khối bộ lọc chiếm nhiều diện tích.",
+    "testData": "Nhấp nút \"Thu gọn bộ lọc\" (Filter Collapse toggle)."
   },
   {
     "id": "TC-SETT-001",
@@ -2095,7 +2313,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Lưu thành công. Tiêu đề trên Header của trạm gác và admin tự động cập nhật tên mới."
-    ]
+    ],
+    "precondition": "Trung tâm Cài đặt -> Tab \"Vận hành & Nghiệp vụ (SettingsOperationPanel)\" đang mở.",
+    "testData": "Đổi tên hệ thống hiển thị: \"Hệ thống Quản lý Khách Ra Vào Cổng An Ninh\", Mã trạm: \"STATION_A\"."
   },
   {
     "id": "TC-SETT-002",
@@ -2103,14 +2323,15 @@ const ALL_TCS = [
     "priority": "P3",
     "name": "Cấu hình Giới hạn Thời gian lưu trú cảnh báo",
     "platform": "Giao diện Quản trị Admin",
-    "testData": "Đặt giới hạn: 8 giờ",
+    "testData": "Cấu hình thời gian lưu trú tối đa cảnh báo = 12 giờ.",
     "steps": [
       "1. Thiết lập thời gian lưu trú cảnh báo = 8 giờ.",
       "2. Lưu cài đặt."
     ],
     "expected": [
       "Khi khách ở trong cơ quan quá 8 giờ, hệ thống đánh dấu cảnh báo màu cam trên Dashboard."
-    ]
+    ],
+    "precondition": "SettingsOperationPanel đang mở."
   },
   {
     "id": "TC-SETT-003",
@@ -2123,7 +2344,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Giao diện Check-in tuân thủ chính sách thẻ đã được thiết lập."
-    ]
+    ],
+    "precondition": "SettingsOperationPanel đang mở.",
+    "testData": "Bật CHECKOUT_DEFAULT_SELECT_ALL = true, ALLOW_LATE_CARD_RETURN_NAMED = true."
   },
   {
     "id": "TC-SETT-004",
@@ -2138,7 +2361,9 @@ const ALL_TCS = [
     "expected": [
       "Gọi API /admin/backup, hệ thống C# sao chép CSDL SQLite sang file sao lưu .bak có gắn mốc thời gian.",
       "File sao lưu xuất hiện ngay trên bảng danh sách lịch sử sao lưu."
-    ]
+    ],
+    "precondition": "Trung tâm Cài đặt -> Tab \"Dữ liệu & Sao lưu CSDL (BackupTab)\" đang mở.",
+    "testData": "Nhấp nút \"Tạo bản sao lưu ngay\"."
   },
   {
     "id": "TC-SETT-005",
@@ -2151,7 +2376,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Trình duyệt tải file CSDL .bak về máy tính của quản trị viên an toàn."
-    ]
+    ],
+    "precondition": "Danh sách lịch sử sao lưu có ít nhất 1 file .bak.",
+    "testData": "Nhấp biểu tượng Tải về (Download) cạnh bản sao lưu."
   },
   {
     "id": "TC-SETT-006",
@@ -2166,7 +2393,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống C# tự động tạo 1 bản backup dự phòng trước khi khôi phục, sau đó nạp lại CSDL.",
       "Toàn bộ dữ liệu được hoàn nguyên về đúng thời điểm của bản sao lưu."
-    ]
+    ],
+    "precondition": "Quản trị viên có file sao lưu hợp lệ cần phục hồi CSDL.",
+    "testData": "Nhấp nút \"Khôi phục dữ liệu\" -> Chọn file backup -> Xác nhận cảnh báo."
   },
   {
     "id": "TC-SETT-007",
@@ -2174,14 +2403,15 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Cấu hình Lịch Tự động Sao lưu (Auto Backup định kỳ)",
     "platform": "Giao diện Quản trị Admin",
-    "testData": "Bật Auto Backup hàng ngày lúc 23:00, lưu tối đa 30 bản",
+    "testData": "Bật công tắc Tự động sao lưu, đặt chu kỳ = 24 giờ, số bản lưu tối đa = 30 bản.",
     "steps": [
       "1. Bật công tắc Auto Backup, đặt giờ sao lưu tự động và số bản tối đa.",
       "2. Lưu cài đặt."
     ],
     "expected": [
       "Hệ thống lưu cấu hình vào CSDL. Background Service tự động chạy theo lịch đã đặt."
-    ]
+    ],
+    "precondition": "Tab BackupTab đang mở."
   },
   {
     "id": "TC-SETT-008",
@@ -2195,7 +2425,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "File backup bị xóa khỏi ổ cứng máy chủ, danh sách cập nhật ngay lập tức."
-    ]
+    ],
+    "precondition": "Danh sách backup có các bản sao lưu cũ không còn nhu cầu sử dụng.",
+    "testData": "Nhấp biểu tượng Thùng rác (Xóa) cạnh bản sao lưu cũ -> Xác nhận."
   },
   {
     "id": "TC-SETT-009",
@@ -2208,7 +2440,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Đường dẫn hợp lệ và có quyền ghi trên ổ đĩa máy chủ Windows."
-    ]
+    ],
+    "precondition": "Tab BackupTab đang mở.",
+    "testData": "Cấu hình đường dẫn thư mục lưu trữ: \"C:\\SmartVMSLocalData\\backups\"."
   },
   {
     "id": "TC-SETT-010",
@@ -2221,7 +2455,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hộp thoại cảnh báo hiển thị rõ ràng rủi ro ghi đè dữ liệu, yêu cầu quản trị viên xác nhận rõ ràng mới thực thi."
-    ]
+    ],
+    "precondition": "Nhấp nút \"Khôi phục dữ liệu\" trên giao diện Backup.",
+    "testData": "Quan sát hộp thoại cảnh báo rủi ro ghi đè dữ liệu."
   },
   {
     "id": "TC-SETT-011",
@@ -2234,7 +2470,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Backend C# tự động tạo một file \"pre_restore_backup_...\" trước khi ghi đè CSDL, đảm bảo có thể rollback nếu cần."
-    ]
+    ],
+    "precondition": "Thực hiện lệnh khôi phục CSDL qua API /admin/restore.",
+    "testData": "Kiểm tra thư mục backups xem có file \"pre_restore_backup_...\" được tự động sinh ra không."
   },
   {
     "id": "TC-SETT-012",
@@ -2247,7 +2485,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hiển thị chính xác kích thước file CSDL (vd: 15.4 MB) và trạng thái kết nối SQLite bình thường."
-    ]
+    ],
+    "precondition": "Tab BackupTab đang mở.",
+    "testData": "Quan sát card thông tin dung lượng file SQLite và trạng thái kết nối."
   },
   {
     "id": "TC-SETT-013",
@@ -2264,7 +2504,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống gọi API PUT /admin/device-profile lưu cấu hình thành công.",
       "Thông số thiết bị được đồng bộ tới trạm gác và DeviceService."
-    ]
+    ],
+    "precondition": "Trung tâm Cài đặt -> Tab \"Thiết bị ngoại vi (SettingsDevicePanel)\" đang mở.",
+    "testData": "Chọn hồ sơ: W3 (USB HID), EA09N (Serial COM), hoặc EA09_W4_SOCKETIO (LAN Socket.io); Cấu hình Socket.IO URL."
   },
   {
     "id": "TC-SETT-014",
@@ -2279,7 +2521,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống truy vấn API GET /admin/browse-folder trả về danh sách thư mục hợp lệ trên hệ thống tập tin máy chủ Windows.",
       "Dung lượng ổ cứng cập nhật chính xác theo thực tế phần cứng."
-    ]
+    ],
+    "precondition": "Tab BackupTab đang mở.",
+    "testData": "Nhấp nút \"Duyệt thư mục\" (FolderOpen) -> Quan sát thanh % dung lượng ổ đĩa máy chủ."
   },
   {
     "id": "TC-SETT-015",
@@ -2287,14 +2531,15 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Cập nhật Tên miền Đơn vị và Tự động cấp mới Chứng chỉ SSL (SystemAdmin UpdateDomain)",
     "platform": "API / Quản trị Hệ thống",
-    "testData": "Tên miền mới: smartvms.local (hoặc IP trạm gác)",
+    "testData": "Gửi request POST /api/SystemAdmin/update-domain với payload {\"domain\": \"smartvms.lan\"}.",
     "steps": [
       "1. Gửi request POST /api/SystemAdmin/update-domain với payload {\"domain\": \"smartvms.local\"}.",
       "2. Quan sát log hệ thống và trạng thái dịch vụ."
     ],
     "expected": [
       "Hệ thống ghi nhận tên miền mới vào appsettings.json, tự động chạy lệnh tái tạo chứng chỉ SSL cục bộ và restart Kestrel an toàn."
-    ]
+    ],
+    "precondition": "Đơn vị thay đổi tên miền nội bộ hoặc IP máy chủ."
   },
   {
     "id": "TC-DEVC-001",
@@ -2309,7 +2554,9 @@ const ALL_TCS = [
     "expected": [
       "Trình duyệt thiết lập kết nối WebSocket tới ws://localhost:6025/ws.",
       "Trạng thái thiết bị hiển thị Online, không có banner lỗi cảnh báo."
-    ]
+    ],
+    "precondition": "Dịch vụ SmartVMS.Local.DeviceService đang chạy trên máy trạm.",
+    "testData": "Kết nối WebSocket từ web app tới ws://localhost:6025/ws."
   },
   {
     "id": "TC-DEVC-002",
@@ -2324,7 +2571,9 @@ const ALL_TCS = [
     "expected": [
       "Dữ liệu thẻ được đẩy qua WebSocket trong vòng dưới 2 giây.",
       "Giao diện web tự động hiển thị thông tin công dân và ảnh chụp trên chip."
-    ]
+    ],
+    "precondition": "Đầu đọc thẻ CCCD PCSC/NFC đã cắm vào máy tính.",
+    "testData": "Đặt thẻ CCCD gắn chip lên đầu đọc."
   },
   {
     "id": "TC-DEVC-003",
@@ -2337,7 +2586,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Máy quét đọc mã thành công, ứng dụng web tự động phân giải chuỗi ký tự thành các trường thông tin tương ứng."
-    ]
+    ],
+    "precondition": "Máy quét mã QR 2D đã kết nối cổng USB.",
+    "testData": "Đưa mã QR trên thẻ CCCD vào vùng quét của máy quét 2D."
   },
   {
     "id": "TC-DEVC-004",
@@ -2350,7 +2601,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mã thẻ RFID (UID) tự động điền vào ô mã thẻ trên form Check-in / Checkout / Thu hồi."
-    ]
+    ],
+    "precondition": "Đầu đọc thẻ RFID Mifare/NFC 13.56MHz đã kết nối.",
+    "testData": "Quẹt thẻ an ninh RFID lên đầu đọc."
   },
   {
     "id": "TC-DEVC-005",
@@ -2364,7 +2617,9 @@ const ALL_TCS = [
     "expected": [
       "DeviceService gửi tín hiệu điều khiển qua cổng COM/Relay kích mở barie cho xe qua cổng.",
       "Sau khoảng trễ quy định, tín hiệu đóng barie được gửi an toàn."
-    ]
+    ],
+    "precondition": "Bộ điều khiển rơ-le cổng Barie kết nối qua cổng COM/Relay.",
+    "testData": "Kích hoạt lệnh mở Barie khi Check-in xe hợp lệ."
   },
   {
     "id": "TC-DEVC-006",
@@ -2379,7 +2634,9 @@ const ALL_TCS = [
     "expected": [
       "Hiển thị thông báo trạng thái Thiết bị Offline.",
       "Phần mềm VẪN CHO PHÉP nhân viên nhập thủ công bình thường, không làm gián đoạn hay tắc nghẽn cổng gác."
-    ]
+    ],
+    "precondition": "DeviceService bị tắt hoặc rút cáp phần cứng trong khi trạm gác đang làm việc.",
+    "testData": "Chuyển sang chế độ nhập liệu thủ công (Manual Fallback)."
   },
   {
     "id": "TC-DEVC-007",
@@ -2392,7 +2649,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Trình duyệt tự động thăm dò và tái kết nối lại WebSocket thành công trong vòng 5 giây mà không cần nhân viên nhấn F5."
-    ]
+    ],
+    "precondition": "DeviceService bị gián đoạn kết nối tạm thời rồi khởi động lại.",
+    "testData": "Quan sát cơ chế tự động tái kết nối WebSocket của Web UI sau 3 giây."
   },
   {
     "id": "TC-DEVC-008",
@@ -2405,7 +2664,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cấu hình thông số cổng COM, tốc độ truyền Baudrate và địa chỉ reader linh hoạt, dễ dàng thay đổi theo phần cứng thực tế."
-    ]
+    ],
+    "precondition": "Mở file cấu hình appsettings.json của DeviceService.",
+    "testData": "Cấu hình cổng COM, tốc độ Baudrate = 115200, Timeout đọc chip = 2000ms."
   },
   {
     "id": "TC-DEVC-009",
@@ -2418,7 +2679,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Thời gian phản hồi đạt dưới 2.0 giây, bảo đảm tốc độ lưu thông nhanh tại cổng trực ban."
-    ]
+    ],
+    "precondition": "Đầu đọc chip CCCD PCSC đang hoạt động tốt.",
+    "testData": "Bấm giờ từ thời điểm chạm thẻ CCCD đến khi form hiển thị đủ dữ liệu (dưới 2 giây)."
   },
   {
     "id": "TC-DEVC-010",
@@ -2431,7 +2694,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "DeviceService bắt ngoại lệ CardCommunicationException, gửi thông báo \"Thẻ bị ngắt quãng, vui lòng giữ nguyên thẻ trên đầu đọc\", không crash service."
-    ]
+    ],
+    "precondition": "Đang đặt thẻ CCCD lên đầu đọc.",
+    "testData": "Rút thẻ ra đột ngột trong khi đầu đọc đang truyền dữ liệu."
   },
   {
     "id": "TC-DEVC-011",
@@ -2444,7 +2709,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Cấu hình được lưu và áp dụng đúng webcam đã chọn."
-    ]
+    ],
+    "precondition": "Trạm gác có webcam USB.",
+    "testData": "Cài đặt thiết bị Webcam mặc định trong cấu hình trạm gác."
   },
   {
     "id": "TC-DEVC-012",
@@ -2457,7 +2724,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hiển thị dải cảnh báo DeviceErrorBanner màu vàng cam thông báo cụ thể thiết bị mất kết nối."
-    ]
+    ],
+    "precondition": "Trực ban đang mở giao diện /staff.html; Rút cáp USB đầu đọc thẻ.",
+    "testData": "Quan sát dải banner DeviceErrorBanner trên đầu trang."
   },
   {
     "id": "TC-DEVC-013",
@@ -2465,7 +2734,7 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Giải mã Chuyên sâu Dữ liệu Chip CCCD DG13 (vnMRTD Decoder Engine)",
     "platform": "Dịch vụ Thiết bị DeviceService (vnMRTD)",
-    "testData": "Thẻ CCCD gắn chip vật lý chuẩn BCA",
+    "testData": "Thư viện vnMRTD (DecodeDG13.cs): Giải mã nhóm dữ liệu ASN.1 DG13.",
     "steps": [
       "1. Đặt thẻ CCCD lên đầu đọc chip tiếp xúc hoặc contactless.",
       "2. Quan sát log DeviceService và gói tin giải mã nhóm dữ liệu DG13 (DecodeDG13.cs)."
@@ -2473,7 +2742,8 @@ const ALL_TCS = [
     "expected": [
       "Thư viện vnMRTD giải mã chính xác ASN.1 DG13: Họ tên tiếng Việt có dấu đầy đủ, Ngày sinh, Giới tính, Quê quán, Nơi thường trú, Dân tộc, Tôn giáo, Đặc điểm nhận dạng, Ngày cấp và Số CMND cũ 9 số.",
       "Gói tin JSON trả về client đầy đủ không bị lỗi font hay mất ký tự."
-    ]
+    ],
+    "precondition": "Thẻ CCCD gắn chip vật lý chuẩn Bộ Công An đặt trên đầu đọc."
   },
   {
     "id": "TC-BKGD-001",
@@ -2487,7 +2757,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Background Worker tự động quét và checkout lượt khách tồn đọng, cập nhật ghi chú tự động đóng, không để dồn khách ảo sang ngày hôm sau."
-    ]
+    ],
+    "precondition": "Có lượt khách chưa checkout và không có cờ isMultiDayVisit tồn đọng qua đêm.",
+    "testData": "Dịch vụ AutoCheckoutBackgroundService chạy định kỳ quét lượt khách quá hạn."
   },
   {
     "id": "TC-BKGD-002",
@@ -2500,7 +2772,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống backend kiểm tra ClientCommandId đã xử lý, trả về kết quả thành công của lệnh đầu tiên, KHÔNG TẠO 2 lượt khách trùng lặp trong CSDL."
-    ]
+    ],
+    "precondition": "Mạng chập chờn; Người dùng nhấp liên tục 3 lần nút Check-in.",
+    "testData": "Cả 3 request gửi đi đều mang cùng 1 mã ClientCommandId (GUID)."
   },
   {
     "id": "TC-BKGD-003",
@@ -2514,7 +2788,9 @@ const ALL_TCS = [
     "expected": [
       "Hệ thống chạy bình thường khi có khóa bản quyền hợp lệ khớp với phần cứng máy tính.",
       "Nếu sao chép sang máy khác mà không có license, phần mềm thông báo yêu cầu kích hoạt bản quyền."
-    ]
+    ],
+    "precondition": "Hệ thống bản quyền phần mềm SmartVMS.",
+    "testData": "Thuật toán Machine Fingerprint tạo mã định danh máy chủ từ CPU ID và Mainboard UUID."
   },
   {
     "id": "TC-BKGD-004",
@@ -2528,7 +2804,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Toàn bộ các tính năng hoạt động mượt mà 100%, không phát sinh bất kỳ lỗi kết nối mạng nào."
-    ]
+    ],
+    "precondition": "Ngắt hoàn toàn kết nối Internet (rút dây mạng WAN hoặc tắt Wi-Fi).",
+    "testData": "Thực hiện đầy đủ quy trình: Đăng nhập trạm, Check-in, Cấp thẻ, Checkout, Xuất báo cáo."
   },
   {
     "id": "TC-BKGD-005",
@@ -2542,7 +2820,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "CSDL SQLite với chế độ Write-Ahead Logging (WAL) tự động phục hồi tính nhất quán, không bị lỗi corrupt database."
-    ]
+    ],
+    "precondition": "CSDL SQLite hoạt động ở chế độ Write-Ahead Logging (WAL mode).",
+    "testData": "Mô phỏng mất điện đột ngột trong khi hệ thống đang ghi dữ liệu vào CSDL."
   },
   {
     "id": "TC-BKGD-006",
@@ -2556,7 +2836,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Thời gian phản hồi hiển thị kết quả đạt dưới 100ms, không có hiện tượng giật lag giao diện."
-    ]
+    ],
+    "precondition": "CSDL có trên 5,000 lượt khách đã lưu.",
+    "testData": "Thực hiện tìm kiếm Live Search, xuất báo cáo Excel toàn bộ dữ liệu."
   },
   {
     "id": "TC-BKGD-007",
@@ -2569,7 +2851,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Backend phản hồi ngay lập tức 401 Unauthorized, không để lộ dữ liệu quản trị."
-    ]
+    ],
+    "precondition": "Client không có header X-Admin-Token hợp lệ.",
+    "testData": "Gửi request GET /admin/users hoặc POST /admin/backup."
   },
   {
     "id": "TC-BKGD-008",
@@ -2577,13 +2861,14 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Phòng chống XSS và SQL Injection trên các trường nhập liệu",
     "platform": "Giao diện Web UI & API",
-    "testData": "Chuỗi nhập: <script>alert(\"xss\")</script> và ' OR 1=1 --",
+    "testData": "Nhập chuỗi độc hại: `<script>alert(1)</script>` hoặc `' OR 1=1 --`.",
     "steps": [
       "1. Nhập các chuỗi tấn công vào trường Họ tên, Mục đích, Biển số xe."
     ],
     "expected": [
       "Entity Framework Core tham số hóa câu lệnh an toàn (Parametrized Queries), React tự động escape ký tự HTML, không bị thực thi mã độc."
-    ]
+    ],
+    "precondition": "Các trường nhập liệu trên form Check-in, Tìm kiếm, Đăng nhập."
   },
   {
     "id": "TC-BKGD-009",
@@ -2596,7 +2881,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống tự động xóa các file tạm sinh ra trong quá trình xuất báo cáo sau khi hoàn tất."
-    ]
+    ],
+    "precondition": "Thư mục /temp chứa các file ảnh tạm sinh ra trong quá trình xuất báo cáo.",
+    "testData": "Dịch vụ ngầm tự động dọn dẹp file tạm theo định kỳ."
   },
   {
     "id": "TC-BKGD-010",
@@ -2609,7 +2896,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "EF Core có cơ chế RetryOnFailure tự động chờ và thử lại, không ném lỗi SQLite busy/locked ra màn hình người dùng."
-    ]
+    ],
+    "precondition": "Nhiều tiến trình ghi CSDL đồng thời (Trực ban + DataEntry + AutoCheckout).",
+    "testData": "EF Core cơ chế RetryOnFailure tự động thử lại khi gặp xung đột khóa file SQLite."
   },
   {
     "id": "TC-BKGD-011",
@@ -2622,7 +2911,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mức tiêu thụ RAM của tab Chrome/Edge duy trì ổn định dưới 500MB, không tăng vọt không kiểm soát."
-    ]
+    ],
+    "precondition": "Tab Web UI trạm gác mở liên tục nhiều ngày trong môi trường kiểm thử tải.",
+    "testData": "Đo mức tiêu thụ RAM qua Task Manager của Windows sau 48 giờ chạy liên tục."
   },
   {
     "id": "TC-BKGD-012",
@@ -2635,7 +2926,9 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mỗi ngày tự động sinh file log (vd: log-20261006.txt) ghi nhận đầy đủ stack trace các ngoại lệ nếu có để phục vụ bảo trì."
-    ]
+    ],
+    "precondition": "Hệ thống Backend C# .NET đang chạy.",
+    "testData": "Kiểm tra thư mục /Logs trên ổ đĩa máy chủ."
   },
   {
     "id": "TC-BKGD-013",
@@ -2653,7 +2946,9 @@ const ALL_TCS = [
     "expected": [
       "ControlPanel hiển thị trực quan trạng thái xanh (Running) của toàn bộ các tiến trình con.",
       "Thu nhỏ xuống System Tray hoạt động ổn định, mở đúng URL cục bộ trên trình duyệt mặc định."
-    ]
+    ],
+    "precondition": "Môi trường Windows Desktop.",
+    "testData": "Khởi chạy SmartVMS.Local.ControlPanel.exe -> Kiểm tra System Tray và khởi động dịch vụ."
   }
 ];
 
