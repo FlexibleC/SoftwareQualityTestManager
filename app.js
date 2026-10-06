@@ -3730,10 +3730,23 @@ function renderExecDetail(tcId) {
           <span style="font-size:11px;color:var(--accent-light);font-weight:normal">${evidences.length} ảnh đính kèm</span>
         </div>
 
+        <!-- CÁC NÚT CHỤP MÀN HÌNH CHUYÊN NGHIỆP -->
+        <div class="evidence-btn-group">
+          <button type="button" class="btn btn-primary btn-sm" onclick="startScreenSnip('${tcId}')" title="Khoanh vùng một phần màn hình máy tính để chụp ảnh lỗi">
+            ✂️ Chụp một phần màn hình (Snip Tool)
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="captureFullScreen('${tcId}')" title="Chụp toàn bộ cửa sổ hoặc màn hình">
+            🖥️ Chụp toàn màn hình
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ev-file-${tcId}').click()" title="Chọn tệp ảnh từ máy">
+            📁 Tải file ảnh
+          </button>
+        </div>
+
         <div class="evidence-dropzone" id="dz-${tcId}" onclick="document.getElementById('ev-file-${tcId}').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEvidenceUpload('${tcId}', event.dataTransfer.files)">
           <div class="dz-icon">📸</div>
-          <div><strong>Kéo thả ảnh vào đây</strong> hoặc nhấn để chọn file</div>
-          <div class="dz-hint">💡 Hoặc chỉ cần chụp màn hình rồi bấm <strong>Ctrl + V</strong> để dán ảnh trực tiếp siêu tốc!</div>
+          <div><strong>Kéo thả ảnh vào đây</strong> hoặc bấm chọn file</div>
+          <div class="dz-hint">💡 Có thể dùng nút <strong>✂️ Chụp một phần màn hình</strong> ở trên, hoặc bấm <strong>Ctrl + V</strong> để dán ảnh trực tiếp!</div>
           <input type="file" id="ev-file-${tcId}" accept="image/*" multiple style="display:none" onchange="handleEvidenceUpload('${tcId}', this.files)" />
         </div>
 
@@ -5349,4 +5362,301 @@ function updateDefectStatus(tcId, newDefectStatus) {
   renderExecDetail(tcId);
   filterExecList();
   syncSingleResultToSupabase(tcId);
+}
+
+// ================================================================
+// INTERACTIVE SCREEN SNIP / REGION CROP ENGINE
+// ================================================================
+let activeSnipTcId = null;
+let activeSnipStream = null;
+let fullSnipImage = null; // Canvas storing captured frame
+let snipStartX = 0, snipStartY = 0;
+let snipCurrentX = 0, snipCurrentY = 0;
+let isSnipDragging = false;
+
+async function startScreenSnip(tcId) {
+  activeSnipTcId = tcId;
+  
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    showToast('⚠️ Trình duyệt chưa hỗ trợ Screen Capture API. Bạn có thể nhấn Windows + Shift + S rồi bấm Ctrl + V để dán ảnh!', 'error');
+    return;
+  }
+  
+  try {
+    showToast('⏳ Vui lòng chọn Màn hình hoặc Cửa sổ cần chụp trong hộp thoại...', 'info');
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always', displaySurface: 'monitor' },
+      audio: false
+    });
+    activeSnipStream = stream;
+    
+    // Create temporary video element to grab frame
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+    
+    await new Promise((resolve) => {
+      video.onloadedmetadata = () => {
+        video.play();
+        setTimeout(resolve, 300); // 300ms delay to ensure video paints
+      };
+    });
+    
+    // Create offscreen canvas for full frame
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = video.videoWidth || window.innerWidth;
+    offscreenCanvas.height = video.videoHeight || window.innerHeight;
+    const offCtx = offscreenCanvas.getContext('2d');
+    offCtx.drawImage(video, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    fullSnipImage = offscreenCanvas;
+    
+    // Stop stream immediately
+    stream.getTracks().forEach(t => t.stop());
+    activeSnipStream = null;
+    
+    // Launch Snipping Overlay
+    openSnipOverlay();
+  } catch (err) {
+    if (err.name === 'NotAllowedError') {
+      showToast('ℹ️ Bạn đã hủy thao tác chụp màn hình.', 'info');
+    } else {
+      console.error('Lỗi chụp màn hình:', err);
+      showToast(`❌ Không thể chụp màn hình: ${err.message}`, 'error');
+    }
+    cancelScreenSnip();
+  }
+}
+
+function openSnipOverlay() {
+  const overlay = document.getElementById('screen-snip-overlay');
+  const canvas = document.getElementById('snip-canvas');
+  if (!overlay || !canvas || !fullSnipImage) return;
+  
+  overlay.classList.add('active');
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  drawSnipCanvasState(null);
+  
+  // Attach event listeners
+  canvas.onmousedown = handleSnipMouseDown;
+  window.onmousemove = handleSnipMouseMove;
+  window.onmouseup = handleSnipMouseUp;
+  window.addEventListener('keydown', handleSnipKeyDown);
+}
+
+function handleSnipKeyDown(e) {
+  if (e.key === 'Escape') {
+    cancelScreenSnip();
+  }
+}
+
+function handleSnipMouseDown(e) {
+  isSnipDragging = true;
+  snipStartX = e.clientX;
+  snipStartY = e.clientY;
+  snipCurrentX = e.clientX;
+  snipCurrentY = e.clientY;
+}
+
+function handleSnipMouseMove(e) {
+  if (!isSnipDragging) return;
+  snipCurrentX = e.clientX;
+  snipCurrentY = e.clientY;
+  
+  const rect = getSnipRect();
+  drawSnipCanvasState(rect);
+}
+
+function getSnipRect() {
+  const x = Math.min(snipStartX, snipCurrentX);
+  const y = Math.min(snipStartY, snipCurrentY);
+  const w = Math.abs(snipCurrentX - snipStartX);
+  const h = Math.abs(snipCurrentY - snipStartY);
+  return { x, y, w, h };
+}
+
+function drawSnipCanvasState(rect) {
+  const canvas = document.getElementById('snip-canvas');
+  if (!canvas || !fullSnipImage) return;
+  const ctx = canvas.getContext('2d');
+  
+  // 1. Draw full background image scaled to window
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(fullSnipImage, 0, 0, canvas.width, canvas.height);
+  
+  // 2. Dim background with dark mask
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // 3. If dragging selection rect, clear the crop area and draw border
+  if (rect && rect.w > 2 && rect.h > 2) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(rect.x, rect.y, rect.w, rect.h);
+    ctx.clip();
+    ctx.drawImage(fullSnipImage, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    
+    // Draw cyan dashed selection border
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    
+    // Draw dimensions label badge
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    const text = `${Math.round(rect.w)} × ${Math.round(rect.h)} px`;
+    ctx.font = '12px Inter, sans-serif';
+    const textW = ctx.measureText(text).width;
+    const badgeX = rect.x;
+    const badgeY = rect.y > 26 ? rect.y - 24 : rect.y + rect.h + 6;
+    ctx.fillRect(badgeX, badgeY, textW + 12, 20);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText(text, badgeX + 6, badgeY + 14);
+  }
+}
+
+function handleSnipMouseUp(e) {
+  if (!isSnipDragging) return;
+  isSnipDragging = false;
+  
+  const rect = getSnipRect();
+  if (rect.w > 15 && rect.h > 15) {
+    finalizeCrop(rect);
+  }
+}
+
+function finalizeCrop(rect) {
+  if (!fullSnipImage || !activeSnipTcId) {
+    cancelScreenSnip();
+    return;
+  }
+  
+  const canvas = document.getElementById('snip-canvas');
+  const scaleX = fullSnipImage.width / canvas.width;
+  const scaleY = fullSnipImage.height / canvas.height;
+  
+  const origX = Math.round(rect.x * scaleX);
+  const origY = Math.round(rect.y * scaleY);
+  const origW = Math.round(rect.w * scaleX);
+  const origH = Math.round(rect.h * scaleY);
+  
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = origW;
+  cropCanvas.height = origH;
+  const cropCtx = cropCanvas.getContext('2d');
+  
+  cropCtx.drawImage(
+    fullSnipImage,
+    origX, origY, origW, origH,
+    0, 0, origW, origH
+  );
+  
+  const croppedDataUrl = cropCanvas.toDataURL('image/webp', 0.88);
+  const tcId = activeSnipTcId;
+  
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
+  const fileName = `snip_${timeStr}_${Math.round(origW)}x${Math.round(origH)}.webp`;
+  
+  if (!state.results[tcId]) state.results[tcId] = { status: 'Not Run' };
+  if (!state.results[tcId].evidences) state.results[tcId].evidences = [];
+  
+  state.results[tcId].evidences.push({
+    id: 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: fileName,
+    url: croppedDataUrl,
+    uploadedBy: state.currentUser ? state.currentUser.name : 'Tester',
+    createdAt: now.toISOString()
+  });
+  
+  saveState();
+  cancelScreenSnip();
+  renderExecDetail(tcId);
+  syncSingleResultToSupabase(tcId);
+  showToast(`✂️ Đã chụp và đính kèm vùng màn hình (${Math.round(origW)} × ${Math.round(origH)} px)!`, 'success');
+}
+
+function cancelScreenSnip() {
+  const overlay = document.getElementById('screen-snip-overlay');
+  if (overlay) overlay.classList.remove('active');
+  
+  if (activeSnipStream) {
+    activeSnipStream.getTracks().forEach(t => t.stop());
+    activeSnipStream = null;
+  }
+  
+  fullSnipImage = null;
+  activeSnipTcId = null;
+  isSnipDragging = false;
+  
+  window.removeEventListener('keydown', handleSnipKeyDown);
+  window.onmousemove = null;
+  window.onmouseup = null;
+}
+
+async function captureFullScreen(tcId) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    showToast('⚠️ Trình duyệt chưa hỗ trợ Screen Capture API. Bạn có thể nhấn Windows + Shift + S rồi bấm Ctrl + V để dán ảnh!', 'error');
+    return;
+  }
+  
+  try {
+    showToast('⏳ Vui lòng chọn Màn hình/Cửa sổ cần chụp...', 'info');
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always' },
+      audio: false
+    });
+    
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+    
+    await new Promise((resolve) => {
+      video.onloadedmetadata = () => {
+        video.play();
+        setTimeout(resolve, 300);
+      };
+    });
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1920;
+    canvas.height = video.videoHeight || 1080;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    stream.getTracks().forEach(t => t.stop());
+    
+    const fullDataUrl = canvas.toDataURL('image/webp', 0.85);
+    const timeStr = new Date().toTimeString().slice(0, 8).replace(/:/g, '');
+    const fileName = `fullscreen_${timeStr}.webp`;
+    
+    if (!state.results[tcId]) state.results[tcId] = { status: 'Not Run' };
+    if (!state.results[tcId].evidences) state.results[tcId].evidences = [];
+    
+    state.results[tcId].evidences.push({
+      id: 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      name: fileName,
+      url: fullDataUrl,
+      uploadedBy: state.currentUser ? state.currentUser.name : 'Tester',
+      createdAt: new Date().toISOString()
+    });
+    
+    saveState();
+    renderExecDetail(tcId);
+    syncSingleResultToSupabase(tcId);
+    showToast('🖥️ Đã chụp toàn bộ màn hình/cửa sổ thành công!', 'success');
+  } catch (err) {
+    if (err.name !== 'NotAllowedError') {
+      console.error('Lỗi chụp toàn màn hình:', err);
+      showToast(`❌ Không thể chụp: ${err.message}`, 'error');
+    }
+  }
 }

@@ -835,6 +835,18 @@
     </div>
   </div>
 
+  <!-- Screen Snip / Region Capture Overlay -->
+  <div id="screen-snip-overlay">
+    <div class="snip-toolbar">
+      <div class="snip-hint">
+        <span class="snip-hint-badge">✂️ Snipping Tool</span>
+        <span>Kéo chuột để khoanh vùng màn hình cần chụp · Nhấn <strong>Esc</strong> để hủy</span>
+      </div>
+      <button class="snip-btn-cancel" onclick="cancelScreenSnip()">✕ Hủy bỏ</button>
+    </div>
+    <canvas id="snip-canvas"></canvas>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
