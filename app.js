@@ -107,7 +107,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-002",
     "module": "M01",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Đăng nhập trạm không phân biệt hoa/thường",
     "platform": "Giao diện Web Trực ban",
     "testData": "Nhập \"NV001A1\", \"nv001a1\" hoặc \"Nv001A1\"",
@@ -152,7 +152,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-005",
     "module": "M01",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Xử lý xung đột phiên trạm: Phát hiện trạm đang có phiên mở dở dang",
     "platform": "Giao diện Web Trực ban",
     "testData": "Trạm đang được giữ bởi phiên trực trước đó hoặc tài khoản khác",
@@ -187,7 +187,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-007",
     "module": "M01",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Lựa chọn thiết bị Camera khi mở ca (Đa camera)",
     "platform": "Giao diện Web Trực ban",
     "testData": "Máy tính trạm gắn cả Webcam tích hợp và Camera USB ngoài",
@@ -202,7 +202,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-008",
     "module": "M01",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Hủy mở ca trực (Hủy chụp ảnh vào ca)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -215,7 +215,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-009",
     "module": "M01",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Mở ca trực dự phòng bằng thẻ CCCD gắn chip (Khi Camera hỏng)",
     "platform": "Giao diện Web Trực ban & Thiết bị",
     "testData": "Thẻ CCCD của nhân viên đăng nhập, tài khoản có quyền AllowCccdShiftAuth",
@@ -248,7 +248,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-011",
     "module": "M01",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tách biệt nghiệp vụ: \"Đăng xuất\" (thoát UI) vs \"Rời ca\" (kết thúc ca trực)",
     "platform": "Giao diện Web Trực ban",
     "precondition": "Nhân viên đang trong ca trực.",
@@ -282,7 +282,7 @@ const ALL_TCS = [
   {
     "id": "TC-AUTH-013",
     "module": "M01",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Khôi phục ca trực sau Reload (F5) hoặc mở lại trình duyệt",
     "platform": "Giao diện Web Trực ban",
     "precondition": "Nhân viên đang trong ca trực.",
@@ -353,7 +353,7 @@ const ALL_TCS = [
   {
     "id": "TC-CKIN-003",
     "module": "M02",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Check-in tự động bằng quét mã QR thẻ CCCD qua máy quét 2D",
     "platform": "Giao diện Web Trực ban & Thiết bị",
     "testData": "Máy quét mã vạch 2D kết nối cổng USB HID",
@@ -384,7 +384,7 @@ const ALL_TCS = [
   {
     "id": "TC-CKIN-005",
     "module": "M02",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Chụp đa ảnh bổ sung (Giấy tờ tùy thân, tài sản) bằng Multi-shot camera modal",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -417,7 +417,7 @@ const ALL_TCS = [
   {
     "id": "TC-CKIN-007",
     "module": "M02",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Check-in cấp Thẻ Thường (Cấp chung đếm số lượng không nhập mã)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -448,7 +448,7 @@ const ALL_TCS = [
   {
     "id": "TC-CKIN-009",
     "module": "M02",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Check-in có Phương tiện: Đăng ký loại xe từ danh mục chuẩn hóa",
     "platform": "Giao diện Web Trực ban",
     "testData": "Loại xe: \"Ô tô 7 chỗ\", Biển số: \"30H-999.88\"",
@@ -525,7 +525,7 @@ const ALL_TCS = [
   {
     "id": "TC-CKIN-014",
     "module": "M02",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Tự động Upsert gợi ý Khách quen khi nhập số CCCD cũ",
     "platform": "Giao diện Web Trực ban",
     "testData": "Số CCCD của khách đã từng đến làm việc tuần trước",
@@ -541,7 +541,7 @@ const ALL_TCS = [
   {
     "id": "TC-CKIN-015",
     "module": "M02",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Chụp ảnh phương tiện (Biển số xe và đầu xe) khi Check-in",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -574,7 +574,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-002",
     "module": "M03",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Đọc Chip CCCD hoặc Quét QR độc lập cho từng Người đi cùng",
     "platform": "Giao diện Web Trực ban & Thiết bị",
     "steps": [
@@ -589,7 +589,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-003",
     "module": "M03",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Chụp ảnh chân dung và giấy tờ riêng cho từng Người đi cùng",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -603,7 +603,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-004",
     "module": "M03",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Cấp phát thẻ linh hoạt cho từng Người đi cùng",
     "platform": "Giao diện Web Trực ban",
     "testData": "Người 1 nhận thẻ định danh \"CARD-101\", Người 2 nhận thẻ thường, Trưởng đoàn nhận thẻ định danh \"CARD-100\"",
@@ -619,7 +619,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-005",
     "module": "M03",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Khai báo Đoàn vô danh (Số lượng khách đi cùng không cần khai báo tên)",
     "platform": "Giao diện Web Trực ban",
     "testData": "Đoàn công nhân xây dựng 10 người vô danh + 1 Trưởng đoàn",
@@ -636,7 +636,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-006",
     "module": "M03",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Cấp phát thẻ cho Đoàn vô danh: Thẻ thường và Danh sách thẻ RFID",
     "platform": "Giao diện Web Trực ban",
     "testData": "Cấp 10 thẻ thường và thêm 2 thẻ định danh RFID cho khách trong đoàn vô danh",
@@ -705,7 +705,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-010",
     "module": "M03",
-    "priority": "P1",
+    "priority": "P3",
     "name": "Nghiệp vụ Cấp bù thẻ thiếu (Tab missing_cards trong SupplementalCheckInModal)",
     "platform": "Giao diện Web Trực ban",
     "testData": "Thành viên lúc Check-in chưa được nhận thẻ, nay phát bù",
@@ -763,7 +763,7 @@ const ALL_TCS = [
   {
     "id": "TC-COMP-014",
     "module": "M03",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Lưu vết lịch sử đợt bổ sung thành viên",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -814,7 +814,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-003",
     "module": "M04",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Check-out Xe riêng độc lập: Xe ra trước người (hoặc người ra xe ở lại)",
     "platform": "Giao diện Web Trực ban",
     "testData": "Khách gửi xe ô tô trong bãi qua đêm, người đi taxi về trước",
@@ -844,7 +844,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-005",
     "module": "M04",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Thu hồi Thẻ Thường (Đếm số lượng): Cho phép trả đủ hoặc trả 1 phần",
     "platform": "Giao diện Web Trực ban",
     "testData": "Đoàn giữ 5 thẻ thường, lúc về chỉ trả 3 thẻ",
@@ -860,7 +860,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-006",
     "module": "M04",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Thu hồi Thẻ của Đoàn vô danh (Cả thẻ thường và thẻ RFID danh sách)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -903,7 +903,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-009",
     "module": "M04",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Chụp ảnh Webcam tại thời điểm Check-out làm bằng chứng bàn giao",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -934,7 +934,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-011",
     "module": "M04",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Nghiệp vụ THU HỒI THẺ MẤT: Thu hồi theo Hồ sơ lượt khách đang nợ thẻ",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -965,7 +965,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-013",
     "module": "M04",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Xử lý lượt khách hết người nhưng xe còn bên trong",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -979,7 +979,7 @@ const ALL_TCS = [
   {
     "id": "TC-COUT-014",
     "module": "M04",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Xử lý lượt khách hết người nhưng thẻ còn nợ",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1007,7 +1007,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-001",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Header Trực ban hiển thị Realtime Live Clock tiếng Việt",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1037,7 +1037,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-003",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Phím tắt toàn cục Ctrl + K focus nhanh ô tìm kiếm",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1050,7 +1050,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-004",
     "module": "M05",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Popover Lọc theo 5 nhóm đối tượng (Multi-Category Search Filter)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1065,7 +1065,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-005",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Bộ đếm kết quả khớp thời gian thực (Match counter badges) trong Popover",
     "platform": "Giao diện Web Trực ban",
     "testData": "Gõ từ khóa có trong cả biển xe và tên khách",
@@ -1080,7 +1080,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-006",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Nút Chọn tất cả / Bỏ chọn tất cả nhóm đối tượng tìm kiếm",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1106,7 +1106,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-008",
     "module": "M05",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tra cứu chuyên sâu đa tiêu chí trong AdvancedSearchModal",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1121,7 +1121,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-009",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Chế độ hiển thị thống kê tổng quan (Stats View Mode: Ẩn / Tinh gọn / Chi tiết)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1136,7 +1136,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-010",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Chế độ bảng danh sách khách (Table View Mode: Thu gọn Compact vs Chi tiết Detailed)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1151,7 +1151,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-011",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Tùy biến Màu sắc và Độ trong suốt hàng (DisplaySettingsModal)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1166,7 +1166,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-012",
     "module": "M05",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Bộ lọc nguồn dữ liệu (Source Filter: Tất cả / Trực ban cổng / Sổ sách ngoại lệ)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1181,7 +1181,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-013",
     "module": "M05",
-    "priority": "P1",
+    "priority": "P3",
     "name": "Bộ lọc thời gian: Lọc nhanh và Khoảng ngày chặn tương lai",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1196,7 +1196,7 @@ const ALL_TCS = [
   {
     "id": "TC-DASH-014",
     "module": "M05",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Menu gom nhóm Tiện ích & Tùy chọn (SlidersHorizontal dropdown)",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -1222,7 +1222,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-002",
     "module": "M06",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tab Tổng quan (Overview): Thẻ KPI tóm tắt đầy đủ chỉ số",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1236,7 +1236,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-003",
     "module": "M06",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Cửa sổ con xem nhanh Quân số chi tiết từ Tab Tổng quan",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1249,7 +1249,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-004",
     "module": "M06",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Cửa sổ con xem nhanh Thẻ an ninh & Thẻ thường từ Tab Tổng quan",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1262,7 +1262,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-005",
     "module": "M06",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Cửa sổ con xem nhanh Phương tiện & Checkout từng xe trực tiếp",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1290,7 +1290,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-007",
     "module": "M06",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Đổi chiều sắp xếp Timeline: Mới nhất trước vs Cũ nhất trước",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1303,7 +1303,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-008",
     "module": "M06",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Thu gọn / Mở rộng chi tiết từng đợt sự kiện Timeline",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1316,7 +1316,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-009",
     "module": "M06",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tab Thành viên (Members): Danh sách toàn diện thành viên trong đoàn",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1330,7 +1330,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-010",
     "module": "M06",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Thư viện Đa Ảnh Lượt thăm (VisitPhotoGalleryModal + ZoomableImage)",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1345,7 +1345,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-011",
     "module": "M06",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Nút hành động nhanh liên thông từ modal Chi tiết",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1358,7 +1358,7 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-012",
     "module": "M06",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Đóng modal Chi tiết bằng phím Escape hoặc nút đóng ✕",
     "platform": "Giao diện Web Trực ban & Admin",
     "steps": [
@@ -1387,7 +1387,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-002",
     "module": "M07",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Thao tác Phím tắt toàn cục trong DataEntry: F1, F3, Escape",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1451,7 +1451,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-006",
     "module": "M07",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Nhập đoàn đông người, người đi cùng và nhiều phương tiện từ sổ trực",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1492,7 +1492,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-009",
     "module": "M07",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Bổ sung người đi cùng sổ sách qua DataEntrySupplementalModal",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1506,7 +1506,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-010",
     "module": "M07",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Checkout sổ sách qua DataEntryCheckOutModal",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1520,7 +1520,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-011",
     "module": "M07",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Thu hồi thẻ mất từ giao diện DataEntry",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1534,7 +1534,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-012",
     "module": "M07",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Xuất báo cáo Excel danh sách hồ sơ sổ sách đã nhập để đối soát",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1547,7 +1547,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-013",
     "module": "M07",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Xem chi tiết lượt khách sổ sách qua modal VisitDetailsModal",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1560,7 +1560,7 @@ const ALL_TCS = [
   {
     "id": "TC-DENT-014",
     "module": "M07",
-    "priority": "P1",
+    "priority": "P4",
     "name": "Kiểm tra ping phiên làm việc DataEntry định kỳ",
     "platform": "Phân hệ Sổ sách DataEntry",
     "steps": [
@@ -1576,7 +1576,7 @@ const ALL_TCS = [
   {
     "id": "TC-ADMN-001",
     "module": "M08",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Giao diện Quản trị Admin mới: Sidebar thu gọn/mở rộng & Trạng thái Online",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1680,7 +1680,7 @@ const ALL_TCS = [
   {
     "id": "TC-ADMN-008",
     "module": "M08",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Tải lên Ảnh thẻ đại diện cho cán bộ trực ban (Upload Avatar Photo)",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1694,7 +1694,7 @@ const ALL_TCS = [
   {
     "id": "TC-ADMN-009",
     "module": "M08",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Nhập danh sách cán bộ hàng loạt từ file Excel (Import Staff Excel)",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1709,7 +1709,7 @@ const ALL_TCS = [
   {
     "id": "TC-ADMN-010",
     "module": "M08",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Xóa hàng loạt nhân sự đã nghỉ việc (Bulk Delete Staff)",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1765,7 +1765,7 @@ const ALL_TCS = [
   {
     "id": "TC-ADMN-014",
     "module": "M08",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Khóa (Deactivate) tài khoản người dùng",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1794,7 +1794,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-002",
     "module": "M09",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Lọc theo Khoảng ngày tùy chọn và Lọc theo Nhiều ngày rời rạc (discrete_dates)",
     "platform": "Giao diện Quản trị Admin",
     "testData": "Chọn 3 ngày ngắt quãng: 01/10/2026, 05/10/2026, 12/10/2026",
@@ -1810,7 +1810,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-003",
     "module": "M09",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Lọc đa chiều: Cán bộ trực ban, Nguồn (Trực ban vs Sổ sách), Trạng thái thẻ, Phương tiện",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1868,7 +1868,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-007",
     "module": "M09",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Xuất Báo cáo Thẻ mất ra Excel phục vụ công tác thanh tra tài sản",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1881,7 +1881,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-008",
     "module": "M09",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Dashboard Admin đồ thị thống kê lưu lượng khách",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1894,7 +1894,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-009",
     "module": "M09",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Xuất báo cáo danh sách ca trực ra Excel phục vụ chấm công",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1907,7 +1907,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-010",
     "module": "M09",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Khả năng lọc tìm kiếm từ khóa kết hợp trong Trung tâm Báo cáo",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1920,7 +1920,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-011",
     "module": "M09",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Mở xem chi tiết bất kỳ lượt khách nào trực tiếp từ bảng Báo cáo",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1933,7 +1933,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-012",
     "module": "M09",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Kiểm tra định dạng chuẩn tên file xuất báo cáo",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1946,7 +1946,7 @@ const ALL_TCS = [
   {
     "id": "TC-REPT-013",
     "module": "M09",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Đóng/mở khối bộ lọc báo cáo (Filter Collapse toggle) để tăng không gian xem bảng",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1959,7 +1959,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-001",
     "module": "M10",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Cấu hình Vận hành (SettingsOperationPanel): Tên hệ thống & Cổng trực mặc định",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -1974,7 +1974,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-002",
     "module": "M10",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Cấu hình Giới hạn Thời gian lưu trú cảnh báo",
     "platform": "Giao diện Quản trị Admin",
     "testData": "Đặt giới hạn: 8 giờ",
@@ -1989,7 +1989,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-003",
     "module": "M10",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Cấu hình Chính sách Thẻ an ninh",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -2017,7 +2017,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-005",
     "module": "M10",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tải file sao lưu (Download Backup) về máy tính cá nhân",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -2045,7 +2045,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-007",
     "module": "M10",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Cấu hình Lịch Tự động Sao lưu (Auto Backup định kỳ)",
     "platform": "Giao diện Quản trị Admin",
     "testData": "Bật Auto Backup hàng ngày lúc 23:00, lưu tối đa 30 bản",
@@ -2060,7 +2060,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-008",
     "module": "M10",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Quản lý Bản sao lưu cũ: Xem dung lượng và Xóa bản backup",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -2074,7 +2074,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-009",
     "module": "M10",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Kiểm tra và cấu hình đường dẫn thư mục lưu trữ sao lưu",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -2100,7 +2100,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-011",
     "module": "M10",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tự động tạo bản backup dự phòng trước khi thực hiện restore",
     "platform": "API / Backend C#",
     "steps": [
@@ -2113,7 +2113,7 @@ const ALL_TCS = [
   {
     "id": "TC-SETT-012",
     "module": "M10",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Kiểm tra dung lượng CSDL và trạng thái kết nối SQLite",
     "platform": "Giao diện Quản trị Admin",
     "steps": [
@@ -2156,7 +2156,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-003",
     "module": "M11",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Quét mã QR thẻ CCCD qua máy quét 2D kết nối USB",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2182,7 +2182,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-005",
     "module": "M11",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Điều khiển Đóng/Mở Barie / Cổng Barrier tự động qua Rơ-le",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2211,7 +2211,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-007",
     "module": "M11",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Tự động Tái kết nối WebSocket (Auto-reconnect)",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2224,7 +2224,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-008",
     "module": "M11",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Cấu hình thiết bị trong DeviceService (Cổng COM, Baudrate, IP)",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2237,7 +2237,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-009",
     "module": "M11",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Kiểm tra thời gian đọc thẻ CCCD gắn chip dưới 2 giây",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2250,7 +2250,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-010",
     "module": "M11",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Báo lỗi đọc thẻ khi thẻ đặt lệch hoặc rút ra quá sớm",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2263,7 +2263,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-011",
     "module": "M11",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Cấu hình thiết bị Webcam trong Device Settings của trạm",
     "platform": "Thiết bị & Cổng gác",
     "steps": [
@@ -2276,7 +2276,7 @@ const ALL_TCS = [
   {
     "id": "TC-DEVC-012",
     "module": "M11",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Cảnh báo sự cố thiết bị ngoại vi qua banner DeviceErrorBanner",
     "platform": "Giao diện Web Trực ban",
     "steps": [
@@ -2358,7 +2358,7 @@ const ALL_TCS = [
   {
     "id": "TC-BKGD-006",
     "module": "M12",
-    "priority": "P2",
+    "priority": "P3",
     "name": "Hiệu năng Tìm kiếm và Xử lý dưới tải (5,000+ lượt khách)",
     "platform": "Giao diện Web UI & API",
     "steps": [
@@ -2385,7 +2385,7 @@ const ALL_TCS = [
   {
     "id": "TC-BKGD-008",
     "module": "M12",
-    "priority": "P1",
+    "priority": "P2",
     "name": "Phòng chống XSS và SQL Injection trên các trường nhập liệu",
     "platform": "Giao diện Web UI & API",
     "testData": "Chuỗi nhập: <script>alert(\"xss\")</script> và ' OR 1=1 --",
@@ -2399,7 +2399,7 @@ const ALL_TCS = [
   {
     "id": "TC-BKGD-009",
     "module": "M12",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Cơ chế tự động dọn dẹp file tạm và ảnh rác định kỳ",
     "platform": "Dịch vụ Ngầm C# Backend",
     "steps": [
@@ -2425,7 +2425,7 @@ const ALL_TCS = [
   {
     "id": "TC-BKGD-011",
     "module": "M12",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Kiểm tra rò rỉ bộ nhớ (Memory Leak) khi ứng dụng chạy liên tục nhiều ngày",
     "platform": "Giao diện Web UI & DeviceService",
     "steps": [
@@ -2438,7 +2438,7 @@ const ALL_TCS = [
   {
     "id": "TC-BKGD-012",
     "module": "M12",
-    "priority": "P2",
+    "priority": "P4",
     "name": "Ghi nhật ký lỗi hệ thống (Error Logging): File log hàng ngày",
     "platform": "Dịch vụ Ngầm C# Backend",
     "steps": [
@@ -2831,7 +2831,8 @@ function renderPriorityChart(s) {
   const p1 = all.filter(t=>t.priority==='P1');
   const p2 = all.filter(t=>t.priority==='P2');
   const p3 = all.filter(t=>t.priority==='P3');
-  const pData = [p1,p2,p3].map(arr => {
+  const p4 = all.filter(t=>t.priority==='P4');
+  const pData = [p1,p2,p3,p4].map(arr => {
     let pass=0,fail=0,notrun=0;
     arr.forEach(tc=>{ const r=state.results[tc.id]; const st=r?.status||'Not Run'; if(st==='Pass')pass++;else if(st==='Fail')fail++;else notrun++; });
     return {pass,fail,notrun};
@@ -2840,7 +2841,7 @@ function renderPriorityChart(s) {
   state.charts.priority = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['🔴 P1 (Critical)','🟠 P2 (Important)','🟡 P3 (Medium)'],
+      labels: ['🔴 P1 (Critical)','🟠 P2 (Important)','🟡 P3 (Medium)','🟢 P4 (Low)'],
       datasets: [
         { label:'Pass', data: pData.map(d=>d.pass), backgroundColor:'rgba(34,197,94,0.85)', borderRadius:4 },
         { label:'Fail', data: pData.map(d=>d.fail), backgroundColor:'rgba(239,68,68,0.85)', borderRadius:4 },

@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartVMS Test Manager v3.0 — Quản lý Kiểm thử Chuyên nghiệp</title>
-  <meta name="description" content="Phần mềm quản lý kịch bản kiểm thử chuyên nghiệp cho hệ thống SmartVMS Local 2026 (12 Modules, 161 Test Cases chuẩn hóa)" />
+  <meta name="description"
+    content="Phần mềm quản lý kịch bản kiểm thử chuyên nghiệp cho hệ thống SmartVMS Local 2026 (12 Modules, 161 Test Cases chuẩn hóa)" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <!-- Login Screen -->
   <div id="login-screen" class="login-overlay">
@@ -24,17 +28,20 @@
       <form id="login-form" onsubmit="handleLogin(event)">
         <div class="form-group">
           <label>Tài khoản</label>
-          <input type="text" id="login-username" placeholder="Nhập admin hoặc tester" required autocomplete="username" />
+          <input type="text" id="login-username" placeholder="Nhập admin hoặc tester" required
+            autocomplete="username" />
         </div>
         <div class="form-group">
           <label>Mật khẩu</label>
-          <input type="password" id="login-password" placeholder="Mật khẩu là 123" required autocomplete="current-password" />
+          <input type="password" id="login-password" placeholder="Mật khẩu là 123" required
+            autocomplete="current-password" />
         </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center">Đăng nhập</button>
+        <button type="submit" class="btn btn-primary"
+          style="width: 100%; margin-top: 10px; justify-content: center">Đăng nhập</button>
       </form>
       <div style="margin-top:20px; font-size:13px; color:var(--text-muted)">
-        <strong>Tài khoản Demo:</strong><br/>
-        Admin: admin / 123 (hoặc admin123)<br/>
+        <strong>Tài khoản Demo:</strong><br />
+        Admin: admin / 123 (hoặc admin123)<br />
         Tester: tester / 123
       </div>
     </div>
@@ -93,7 +100,8 @@
             👋 Xin chào, <span id="current-user-name" style="color: var(--accent-light)">...</span>
             <span id="current-user-role" class="module-tag" style="margin-left: 6px">...</span>
           </div>
-          <div class="cloud-status-badge" id="cloud-status-badge" onclick="navigate('settings')" title="Trạng thái kết nối Supabase Cloud (Click để cấu hình)">
+          <div class="cloud-status-badge" id="cloud-status-badge" onclick="navigate('settings')"
+            title="Trạng thái kết nối Supabase Cloud (Click để cấu hình)">
             <span class="cloud-dot disconnected" id="cloud-dot"></span>
             <span id="cloud-status-text">Cloud: Chưa kết nối</span>
           </div>
@@ -101,7 +109,8 @@
             <span class="dot dot-green"></span>
             <span id="session-name">Chưa có phiên test</span>
           </div>
-          <button class="btn btn-outline btn-sm" id="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển đổi giao diện Sáng / Tối">☀️ Sáng</button>
+          <button class="btn btn-outline btn-sm" id="theme-toggle-btn" onclick="toggleTheme()"
+            title="Chuyển đổi giao diện Sáng / Tối">☀️ Sáng</button>
           <button class="btn btn-primary btn-sm" onclick="openNewSessionModal()">+ Tạo phiên test</button>
           <button class="btn btn-outline btn-sm" onclick="exportReport()">⬇ Xuất báo cáo</button>
           <button class="btn btn-danger btn-sm" style="margin-left:8px;" onclick="handleLogout()">Đăng xuất</button>
@@ -184,18 +193,24 @@
           <!-- Charts Row -->
           <div class="charts-grid">
             <div class="card">
-              <div class="card-header"><h3>Phân bố theo Module</h3></div>
+              <div class="card-header">
+                <h3>Phân bố theo Module</h3>
+              </div>
               <div class="chart-wrapper"><canvas id="chartModule"></canvas></div>
             </div>
             <div class="card">
-              <div class="card-header"><h3>Kết quả theo Mức ưu tiên</h3></div>
+              <div class="card-header">
+                <h3>Kết quả theo Mức ưu tiên</h3>
+              </div>
               <div class="chart-wrapper"><canvas id="chartPriority"></canvas></div>
             </div>
           </div>
 
           <!-- Module Status Table -->
           <div class="card mt-20">
-            <div class="card-header"><h3>Chi tiết theo Module</h3></div>
+            <div class="card-header">
+              <h3>Chi tiết theo Module</h3>
+            </div>
             <div class="table-responsive">
               <table class="data-table" id="module-summary-table">
                 <thead>
@@ -216,7 +231,9 @@
 
           <!-- Recent Executions -->
           <div class="card mt-20">
-            <div class="card-header"><h3>Kết quả gần đây</h3></div>
+            <div class="card-header">
+              <h3>Kết quả gần đây</h3>
+            </div>
             <div id="recent-executions">
               <div class="empty-state">Chưa có kết quả test nào. Hãy bắt đầu thực thi test!</div>
             </div>
@@ -231,8 +248,10 @@
               <p id="tc-page-subtitle">Quản lý toàn bộ test cases theo module và mức ưu tiên</p>
             </div>
             <div class="page-title-actions">
-              <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="navigate('settings')" title="Đi tới cấu hình danh mục Modules">📁 Quản lý Modules</button>
-              <button class="btn btn-primary admin-only" id="btn-add-tc" onclick="openAddTcModal()">➕ Thêm Test Case mới</button>
+              <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="navigate('settings')"
+                title="Đi tới cấu hình danh mục Modules">📁 Quản lý Modules</button>
+              <button class="btn btn-primary admin-only" id="btn-add-tc" onclick="openAddTcModal()">➕ Thêm Test Case
+                mới</button>
             </div>
           </div>
 
@@ -269,13 +288,14 @@
               <label>Phân loại</label>
               <select id="filter-type" onchange="applyFilters()">
                 <option value="">Tất cả</option>
-                <option value="builtin">📦 Bộ chuẩn gốc (157)</option>
+                <option value="builtin">📦 Bộ chuẩn gốc</option>
                 <option value="custom">✨ Tùy chỉnh (Đã thêm)</option>
               </select>
             </div>
             <div class="filter-group filter-search">
               <label>Tìm kiếm</label>
-              <input type="text" id="filter-search" placeholder="Nhập tên TC, mã TC, mô tả..." oninput="applyFilters()" />
+              <input type="text" id="filter-search" placeholder="Nhập tên TC, mã TC, mô tả..."
+                oninput="applyFilters()" />
             </div>
             <button class="btn btn-outline btn-sm" onclick="resetFilters()">↺ Đặt lại</button>
           </div>
@@ -371,11 +391,15 @@
           <!-- Charts -->
           <div class="charts-grid mt-20">
             <div class="card">
-              <div class="card-header"><h3>Tổng quan kết quả</h3></div>
+              <div class="card-header">
+                <h3>Tổng quan kết quả</h3>
+              </div>
               <div class="chart-wrapper"><canvas id="chartReportPie"></canvas></div>
             </div>
             <div class="card">
-              <div class="card-header"><h3>Kết quả theo Module</h3></div>
+              <div class="card-header">
+                <h3>Kết quả theo Module</h3>
+              </div>
               <div class="chart-wrapper"><canvas id="chartReportBar"></canvas></div>
             </div>
           </div>
@@ -389,7 +413,14 @@
             <div class="table-responsive">
               <table class="data-table" id="fail-table">
                 <thead>
-                  <tr><th>Mã TC</th><th>Module</th><th>Tên</th><th>Lý do thất bại</th><th>Người test</th><th>Ngày</th></tr>
+                  <tr>
+                    <th>Mã TC</th>
+                    <th>Module</th>
+                    <th>Tên</th>
+                    <th>Lý do thất bại</th>
+                    <th>Người test</th>
+                    <th>Ngày</th>
+                  </tr>
                 </thead>
                 <tbody id="fail-table-body"></tbody>
               </table>
@@ -398,11 +429,22 @@
 
           <!-- Module Report -->
           <div class="card mt-20">
-            <div class="card-header"><h3>Báo cáo theo Module</h3></div>
+            <div class="card-header">
+              <h3>Báo cáo theo Module</h3>
+            </div>
             <div class="table-responsive">
               <table class="data-table" id="report-module-table">
                 <thead>
-                  <tr><th>Module</th><th>Tổng</th><th>Pass</th><th>Fail</th><th>Skip</th><th>Chưa chạy</th><th>Pass Rate</th><th>Trạng thái</th></tr>
+                  <tr>
+                    <th>Module</th>
+                    <th>Tổng</th>
+                    <th>Pass</th>
+                    <th>Fail</th>
+                    <th>Skip</th>
+                    <th>Chưa chạy</th>
+                    <th>Pass Rate</th>
+                    <th>Trạng thái</th>
+                  </tr>
                 </thead>
                 <tbody id="report-module-body"></tbody>
               </table>
@@ -419,7 +461,9 @@
 
           <div class="settings-grid">
             <div class="card">
-              <div class="card-header"><h3>Thông tin Phiên test</h3></div>
+              <div class="card-header">
+                <h3>Thông tin Phiên test</h3>
+              </div>
               <div class="form-group">
                 <label>Tên phiên test</label>
                 <input type="text" id="set-session-name" placeholder="VD: Sprint 1 - Regression Test" />
@@ -440,7 +484,9 @@
             </div>
 
             <div class="card">
-              <div class="card-header"><h3>Quản lý Dữ liệu</h3></div>
+              <div class="card-header">
+                <h3>Quản lý Dữ liệu</h3>
+              </div>
               <div class="setting-actions">
                 <div class="setting-action-item">
                   <div>
@@ -455,7 +501,8 @@
                     <p>Nạp lại dữ liệu từ file JSON đã export</p>
                   </div>
                   <label class="btn btn-outline" for="import-file">⬆ Import JSON</label>
-                  <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display:none" />
+                  <input type="file" id="import-file" accept=".json" onchange="importData(event)"
+                    style="display:none" />
                 </div>
                 <div class="setting-action-item danger">
                   <div>
@@ -468,71 +515,91 @@
             </div>
 
             <div class="card">
-              <div class="card-header"><h3>Thống kê lưu trữ</h3></div>
+              <div class="card-header">
+                <h3>Thống kê lưu trữ</h3>
+              </div>
               <div id="storage-stats"></div>
             </div>
 
             <!-- Kết nối Supabase Cloud & Realtime Sync -->
-            <div class="card card-full" style="border: 1px solid var(--accent); background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(168,85,247,0.03));">
-              <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div class="card card-full"
+              style="border: 1px solid var(--accent); background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(168,85,247,0.03));">
+              <div class="card-header"
+                style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 <div>
                   <h3 style="display:flex; align-items:center; gap:8px;">
                     <span>⚡ Kết nối Supabase Cloud (Đồng bộ Realtime Online)</span>
                     <span id="supabase-status-pill" class="badge badge-nr" style="font-size:12px;">Chưa kết nối</span>
                   </h3>
                   <p style="font-size:12.5px; color:var(--text-secondary); margin-top:2px;">
-                    Lưu trữ kết quả test tập trung trên đám mây PostgreSQL và tự động đồng bộ thời gian thực giữa nhiều thiết bị/nhân viên test
+                    Lưu trữ kết quả test tập trung trên đám mây PostgreSQL và tự động đồng bộ thời gian thực giữa nhiều
+                    thiết bị/nhân viên test
                   </p>
                 </div>
                 <div style="display:flex; gap:8px;">
-                  <button class="btn btn-outline btn-sm" onclick="pullSupabaseToLocal()" title="Tải toàn bộ kết quả test từ Cloud về máy">⬇ Kéo dữ liệu từ Cloud (Pull)</button>
-                  <button class="btn btn-outline btn-sm" onclick="pushLocalToSupabase()" title="Đẩy toàn bộ kết quả test hiện tại lên Cloud">🔄 Đẩy lên Cloud (Push)</button>
+                  <button class="btn btn-outline btn-sm" onclick="pullSupabaseToLocal()"
+                    title="Tải toàn bộ kết quả test từ Cloud về máy">⬇ Kéo dữ liệu từ Cloud (Pull)</button>
+                  <button class="btn btn-outline btn-sm" onclick="pushLocalToSupabase()"
+                    title="Đẩy toàn bộ kết quả test hiện tại lên Cloud">🔄 Đẩy lên Cloud (Push)</button>
                 </div>
               </div>
 
-              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-top:10px;">
+              <div
+                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-top:10px;">
                 <div class="form-group" style="margin-bottom:0;">
                   <label style="font-weight:600;">Supabase Project URL</label>
                   <input type="url" id="sb-url" placeholder="https://xyzcompany.supabase.co" autocomplete="off" />
-                  <small style="color:var(--text-muted); font-size:11.5px;">Lấy tại: Supabase Dashboard > Settings > API > Project URL</small>
+                  <small style="color:var(--text-muted); font-size:11.5px;">Lấy tại: Supabase Dashboard > Settings > API
+                    > Project URL</small>
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                   <label style="font-weight:600;">Supabase Anon / Public Key</label>
-                  <input type="password" id="sb-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off" />
-                  <small style="color:var(--text-muted); font-size:11.5px;">Lấy tại: Supabase Dashboard > Settings > API > Project API Keys (anon public)</small>
+                  <input type="password" id="sb-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    autocomplete="off" />
+                  <small style="color:var(--text-muted); font-size:11.5px;">Lấy tại: Supabase Dashboard > Settings > API
+                    > Project API Keys (anon public)</small>
                 </div>
               </div>
 
               <div style="display:flex; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;">
-                <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; font-weight:500;">
-                  <input type="checkbox" id="sb-auto-sync" checked style="width:16px; height:16px; accent-color:var(--accent);" />
+                <label
+                  style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; font-weight:500;">
+                  <input type="checkbox" id="sb-auto-sync" checked
+                    style="width:16px; height:16px; accent-color:var(--accent);" />
                   Tự động đồng bộ lên Cloud khi Test (Auto Sync on Pass/Fail) & Lắng nghe Realtime
                 </label>
                 <div style="margin-left:auto; display:flex; gap:10px;">
                   <button class="btn btn-outline btn-sm" onclick="disconnectSupabase()">🔌 Ngắt kết nối</button>
-                  <button class="btn btn-primary btn-sm" onclick="saveAndConnectSupabase()">💾 Lưu & Kết nối Supabase</button>
+                  <button class="btn btn-primary btn-sm" onclick="saveAndConnectSupabase()">💾 Lưu & Kết nối
+                    Supabase</button>
                 </div>
               </div>
 
               <div class="cloud-guide-box">
                 <strong>📌 Hướng dẫn 3 bước kết nối Supabase Cloud:</strong>
                 <ol>
-                  <li>Tạo dự án mới miễn phí tại <a href="https://supabase.com" target="_blank" style="color:var(--accent); font-weight:600;">supabase.com</a>.</li>
-                  <li>Vào mục <strong>SQL Editor</strong>, mở file <code>supabase_schema.sql</code> (đã tạo sẵn trong dự án) -> Copy & Paste vào rồi bấm <strong>Run</strong> để tạo bảng & bật Realtime.</li>
-                  <li>Vào <strong>Project Settings > API</strong>, copy <strong>Project URL</strong> và <strong>anon key</strong> dán vào ô bên trên rồi bấm <strong>Lưu & Kết nối</strong>.</li>
+                  <li>Tạo dự án mới miễn phí tại <a href="https://supabase.com" target="_blank"
+                      style="color:var(--accent); font-weight:600;">supabase.com</a>.</li>
+                  <li>Vào mục <strong>SQL Editor</strong>, mở file <code>supabase_schema.sql</code> (đã tạo sẵn trong dự
+                    án) -> Copy & Paste vào rồi bấm <strong>Run</strong> để tạo bảng & bật Realtime.</li>
+                  <li>Vào <strong>Project Settings > API</strong>, copy <strong>Project URL</strong> và <strong>anon
+                      key</strong> dán vào ô bên trên rồi bấm <strong>Lưu & Kết nối</strong>.</li>
                 </ol>
               </div>
             </div>
 
             <!-- Thiết lập Danh mục Modules -->
             <div class="card card-full">
-              <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div class="card-header"
+                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <div>
                   <h3>📁 Thiết lập Danh mục Modules (<span id="module-count">11</span>)</h3>
-                  <p style="font-size:12.5px;color:var(--text-secondary);margin-top:2px;">Tùy biến, thêm mới, sửa tên hoặc xóa bớt module kiểm thử theo nhu cầu dự án</p>
+                  <p style="font-size:12.5px;color:var(--text-secondary);margin-top:2px;">Tùy biến, thêm mới, sửa tên
+                    hoặc xóa bớt module kiểm thử theo nhu cầu dự án</p>
                 </div>
                 <div style="display:flex;gap:8px;">
-                  <button class="btn btn-outline btn-sm" onclick="resetModulesToDefault()">🔄 Khôi phục mặc định</button>
+                  <button class="btn btn-outline btn-sm" onclick="resetModulesToDefault()">🔄 Khôi phục mặc
+                    định</button>
                   <button class="btn btn-primary btn-sm" onclick="openAddModuleModal()">➕ Thêm Module mới</button>
                 </div>
               </div>
@@ -627,15 +694,18 @@
         </div>
         <div class="form-group">
           <label>Các bước thực hiện (Mỗi bước trên 1 dòng)</label>
-          <textarea id="tc-form-steps" rows="3" placeholder="1. Mở màn hình check-in&#10;2. Quét CCCD hoặc nhập thông tin...&#10;3. Nhấn Xác nhận"></textarea>
+          <textarea id="tc-form-steps" rows="3"
+            placeholder="1. Mở màn hình check-in&#10;2. Quét CCCD hoặc nhập thông tin...&#10;3. Nhấn Xác nhận"></textarea>
         </div>
         <div class="form-group">
           <label>Kết quả mong đợi (Mỗi kết quả trên 1 dòng) *</label>
-          <textarea id="tc-form-expected" rows="3" placeholder="1. HTTP 200 OK&#10;2. Dữ liệu lưu vào DB thành công"></textarea>
+          <textarea id="tc-form-expected" rows="3"
+            placeholder="1. HTTP 200 OK&#10;2. Dữ liệu lưu vào DB thành công"></textarea>
         </div>
         <div class="form-group">
           <label>Ghi chú kỹ thuật (Tùy chọn)</label>
-          <textarea id="tc-form-notes" rows="2" placeholder="Ghi chú API endpoint, lưu ý đặc biệt, rollback..."></textarea>
+          <textarea id="tc-form-notes" rows="2"
+            placeholder="Ghi chú API endpoint, lưu ý đặc biệt, rollback..."></textarea>
         </div>
         <div class="form-actions">
           <button class="btn btn-outline" onclick="closeModal('modal-tc-form')">Hủy bỏ</button>
@@ -707,4 +777,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
