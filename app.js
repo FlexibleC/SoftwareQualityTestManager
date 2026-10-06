@@ -3662,7 +3662,13 @@ function renderExecDetail(tcId) {
   const comments = (state.comments && state.comments[tcId]) || [];
   const evidences = r.evidences || [];
 
-  const isFailed = r.status === 'Fail' || (r.defectStatus && r.defectStatus !== 'None');
+  if (state.execDraftTcId !== tcId) {
+    state.execDraftTcId = tcId;
+    state.execDraftStatus = r.status || '';
+  }
+  const draftStatus = state.execDraftStatus || r.status || '';
+
+  const isFailed = draftStatus === 'Fail' || r.status === 'Fail' || (r.defectStatus && r.defectStatus !== 'None');
   const currentSubtab = state.execActiveSubtab || 'steps';
 
   card.innerHTML = `<div class="exec-detail-container">
@@ -3688,28 +3694,41 @@ function renderExecDetail(tcId) {
         <h2 class="exec-tc-header-name">${tc.name}</h2>
       </div>
 
-      <!-- QUICK EVALUATION TOOLBAR -->
+      <!-- EVALUATION & CONFIRMATION TOOLBAR -->
       <div class="exec-action-toolbar">
         <div class="exec-status-group">
-          <span class="toolbar-label">Đánh giá kết quả:</span>
+          <span class="toolbar-label">1. Chọn kết quả:</span>
           <div class="status-selector-compact" id="status-sel-${tcId}">
-            <button class="btn-stat btn-stat-pass ${r.status==='Pass'?'active':''}" onclick="setStatus('${tcId}','Pass')">
+            <button type="button" class="btn-stat btn-stat-pass ${draftStatus==='Pass'?'active':''}" onclick="selectDraftStatus('${tcId}','Pass')" title="Chọn Pass (Bấm 'Xác nhận & Lưu' để gửi lên hệ thống)">
               ✅ Pass
             </button>
-            <button class="btn-stat btn-stat-fail ${r.status==='Fail'?'active':''}" onclick="setStatus('${tcId}','Fail')">
+            <button type="button" class="btn-stat btn-stat-fail ${draftStatus==='Fail'?'active':''}" onclick="selectDraftStatus('${tcId}','Fail')" title="Chọn Fail (Chuyển sang Tab 2 để điền lý do lỗi)">
               ❌ Fail
             </button>
-            <button class="btn-stat btn-stat-skip ${r.status==='Skip'?'active':''}" onclick="setStatus('${tcId}','Skip')">
+            <button type="button" class="btn-stat btn-stat-skip ${draftStatus==='Skip'?'active':''}" onclick="selectDraftStatus('${tcId}','Skip')" title="Chọn Bỏ qua (Skip)">
               ⏭ Skip
             </button>
-            <button class="btn-stat btn-stat-inprog ${r.status==='In Progress'?'active':''}" onclick="setStatus('${tcId}','In Progress')">
+            <button type="button" class="btn-stat btn-stat-inprog ${draftStatus==='In Progress'?'active':''}" onclick="selectDraftStatus('${tcId}','In Progress')" title="Chọn Đang test">
               🔄 Đang test
             </button>
           </div>
         </div>
+
+        <div class="exec-confirm-group">
+          <button type="button" class="btn btn-primary btn-confirm-save" onclick="confirmSaveTestResult('${tcId}')" title="Xác nhận kết quả đánh giá và đồng bộ lên hệ thống">
+            💾 Xác nhận & Lưu
+          </button>
+          <button type="button" class="btn btn-outline btn-save-next" onclick="confirmSaveTestResult('${tcId}', true)" title="Lưu và chuyển ngay sang test case tiếp theo">
+            Lưu & Tiếp →
+          </button>
+        </div>
+
         <div class="exec-meta-info">
+          <span class="exec-saved-status-badge">
+            Đã lưu: <strong class="status-badge status-${(r.status||'Not Run').replace(' ','-')}">${r.status || 'Chưa chạy'}</strong>
+          </span>
           <span>👤 <strong>${r.tester || (state.currentUser ? state.currentUser.name : 'Tester')}</strong></span>
-          <span>⏱️ ${r.runAt ? new Date(r.runAt).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'}) + ' ' + new Date(r.runAt).toLocaleDateString('vi-VN') : 'Chưa chạy'}</span>
+          <span>⏱️ ${r.runAt ? new Date(r.runAt).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'}) : 'Chưa lưu'}</span>
         </div>
       </div>
 
@@ -3719,13 +3738,13 @@ function renderExecDetail(tcId) {
           📋 1. Kịch bản & Các bước
         </button>
         <button class="exec-subtab-btn ${currentSubtab==='defect'?'active':''}" data-subtab="defect" onclick="switchExecTab('${tcId}','defect')">
-          🎯 2. Kết quả & Lỗi ${isFailed ? `<span class="tab-defect-badge">🐞 ${r.defectStatus||'Lỗi'}</span>` : ''}
+          🎯 2. Đánh giá & Báo cáo kết quả ${isFailed ? `<span class="tab-defect-badge">🐞 ${r.defectStatus||'Lỗi'}</span>` : ''}
         </button>
         <button class="exec-subtab-btn ${currentSubtab==='evidence'?'active':''}" data-subtab="evidence" onclick="switchExecTab('${tcId}','evidence')">
           📸 3. Bằng chứng ảnh <span class="tab-count-badge">${evidences.length}</span>
         </button>
         <button class="exec-subtab-btn ${currentSubtab==='discuss'?'active':''}" data-subtab="discuss" onclick="switchExecTab('${tcId}','discuss')">
-          💬 4. Trao đổi QA & Dev <span class="tab-count-badge">${comments.length}</span>
+          💬 4. Trao đổi QA & Dev (Độc lập) <span class="tab-count-badge">${comments.length}</span>
         </button>
       </div>
     </div>
@@ -3781,6 +3800,16 @@ function renderExecDetail(tcId) {
 
       <!-- PANE 2: KẾT QUẢ & LỖI (DEFECT) -->
       <div class="exec-subtab-pane ${currentSubtab==='defect'?'active':''}" data-subtab="defect">
+        <div class="exec-draft-alert ${draftStatus==='Fail'?'alert-fail':draftStatus==='Pass'?'alert-pass':''}" id="draft-alert-${tcId}">
+          <div>
+            <span>Đang chọn kết quả: </span>
+            <strong id="draft-status-label-${tcId}">${draftStatus==='Pass'?'✅ Pass':draftStatus==='Fail'?'❌ Fail':draftStatus==='Skip'?'⏭ Skip':draftStatus==='In Progress'?'🔄 Đang test':'⏳ Chưa chọn kết quả'}</strong>
+          </div>
+          <div style="font-size:12px;opacity:0.9">
+            💡 Thiết lập thông tin xong, hãy bấm <strong>"Xác nhận & Lưu"</strong> để gửi lên hệ thống.
+          </div>
+        </div>
+
         <div class="form-row-2">
           <div class="form-group">
             <label>Người thực hiện test</label>
@@ -3788,18 +3817,18 @@ function renderExecDetail(tcId) {
           </div>
           <div class="form-group">
             <label>Thời điểm thực thi</label>
-            <input type="text" value="${r.runAt ? new Date(r.runAt).toLocaleString('vi-VN') : 'Chưa chạy'}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
+            <input type="text" value="${r.runAt ? new Date(r.runAt).toLocaleString('vi-VN') : 'Chưa lưu lên hệ thống'}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
           </div>
         </div>
 
         <div class="form-group">
-          <label style="font-weight:600; color:#dc2626">Lý do thất bại / Lỗi phát hiện (khi Fail) *</label>
-          <input type="text" id="ef-fail" placeholder="Mô tả ngắn gọn lỗi thực tế gặp phải (bắt buộc khi đánh Fail)..." value="${r.failReason||''}" onchange="updateTcField('${tcId}','failReason',this.value)" />
+          <label style="font-weight:600; color:#dc2626">Lý do thất bại / Lỗi phát hiện (bắt buộc khi chọn Fail) *</label>
+          <input type="text" id="ef-fail" placeholder="Mô tả ngắn gọn lỗi thực tế gặp phải (bắt buộc khi đánh Fail)..." value="${r.failReason||''}" oninput="updateTcField('${tcId}','failReason',this.value)" />
         </div>
 
         <div class="form-group">
           <label>Ghi chú thực thi bổ sung (Môi trường, Account, Payload...)</label>
-          <textarea id="ef-note" rows="2" placeholder="Ghi chú thêm về ca test này..." onchange="updateTcField('${tcId}','note',this.value)">${r.note||''}</textarea>
+          <textarea id="ef-note" rows="2" placeholder="Ghi chú thêm về ca test này..." oninput="updateTcField('${tcId}','note',this.value)">${r.note||''}</textarea>
         </div>
 
         <!-- DEFECT LIFECYCLE BOX -->
@@ -3820,11 +3849,11 @@ function renderExecDetail(tcId) {
             </div>
             <div class="form-group">
               <label>Lập trình viên phụ trách (Assigned Dev)</label>
-              <input type="text" id="ef-dev" placeholder="VD: Trần Quốc Tuấn (Dev)" value="${r.assignedDev||'Trần Quốc Tuấn (Dev)'}" onchange="updateTcField('${tcId}','assignedDev',this.value)" />
+              <input type="text" id="ef-dev" placeholder="VD: Trần Quốc Tuấn (Dev)" value="${r.assignedDev||'Trần Quốc Tuấn (Dev)'}" oninput="updateTcField('${tcId}','assignedDev',this.value)" />
             </div>
             <div class="form-group">
               <label>Bản build sửa lỗi (Fix Version)</label>
-              <input type="text" id="ef-fixver" placeholder="VD: v2.1.2-build.8" value="${r.fixVersion||''}" onchange="updateTcField('${tcId}','fixVersion',this.value)" />
+              <input type="text" id="ef-fixver" placeholder="VD: v2.1.2-build.8" value="${r.fixVersion||''}" oninput="updateTcField('${tcId}','fixVersion',this.value)" />
             </div>
           </div>
 
@@ -3834,6 +3863,21 @@ function renderExecDetail(tcId) {
             <button class="btn-defect btn-defect-resolved" onclick="updateDefectStatus('${tcId}', 'Resolved')">🔧 Dev: Đã sửa (Chờ Retest)</button>
             <button class="btn-defect btn-defect-retest-ok" onclick="updateDefectStatus('${tcId}', 'Retest Passed')">✅ Tester: Retest Pass (Đóng lỗi)</button>
             <button class="btn-defect btn-defect-reopen" onclick="updateDefectStatus('${tcId}', 'Retest Fail')">🔄 Tester: Retest Fail (Mở lại)</button>
+          </div>
+        </div>
+
+        <!-- FORM BOTTOM CONFIRMATION BAR -->
+        <div class="exec-pane-submit-bar">
+          <div class="submit-bar-left">
+            <span>Kết quả sẽ lưu: <strong id="submit-bar-status-${tcId}" style="color:var(--accent)">${draftStatus || 'Chưa chọn'}</strong></span>
+          </div>
+          <div class="submit-bar-right">
+            <button type="button" class="btn btn-primary btn-confirm-save" onclick="confirmSaveTestResult('${tcId}')" style="padding:8px 18px;font-size:13.5px">
+              💾 Xác nhận & Lưu kết quả kiểm thử
+            </button>
+            <button type="button" class="btn btn-outline btn-save-next" onclick="confirmSaveTestResult('${tcId}', true)" style="padding:8px 14px;font-size:13.5px">
+              💾 Lưu & Sang test case kế tiếp →
+            </button>
           </div>
         </div>
       </div>
@@ -3879,12 +3923,22 @@ function renderExecDetail(tcId) {
         </div>
       </div>
 
-      <!-- PANE 4: TRAO ĐỔI THẢO LUẬN QA & DEV -->
+      <!-- PANE 4: TRAO ĐỔI THẢO LUẬN QA & DEV (ĐỘC LẬP) -->
       <div class="exec-subtab-pane ${currentSubtab==='discuss'?'active':''}" data-subtab="discuss">
         <div class="comments-section" style="margin-top:0">
+          <div class="comments-independent-notice">
+            <div class="notice-icon">💬</div>
+            <div class="notice-body">
+              <div class="notice-title">Kênh trao đổi 2 chiều độc lập (Tester ⇄ Dev ⇄ QA Lead)</div>
+              <div class="notice-desc">
+                Khu vực này hoạt động <strong>hoàn toàn độc lập</strong> với việc chấm điểm Pass/Fail của test case. Tester, Dev và QA Lead có thể trao đổi log lỗi, commit hash, đặt câu hỏi làm rõ theo thời gian thực mà <strong>không làm thay đổi hay ghi đè</strong> lên trạng thái kiểm thử hiện tại.
+              </div>
+            </div>
+          </div>
+
           <div class="comments-header">
             <span>💬 Thảo luận & Phản hồi kỹ thuật (${comments.length})</span>
-            <span style="font-size:11.5px;color:var(--text-muted);font-weight:normal">Trao đổi 2 chiều giữa Tester, Dev và QA Lead</span>
+            <span style="font-size:11.5px;color:var(--text-muted);font-weight:normal">Gửi và cập nhật realtime</span>
           </div>
 
           <div class="comment-feed" id="comment-feed-${tcId}">
@@ -3916,26 +3970,98 @@ function renderExecDetail(tcId) {
   </div>`;
 }
 
-function setStatus(tcId, status) {
+function selectDraftStatus(tcId, status) {
   if (state.currentUser && state.currentUser.role === 'developer') {
     showToast('⚠️ Developer không trực tiếp duyệt Pass/Fail. Vui lòng cập nhật trạng thái xử lý lỗi (Defect Lifecycle: Đang sửa / Đã sửa) và để Tester nghiệm thu!', 'info');
     return;
   }
-  const failEl = document.getElementById('ef-fail');
-  const failReason = failEl ? failEl.value.trim() : ((state.results[tcId] && state.results[tcId].failReason) || '').trim();
-  if (status === 'Fail' && !failReason) {
-    state.execActiveSubtab = 'defect';
-    renderExecDetail(tcId);
-    showToast('⚠️ Vui lòng nhập lý do lỗi trước khi đánh Fail!', 'error');
-    const targetEl = document.getElementById('ef-fail');
-    if (targetEl) targetEl.focus();
+  
+  state.execDraftStatus = status;
+
+  // Cập nhật class active cho các nút trạng thái trên toolbar
+  const selEl = document.getElementById(`status-sel-${tcId}`);
+  if (selEl) {
+    selEl.querySelectorAll('.btn-stat').forEach(b => b.classList.remove('active'));
+    const btnCls = status === 'In Progress' ? 'inprog' : status.toLowerCase();
+    const btn = selEl.querySelector(`.btn-stat-${btnCls}`);
+    if (btn) btn.classList.add('active');
+  }
+
+  // Cập nhật nhãn trạng thái draft ở pane 2 nếu đang mở
+  const labelEl = document.getElementById(`draft-status-label-${tcId}`);
+  if (labelEl) {
+    labelEl.textContent = status === 'Pass' ? '✅ Pass' : status === 'Fail' ? '❌ Fail' : status === 'Skip' ? '⏭ Skip' : '🔄 Đang test';
+  }
+  const submitBarStatus = document.getElementById(`submit-bar-status-${tcId}`);
+  if (submitBarStatus) {
+    submitBarStatus.textContent = status;
+  }
+  const alertEl = document.getElementById(`draft-alert-${tcId}`);
+  if (alertEl) {
+    alertEl.className = `exec-draft-alert ${status === 'Fail' ? 'alert-fail' : status === 'Pass' ? 'alert-pass' : ''}`;
+  }
+
+  // Khi chọn Fail: Tự động chuyển sang Subtab 2 và focus vào ô Lý do lỗi
+  if (status === 'Fail') {
+    switchExecTab(tcId, 'defect');
+    setTimeout(() => {
+      const failEl = document.getElementById('ef-fail');
+      if (failEl) {
+        failEl.focus();
+        failEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 60);
+    showToast('❌ Đã chọn Fail! Vui lòng nhập lý do lỗi và bấm "Xác nhận & Lưu".', 'info');
+  } else if (status === 'Pass') {
+    showToast('✅ Đã chọn Pass! Hãy bấm "Xác nhận & Lưu" để gửi lên hệ thống.', 'info');
+  } else if (status === 'Skip') {
+    showToast('⏭ Đã chọn Skip! Bấm "Xác nhận & Lưu" để nộp kết quả.', 'info');
+  } else if (status === 'In Progress') {
+    showToast('🔄 Đã chọn Đang test! Bấm "Xác nhận & Lưu" để cập nhật.', 'info');
+  }
+}
+
+function confirmSaveTestResult(tcId, andNext = false) {
+  if (state.currentUser && state.currentUser.role === 'developer') {
+    showToast('⚠️ Developer không trực tiếp duyệt Pass/Fail. Vui lòng cập nhật trạng thái xử lý lỗi (Defect Lifecycle: Đang sửa / Đã sửa) và để Tester nghiệm thu!', 'info');
     return;
   }
-  
+
+  const status = state.execDraftStatus || (state.results[tcId] && state.results[tcId].status);
+  if (!status || status === 'Not Run') {
+    showToast('⚠️ Vui lòng chọn kết quả đánh giá (Pass, Fail, Skip hoặc Đang test) trước khi Lưu!', 'error');
+    return;
+  }
+
+  const failEl = document.getElementById('ef-fail');
+  const failReason = failEl ? failEl.value.trim() : ((state.results[tcId] && state.results[tcId].failReason) || '').trim();
+
+  if (status === 'Fail' && !failReason) {
+    switchExecTab(tcId, 'defect');
+    showToast('⚠️ Bắt buộc phải nhập Lý do thất bại / Lỗi phát hiện khi đánh giá Fail!', 'error');
+    setTimeout(() => {
+      const targetEl = document.getElementById('ef-fail');
+      if (targetEl) targetEl.focus();
+    }, 60);
+    return;
+  }
+
   if (!state.results[tcId]) state.results[tcId] = {};
   state.results[tcId].status = status;
   state.results[tcId].runAt = new Date().toISOString();
-  
+  state.results[tcId].tester = (state.currentUser && state.currentUser.name) || 'Tester';
+
+  if (failEl) state.results[tcId].failReason = failReason;
+  const noteEl = document.getElementById('ef-note');
+  if (noteEl) state.results[tcId].note = noteEl.value.trim();
+
+  const sevEl = document.getElementById('ef-sev');
+  if (sevEl) state.results[tcId].severity = sevEl.value;
+  const devEl = document.getElementById('ef-dev');
+  if (devEl) state.results[tcId].assignedDev = devEl.value.trim();
+  const fixEl = document.getElementById('ef-fixver');
+  if (fixEl) state.results[tcId].fixVersion = fixEl.value.trim();
+
   if (status === 'Fail') {
     if (!state.results[tcId].defectStatus || state.results[tcId].defectStatus === 'None') {
       state.results[tcId].defectStatus = 'New';
@@ -3944,18 +4070,23 @@ function setStatus(tcId, status) {
     state.results[tcId].defectStatus = 'Retest Passed';
   }
 
-  const testerEl = document.getElementById('ef-tester');
-  if (testerEl && testerEl.value) state.results[tcId].tester = testerEl.value;
-  
-  if (failEl) state.results[tcId].failReason = failEl.value;
-  const noteEl = document.getElementById('ef-note');
-  if (noteEl) state.results[tcId].note = noteEl.value;
-  
   saveState();
   renderExecDetail(tcId);
   filterExecList();
   syncSingleResultToSupabase(tcId);
-  showToast(`${status === 'Pass' ? '✅' : status === 'Fail' ? '❌' : '⏭'} ${tcId}: ${status}`, status === 'Pass' ? 'success' : status === 'Fail' ? 'error' : 'info');
+
+  const statEmoji = status === 'Pass' ? '✅' : status === 'Fail' ? '❌' : status === 'Skip' ? '⏭' : '🔄';
+  showToast(`${statEmoji} Đã xác nhận & lưu kết quả ${tcId}: [${status}] lên hệ thống!`, status === 'Pass' ? 'success' : status === 'Fail' ? 'error' : 'info');
+
+  if (andNext) {
+    setTimeout(() => {
+      nextTc(tcId);
+    }, 200);
+  }
+}
+
+function setStatus(tcId, status) {
+  selectDraftStatus(tcId, status);
 }
 
 function updateTcField(tcId, field, value) {
