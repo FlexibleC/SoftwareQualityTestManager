@@ -1,24 +1,74 @@
 /* ============================================================
    SmartVMS Test Manager — Application Logic
-   Version 2.0 | 167 Test Cases | 10 Modules (SmartVMS Local v2.0)
+   Version 3.0 | 161 Test Cases | 12 Modules (SmartVMS Local 2026)
    ============================================================ */
 
 'use strict';
 
 // ================================================================
-// DATA: 10 MODULES — SMARTVMS LOCAL v2.0
+// DATA: 12 MODULES — SMARTVMS LOCAL 2026 CHUẨN HÓA
 // ================================================================
 const DEFAULT_MODULES = [
-  { id: 'M01', name: 'Xác thực & Ca trực', short: 'Auth & Ca trực' },
-  { id: 'M02', name: 'Check-in Khách Đơn', short: 'Check-in' },
-  { id: 'M03', name: 'Khách Đoàn & Người đi cùng', short: 'Đoàn & Đi cùng' },
-  { id: 'M04', name: 'Check-out & Quản lý Thẻ', short: 'Check-out & Thẻ' },
-  { id: 'M05', name: 'Quản trị Admin & Nhân sự', short: 'Admin & Nhân sự' },
-  { id: 'M06', name: 'Báo cáo, Thống kê & Xuất file', short: 'Báo cáo & Thống kê' },
-  { id: 'M07', name: 'Bảo trì Dữ liệu & Auto Backup', short: 'Backup & Restore' },
-  { id: 'M08', name: 'Thiết bị Ngoại vi & DeviceService', short: 'Thiết bị & Cổng' },
-  { id: 'M09', name: 'Cấu hình Mạng, Hệ thống & Giao diện', short: 'Mạng & Giao diện' },
-  { id: 'M10', name: 'Phi chức năng, Độ ổn định & Chịu lỗi', short: 'Phi chức năng' },
+  {
+    "id": "M01",
+    "name": "Xác thực, Phân quyền & Quản lý Ca trực",
+    "short": "Auth & Ca trực"
+  },
+  {
+    "id": "M02",
+    "name": "Check-in Khách Đơn & Cấp phát Thẻ",
+    "short": "Check-in Khách"
+  },
+  {
+    "id": "M03",
+    "name": "Khách Đoàn, Người đi cùng & Lưu trú Qua đêm",
+    "short": "Đoàn & Đi cùng"
+  },
+  {
+    "id": "M04",
+    "name": "Check-out, Quản lý Phương tiện & Thu hồi Thẻ mất",
+    "short": "Check-out & Thẻ"
+  },
+  {
+    "id": "M05",
+    "name": "Giao diện Trực ban Cải tiến & Tra cứu Nâng cao",
+    "short": "Trực ban & Tra cứu"
+  },
+  {
+    "id": "M06",
+    "name": "Chi tiết Lượt khách & Dòng thời gian Timeline",
+    "short": "Chi tiết & Timeline"
+  },
+  {
+    "id": "M07",
+    "name": "Phân hệ Sổ sách Ngoại lệ - DataEntry",
+    "short": "Sổ sách DataEntry"
+  },
+  {
+    "id": "M08",
+    "name": "Quản trị Admin & Giám sát Vận hành",
+    "short": "Admin & Giám sát"
+  },
+  {
+    "id": "M09",
+    "name": "Trung tâm Báo cáo, Thống kê & Báo cáo Thẻ mất",
+    "short": "Báo cáo & Thống kê"
+  },
+  {
+    "id": "M10",
+    "name": "Cấu hình Hệ thống, Trạm gác & Sao lưu CSDL",
+    "short": "Cấu hình & Backup"
+  },
+  {
+    "id": "M11",
+    "name": "Thiết bị Ngoại vi, DeviceService & Tương tác Cổng",
+    "short": "Thiết bị & Barie"
+  },
+  {
+    "id": "M12",
+    "name": "Dịch vụ Ngầm, Tính toàn vẹn, Bản quyền & Chịu lỗi",
+    "short": "Dịch vụ ngầm & NFR"
+  }
 ];
 
 function getModules() {
@@ -37,583 +87,2369 @@ try {
 } catch(e) {}
 
 const ALL_TCS = [
-  // ==========================================
-  // M01: Đăng nhập & Ca trực (Auth & Shift)
-  // ==========================================
-  { id:'TC-AUTH-001', module:'M01', priority:'P1', name:'Đăng nhập hợp lệ bằng tài khoản trạm (Không mật khẩu)',
-    platform: 'Giao diện Web UI',
-    testData: 'Tài khoản nhân viên trạm: Nv001a1 (hoặc NV001)',
-    precondition:'Nhân viên đang Active trong hệ thống',
-    steps:['1. Mở trang Web trạm gác (/staff.html).','2. Nhập Tên đăng nhập trạm (vd: Nv001a1), nhấn Đăng nhập (hệ thống trạm không yêu cầu mật khẩu).'],
-    expected:['Hệ thống xác thực thành công, lưu Token đăng nhập.','Nếu chưa có ca trực nào, popup Yêu cầu mở ca trực (Chụp ảnh webcam hoặc quét CCCD) sẽ hiện lên.'] },
-  { id:'TC-AUTH-002', module:'M01', priority:'P2', name:'Đăng nhập trạm không phân biệt hoa/thường',
-    platform: 'Giao diện Web UI',
-    testData: 'Nhập "NV001A1" hoặc "nv001a1"',
-    steps:['1. Nhập username xen kẽ chữ hoa chữ thường.','2. Nhấn Đăng nhập.'],
-    expected:['Hệ thống tự động chuẩn hóa chữ thường và đăng nhập thành công, không báo lỗi.'] },
-  { id:'TC-AUTH-003', module:'M01', priority:'P1', name:'Đăng nhập trạm thất bại: Tên tài khoản không tồn tại',
-    platform: 'Giao diện Web UI',
-    testData: 'Tài khoản không có thật: "khongtontai"',
-    steps:['1. Nhập tài khoản không tồn tại.','2. Nhấn Đăng nhập.'],
-    expected:['Hệ thống chặn lại, báo lỗi: "User không hợp lệ hoặc nhân viên chưa được kích hoạt."'] },
-  { id:'TC-AUTH-004', module:'M01', priority:'P1', name:'Đăng nhập thất bại: Tài khoản bị khóa (Inactive)',
-    platform: 'Giao diện Web UI',
-    testData: 'Tài khoản nhân viên đã bị Admin tắt kích hoạt (IsActive = false)',
-    steps:['1. Nhập tài khoản bị khóa.','2. Nhấn Đăng nhập.'],
-    expected:['Hệ thống từ chối đăng nhập, thông báo: "User không hợp lệ hoặc nhân viên chưa được kích hoạt."'] },
-  { id:'TC-AUTH-005', module:'M01', priority:'P1', name:'Mở ca trực bằng Camera (Webcam)',
-    platform: 'Giao diện Web UI',
-    testData: 'Webcam PC đang hoạt động',
-    precondition:'Đã qua bước Đăng nhập tài khoản trạm. Trạm được cấu hình "Bắt buộc chụp ảnh Camera".',
-    steps:['1. Tại popup "Xác nhận chụp ảnh vào ca", cấp quyền Camera nếu trình duyệt yêu cầu.',
-           '2. Quan sát khung hình camera trực tiếp (Live Preview) hiển thị rõ khuôn mặt nhân viên.',
-           '3. Nhấn nút "Vào ca" (biểu tượng Camera).'],
-    expected:['Hệ thống chụp lại ảnh từ camera, lưu vào CSDL làm bằng chứng mở ca trực.',
-              'Mở ca thành công, popup tự đóng và màn hình chuyển vào Dashboard làm việc của trạm gác.',
-              'Header cập nhật tên nhân viên và chấm trạng thái màu xanh lá "Đang trong ca trực".'] },
-  { id:'TC-AUTH-006', module:'M01', priority:'P1', name:'Hủy mở ca trực (Hủy chụp ảnh)',
-    platform: 'Giao diện Web UI',
-    steps:['1. Khi popup "Xác nhận chụp ảnh vào ca" hiện lên, nhấn nút "Hủy bỏ".'],
-    expected:['Hệ thống hủy phiên đăng nhập trạm ngay lập tức, chuyển hướng quay lại màn hình Đăng nhập.'] },
-  { id:'TC-AUTH-007', module:'M01', priority:'P1', name:'Mở ca trực bằng Thẻ CCCD (Khi Camera hỏng)',
-    platform: 'Thiết bị & Cổng gác',
-    testData: 'Thẻ CCCD gắn chip của nhân viên Nv001a1 (Khớp CCCD + Họ tên + Giới tính)',
-    precondition:'Admin bật cờ "Cho phép dùng CCCD mở ca (AllowCccdShiftAuth)" cho nhân viên này.',
-    steps:['1. Tại popup Mở ca, chuyển sang tab "Dùng CCCD thay Camera".',
-           '2. Nhấn nút "Bắt đầu đọc thẻ CCCD" (hoặc quẹt thẻ CCCD gắn chip của nhân viên vào đầu đọc).',
-           '3. Hệ thống hiển thị số CCCD và thông tin đọc được, nhấn nút "Xác nhận vào ca".'],
-    expected:['Đọc thẻ thành công. Đối soát số CCCD trùng khớp với hồ sơ nhân viên trong hệ thống.',
-              'Mở ca thành công, popup đóng lại và chuyển tới Dashboard trạm gác.'] },
-  { id:'TC-AUTH-008', module:'M01', priority:'P2', name:'Từ chối mở ca bằng CCCD người khác',
-    platform: 'Thiết bị & Cổng gác',
-    testData: 'Quẹt thẻ CCCD của người khác không khớp với nhân viên đang đăng nhập',
-    steps:['1. Đăng nhập Nv001a1, chọn Dùng CCCD thay thế.','2. Quẹt thẻ CCCD của người khác.'],
-    expected:['Hệ thống từ chối mở ca, báo lỗi: "Số CCCD không khớp với hồ sơ nhân viên trong hệ thống."'] },
-  { id:'TC-AUTH-009', module:'M01', priority:'P2', name:'Khôi phục ca trực sau khi Reload (F5)',
-    platform: 'Giao diện Web UI',
-    precondition:'Nhân viên đang trong ca trực.',
-    steps:['1. Nhấn F5 refresh lại trang Web.'],
-    expected:['Vào thẳng Dashboard, không bắt đăng nhập hay chụp ảnh lại.'] },
-  { id:'TC-AUTH-010', module:'M01', priority:'P1', name:'Kết thúc ca trực (Đăng xuất)',
-    platform: 'Giao diện Web UI',
-    steps:['1. Trên thanh Header trạm gác, nhấn nút màu đỏ "Rời ca" (biểu tượng LogOut).',
-           '2. Popup "Xác nhận rời ca trực" hiện lên hiển thị khung hình camera trực tiếp.',
-           '3. Nhìn thẳng vào camera và nhấn nút "Rời ca" (màu đỏ) để chụp ảnh và kết ca.'],
-    expected:['Hệ thống chụp ảnh kết ca, gọi API ghi nhận chính xác thời điểm kết thúc ca trực.',
-              'Popup đóng lại và chuyển hướng về màn hình Đăng nhập trạm.'] },
-
-  // ==========================================
-  // M02: Khách Đơn & Check-in (Check-in)
-  // ==========================================
-  { id:'TC-CHECKIN-001', module:'M02', priority:'P1', name:'Đón Khách đi bộ cơ bản',
-    platform: 'Giao diện Web UI',
-    testData: 'Tên: "Khách VIP", CCCD: "0310...", Lý do: "Gặp IT"',
-    precondition:'Trạm gác đang trong ca trực.',
-    steps:['1. Trên giao diện Dashboard trạm gác, nhấn nút "+ Check-in khách mới" (màu xanh lá) để mở phiếu đăng ký.',
-           '2. Tại modal "Phiếu đăng ký khách ra/vào", nhập Họ tên khách, Số CCCD/Định danh, Mục đích vào (Lý do).',
-           '3. Giữ mặc định phương tiện Đi bộ, không phát thẻ, nhấn nút "Hoàn thành Check-In (1 khách, 0 thẻ)".'],
-    expected:['Hệ thống xác thực hợp lệ, lưu lượt thăm vào CSDL, modal tự đóng lại.',
-              'Bảng "Danh sách lượt khách ra vào đơn vị" (tab Đang trong đơn vị) lập tức xuất hiện dòng khách mới.',
-              'Thẻ thống kê "Tổng khách trong đơn vị" tăng thêm 1.'] },
-  { id:'TC-CHECKIN-002', module:'M02', priority:'P1', name:'Chặn Check-in trùng lặp (Duplicate)',
-    platform: 'Giao diện Web UI',
-    testData: 'Nhập lại đúng số CCCD vừa check-in ở bước trước',
-    steps:['1. Nhập CCCD của khách ĐANG Ở TRONG.','2. Nhấn Check-in.'],
-    expected:['Hệ thống báo lỗi "Khách có số CCCD này đang ở trong đơn vị".'] },
-  { id:'TC-CHECKIN-003', module:'M02', priority:'P1', name:'Check-in phát Thẻ Định Danh (RFID/Mã vạch)',
-    platform: 'Thiết bị & Cổng gác',
-    testData: 'Mã thẻ "TAG-001"',
-    steps:['1. Nhấn nút "+ Check-in khách mới", điền thông tin cá nhân khách.',
-           '2. Tại mục "Thẻ vào ra", chọn loại thẻ Định danh và quét hoặc nhập mã thẻ (vd: "TAG-001").',
-           '3. Nhấn nút "Hoàn thành Check-In (1 khách, 1 thẻ)".'],
-    expected:['Check-in thành công. Trên bảng danh sách khách Đang trong đơn vị, cột Thẻ hiển thị nhãn mã thẻ "TAG-001".'] },
-  { id:'TC-CHECKIN-004', module:'M02', priority:'P1', name:'Check-in phát Thẻ Cấp Chung (Số lượng đếm)',
-    platform: 'Giao diện Web UI',
-    testData: 'Số lượng thẻ: 3',
-    steps:['1. Nhấn nút "+ Check-in khách mới", điền thông tin khách.',
-           '2. Tại mục "Thẻ vào ra", chọn loại Thẻ cấp chung và nhập số lượng thẻ phát (vd: 3).',
-           '3. Nhấn nút "Hoàn thành Check-In (1 khách, 3 thẻ)".'],
-    expected:['Check-in thành công. Chi tiết lượt thăm ghi nhận 3 thẻ cấp chung.'] },
-  { id:'TC-CHECKIN-005', module:'M02', priority:'P1', name:'Check-in có Xe Cộ (Ô tô/Xe máy)',
-    platform: 'Giao diện Web UI',
-    testData: 'Biển số: "29A-12345", Loại: "Ô tô"',
-    steps:['1. Nhấn nút "+ Check-in khách mới", điền thông tin khách.',
-           '2. Tại mục Phương tiện, chọn loại xe (Ô tô/Xe máy) và nhập Biển số xe (vd: "29A-12345").',
-           '3. Nhấn nút "Hoàn thành Check-In".'],
-    expected:['Check-in thành công. Cột Biển số xe trên bảng khách Đang trong đơn vị hiển thị "29A-12345".'] },
-  { id:'TC-CHECKIN-006', module:'M02', priority:'P2', name:'Tự động Upsert (Gợi ý) Khách cũ',
-    platform: 'Giao diện Web UI',
-    testData: 'Nhập CCCD của 1 khách đã từng ra vào hôm qua',
-    steps:['1. Tại form Check-in, chỉ gõ số CCCD.','2. Nhấn Tab hoặc click ra ngoài.'],
-    expected:['Form tự động "kéo" Tên, Số ĐT, Công ty cũ của khách này và điền sẵn, giúp tiết kiệm thời gian.'] },
-  { id:'TC-CHECKIN-007', module:'M02', priority:'P2', name:'Check-in chụp Đa Ảnh Đính Kèm',
-    platform: 'Giao diện Web UI',
-    testData: 'Camera tài liệu (Document Camera)',
-    steps:['1. Trong modal Check-in, nhấn nút "Chụp ảnh đính kèm" để mở popup MultiShotCameraModal.',
-           '2. Chụp lần lượt các ảnh (Mặt trước CCCD, Mặt sau, Giấy giới thiệu) bằng cách nhấn nút chụp ảnh trên popup camera.',
-           '3. Kiểm tra các ảnh thu nhỏ trong dải gallery bên dưới, nhấn nút "Xong" để lưu ảnh vào phiếu đăng ký.',
-           '4. Nhấn nút "Hoàn thành Check-In".'],
-    expected:['Toàn bộ các ảnh chụp được resize tối ưu và tải lên server thành công.',
-              'Khi mở modal "Chi tiết" lượt thăm, gallery ảnh hiển thị đầy đủ các hình ảnh đã chụp.'] },
-  { id:'TC-CHECKIN-008', module:'M02', priority:'P1', name:'Validation: Bỏ trống trường bắt buộc',
-    platform: 'Giao diện Web UI',
-    steps:['1. Mở modal "+ Check-in khách mới", để trống ô Họ tên hoặc Số CCCD/Định danh.',
-           '2. Quan sát trạng thái nút submit và khu vực cảnh báo ở footer modal.'],
-    expected:['Nút "Hoàn thành Check-In" bị vô hiệu hóa (disabled, không bấm được).',
-              'Thanh footer modal hiển thị danh sách lỗi cảnh báo màu đỏ (Validation Summary) chỉ rõ các trường bắt buộc cần điền.'] },
-
-  // ==========================================
-  // M03: Khách Đoàn & Đi Cùng (Accompanying)
-  // ==========================================
-  { id:'TC-COMP-001', module:'M03', priority:'P1', name:'Tạo Đoàn: Thêm người đi cùng (có Tên tuổi)',
-    platform: 'Giao diện Web UI',
-    testData: 'Trưởng đoàn + 2 thành viên đi cùng',
-    steps:['1. Nhấn "+ Check-in khách mới", nhập thông tin Trưởng đoàn.',
-           '2. Nhấn nút "+ Thêm người đi cùng", nhập Họ tên và CCCD cho thành viên số 2 và số 3.',
-           '3. Nhấn nút "Hoàn thành Check-In (3 khách, 0 thẻ)".'],
-    expected:['Tạo đoàn thành công. Bảng Đang trong đơn vị hiển thị Trưởng đoàn kèm nhãn số lượng thành viên đi cùng là 2.'] },
-  { id:'TC-COMP-002', module:'M03', priority:'P1', name:'Tạo Đoàn: Nhập nhanh Số lượng khách vô danh',
-    platform: 'Giao diện Web UI',
-    testData: 'Trưởng đoàn + Đoàn công nhân 15 người',
-    steps:['1. Nhấn "+ Check-in khách mới", nhập thông tin Trưởng đoàn.',
-           '2. Tại mục Khách đi cùng vô danh, nhập số lượng = 15.',
-           '3. Nhấn nút "Hoàn thành Check-In (16 khách, 0 thẻ)".'],
-    expected:['Tổng khách lượt thăm ghi nhận 16 người (1 Trưởng đoàn + 15 khách vô danh), không cần gõ từng tên.'] },
-  { id:'TC-COMP-003', module:'M03', priority:'P1', name:'Sửa Đoàn đang Inside: Bổ sung thành viên',
-    platform: 'Giao diện Web UI',
-    testData: 'Chọn khách đoàn đang Inside',
-    steps:['1. Tại bảng danh sách trạm gác, tìm lượt thăm của đoàn đang ở trạng thái Inside.',
-           '2. Tại cột Thao tác, nhấn nút màu tím "Thêm" (biểu tượng icon Plus).',
-           '3. Modal "Bổ sung thành viên & Phương tiện vào đơn vị" mở ra, nhấn "+ Thêm người đi cùng" và nhập thông tin thành viên mới.',
-           '4. Nhấn nút "Lưu thông tin bổ sung".'],
-    expected:['Hệ thống gọi API /station/visits/supplemental cập nhật trực tiếp vào lượt thăm hiện tại.',
-              'Số lượng người trong đoàn tăng thêm 1, không tạo thêm lượt thăm rác.'] },
-  { id:'TC-COMP-004', module:'M03', priority:'P2', name:'Sửa Đoàn đang Inside: Bổ sung Xe ô tô đi sau',
-    platform: 'Giao diện Web UI',
-    testData: 'Đoàn khách lúc sáng đi bộ vào, chiều mang xe vào',
-    steps:['1. Tại dòng khách đang Inside, nhấn nút "Thêm" (icon Plus) để mở modal Bổ sung.',
-           '2. Chuyển sang mục Phương tiện, thêm loại xe và nhập biển số xe vào sau.',
-           '3. Nhấn nút "Lưu thông tin bổ sung".'],
-    expected:['Phương tiện được gán bổ sung vào lượt thăm hiện tại thành công.'] },
-  { id:'TC-COMP-005', module:'M03', priority:'P2', name:'Khách Lưu Trú Qua Đêm (Nhiều Ngày)',
-    platform: 'Giao diện Web UI',
-    steps:['1. Trong modal Check-in, tích chọn "Khách lưu trú dài ngày / qua đêm".','2. Nhấn nút "Hoàn thành Check-In".'],
-    expected:['Khách được gắn cờ IsMultiDayVisit. Khách này sẽ BỎ QUA quá trình Auto Check-out lúc nửa đêm của hệ thống.'] },
-
-  // ==========================================
-  // M04: Trả thẻ & Check-out (Check-out)
-  // ==========================================
-  { id:'TC-CHKOUT-001', module:'M04', priority:'P1', name:'Check-out Khách Đơn, không nợ thẻ',
-    platform: 'Giao diện Web UI',
-    steps:['1. Tại bảng danh sách khách (tab Đang trong đơn vị), tìm lượt thăm cần check-out.',
-           '2. Nhấn nút màu cam "Check-out" (biểu tượng LogOut) ở cột Thao tác.',
-           '3. Modal "Phiếu xuất bến & Check-out" mở ra và đã tích chọn sẵn khách ra về.',
-           '4. Nhấn nút "Xác nhận Check-out (1 người, 0 xe, 0 thẻ)".'],
-    expected:['Check-out thành công. Khách biến mất khỏi tab "Đang trong đơn vị" và chuyển sang tab "Lịch sử ra vào" với trạng thái Đã ra (CheckedOut).',
-              'Thời gian xuất bến được ghi nhận chính xác đến từng giây.'] },
-  { id:'TC-CHKOUT-002', module:'M04', priority:'P1', name:'Check-out: Thu hồi Thẻ Định Danh',
-    platform: 'Giao diện Web UI',
-    testData: 'Khách đang cầm thẻ "TAG-001"',
-    steps:['1. Nhấn nút "Check-out" trên dòng khách đang mượn thẻ TAG-001.',
-           '2. Trong modal Check-out, tại mục danh sách thẻ, tích chọn thu hồi thẻ "TAG-001".',
-           '3. Nhấn nút "Xác nhận Check-out (1 người, 0 xe, 1 thẻ)".'],
-    expected:['Check-out thành công. Thẻ TAG-001 được thu hồi và hoàn trả về kho thẻ với trạng thái Sẵn sàng cấp (Available).'] },
-  { id:'TC-CHKOUT-003', module:'M04', priority:'P1', name:'Báo lỗi: Quên không thu thẻ (Chặn Check-out)',
-    platform: 'Giao diện Web UI',
-    testData: 'Khách đang cầm thẻ, Chính sách hệ thống cấm nợ thẻ',
-    steps:['1. Nhấn nút "Check-out" cho khách đang mượn thẻ.',
-           '2. Trong modal Check-out, cố tình KHÔNG TÍCH thu lại thẻ và KHÔNG chọn báo mất thẻ.',
-           '3. Nhấn nút "Xác nhận Check-out".'],
-    expected:['Hệ thống chặn lại, hiển thị thông báo lỗi yêu cầu nhân viên phải xác nhận thu hồi thẻ hoặc đánh dấu nợ thẻ/mất thẻ trước khi cho khách ra.'] },
-  { id:'TC-CHKOUT-004', module:'M04', priority:'P1', name:'Ngoại lệ: Báo Mất Thẻ / Chấp nhận Khách nợ thẻ',
-    platform: 'Giao diện Web UI',
-    steps:['1. Trong modal Check-out, tại mục xử lý thẻ, tích chọn "Báo Mất / Chưa trả thẻ".',
-           '2. Nhập lý do vào ô Ghi chú Check-out: "Khách để quên ở nhà, cam kết trả sau".',
-           '3. Nhấn nút "Xác nhận Check-out".'],
-    expected:['Hệ thống cho phép check-out, trạng thái lượt thăm ghi nhận Đã ra (Có nợ thẻ), mã thẻ chuyển sang trạng thái Lost/Debt.'] },
-  { id:'TC-CHKOUT-005', module:'M04', priority:'P2', name:'Check-out Xe Ra Trước (Người ở lại)',
-    platform: 'Giao diện Web UI',
-    testData: 'Khách có xe',
-    steps:['1. Nhấn nút "Check-out" của đoàn có xe ô tô.',
-           '2. Trong modal Check-out, tích chọn Xe ra khỏi cổng, BỎ CHỌN người ra về.',
-           '3. Nhấn nút "Xác nhận Check-out (0 người, 1 xe, 0 thẻ)".'],
-    expected:['Ghi nhận thời gian xuất bến của xe. Lượt thăm và thành viên trong đoàn vẫn duy trì trạng thái Đang trong đơn vị (Inside).'] },
-  { id:'TC-CHKOUT-006', module:'M04', priority:'P2', name:'Check-out Từng Phần Đoàn (Vài người về trước)',
-    platform: 'Giao diện Web UI',
-    testData: 'Đoàn có Trưởng đoàn + 2 người đi cùng',
-    steps:['1. Mở popup Check-out trên dòng khách đoàn.','2. Bỏ tích Trưởng đoàn, chỉ tích chọn người đi cùng ra về.','3. Nhấn nút "Xác nhận Check-out".'],
-    expected:['Chỉ người đi cùng số 1 có giờ ra. Toàn bộ lượt thăm (Visit) vẫn ở trạng thái Inside.'] },
-  { id:'TC-CHKOUT-007', module:'M04', priority:'P1', name:'Đóng Lượt thăm hoàn toàn (Tự động chuyển CheckedOut)',
-    platform: 'Giao diện Web UI',
-    testData: 'Lượt thăm phức tạp đang Check-out lắt nhắt',
-    steps:['1. Mở modal Check-out, tích chọn nốt toàn bộ thành viên, xe và thẻ còn lại của lượt thăm.',
-           '2. Nhấn nút "Xác nhận Check-out".'],
-    expected:['Hệ thống kiểm tra không còn thành viên hoặc xe nào sót lại bên trong, lượt thăm tự động chuyển sang trạng thái Đã ra hoàn toàn (CheckedOut).'] },
-  { id:'TC-CHKOUT-008', module:'M04', priority:'P2', name:'Trả 1 phần Thẻ Vô Danh',
-    platform: 'Giao diện Web UI',
-    testData: 'Khách mượn 10 thẻ vô danh',
-    steps:['1. Nhấn nút Check-out trên dòng khách mượn thẻ cấp chung.','2. Tại mục Thẻ cấp chung, nhập số thẻ trả = 4 (nợ lại 6 thẻ).','3. Nhấn nút "Xác nhận Check-out".'],
-    expected:['Hệ thống cho phép. Khách ghi nợ 6 thẻ vô danh.'] },
-
-  // ==========================================
-  // M05: Quản trị Tài khoản & Admin (Settings)
-  // ==========================================
-  { id:'TC-ADMIN-001', module:'M05', priority:'P1', name:'Quản trị viên (Admin) Đăng nhập Hệ thống Admin',
-    platform: 'Giao diện Quản trị',
-    testData: 'Tài khoản mặc định: admin / admin123 (hoặc dataentry / data123)',
-    steps:['1. Mở trang Quản trị (/index.html).','2. Nhập tài khoản mật khẩu admin (admin / admin123).','3. Nhấn Đăng nhập.'],
-    expected:['Đăng nhập thành công, thấy được màn hình Dashboard Thống kê và Quản lý Hệ thống.'] },
-  { id:'TC-ADMIN-002', module:'M05', priority:'P1', name:'Đổi mật khẩu tài khoản Admin',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Vào tab Cài đặt / Quản lý tài khoản.','2. Chọn Đổi mật khẩu.','3. Nhập mk cũ "admin123", mk mới "123456".'],
-    expected:['Đổi thành công. Lần đăng nhập Admin sau bắt buộc dùng mk mới. (LƯU Ý: TEST XONG ĐỔI LẠI "admin123" ĐỂ TIẾP TỤC TEST)'] },
-  { id:'TC-STAFF-001', module:'M05', priority:'P1', name:'Thêm Nhân Viên Mới (Trạm gác)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Tên: "Bảo vệ Mới", Username: "baove3", CCCD: "026088009999", SĐT: "0988123456", Giới tính: Nam, Phòng ban: "An Ninh"',
-    steps:['1. Vào Cài đặt > Quản lý Tài khoản & Nhân viên.','2. Nhấn Thêm mới Nhân viên. Điền đủ Họ tên, Số CCCD, SĐT, Tên đăng nhập (không cần mật khẩu), Phòng ban, Chức vụ.','3. Nhấn Lưu.'],
-    expected:['Thêm thành công. Mã nhân viên tự sinh (vd: NV000004). Tài khoản baove3 lập tức có thể dùng để đăng nhập mở ca ở trạm gác.'] },
-  { id:'TC-STAFF-002', module:'M05', priority:'P2', name:'Cập nhật Quyền dùng CCCD thay Camera',
-    platform: 'Giao diện Quản trị',
-    testData: 'Chọn tài khoản baove3',
-    steps:['1. Chỉnh sửa baove3.','2. Tích chọn "Cho phép đăng nhập bằng CCCD (Bỏ qua Camera)".','3. Lưu.'],
-    expected:['Từ giờ baove3 có thể quẹt CCCD để mở ca theo kịch bản TC-AUTH-007.'] },
-  { id:'TC-STAFF-003', module:'M05', priority:'P2', name:'Khóa (Deactivate) tài khoản nhân viên đã nghỉ',
-    platform: 'Giao diện Quản trị',
-    testData: 'Chọn tài khoản baove3',
-    steps:['1. Sửa baove3, TẮT nút "Đang hoạt động (IsActive)".','2. Lưu.'],
-    expected:['Tài khoản chuyển màu xám. Mọi nỗ lực login bằng baove3 sẽ bị chặn (như TC-AUTH-004).'] },
-  { id:'TC-STAFF-004', module:'M05', priority:'P1', name:'Xóa hàng loạt (Bulk Delete) Nhân viên rác',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Tích chọn nhiều nhân viên giả mạo.','2. Nhấn nút "Xóa các mục đã chọn".','3. Xác nhận Cảnh báo nguy hiểm.'],
-    expected:['Hệ thống xóa sạch các nhân viên này khỏi DB (chỉ xóa được nếu họ chưa từng mở ca trực nào).'] },
-  { id:'TC-STAFF-005', module:'M05', priority:'P2', name:'Import danh sách nhân viên từ Excel (Dự phòng)',
-    platform: 'API / Postman',
-    testData: 'Upload file Excel (hoặc gọi API /api/admin/staff/import)',
-    steps:['1. Gửi request Import file Excel danh sách 50 nhân viên theo template mẫu.'],
-    expected:['Hệ thống tự động Insert hàng loạt 50 nhân viên. Báo lỗi những dòng sai định dạng.'] },
-
-  // ==========================================
-  // M06: Báo Cáo, Thống Kê & Xuất File (Report & Export)
-  // ==========================================
-  { id:'TC-RPT-001', module:'M06', priority:'P1', name:'Dashboard Admin: Thống kê Khách Đang Trong Đơn Vị (Inside)',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Vào tab Dashboard Admin.','2. Gọi API /api/admin/dashboard/inside.'],
-    expected:['Hiển thị chính xác tổng số Khách, Đoàn, và Phương tiện ĐANG Ở TRONG thời điểm hiện tại.'] },
-  { id:'TC-RPT-002', module:'M06', priority:'P1', name:'Tra cứu Lịch sử (Tìm kiếm đa năng)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Gõ từ khóa: "Tuấn" hoặc "29A-"',
-    steps:['1. Vào tab Lịch sử (History).','2. Nhập từ khóa vào ô tìm kiếm.','3. Nhấn Enter (Lọc).'],
-    expected:['Hệ thống fetch API /api/admin/visits?search=...','Danh sách lọc ngay lập tức ra các lượt thăm có Tên, CCCD hoặc Biển số xe chứa từ khóa.'] },
-  { id:'TC-RPT-003', module:'M06', priority:'P1', name:'Lọc Lịch sử theo Thời gian (Date Range)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Chọn Từ ngày 01/01 đến 15/01',
-    steps:['1. Chọn bộ lọc Date Picker.','2. Áp dụng.'],
-    expected:['Chỉ hiển thị các lượt thăm phát sinh trong khoảng thời gian này.'] },
-  { id:'TC-RPT-004', module:'M06', priority:'P2', name:'Lọc Lịch sử theo Trạng thái & Thẻ nợ',
-    platform: 'Giao diện Quản trị',
-    testData: 'Filter: "Chưa trả thẻ" / "Đã báo mất"',
-    steps:['1. Mở bộ lọc nâng cao, chọn mục Khách Nợ Thẻ.','2. Áp dụng.'],
-    expected:['Hiển thị đúng những khách CheckedOut nhưng vẫn còn giữ thẻ (hoặc làm mất).'] },
-  { id:'TC-RPT-005', module:'M06', priority:'P1', name:'Xem Chi tiết Lượt thăm trong Lịch sử',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Click vào 1 dòng lượt thăm trong Lịch sử.','2. Modal Chi tiết mở ra.'],
-    expected:['Hiển thị ĐẦY ĐỦ: Tên khách, Giờ vào/ra, Người bảo vệ duyệt, Toàn bộ Ảnh đính kèm đã chụp, Biển số xe.'] },
-  { id:'TC-RPT-006', module:'M06', priority:'P1', name:'Xuất file Báo Cáo Lịch Sử ra Excel (.xlsx)',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Đặt các bộ lọc (VD: Hôm nay).','2. Nhấn nút "Xuất Excel" (Export).','3. Đợi tiến trình tải xuống.'],
-    expected:['File Excel tải về thành công (Gọi API /api/admin/visits/export).','Mở file không bị lỗi Font, dữ liệu khớp 100% với danh sách trên Web.'] },
-
-  // ==========================================
-  // M07: Bảo Trì Dữ Liệu & Auto Backup (Backup)
-  // ==========================================
-  { id:'TC-BCK-001', module:'M07', priority:'P1', name:'Sao lưu Cơ sở dữ liệu Thủ công (Manual Backup)',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Vào tab Cài đặt > Backup & Restore.','2. Nhấn "Tạo bản sao lưu ngay".'],
-    expected:['Gọi API /api/admin/backup. Hệ thống thông báo thành công. Một file backup hiển thị ở danh sách bên dưới.'] },
-  { id:'TC-BCK-002', module:'M07', priority:'P2', name:'Tải file Backup về máy cá nhân (Download)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Có sẵn file trong danh sách backup',
-    steps:['1. Tìm dòng backup vừa tạo, nhấn nút "Tải xuống" (Download).'],
-    expected:['Gọi API /api/admin/backup/file/{name}. Trình duyệt tải về file .db an toàn.'] },
-  { id:'TC-BCK-003', module:'M07', priority:'P1', name:'Phục hồi dữ liệu từ file (Restore)',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Nhấn nút "Khôi phục dữ liệu".','2. Chọn file .db từ máy tính.','3. Xác nhận ghi đè.'],
-    expected:['Gọi API /api/admin/restore.','Hệ thống ngắt kết nối tạm thời, ghi đè DB, khởi động lại service nội bộ, F5 lại trang Web dữ liệu cũ hiện ra nguyên vẹn.'] },
-  { id:'TC-BCK-004', module:'M07', priority:'P2', name:'Xem trạng thái & lịch sử Auto Backup',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Truy cập tab Backup.','2. Xem bảng Lịch sử tự động.'],
-    expected:['Bảng gọi API /api/admin/backup/history liệt kê các mốc sao lưu tự động hàng ngày.'] },
-  { id:'TC-BCK-005', module:'M07', priority:'P3', name:'Xóa thủ công bản Backup cũ',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Chọn 1 bản backup cũ, nhấn icon Xóa (Thùng rác).','2. Xác nhận.'],
-    expected:['Gọi API /api/admin/backup/{name} (DELETE). File bị xóa khỏi ổ cứng máy chủ.'] },
-  { id:'TC-BCK-006', module:'M07', priority:'P2', name:'Thay đổi cấu hình Auto Backup (Cron/Interval)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Chỉnh thời gian tự động sao lưu = 1 ngày/lần',
-    steps:['1. Tại mục Cấu hình Backup, đổi tham số Interval.','2. Nhấn Lưu cài đặt.'],
-    expected:['Gọi API /api/admin/backup/settings. Hệ thống nhận lệnh và hẹn giờ tiến trình Background chạy theo cấu hình mới.'] },
-
-  // ==========================================
-  // M08: Thiết bị Ngoại vi (Device Service)
-  // ==========================================
-  { id:'TC-DEV-001', module:'M08', priority:'P1', name:'Thay đổi Cấu hình Camera trong Admin',
-    platform: 'Giao diện Quản trị',
-    testData: 'Chọn loại Camera = "IP Camera", nhập URL RTSP',
-    steps:['1. Vào Cài đặt Thiết bị.','2. Cập nhật Device Profile cho Trạm 1.','3. Đổi cấu hình nguồn Video. Lưu lại.'],
-    expected:['Gọi API /api/admin/device-profile. Hệ thống ghi đè file cấu hình thiết bị trạm. (Lưu ý: Yêu cầu Refresh App trạm gác để nhận diện).'] },
-  { id:'TC-DEV-002', module:'M08', priority:'P2', name:'Test tính năng: Tắt bắt buộc chụp ảnh (No Camera Zone)',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Trong Cấu hình Thiết bị trạm, TẮT cờ "RequireCameraForCheckin" (Bắt buộc có ảnh).','2. Qua cổng gác thực hiện Check-in một khách.'],
-    expected:['Hệ thống cho phép Check-in ngay lập tức, KHÔNG mở Popup yêu cầu chụp ảnh nữa.'] },
-  { id:'TC-DEV-003', module:'M08', priority:'P2', name:'Cấu hình cổng giao tiếp Đầu đọc thẻ (COM Port)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Đổi cổng COM3 -> COM4',
-    steps:['1. Cập nhật mục RFID Reader sang COM4.','2. Lưu lại.'],
-    expected:['DeviceService tự động khởi động lại module CardReader để lắng nghe trên cổng COM mới (hoặc cần restart service).'] },
-
-  // ==========================================
-  // M09: Thiết lập Giao diện & Mạng lưới (Control Panel)
-  // ==========================================
-  { id:'TC-NET-001', module:'M09', priority:'P2', name:'Thiết lập Đăng nhập từ xa (Domain / SSL)',
-    platform: 'API / Postman',
-    testData: 'Gọi API cập nhật Domain',
-    steps:['1. Sử dụng SystemAdmin gọi API POST /api/system/update-domain với thông tin "my-smartvms.local"'],
-    expected:['Hệ thống phản hồi 200 OK.','Kích hoạt các script hệ thống để tạo chứng chỉ SSL (Local) và cấu hình lại web server.'] },
-  { id:'TC-NET-002', module:'M09', priority:'P3', name:'Lấy cấu hình chung (Public Config) không cần Auth',
-    platform: 'API / Postman',
-    steps:['1. Gọi GET /api/station/config mà không cần Bearer token.'],
-    expected:['Nhận được JSON chứa version, Tên trạm, Trạng thái kết nối DB để UI load giao diện cơ bản ban đầu.'] },
-  { id:'TC-NET-003', module:'M09', priority:'P2', name:'Thiết lập giao diện hiển thị bảng (Display Settings Modal)',
-    platform: 'Giao diện Web UI',
-    steps:['1. Tại trạm gác, nhấn icon Bánh răng Cài đặt.','2. Bật/Tắt các cột trong bảng (Ẩn cột Tên Công Ty).','3. Lưu.'],
-    expected:['Bảng Đang trong đơn vị lập tức cập nhật, ẩn đi cột Tên Công ty. Thiết lập lưu vào LocalStorage/DB để nhớ cho lần sau.'] },
-
-  // ==========================================
-  // M10: Phi chức năng, Ổn định & Chịu lỗi (Reliability)
-  // ==========================================
-  { id:'TC-STB-001', module:'M10', priority:'P1', name:'Offline-First: Ngắt kết nối Mạng Internet WAN',
-    platform: 'Môi trường Mạng',
-    testData: 'Rút dây mạng Internet, giữ nguyên dây LAN cục bộ',
-    steps:['1. Rút cáp quang/cáp mạng Internet khỏi trạm gác (hoặc tắt WiFi router ra ngoài).','2. Thực hiện Check-in 3 khách.'],
-    expected:['Hệ thống VẪN HOẠT ĐỘNG hoàn toàn bình thường, rất nhanh. (Do C# Server và React App chạy cục bộ trên máy trạm).'] },
-  { id:'TC-STB-002', module:'M10', priority:'P1', name:'Chống Spam Click / Race Condition',
-    platform: 'Giao diện Web UI',
-    testData: 'Màn check-in khách',
-    steps:['1. Điền đủ thông tin khách.','2. Nhấn nút Check-in LIÊN TỤC (click 10-20 lần cực nhanh) hoặc dùng AutoClick.'],
-    expected:['Hệ thống chỉ gửi đi 1 request hoặc server chỉ xử lý 1 request nhờ cơ chế block UI (loading) hoặc Idempotent Token. KHÔNG TẠO RA 20 LƯỢT THĂM TRÙNG NHAU.'] },
-  { id:'TC-STB-003', module:'M10', priority:'P1', name:'Bảo toàn dữ liệu khi Crash (Mất điện / Tắt Server nóng)',
-    platform: 'Phần cứng',
-    testData: 'Đang lưu file',
-    steps:['1. Trong lúc phần mềm đang xử lý lưu khách (vòng quay loading).','2. Tắt nóng tiến trình C# (End Task) hoặc Rút điện máy tính.','3. Khởi động lại.'],
-    expected:['Database SQLite sử dụng Write-Ahead Logging (WAL). Nếu ghi chưa xong sẽ rollback an toàn. Database không bị hỏng (Corrupted). Khởi động lên vẫn truy cập bình thường.'] },
-  { id:'TC-STB-004', module:'M10', priority:'P1', name:'Tự động ép Check-out khách tồn đọng qua đêm (Auto Check-out Service)',
-    platform: 'Hệ thống (Background)',
-    testData: 'Cấu hình SystemSetting: AutoCheckoutSameDayVisits="true", 1 khách thường (IsMultiDayVisit=false) Inside',
-    steps:['1. Chỉnh giờ hệ thống sang ngày hôm sau hoặc chờ AutoCheckOutHostedService chạy (chu kỳ 10 phút).','2. Quan sát log hệ thống và trạng thái lượt thăm.'],
-    expected:['Service nền tự động quét, set CheckOutTime về 23:59:59 của ngày check-in, IsAutoCheckedOut=true, Status=CheckedOut. Khách có IsMultiDayVisit=true được giữ nguyên trong đơn vị.'] },
-  { id:'TC-STB-005', module:'M10', priority:'P3', name:'Giao diện Responsive / Phân giải màn hình',
-    platform: 'Giao diện Web UI',
-    testData: 'Máy trạm có màn hình độ phân giải thấp (1366x768)',
-    steps:['1. Thu nhỏ cửa sổ trình duyệt xuống kích thước 1366x768.','2. Cuộn bảng, mở modal.'],
-    expected:['Giao diện co giãn tốt, không bị vỡ bố cục, nút Check-in không bị lấp mất khỏi màn hình.'] },
-  // ==========================================
-  // [BỔ SUNG] 90 TEST CASES MỞ RỘNG (EDGE CASES & NEGATIVE TESTS)
-  // ==========================================
-  // M01 EXTENSIONS
-  { id:'TC-AUTH-011', module:'M01', priority:'P2', name:'Login Session Timeout', platform:'Giao diện Web UI', testData:'Đăng nhập thành công, treo máy 24h', steps:['1. Đăng nhập.','2. Để nguyên màn hình không thao tác qua ngày hôm sau.','3. Click 1 nút bất kỳ.'], expected:['Hệ thống báo "Phiên đăng nhập hết hạn". Đẩy về màn hình Login.'] },
-  { id:'TC-AUTH-012', module:'M01', priority:'P3', name:'Đăng nhập đồng thời trên 2 thiết bị (Chặn đa phiên & Ép đăng nhập)', platform:'Giao diện Web UI', testData:'Dùng cùng 1 tài khoản bảo vệ login trên 2 thiết bị khác nhau', steps:['1. Nhân viên login và mở ca ở máy A.','2. Đăng nhập tài khoản đó ở máy B.'], expected:['Máy B nhận cảnh báo mã ALREADY_ACTIVE ("Tài khoản đang có phiên trực tại trạm..."). Máy B hiển thị nút "Ép Bắt Đầu Ca Mới" (ForceLogin). Khi ép vào, phiên ở máy A bị vô hiệu hóa do LastLoginAt cập nhật.'] },
-  { id:'TC-AUTH-013', module:'M01', priority:'P2', name:'Quét CCCD mở ca: Bụi bẩn trên thẻ', platform:'Thiết bị & Cổng gác', testData:'Dán 1 lớp băng keo đục mờ lên chip', steps:['1. Quét thẻ CCCD bị mờ/bẩn.'], expected:['Hệ thống timeout và báo lỗi "Không thể đọc chip, vui lòng lau sạch thẻ".'] },
-  { id:'TC-AUTH-014', module:'M01', priority:'P3', name:'Mở ca: Camera bị ngắt kết nối đột ngột',
-    platform: 'Giao diện Web UI',
-    testData: 'Rút cáp USB webcam',
-    steps:['1. Popup chụp ảnh Mở ca hiện lên, rút cáp USB camera khỏi máy tính.',
-           '2. Quan sát khung hình camera và thử nhấn nút "Vào ca".'],
-    expected:['Khung hình camera báo mất tín hiệu, nút "Vào ca" bị vô hiệu hóa hoặc hệ thống hiển thị thông báo lỗi yêu cầu kết nối lại camera.'] },
-  { id:'TC-AUTH-015', module:'M01', priority:'P2', name:'Check trạng thái Ca trực trên Dashboard',
-    platform: 'Giao diện Web UI',
-    steps:['1. Đăng nhập và mở ca trực thành công vào Dashboard.',
-           '2. Quan sát thông tin nhân sự trên thanh Header.'],
-    expected:['Header hiển thị tên nhân viên, avatar có viền và chấm tròn màu xanh lá (Đang trong ca trực), đi kèm nút màu đỏ "Rời ca".'] },
-  { id:'TC-AUTH-016', module:'M01', priority:'P3', name:'Bypass Login bằng URL direct', platform:'Giao diện Web UI', steps:['1. Chưa đăng nhập.','2. Gõ thẳng URL /dashboard vào trình duyệt.'], expected:['Bị chặn lại và redirect về /login.'] },
-  { id:'TC-AUTH-017', module:'M01', priority:'P2', name:'Logout khi mất mạng', platform:'Giao diện Web UI', steps:['1. Ngắt mạng LAN.','2. Bấm Kết ca.'], expected:['Báo lỗi "Không thể kết nối máy chủ, chưa thể kết ca".'] },
-  { id:'TC-AUTH-018', module:'M01', priority:'P2', name:'SQL Injection trên form Login', platform:'Giao diện Web UI', testData:'Username: "admin\' OR \'1\'=\'1"', steps:['1. Nhập username injection.','2. Login.'], expected:['Báo lỗi sai tài khoản. Không bị hack.'] },
-  { id:'TC-AUTH-019', module:'M01', priority:'P2', name:'XSS trên form Login', platform:'Giao diện Web UI', testData:'Username: "<script>alert(1)</script>"', steps:['1. Nhập username XSS.','2. Login.'], expected:['Không alert, báo lỗi sai tài khoản.'] },
-  { id:'TC-AUTH-020', module:'M01', priority:'P3', name:'Bảo vệ Anti-Spam đăng nhập trạm gác', platform:'Giao diện Web UI', steps:['1. Spam click nút Đăng nhập liên tục nhiều lần.','2. Thử liên tiếp nhiều username không tồn tại.'], expected:['Frontend debounce nút bấm (trạng thái busy), ngăn submit dồn dập. Backend trả về 400 rõ ràng, không gây treo service C#.'] },
-
-  // M02 EXTENSIONS
-  { id:'TC-CHECKIN-009', module:'M02', priority:'P2', name:'Check-in Khách: SĐT chứa ký tự chữ', platform:'Giao diện Web UI', testData:'SĐT: "090abc1234"', steps:['1. Nhập SĐT chứa chữ.'], expected:['Form báo lỗi format SĐT.'] },
-  { id:'TC-CHECKIN-010', module:'M02', priority:'P2', name:'Check-in Khách: Tên chứa ký tự đặc biệt', platform:'Giao diện Web UI', testData:'Tên: "Nguyễn @#$"', steps:['1. Nhập tên có ký tự lạ.','2. Check-in.'], expected:['Báo lỗi tên không hợp lệ.'] },
-  { id:'TC-CHECKIN-011', module:'M02', priority:'P3', name:'Check-in: Biển số xe quá dài', platform:'Giao diện Web UI', testData:'Biển số: "29A-123.4567890123"', steps:['1. Nhập biển số siêu dài.'], expected:['Bị chặn ở max-length của textbox.'] },
-  { id:'TC-CHECKIN-012', module:'M02', priority:'P1', name:'Phát thẻ định danh: Mã thẻ không tồn tại', platform:'Thiết bị & Cổng gác', testData:'Quét thẻ rác không có trong DB hệ thống', steps:['1. Gắn mã thẻ rác cho khách.','2. Check-in.'], expected:['Báo lỗi "Mã thẻ này chưa được đăng ký trong hệ thống".'] },
-  { id:'TC-CHECKIN-013', module:'M02', priority:'P1', name:'Phát thẻ định danh: Thẻ ĐANG ĐƯỢC SỬ DỤNG', platform:'Thiết bị & Cổng gác', testData:'Thẻ TAG-001 đang được 1 khách khác mượn chưa trả', steps:['1. Quét thẻ TAG-001 cho khách mới.','2. Check-in.'], expected:['Báo lỗi "Thẻ này đang được sử dụng bởi khách khác".'] },
-  { id:'TC-CHECKIN-014', module:'M02', priority:'P2', name:'Check-in: Ảnh CMND upload quá dung lượng (10MB)', platform:'Giao diện Web UI', testData:'File JPG 15MB', steps:['1. Upload file 15MB.'], expected:['Báo lỗi "File quá lớn, tối đa 5MB".'] },
-  { id:'TC-CHECKIN-015', module:'M02', priority:'P3', name:'Check-in: Upload file không phải ảnh', platform:'Giao diện Web UI', testData:'File .exe hoặc .pdf', steps:['1. Upload file .exe.'], expected:['Báo lỗi "Chỉ chấp nhận định dạng hình ảnh".'] },
-  { id:'TC-CHECKIN-016', module:'M02', priority:'P2', name:'Upsert: Sửa thông tin khách cũ', platform:'Giao diện Web UI', testData:'CCCD cũ, nhưng đổi Số ĐT mới', steps:['1. Nhập CCCD cũ, tự điền data.','2. Đổi Số ĐT.','3. Check-in.'], expected:['Lưu khách thành công, DB cập nhật SĐT mới cho khách này.'] },
-  { id:'TC-CHECKIN-017', module:'M02', priority:'P3', name:'Gõ phím Enter để Check-in', platform:'Giao diện Web UI', steps:['1. Điền form xong, nhấn phím Enter trên bàn phím.'], expected:['Tương đương click nút Check-in, form submit thành công.'] },
-  { id:'TC-CHECKIN-018', module:'M02', priority:'P3', name:'Tab index trên form', platform:'Giao diện Web UI', steps:['1. Nhấn phím Tab liên tục.'], expected:['Con trỏ nhảy đúng thứ tự từ trên xuống dưới, không bị loạn.'] },
-
-  // M03 EXTENSIONS
-  { id:'TC-COMP-006', module:'M03', priority:'P2', name:'Người đi cùng: Xóa người vừa thêm (trước khi lưu)', platform:'Giao diện Web UI', steps:['1. Click Thêm người.','2. Click icon Thùng rác xóa dòng người đó.','3. Check-in.'], expected:['Người đó không được lưu vào hệ thống.'] },
-  { id:'TC-COMP-007', module:'M03', priority:'P3', name:'Người đi cùng: Nhập trùng CCCD với trưởng đoàn', platform:'Giao diện Web UI', testData:'CCCD người đi cùng = CCCD trưởng đoàn', steps:['1. Nhập trùng CCCD.','2. Check-in.'], expected:['Báo lỗi "CCCD người đi cùng trùng với trưởng đoàn".'] },
-  { id:'TC-COMP-008', module:'M03', priority:'P3', name:'Số lượng thẻ vô danh > Số lượng người vô danh', platform:'Giao diện Web UI', testData:'Khách vô danh 2 người, Phát 5 thẻ vô danh', steps:['1. Nhập sl khách 2, sl thẻ 5.','2. Check-in.'], expected:['Vẫn cho phép (Khách 2 người có thể cầm nhiều thẻ cho xe cộ/đồ đạc).'] },
-  { id:'TC-COMP-009', module:'M03', priority:'P2', name:'Cập nhật đoàn: Xóa bớt xe ô tô', platform:'Giao diện Web UI', steps:['1. Chọn khách đoàn Inside đang có xe.','2. Xóa biển số xe. Lưu.'], expected:['Xe bị gỡ khỏi lượt thăm.'] },
-  { id:'TC-COMP-010', module:'M03', priority:'P2', name:'Cập nhật đoàn: Đổi thẻ định danh khác', platform:'Giao diện Web UI', testData:'Đổi từ thẻ TAG-001 sang TAG-002', steps:['1. Chọn khách Inside, sửa thẻ định danh.','2. Lưu.'], expected:['TAG-001 được giải phóng, TAG-002 bị gắn vào khách.'] },
-  { id:'TC-COMP-011', module:'M03', priority:'P1', name:'Nhóm Khách 100 người', platform:'Giao diện Web UI', testData:'Thêm 100 dòng người đi cùng', steps:['1. Bấm thêm người liên tục 100 lần. Điền data.','2. Check-in.'], expected:['Lưu thành công, không crash UI, performance vẫn chấp nhận được.'] },
-  { id:'TC-COMP-012', module:'M03', priority:'P3', name:'Mở 2 tab Check-in cho cùng 1 CCCD', platform:'Giao diện Web UI', steps:['1. Mở 2 tab browser.','2. Điền cùng 1 khách vào cả 2 tab.','3. Bấm Check-in tab 1.','4. Bấm Check-in tab 2.'], expected:['Tab 1 thành công. Tab 2 báo lỗi "Khách đã ở trong đơn vị".'] },
-  { id:'TC-COMP-013', module:'M03', priority:'P2', name:'Check-out người trong đoàn đang có nợ thẻ', platform:'Giao diện Web UI', steps:['1. Check-out trưởng đoàn nhưng KHÔNG thu thẻ.','2. Chấp nhận nợ thẻ.'], expected:['Người đó ra về, Trạng thái lượt thăm = Mất thẻ 1 phần.'] },
-  { id:'TC-COMP-014', module:'M03', priority:'P3', name:'Sửa tên người đi cùng', platform:'Giao diện Web UI', steps:['1. Cập nhật khách đoàn Inside.','2. Đổi tên người đi cùng từ A -> B. Lưu.'], expected:['Cập nhật thành công. Tên trong DB đổi thành B.'] },
-  { id:'TC-COMP-015', module:'M03', priority:'P3', name:'Thêm khách vô danh số lượng âm', platform:'Giao diện Web UI', testData:'Nhập số lượng = -5', steps:['1. Điền -5 vào ô vô danh.'], expected:['Form chặn không cho nhập số âm.'] },
-
-  // M04 EXTENSIONS
-  { id:'TC-CHKOUT-009', module:'M04', priority:'P1', name:'Check-out tinh gọn cho Khách đi bộ không giữ thẻ',
-    platform: 'Giao diện Web UI',
-    testData: 'Khách đi bộ một mình, không mượn thẻ, không có xe',
-    steps:['1. Tại danh sách Đang trong đơn vị, nhấn nút "Check-out" trên dòng khách.',
-           '2. Modal Check-out mở ra với lựa chọn người ra đã được chọn sẵn theo mặc định.',
-           '3. Nhân viên nhấn nút "Xác nhận Check-out (1 người, 0 xe, 0 thẻ)" (hoặc nhấn phím Enter) để hoàn tất ngay.'],
-    expected:['Check-out hoàn tất nhanh gọn chỉ với 2 thao tác click chuột, đảm bảo vừa đối chiếu chính xác vừa tối ưu tốc độ xuất bến cho nhân viên trạm gác.'] },
-  { id:'TC-CHKOUT-010', module:'M04', priority:'P1', name:'Check-out bằng cách Quét Thẻ', platform:'Thiết bị & Cổng gác', testData:'Khách đang giữ thẻ TAG-001', steps:['1. Trạm gác đang ở màn hình chờ.','2. Khách đặt thẻ TAG-001 lên đầu đọc.'], expected:['Hệ thống tự động tìm lượt thăm của thẻ TAG-001, tự động Check-out và Thu hồi thẻ luôn.'] },
-  { id:'TC-CHKOUT-011', module:'M04', priority:'P2', name:'Quét thẻ Check-out: Thẻ rác', platform:'Thiết bị & Cổng gác', testData:'Thẻ không có ai đang mượn', steps:['1. Quét thẻ rác lên đầu đọc.'], expected:['Hệ thống báo "Thẻ này không có người sử dụng hiện tại".'] },
-  { id:'TC-CHKOUT-012', module:'M04', priority:'P2', name:'Báo mất thẻ nhưng Ghi chú trống', platform:'Giao diện Web UI', steps:['1. Nhấn nút Check-out.','2. Chọn trạng thái Mất thẻ nhưng để trống ô Ghi chú.','3. Nhấn nút "Xác nhận Check-out".'], expected:['Form báo lỗi "Bắt buộc nhập lý do làm mất thẻ".'] },
-  { id:'TC-CHKOUT-013', module:'M04', priority:'P2', name:'Hoàn trả lại thẻ đã mất (Khách mang trả sau)', platform:'Giao diện Web UI', testData:'Khách làm mất thẻ, hôm sau mang đến trả', steps:['1. Vào tab Quản lý Thẻ (nếu có) hoặc Lịch sử.','2. Tìm lượt thăm cũ, chọn "Hoàn trả thẻ".'], expected:['Trạng thái thẻ từ Lost -> Available.'] },
-  { id:'TC-CHKOUT-014', module:'M04', priority:'P3', name:'Check-out khách nhiều ngày (Đã qua nửa đêm)', platform:'Giao diện Web UI', testData:'Khách lưu trú 3 ngày', steps:['1. Ngày thứ 3, bấm Check-out khách này.'], expected:['Check-out thành công, thời gian lưu trú tính bằng tổng (ví dụ 72 tiếng).'] },
-  { id:'TC-CHKOUT-015', module:'M04', priority:'P3', name:'Check-out: Trả dư thẻ đếm', platform:'Giao diện Web UI', testData:'Mượn 3 thẻ vô danh, nhập trả 5 thẻ', steps:['1. Bấm Check-out.','2. Trả số lượng thẻ = 5.'], expected:['Báo lỗi "Số thẻ trả không thể lớn hơn số thẻ đang mượn (3)".'] },
-  { id:'TC-CHKOUT-016', module:'M04', priority:'P2', name:'Check-out: Đối chiếu hồ sơ xuất bến & Lưu thời gian ra',
-    platform: 'Giao diện Web UI',
-    testData: 'Lượt thăm có ảnh vào cổng',
-    steps:['1. Mở modal "Phiếu xuất bến & Check-out" của lượt thăm.',
-           '2. Đối chiếu khuôn mặt khách thực tế với ảnh chân dung lúc vào hiển thị trên phiếu.',
-           '3. Nhấn nút "Xác nhận Check-out".'],
-    expected:['Hệ thống ghi nhận chính xác thời gian xuất bến (CheckOutTime), thông tin nhân viên ca trực thực hiện check-out được lưu vào hồ sơ lượt thăm phục vụ tra cứu.'] },
-  { id:'TC-CHKOUT-017', module:'M04', priority:'P3', name:'Check-out đoàn > 100 người', platform:'Giao diện Web UI', steps:['1. Check-out đoàn 100 người.'], expected:['Xử lý mượt mà, DB cập nhật status 100 dòng nhanh chóng.'] },
-  { id:'TC-CHKOUT-018', module:'M04', priority:'P3', name:'Auto Check-out (Cronjob trigger manual)', platform:'API / Postman', steps:['1. Gọi API trigger auto check-out.'], expected:['Quét sạch khách không lưu trú qua đêm ra khỏi Inside.'] },
-
-  // M05 EXTENSIONS
-  { id:'TC-ADMIN-003', module:'M05', priority:'P2', name:'Quyền hạn: Nhân viên không thể vào trang Admin', platform:'Giao diện Web UI', testData:'Login bằng tài khoản bảo vệ', steps:['1. Gõ URL /admin'], expected:['Bị chặn lại, thông báo "Access Denied / Không có quyền".'] },
-  { id:'TC-STAFF-006', module:'M05', priority:'P2', name:'Thêm nhân viên trùng Username', platform:'Giao diện Quản trị', testData:'Tạo user "admin"', steps:['1. Tạo nhân viên username "admin".'], expected:['Báo lỗi "Username đã tồn tại".'] },
-  { id:'TC-STAFF-007', module:'M05', priority:'P3', name:'Đổi mật khẩu: Pass cũ sai', platform:'Giao diện Quản trị', steps:['1. Nhập pass cũ sai, pass mới đúng.'], expected:['Báo lỗi mật khẩu hiện tại không đúng.'] },
-  { id:'TC-STAFF-008', module:'M05', priority:'P3', name:'Đổi mật khẩu: Pass mới quá ngắn', platform:'Giao diện Quản trị', testData:'Pass mới = "12"', steps:['1. Nhập pass mới 2 ký tự.'], expected:['Báo lỗi yêu cầu độ dài tối thiểu (nếu có cấu hình).'] },
-  { id:'TC-STAFF-009', module:'M05', priority:'P2', name:'Import Excel Nhân sự: Định dạng sai (Chứa text ở cột số)', platform:'Giao diện Quản trị', steps:['1. Upload file Excel bị hỏng format.'], expected:['API trả về lỗi chi tiết dòng nào bị sai.'] },
-  { id:'TC-STAFF-010', module:'M05', priority:'P3', name:'Xóa nhân viên ĐANG TRONG CA', platform:'Giao diện Quản trị', steps:['1. Tìm nhân viên đang làm việc, nhấn Xóa.'], expected:['Báo lỗi "Không thể xóa nhân viên đang trong ca trực".'] },
-  { id:'TC-STAFF-011', module:'M05', priority:'P2', name:'Tạo Quản trị viên (LocalAdminUser) phân quyền SystemAdmin', platform:'Giao diện Quản trị', steps:['1. Vào Cài đặt > Quản lý Quản trị viên (Local Admin Users).','2. Thêm mới user, chọn Role = SystemAdmin, đặt mật khẩu.','3. Đăng nhập bằng user mới.'], expected:['User mới đăng nhập thành công và có toàn quyền quản trị hệ thống, backup dữ liệu và cấu hình thiết bị.'] },
-  { id:'TC-STAFF-012', module:'M05', priority:'P3', name:'Upload Avatar nhân viên', platform:'Giao diện Quản trị', steps:['1. Chọn nhân viên, upload file ảnh avatar.'], expected:['Ảnh hiển thị trên Dashboard khi nhân viên này login.'] },
-  { id:'TC-STAFF-013', module:'M05', priority:'P3', name:'Sắp xếp danh sách nhân sự', platform:'Giao diện Quản trị', steps:['1. Click vào tiêu đề cột "Tên".'], expected:['Bảng sort A-Z, Z-A đúng.'] },
-  { id:'TC-STAFF-014', module:'M05', priority:'P3', name:'Phân trang (Pagination) Nhân sự', platform:'Giao diện Quản trị', steps:['1. Có 50 nhân viên. Chuyển sang trang 2.'], expected:['Hiển thị danh sách trang 2 chuẩn.'] },
-
-  // M06 EXTENSIONS
-  { id:'TC-RPT-007', module:'M06', priority:'P1', name:'Dashboard Admin: Biểu đồ theo ngày', platform:'Giao diện Quản trị', steps:['1. Xem biểu đồ lượng khách 7 ngày qua.'], expected:['Data render đúng, không bị NaN.'] },
-  { id:'TC-RPT-008', module:'M06', priority:'P2', name:'Export Excel: Khi không có dữ liệu', platform:'Giao diện Quản trị', testData:'Chọn ngày lễ không có ai', steps:['1. Bấm Export.'], expected:['Tải về file Excel chỉ có Header, không lỗi server.'] },
-  { id:'TC-RPT-009', module:'M06', priority:'P2', name:'Export Excel: File name chứa ngày tháng', platform:'Giao diện Quản trị', steps:['1. Bấm Export.'], expected:['File tên dạng: Report_Visits_20261010.xlsx'] },
-  { id:'TC-RPT-010', module:'M06', priority:'P1', name:'Thống kê theo Công ty/Phòng ban', platform:'Giao diện Quản trị', steps:['1. Chọn tab Thống Kê Nâng Cao.'], expected:['Thống kê ra biểu đồ công ty nào có khách tới thăm nhiều nhất.'] },
-  { id:'TC-RPT-011', module:'M06', priority:'P3', name:'Tìm kiếm Unicode (Dấu tiếng Việt)', platform:'Giao diện Quản trị', testData:'Gõ "Nguyễn"', steps:['1. Tìm kiếm chữ có dấu.'], expected:['Lọc ra "Nguyễn", "nguyễn" chính xác.'] },
-  { id:'TC-RPT-012', module:'M06', priority:'P3', name:'Tìm kiếm Ký tự đặc biệt (SQL Injection)', platform:'Giao diện Quản trị', testData:'Gõ "%_%"', steps:['1. Tìm kiếm ký tự wildcard.'], expected:['Xử lý escape đúng, không văng lỗi DB.'] },
-  { id:'TC-RPT-013', module:'M06', priority:'P2', name:'Xem chi tiết lượt thăm đã XÓA (Soft delete)', platform:'Giao diện Quản trị', steps:['1. Bật cờ "Xem các bản ghi đã xóa".','2. Click xem chi tiết.'], expected:['Vẫn xem được lịch sử.'] },
-  { id:'TC-RPT-014', module:'M06', priority:'P3', name:'Xem hình ảnh đính kèm to ra (Zoom)', platform:'Giao diện Quản trị', steps:['1. Click vào ảnh trong chi tiết lượt thăm.'], expected:['Mở modal zoom ảnh to ra.'] },
-  { id:'TC-RPT-015', module:'M06', priority:'P3', name:'In Phím tắt (Ctrl+P) trên bảng Lịch sử', platform:'Giao diện Quản trị', steps:['1. Nhấn Ctrl+P trình duyệt.'], expected:['Bản in CSS Ẩn bớt menu, chỉ in danh sách (nếu có hỗ trợ).'] },
-  { id:'TC-RPT-016', module:'M06', priority:'P2', name:'Lịch sử Ca Trực (Shift Sessions)', platform:'Giao diện Quản trị', steps:['1. Vào Quản lý Ca Trực.'], expected:['Liệt kê đầy đủ bảo vệ nào trực từ mấy giờ, ảnh lúc vào, lúc ra.'] },
-
-  // M07 EXTENSIONS
-  { id:'TC-BCK-007', module:'M07', priority:'P1', name:'Restore từ file không hợp lệ', platform:'Giao diện Quản trị', testData:'Upload file txt giả danh .db', steps:['1. Bấm Restore.','2. Upload file txt.'], expected:['Hệ thống kiểm tra magic byte hoặc SQLite format, từ chối file, không làm hỏng DB thật.'] },
-  { id:'TC-BCK-008', module:'M07', priority:'P2', name:'Auto Backup: Hết dung lượng ổ cứng', platform:'Hệ thống (Background)', testData:'Giả lập ổ cứng đầy', steps:['1. Chờ tới giờ backup.'], expected:['Ghi log lỗi "Out of space", hệ thống chính không bị sập.'] },
-  { id:'TC-BCK-009', module:'M07', priority:'P2', name:'Cấu hình Retention Policy (Giữ file 30 ngày)', platform:'Giao diện Quản trị', steps:['1. Đặt cấu hình xóa backup cũ sau 30 ngày.'], expected:['Các file backup ngày 31 tự động bị xóa khỏi ổ cứng.'] },
-  { id:'TC-BCK-010', module:'M07', priority:'P3', name:'Restore DB có version mới hơn/cũ hơn', platform:'Giao diện Quản trị', steps:['1. Restore file DB tạo từ phần mềm v1.0 vào phần mềm v2.0.'], expected:['Phần mềm tự động chạy Migration script để nâng cấp CSDL cũ lên chuẩn mới sau khi restore xong.'] },
-  { id:'TC-BCK-011', module:'M07', priority:'P3', name:'Download Backup khi đang bị lock', platform:'Giao diện Quản trị', steps:['1. Bấm Download đúng lúc auto-backup đang ghi file.'], expected:['Chờ ghi xong rồi mới stream download, hoặc báo lỗi file đang bị khóa.'] },
-  { id:'TC-BCK-012', module:'M07', priority:'P2', name:'Xem dung lượng file backup trên UI', platform:'Giao diện Quản trị', steps:['1. Vào danh sách backup.'], expected:['Hiển thị Size (VD: 5.2 MB) và thời gian tạo chính xác.'] },
-  { id:'TC-BCK-013', module:'M07', priority:'P2', name:'Download toàn bộ ảnh đính kèm (Zip)', platform:'Giao diện Quản trị', steps:['1. Nhấn nút Tải toàn bộ Ảnh (nếu có hỗ trợ).'], expected:['Tải về file Zip chứa thư mục Uploads.'] },
-  { id:'TC-BCK-014', module:'M07', priority:'P3', name:'Phục hồi qua mạng LAN chậm', platform:'Giao diện Quản trị', steps:['1. Upload file DB 100MB qua WiFi yếu.'], expected:['Upload thành công, có thanh tiến trình.'] },
-  { id:'TC-BCK-015', module:'M07', priority:'P3', name:'Không có quyền Restore', platform:'Giao diện Quản trị', testData:'Login bằng staff mạo quyền', steps:['1. Gọi API POST /restore.'], expected:['403 Forbidden.'] },
-  { id:'TC-BCK-016', module:'M07', priority:'P3', name:'Xóa tất cả backup cùng lúc', platform:'Giao diện Quản trị', steps:['1. Bấm nút Delete All (Nếu có).'], expected:['Cảnh báo nguy hiểm. Nếu xóa, DB hiện tại vẫn nguyên vẹn.'] },
-
-  // M08 EXTENSIONS
-  { id:'TC-DEV-004', module:'M08', priority:'P2', name:'Ngắt kết nối Đầu đọc thẻ giữa chừng', platform:'Thiết bị & Cổng gác', steps:['1. Đang mở form check-in.','2. Rút dây đầu đọc thẻ RFID.'], expected:['DeviceService báo lỗi Disconnected ở góc màn hình UI. Cắm lại tự nhận lại.'] },
-  { id:'TC-DEV-005', module:'M08', priority:'P2', name:'Quét CCCD bằng app VNeID (QR Code)', platform:'Thiết bị & Cổng gác', testData:'Sử dụng máy quét 2D/QR Code quét VNeID', steps:['1. Quét mã QR VNeID thay vì thẻ chip cứng.'], expected:['Hệ thống phân giải mã QR và trích xuất đúng thông tin cá nhân. (Tùy tính năng có hỗ trợ không).'] },
-  { id:'TC-DEV-006', module:'M08', priority:'P3', name:'Cấu hình IP Camera: Sai mật khẩu luồng RTSP', platform:'Giao diện Quản trị', steps:['1. Đổi profile, nhập sai pass camera.'], expected:['Khung hình camera trên trạm gác báo "RTSP Auth Failed" hoặc hiển thị màn hình đen.'] },
-  { id:'TC-DEV-007', module:'M08', priority:'P2', name:'Điều khiển Barrier Mở tự động', platform:'Thiết bị & Cổng gác', steps:['1. Check-in thành công.','2. Bật cờ "Auto Open Barrier".'], expected:['Thiết bị rơ-le (Relay) kích hoạt mở cổng Barrier sau khi check-in thành công.'] },
-  { id:'TC-DEV-008', module:'M08', priority:'P3', name:'Mở Barrier thủ công trên Web', platform:'Giao diện Web UI', steps:['1. Nhấn nút "Mở Barrier" trên Dashboard.'], expected:['Gửi lệnh Relay -> Cổng gác mở. Ghi log hành động thủ công.'] },
-  { id:'TC-DEV-009', module:'M08', priority:'P3', name:'Đầu đọc thẻ chập chờn (Spam quét liên tục)', platform:'Thiết bị & Cổng gác', steps:['1. Giữ thẻ RFID liên tục trên đầu đọc.'], expected:['Driver có cơ chế Debounce (Antipassback), chỉ phát ra 1 event quét thẻ duy nhất mỗi 3 giây, không bị dội bom UI.'] },
-  { id:'TC-DEV-010', module:'M08', priority:'P2', name:'Cấu hình thiết bị trạm con qua API', platform:'API / Postman', steps:['1. Gọi GET /api/admin/settings để xem.','2. PUT sửa cấu hình trạm.'], expected:['Lưu DB, Broadcast qua Websocket/SignalR để trạm tự restart dịch vụ thiết bị.'] },
-  { id:'TC-DEV-011', module:'M08', priority:'P3', name:'Webcam USB 4K (Dung lượng ảnh lớn)', platform:'Thiết bị & Cổng gác', steps:['1. Gắn webcam 4K.','2. Mở ca.'], expected:['Hệ thống tự nén (compress/resize) xuống chuẩn 720p trước khi lưu DB để tiết kiệm dung lượng.'] },
-  { id:'TC-DEV-012', module:'M08', priority:'P3', name:'Chụp ảnh ban đêm (Low light)', platform:'Thiết bị & Cổng gác', steps:['1. Che tối camera.','2. Mở ca.'], expected:['Chụp thành công, có cảnh báo "Ảnh tối" nếu có AI check, hoặc vẫn lưu bình thường.'] },
-  { id:'TC-DEV-013', module:'M08', priority:'P3', name:'Không tìm thấy thiết bị RFID COM port', platform:'Thiết bị & Cổng gác', steps:['1. Cấu hình COM9 (Không tồn tại).','2. Khởi động app.'], expected:['Báo lỗi cấu hình thiết bị "Port COM9 not found".'] },
-
-  // M09 EXTENSIONS
-  { id:'TC-NET-004', module:'M09', priority:'P1', name:'Chứng chỉ SSL: Hết hạn (Tự động gia hạn)', platform:'Control Panel', steps:['1. Đổi lịch máy tính tới ngày chứng chỉ tự cấp (Self-signed) hết hạn.'], expected:['Script FixDomain.bat / Create-LocalSSL.ps1 tự động chạy lại (hoặc yêu cầu admin click) để cấp mới.'] },
-  { id:'TC-NET-005', module:'M09', priority:'P2', name:'Xung đột cổng (Port Conflict) 80/443', platform:'Control Panel', testData:'Bật Skype/XAMPP chiếm port 443', steps:['1. Bật XAMPP.','2. Bật SmartVMS.'], expected:['SmartVMS Control Panel hiện cảnh báo đỏ: "Cổng 443 đang bị chiếm dụng bởi phần mềm khác".'] },
-  { id:'TC-NET-006', module:'M09', priority:'P2', name:'Cập nhật Domain: Tên miền chứa ký tự cấm', platform:'Control Panel', testData:'Domain: "my_smartvms*.*"', steps:['1. Dùng SystemAdmin đổi domain sai.'], expected:['Báo lỗi Regex tên miền không hợp lệ.'] },
-  { id:'TC-NET-007', module:'M09', priority:'P2', name:'Hiển thị Settings: Reset về mặc định', platform:'Giao diện Web UI', steps:['1. Thay đổi bung bét các cột trong bảng Dashboard.','2. Nhấn "Khôi phục mặc định".'], expected:['Bảng quay về trạng thái chuẩn như lúc cài đặt.'] },
-  { id:'TC-NET-008', module:'M09', priority:'P3', name:'Thiết lập Chế độ Dark Mode (Nếu có)', platform:'Giao diện Web UI', steps:['1. Bật công tắc Nền Tối.'], expected:['Giao diện chuyển màu tối, dễ nhìn ban đêm.'] },
-  { id:'TC-NET-009', module:'M09', priority:'P3', name:'Clear Local Storage (Xóa Cache Trình Duyệt)', platform:'Giao diện Web UI', steps:['1. Mở F12 -> Xóa LocalStorage.','2. F5.'], expected:['Bị văng ra màn hình đăng nhập (Mất Token). Các settings hiển thị bị reset.'] },
-  { id:'TC-NET-010', module:'M09', priority:'P3', name:'Truy cập qua IP LAN từ thiết bị di động (Tablet/Phone)', platform:'Giao diện Web UI', steps:['1. Dùng iPad kết nối cùng Wifi, gõ địa chỉ https://IP_MAY_CHU/'], expected:['Vào được giao diện trạm gác, có cảnh báo chứng chỉ (Bấm Continue). UI Responsive tương thích màn hình chạm.'] },
-  { id:'TC-NET-011', module:'M09', priority:'P3', name:'Cấu hình Logo công ty/Tiêu đề Web', platform:'Giao diện Quản trị', steps:['1. Upload logo mới, nhập Tên nhà máy.','2. F5.'], expected:['Giao diện trạm gác thay đổi theo Logo của nhà máy khách hàng.'] },
-
-  // M10 EXTENSIONS
-  { id:'TC-STB-006', module:'M10', priority:'P1', name:'DB Lock: SQLite database is locked', platform:'Phi chức năng', testData:'Giả lập truy vấn chậm 10 giây khóa bảng', steps:['1. Viết script lock DB.','2. Cùng lúc thực hiện Check-in.'], expected:['Entity Framework Core có cơ chế RetryOnFailure, chờ DB mở khóa rồi lưu, không ném exception văng app.'] },
-  { id:'TC-STB-007', module:'M10', priority:'P2', name:'Memory Leak: Để Web chạy liên tục 7 ngày', platform:'Phi chức năng', steps:['1. Bật máy trạm 7 ngày liên tiếp không tắt tab.'], expected:['RAM của trình duyệt không tăng vọt quá 1GB. Mượt mà.'] },
-  { id:'TC-STB-008', module:'M10', priority:'P2', name:'Ổ cứng máy tính Full 100%', platform:'Phi chức năng', steps:['1. Chép file đầy ổ C.','2. Bấm Check-in.'], expected:['Hệ thống C# catch IOException "Disk full", báo lỗi rõ ràng lên UI "Không đủ dung lượng ổ đĩa", không crash ngầm.'] },
-  { id:'TC-STB-009', module:'M10', priority:'P3', name:'Đồng hồ máy tính chạy sai', platform:'Môi trường Windows', testData:'Đổi lùi lại 5 năm (Năm 2021)', steps:['1. Đổi năm.','2. Check-in.'], expected:['Check-in thành công với ngày bị sai, NHƯNG HTTPS SSL có thể bị trình duyệt chặn "Chứng chỉ chưa có hiệu lực".'] },
-  { id:'TC-STB-010', module:'M10', priority:'P2', name:'Tắt đột ngột C# API Service trong Task Manager', platform:'Môi trường Windows', steps:['1. End Task "SmartVMS.Local.Api.exe".','2. Trên Web, bấm Check-in.'], expected:['Giao diện Web quay Loading 1 lúc rồi báo "Lỗi kết nối máy chủ / Server Offline".'] },
-  { id:'TC-STB-011', module:'M10', priority:'P1', name:'Nhấn nút Back (Trở lại) trên trình duyệt khi đang xử lý POST', platform:'Giao diện Web UI', steps:['1. Bấm Check-in.','2. Đang có Loading, lập tức bấm Back trên Browser.'], expected:['Request đã đẩy đi thì DB vẫn lưu thành công ở Background. UI không bị hỏng state.'] },
-  { id:'TC-STB-012', module:'M10', priority:'P2', name:'Bật nhiều Tab Web Admin cùng lúc', platform:'Giao diện Quản trị', steps:['1. Mở 10 tab Admin, đồng loạt F5.'], expected:['DB xử lý tốt các truy vấn READ concurrent, không bị thắt cổ chai.'] },
-  { id:'TC-STB-013', module:'M10', priority:'P3', name:'Lấy Log Lỗi (Error Logging)', platform:'Control Panel', steps:['1. Vào thư mục Logs của ứng dụng C#.'], expected:['Mỗi ngày sinh ra 1 file txt log (VD: log-20261010.txt) chứa chi tiết các StackTrace lỗi nếu có.'] },
-
-  // ==========================================
-  // [BỔ SUNG SMARTVMS LOCAL v2.0]: 10 TEST CASES MỚI
-  // ==========================================
-  { id:'TC-AUTH-021', module:'M01', priority:'P1', name:'Tính năng Ép Bắt Đầu Ca Mới (Force Login khi treo ca trạm cũ)',
-    platform: 'Giao diện Web UI',
-    testData: 'Tài khoản nhân viên đang có ca Active ở trạm khác hoặc máy bị mất điện',
-    steps:['1. Nhập username bảo vệ. Bấm Đăng nhập.','2. Hệ thống cảnh báo ALREADY_ACTIVE và xuất hiện nút "Ép Bắt Đầu Ca Mới".','3. Nhấn "Ép Bắt Đầu Ca Mới".'],
-    expected:['Hệ thống gọi API /station/auth/login với cờ ForceLogin=true. Mở thành công popup chụp ảnh mở ca. Ca trực cũ được chuyển sang kết thúc an toàn.'] },
-  { id:'TC-CARD-001', module:'M02', priority:'P1', name:'Check-in phát Thẻ định danh cho nhóm ẩn danh (AnonymousIdentityCards)',
-    platform: 'Thiết bị & Cổng gác',
-    testData: 'Đoàn công nhân 5 người vô danh, phát 5 thẻ an ninh định danh',
-    steps:['1. Trong modal Check-in, nhập thông tin Trưởng đoàn.','2. Nhập số khách đi cùng vô danh = 5.','3. Quét lần lượt 5 mã thẻ định danh vào danh sách thẻ nhóm vô danh.','4. Nhấn nút "Hoàn thành Check-In (6 khách, 5 thẻ)".'],
-    expected:['Check-in thành công. Hệ thống lưu mảng AnonymousIdentityCardNumbers dạng JSON, hiển thị đầy đủ 5 thẻ trên chi tiết lượt thăm.'] },
-  { id:'TC-SUPP-001', module:'M03', priority:'P1', name:'Bổ sung Người và Phương tiện cho đoàn Inside (Trạm gác)',
-    platform: 'Giao diện Web UI',
-    testData: 'Lượt thăm đang ở trạng thái Inside',
-    steps:['1. Tại bảng "Danh sách lượt khách ra vào đơn vị" (tab Đang trong đơn vị), nhấn nút "Thêm" (icon Plus) trên dòng khách.',
-           '2. Modal Bổ sung mở ra, điền thông tin người đi cùng có CCCD và nhập thêm biển số xe ô tô.',
-           '3. Nhấn nút "Lưu thông tin bổ sung".'],
-    expected:['Hệ thống gọi API /station/visits/supplemental lưu thành công, số lượng người và xe của lượt thăm được cập nhật tức thì.'] },
-  { id:'TC-CARD-002', module:'M04', priority:'P1', name:'Check-out thu hồi từng thẻ định danh của nhóm ẩn danh',
-    platform: 'Giao diện Web UI',
-    testData: 'Khách nhóm vô danh đang cầm 5 thẻ định danh',
-    steps:['1. Mở popup Check-out của khách.','2. Tích chọn thu hồi 3 trong số 5 thẻ định danh. 2 thẻ còn lại chọn Nợ/Mất thẻ.','3. Nhấn Xác nhận Check-out.'],
-    expected:['Hệ thống ghi nhận ReturnedAnonymousIdentities chính xác 3 mã thẻ đã trả, các thẻ còn lại ghi nợ/mất đúng cấu hình.'] },
-  { id:'TC-SUPP-002', module:'M05', priority:'P1', name:'Admin bổ sung người và xe cho lượt thăm Inside (Admin Supplemental)',
-    platform: 'Giao diện Quản trị',
-    testData: 'Lượt thăm đang ở trạng thái Inside',
-    steps:['1. Vào tab Đang Ở Trong trên giao diện Admin.','2. Nhấn nút Bổ sung (Supplemental).','3. Điền thêm thành viên và phương tiện, nhấn Xác nhận.'],
-    expected:['Gọi API /admin/visits/{id}/supplemental thành công. Dữ liệu lượt thăm được cập nhật tức thì trên cả trang Admin và trạm gác.'] },
-  { id:'TC-MAN-001', module:'M05', priority:'P1', name:'Nhập liệu thủ công (Manual Entry) lượt thăm trong quá khứ',
-    platform: 'Giao diện Quản trị',
-    testData: 'Khách VIP đã vào sáng nay nhưng bảo vệ quên không check-in',
-    steps:['1. Vào tab Nhập Thủ Công (Manual Entry) trên trang Admin.','2. Nhập thông tin Khách, chọn ngày giờ vào trong quá khứ (Backdate).','3. Chọn Trạm tiếp đón và Nhân viên trực. Nhấn Lưu.'],
-    expected:['Gọi API /admin/visits/manual thành công. Tạo mới lượt thăm với CreatedByType = ManualAdmin, lưu thông tin CreatedByAdminId chính xác.'] },
-  { id:'TC-MAN-002', module:'M05', priority:'P1', name:'Nhập thủ công lượt thăm có nhiều Người đi cùng và Phương tiện',
-    platform: 'Giao diện Quản trị',
-    steps:['1. Tại form Nhập Thủ Công, thêm 2 người đi cùng và 1 xe ô tô.','2. Điền giờ vào và giờ ra nếu khách đã ra về.','3. Nhấn Lưu lượt thăm.'],
-    expected:['Lưu thành công. Tất cả người đi cùng và phương tiện đều có giờ vào/giờ ra khớp với thời gian khai báo thủ công.'] },
-  { id:'TC-MAN-003', module:'M05', priority:'P2', name:'Tự động tạo Ca trực ảo (Virtual Shift Session) khi nhập thủ công',
-    platform: 'API / Backend',
-    steps:['1. Admin nhập thủ công lượt thăm vào khung giờ không có ca trực nào đang mở.'],
-    expected:['Hệ thống C# tự động khởi tạo 1 ShiftSession ảo (Virtual Session) khép kín với Status = Ended để đảm bảo toàn vẹn khóa ngoại CSDL.'] },
-  { id:'TC-ROLE-001', module:'M05', priority:'P1', name:'Phân quyền Quản trị: Tài khoản DataEntry bị giới hạn quyền',
-    platform: 'Giao diện Quản trị',
-    testData: 'Tài khoản dataentry / data123 (Role = DataEntry)',
-    steps:['1. Đăng nhập bằng tài khoản dataentry.','2. Kiểm tra các menu và nút chức năng.'],
-    expected:['Đăng nhập thành công. Tài khoản chỉ được xem và nhập liệu. Không được truy cập tab Cài đặt tài khoản, cấu hình hệ thống và Backup.'] },
-  { id:'TC-ROLE-002', module:'M05', priority:'P1', name:'Chặn quyền Backup & Restore đối với tài khoản vai trò DataEntry',
-    platform: 'API / Postman',
-    testData: 'Sử dụng token của tài khoản dataentry',
-    steps:['1. Cố tình gọi API POST /admin/backup hoặc POST /admin/restore.'],
-    expected:['Hệ thống phản hồi 403 Forbidden hoặc từ chối thực thi: chỉ tài khoản SystemAdmin mới có quyền sao lưu phục hồi dữ liệu.'] }
+  {
+    "id": "TC-AUTH-001",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Đăng nhập Trạm gác hợp lệ bằng tài khoản trạm (Không mật khẩu)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Tài khoản nhân viên trạm: Nv001a1 (hoặc NV001)",
+    "precondition": "Nhân viên đang kích hoạt (Active) trong CSDL",
+    "steps": [
+      "1. Truy cập trang web Trạm gác (/staff.html).",
+      "2. Nhập Tên đăng nhập trạm (vd: Nv001a1), nhấn Đăng nhập (hệ thống trạm không yêu cầu mật khẩu)."
+    ],
+    "expected": [
+      "Hệ thống tự động chuẩn hóa chữ thường, xác thực thành công và lưu Token đăng nhập trạm.",
+      "Nếu trạm chưa có ca trực nào đang mở, popup \"Xác nhận chụp ảnh vào ca\" sẽ tự động hiện lên."
+    ]
+  },
+  {
+    "id": "TC-AUTH-002",
+    "module": "M01",
+    "priority": "P2",
+    "name": "Đăng nhập trạm không phân biệt hoa/thường",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Nhập \"NV001A1\", \"nv001a1\" hoặc \"Nv001A1\"",
+    "steps": [
+      "1. Nhập username xen kẽ chữ hoa chữ thường.",
+      "2. Nhấn nút Đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống tự động chuẩn hóa chữ thường và đăng nhập thành công, không phát sinh lỗi."
+    ]
+  },
+  {
+    "id": "TC-AUTH-003",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Đăng nhập trạm thất bại: Tên tài khoản không tồn tại",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Tài khoản không tồn tại: \"khongtontai\"",
+    "steps": [
+      "1. Nhập tài khoản không tồn tại trong hệ thống.",
+      "2. Nhấn Đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống chặn lại và hiển thị thông báo: \"User không hợp lệ hoặc nhân viên chưa được kích hoạt.\""
+    ]
+  },
+  {
+    "id": "TC-AUTH-004",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Đăng nhập trạm thất bại: Tài khoản bị khóa (Inactive)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Tài khoản nhân viên đã bị tắt kích hoạt (IsActive = false)",
+    "steps": [
+      "1. Nhập tài khoản nhân viên đã bị vô hiệu hóa.",
+      "2. Nhấn Đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống từ chối đăng nhập, hiển thị thông báo: \"User không hợp lệ hoặc nhân viên chưa được kích hoạt.\""
+    ]
+  },
+  {
+    "id": "TC-AUTH-005",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Xử lý xung đột phiên trạm: Phát hiện trạm đang có phiên mở dở dang",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Trạm đang được giữ bởi phiên trực trước đó hoặc tài khoản khác",
+    "steps": [
+      "1. Đăng nhập vào trạm đang có phiên trực chưa được đóng hoàn tất.",
+      "2. Quan sát nút hành động hiển thị trên màn hình đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống hiển thị nút màu đỏ \"Ép Bắt Đầu Ca Mới\".",
+      "Khi nhân viên nhấn nút này, hệ thống tự động đóng phiên cũ và khởi tạo ca trực mới cho nhân viên."
+    ]
+  },
+  {
+    "id": "TC-AUTH-006",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Mở ca trực bằng Camera (Webcam): Live Preview & Lưu ảnh chứng thực",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Webcam PC đang hoạt động bình thường",
+    "precondition": "Đã hoàn tất bước nhập tài khoản trạm. Trạm bật cờ bắt buộc chụp ảnh mở ca.",
+    "steps": [
+      "1. Tại popup \"Xác nhận chụp ảnh vào ca\", cấp quyền truy cập Camera nếu trình duyệt yêu cầu.",
+      "2. Quan sát khung hình camera trực tiếp (Live Preview) hiển thị rõ nét khuôn mặt nhân viên.",
+      "3. Nhấn nút \"Vào ca\" (biểu tượng Camera)."
+    ],
+    "expected": [
+      "Hệ thống chụp lại khung hình webcam, tải ảnh lên thư mục /uploads/shifts/... làm bằng chứng mở ca.",
+      "ShiftSession mới được tạo trong CSDL, popup tự động đóng và chuyển thẳng vào Dashboard làm việc.",
+      "Header trạm cập nhật họ tên nhân viên và hiển thị chấm xanh lá \"Đang trong ca trực\"."
+    ]
+  },
+  {
+    "id": "TC-AUTH-007",
+    "module": "M01",
+    "priority": "P2",
+    "name": "Lựa chọn thiết bị Camera khi mở ca (Đa camera)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Máy tính trạm gắn cả Webcam tích hợp và Camera USB ngoài",
+    "steps": [
+      "1. Tại popup Mở ca trực, quan sát dropdown danh sách camera khả dụng.",
+      "2. Nhấp chọn camera khác trong danh sách dropdown."
+    ],
+    "expected": [
+      "Khung Live Preview chuyển đổi nguồn video sang camera vừa chọn mượt mà, không bị treo trình duyệt."
+    ]
+  },
+  {
+    "id": "TC-AUTH-008",
+    "module": "M01",
+    "priority": "P2",
+    "name": "Hủy mở ca trực (Hủy chụp ảnh vào ca)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Khi popup \"Xác nhận chụp ảnh vào ca\" hiển thị, nhấn nút \"Hủy bỏ\"."
+    ],
+    "expected": [
+      "Hệ thống hủy phiên đăng nhập trạm, giải phóng luồng camera và quay lại màn hình Đăng nhập ban đầu."
+    ]
+  },
+  {
+    "id": "TC-AUTH-009",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Mở ca trực dự phòng bằng thẻ CCCD gắn chip (Khi Camera hỏng)",
+    "platform": "Giao diện Web Trực ban & Thiết bị",
+    "testData": "Thẻ CCCD của nhân viên đăng nhập, tài khoản có quyền AllowCccdShiftAuth",
+    "precondition": "Admin đã kích hoạt quyền \"Cho phép dùng CCCD mở ca (AllowCccdShiftAuth)\" cho nhân viên này.",
+    "steps": [
+      "1. Tại popup Mở ca, nhấn liên kết \"Dùng CCCD thay Camera\".",
+      "2. Chuyển sang giao diện xác thực CCCD, đặt thẻ CCCD lên đầu đọc chip.",
+      "3. Hệ thống hiển thị số CCCD và thông tin đọc được, nhấn \"Xác nhận vào ca\"."
+    ],
+    "expected": [
+      "Hệ thống đối soát số CCCD đọc được với hồ sơ nhân viên trong CSDL.",
+      "Khớp số CCCD -> Mở ca thành công, popup đóng lại và chuyển vào Dashboard trạm gác."
+    ]
+  },
+  {
+    "id": "TC-AUTH-010",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Từ chối mở ca bằng thẻ CCCD của người khác",
+    "platform": "Giao diện Web Trực ban & Thiết bị",
+    "testData": "Quẹt thẻ CCCD của công dân khác không trùng hồ sơ nhân viên",
+    "steps": [
+      "1. Chọn mở ca bằng CCCD dự phòng.",
+      "2. Quẹt thẻ CCCD không trùng với số CCCD lưu trong hồ sơ tài khoản đang đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống từ chối mở ca và báo lỗi: \"Số CCCD không khớp với hồ sơ nhân viên trong hệ thống.\""
+    ]
+  },
+  {
+    "id": "TC-AUTH-011",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Tách biệt nghiệp vụ: \"Đăng xuất\" (thoát UI) vs \"Rời ca\" (kết thúc ca trực)",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Nhân viên đang trong ca trực.",
+    "steps": [
+      "1. Nhấp nút \"Đăng xuất\" trên thanh Header (nút bên cạnh nút Rời ca màu đỏ).",
+      "2. Kiểm tra thông báo và trạng thái phiên trực trên hệ thống."
+    ],
+    "expected": [
+      "Hệ thống xóa token phiên giao diện và quay về màn hình Login.",
+      "Ca trực (ShiftSession) vẫn tiếp tục DUY TRÌ chạy ngầm, không bị đóng để bàn giao ca tạm thời."
+    ]
+  },
+  {
+    "id": "TC-AUTH-012",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Kết thúc ca trực (\"Rời ca\"): Chụp ảnh bàn giao và đóng ShiftSession",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Nhân viên đang trong ca trực.",
+    "steps": [
+      "1. Nhấp nút màu đỏ \"Rời ca\" trên thanh Header.",
+      "2. Popup \"Xác nhận rời ca trực\" hiển thị live webcam.",
+      "3. Nhấn nút \"Rời ca\" để xác nhận chụp ảnh kết thúc phiên trực."
+    ],
+    "expected": [
+      "Hệ thống chụp ảnh kết thúc ca, gọi API /station/shift-sessions/end.",
+      "ShiftSession cập nhật thời gian ra EndTime, chuyển trạng thái Ended.",
+      "Màn hình tự động quay về trang Đăng nhập trạm."
+    ]
+  },
+  {
+    "id": "TC-AUTH-013",
+    "module": "M01",
+    "priority": "P2",
+    "name": "Khôi phục ca trực sau Reload (F5) hoặc mở lại trình duyệt",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Nhân viên đang trong ca trực.",
+    "steps": [
+      "1. Đang làm việc trên Dashboard trạm, nhấn phím F5 hoặc đóng tab và mở lại URL /staff.html."
+    ],
+    "expected": [
+      "Hệ thống tự động đọc token lưu trong localStorage, gọi /station/auth/status và /station/shift-sessions/active.",
+      "Hiển thị thẳng vào Dashboard làm việc, không bắt đăng nhập hay mở ca lại."
+    ]
+  },
+  {
+    "id": "TC-AUTH-014",
+    "module": "M01",
+    "priority": "P1",
+    "name": "Đăng nhập Phân hệ Quản trị Admin: Yêu cầu Mật khẩu & Xử lý xung đột phiên",
+    "platform": "Giao diện Quản trị Admin",
+    "testData": "Tài khoản: admin, Mật khẩu: 123456 (hoặc tài khoản quản trị hợp lệ)",
+    "steps": [
+      "1. Truy cập /admin.html (hoặc /staff.html?login_as=admin).",
+      "2. Nhập tên tài khoản và mật khẩu admin.",
+      "3. Thử nhấp biểu tượng mắt kính để ẩn/hiện mật khẩu, sau đó nhấn Đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống xác thực mật khẩu qua thuật toán băm bảo mật.",
+      "Nếu phát hiện tài khoản đang đăng nhập nơi khác, cung cấp nút \"Ép Đăng Xuất Phiên Cũ\".",
+      "Đăng nhập thành công chuyển hướng vào trang Quản trị Admin với đầy đủ menu sidebar."
+    ]
+  },
+  {
+    "id": "TC-CKIN-001",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Check-in Khách đi bộ cơ bản: Nhập thủ công đầy đủ thông tin",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Họ tên: Nguyễn Văn An, CCCD: 001099000001, SĐT: 0988111222, Cơ quan: Cty ABC, Cán bộ tiếp: Đồng chí Nam, Mục đích: Làm việc chuyên môn",
+    "precondition": "Nhân viên đã mở ca trực tại trạm gác.",
+    "steps": [
+      "1. Trên Dashboard trạm, nhấn nút \"+ Check-in khách mới\".",
+      "2. Điền đầy đủ Họ tên, Số CCCD, Số điện thoại, Cơ quan, Người đón, Mục đích.",
+      "3. Chọn Không dùng xe cộ.",
+      "4. Nhấn nút \"Check-in\"."
+    ],
+    "expected": [
+      "Gọi API /station/visits/checkin thành công, lưu bản ghi Visit vào CSDL SQLite.",
+      "Modal tự đóng, Dashboard cập nhật ngay dòng khách Nguyễn Văn An với trạng thái \"Trong đơn vị\".",
+      "Bộ đếm quân số inside trên header tăng lên 1."
+    ]
+  },
+  {
+    "id": "TC-CKIN-002",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Check-in tự động bằng đọc thẻ CCCD gắn chip qua DeviceService",
+    "platform": "Giao diện Web Trực ban & Thiết bị",
+    "testData": "Thẻ CCCD gắn chip thật, DeviceService đang chạy WebSocket ws://localhost:6025/ws",
+    "steps": [
+      "1. Mở modal Check-in.",
+      "2. Đặt thẻ CCCD gắn chip lên đầu đọc thẻ PCSC.",
+      "3. Quan sát các trường trên form Check-in."
+    ],
+    "expected": [
+      "DeviceService đọc chip và đẩy dữ liệu qua WebSocket.",
+      "Form tự động điền: Họ tên, Số CCCD 12 số, Ngày sinh, Giới tính, Quê quán, Địa chỉ thường trú.",
+      "Hiển thị huy hiệu xác thực chip màu xanh lá bảo đảm tính pháp lý."
+    ]
+  },
+  {
+    "id": "TC-CKIN-003",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Check-in tự động bằng quét mã QR thẻ CCCD qua máy quét 2D",
+    "platform": "Giao diện Web Trực ban & Thiết bị",
+    "testData": "Máy quét mã vạch 2D kết nối cổng USB HID",
+    "steps": [
+      "1. Mở modal Check-in.",
+      "2. Đưa vùng mã QR trên thẻ CCCD qua luồng sáng của máy quét 2D."
+    ],
+    "expected": [
+      "Máy quét bíp và gửi chuỗi QR chuẩn Bộ Công An vào ứng dụng.",
+      "Hệ thống tự động giải mã chuỗi chuẩn, bóc tách chính xác Số CCCD, CMND cũ, Họ tên, Ngày sinh, Giới tính, Địa chỉ."
+    ]
+  },
+  {
+    "id": "TC-CKIN-004",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Chụp ảnh chân dung khách chính trực tiếp qua Webcam khi Check-in",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Mở modal Check-in, nhấp vào khung camera chân dung.",
+      "2. Hướng camera về phía khách, nhấn nút Chụp ảnh."
+    ],
+    "expected": [
+      "Ảnh chân dung hiển thị ngay trong khung avatar của form Check-in.",
+      "Sau khi lưu lượt khách, ảnh đại diện xuất hiện rõ ràng trên bảng danh sách của Dashboard."
+    ]
+  },
+  {
+    "id": "TC-CKIN-005",
+    "module": "M02",
+    "priority": "P2",
+    "name": "Chụp đa ảnh bổ sung (Giấy tờ tùy thân, tài sản) bằng Multi-shot camera modal",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại form Check-in, nhấn biểu tượng Camera chụp đa ảnh bổ sung.",
+      "2. Chụp mặt trước CCCD, mặt sau CCCD và giấy giới thiệu công tác.",
+      "3. Nhấn \"Hoàn tất\"."
+    ],
+    "expected": [
+      "Danh sách các ảnh chụp thêm hiển thị dưới dạng carousel thu nhỏ trong form Check-in.",
+      "Các đường dẫn ảnh được lưu vào trường AdditionalPhotoPaths trong CSDL."
+    ]
+  },
+  {
+    "id": "TC-CKIN-006",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Check-in cấp Thẻ Định Danh (RFID / Mã thẻ an ninh cụ thể)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Mã thẻ định danh: \"CARD-8801\"",
+    "steps": [
+      "1. Tại phần Cấp thẻ an ninh trên form Check-in, chọn loại thẻ \"Thẻ định danh (Identity)\".",
+      "2. Nhập mã thẻ \"CARD-8801\" (hoặc quẹt thẻ qua đầu đọc RFID).",
+      "3. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Lượt khách lưu trường CardNumber = \"CARD-8801\", IsCardIssued = true, CardType = \"identity\".",
+      "Trên bảng Dashboard hiển thị thông tin thẻ phát \"1\", trạng thái \"Giữ 1 thẻ\"."
+    ]
+  },
+  {
+    "id": "TC-CKIN-007",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Check-in cấp Thẻ Thường (Cấp chung đếm số lượng không nhập mã)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại phần Cấp thẻ, chọn loại thẻ \"Thẻ thường (Regular)\".",
+      "2. Không cần nhập mã số thẻ.",
+      "3. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Lượt khách lưu trường CardType = \"regular\", IsCardIssued = true, CardNumber = null.",
+      "Dashboard ghi nhận đã phát 1 thẻ thường, tính vào số lượng thẻ cần thu hồi lúc ra về."
+    ]
+  },
+  {
+    "id": "TC-CKIN-008",
+    "module": "M02",
+    "priority": "P2",
+    "name": "Check-in không cấp thẻ an ninh (Khu vực mở / Sảnh tiếp dân)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại phần Cấp thẻ, chọn loại thẻ \"Không cấp thẻ (None)\".",
+      "2. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Lưu lượt khách với CardType = \"none\", IsCardIssued = false.",
+      "Cột thẻ trên Dashboard hiển thị \"Đã thu đủ thẻ\" (không nợ thẻ)."
+    ]
+  },
+  {
+    "id": "TC-CKIN-009",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Check-in có Phương tiện: Đăng ký loại xe từ danh mục chuẩn hóa",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Loại xe: \"Ô tô 7 chỗ\", Biển số: \"30H-999.88\"",
+    "steps": [
+      "1. Chuyển sang tab Phương tiện trên form Check-in.",
+      "2. Chọn loại xe từ danh mục chuẩn (STANDARD_VEHICLE_TYPES: Ô tô, Xe máy, Xe tải...).",
+      "3. Nhập Biển số xe \"30H-999.88\", chủ xe gán cho khách chính.",
+      "4. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Bản ghi Vehicle được tạo liên kết với Visit, lưu PlateNumber = \"30H-999.88\", Type = \"Ô tô 7 chỗ\".",
+      "Dashboard hiển thị thẻ biển số \"30H-999.88 (Ô tô 7 chỗ)\", đếm \"Xe: Đăng ký 1 — Còn bên trong: 1\"."
+    ]
+  },
+  {
+    "id": "TC-CKIN-010",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Validation Chặn trùng CCCD: Khách có số CCCD đang ở bên trong",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Số CCCD \"001099000001\" của khách đang ở trong cơ quan",
+    "steps": [
+      "1. Mở modal Check-in khách mới.",
+      "2. Nhập số CCCD \"001099000001\".",
+      "3. Quan sát thông báo kiểm tra ràng buộc chéo (Cross-visit constraint)."
+    ],
+    "expected": [
+      "Hệ thống hiển thị cảnh báo đỏ ngay dưới ô nhập CCCD: \"Số CCCD này hiện đang có 1 lượt khách ở trong đơn vị chưa Checkout.\"",
+      "Nút Check-in bị chặn, không cho phép gửi trùng lặp."
+    ]
+  },
+  {
+    "id": "TC-CKIN-011",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Validation Chặn trùng Thẻ An Ninh: Mã thẻ đang cấp cho lượt khác chưa trả",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Mã thẻ \"CARD-8801\" đang được khách khác giữ",
+    "steps": [
+      "1. Mở modal Check-in, nhập mã thẻ \"CARD-8801\"."
+    ],
+    "expected": [
+      "Hệ thống phát hiện mã thẻ đang active trong danh sách thẻ chưa trả.",
+      "Hiển thị cảnh báo lỗi: \"Mã thẻ này đang được sử dụng bởi khách khác bên trong đơn vị.\""
+    ]
+  },
+  {
+    "id": "TC-CKIN-012",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Validation Chặn trùng Biển số xe: Phương tiện đang ở bên trong cơ quan",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Biển số xe \"30H-999.88\" đang trong đơn vị chưa ra",
+    "steps": [
+      "1. Mở modal Check-in, thêm phương tiện với biển số \"30H-999.88\"."
+    ],
+    "expected": [
+      "Hệ thống cảnh báo: \"Biển số xe 30H-999.88 hiện đang ở trong đơn vị chưa Checkout.\""
+    ]
+  },
+  {
+    "id": "TC-CKIN-013",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Validation Bỏ trống các trường bắt buộc",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Mở modal Check-in và bấm trực tiếp nút \"Check-in\" khi chưa điền thông tin."
+    ],
+    "expected": [
+      "Hệ thống chặn submit, hiển thị tóm tắt lỗi các trường còn thiếu (Họ tên, CCCD, Mục đích, Người đón)."
+    ]
+  },
+  {
+    "id": "TC-CKIN-014",
+    "module": "M02",
+    "priority": "P2",
+    "name": "Tự động Upsert gợi ý Khách quen khi nhập số CCCD cũ",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Số CCCD của khách đã từng đến làm việc tuần trước",
+    "steps": [
+      "1. Mở modal Check-in, gõ số CCCD cũ.",
+      "2. Rời tiêu điểm (blur) khỏi ô nhập CCCD."
+    ],
+    "expected": [
+      "Hệ thống tự động tra cứu và điền sẵn Họ tên, Số điện thoại và Cơ quan của khách từ lịch sử.",
+      "Tiết kiệm thời gian gõ phím cho nhân viên trực ban."
+    ]
+  },
+  {
+    "id": "TC-CKIN-015",
+    "module": "M02",
+    "priority": "P2",
+    "name": "Chụp ảnh phương tiện (Biển số xe và đầu xe) khi Check-in",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại tab Phương tiện, nhấp nút chụp ảnh phương tiện.",
+      "2. Chụp biển số và đầu xe ô tô."
+    ],
+    "expected": [
+      "Ảnh xe được đính kèm vào phương tiện, lưu vào CSDL làm cơ sở đối soát lúc xe ra."
+    ]
+  },
+  {
+    "id": "TC-COMP-001",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Tạo đoàn Check-in ban đầu: Thêm nhiều Người đi cùng có danh tính",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Trưởng đoàn + 2 người đi cùng (Trần Thị B, Lê Văn C)",
+    "steps": [
+      "1. Tại form Check-in, chuyển sang tab \"Người đi cùng (Companions)\".",
+      "2. Nhấn nút \"+ Thêm người đi cùng\".",
+      "3. Điền Họ tên, Số CCCD, SĐT, Giới tính cho từng người đi cùng.",
+      "4. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Lưu lượt thăm với TotalGuests = 3, InsideGuests = 3.",
+      "Bảng danh sách Dashboard hiển thị huy hiệu \"3/3 khách\".",
+      "Xem chi tiết hiển thị đầy đủ danh sách 2 người đi cùng."
+    ]
+  },
+  {
+    "id": "TC-COMP-002",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Đọc Chip CCCD hoặc Quét QR độc lập cho từng Người đi cùng",
+    "platform": "Giao diện Web Trực ban & Thiết bị",
+    "steps": [
+      "1. Tại tab Người đi cùng, chọn thành viên thứ 2.",
+      "2. Nhấn nút \"Quét chip\" (hoặc \"Quét QR\") dành riêng cho thành viên này.",
+      "3. Đặt thẻ CCCD của thành viên lên đầu đọc."
+    ],
+    "expected": [
+      "Thông tin cá nhân của thành viên thứ 2 được điền chính xác, không ghi đè vào thông tin của Trưởng đoàn."
+    ]
+  },
+  {
+    "id": "TC-COMP-003",
+    "module": "M03",
+    "priority": "P2",
+    "name": "Chụp ảnh chân dung và giấy tờ riêng cho từng Người đi cùng",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại mục của Người đi cùng, nhấn nút Camera chụp ảnh chân dung.",
+      "2. Nhấn Multi-shot chụp ảnh giấy tờ của người đi cùng."
+    ],
+    "expected": [
+      "Ảnh của người đi cùng được lưu riêng biệt vào trường PhotoPath / DocumentPhoto của đối tượng AccompanyingPerson."
+    ]
+  },
+  {
+    "id": "TC-COMP-004",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Cấp phát thẻ linh hoạt cho từng Người đi cùng",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Người 1 nhận thẻ định danh \"CARD-101\", Người 2 nhận thẻ thường, Trưởng đoàn nhận thẻ định danh \"CARD-100\"",
+    "steps": [
+      "1. Thiết lập thẻ cho Trưởng đoàn và từng người đi cùng theo các cấu hình khác nhau.",
+      "2. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Hệ thống tính tổng số thẻ phát = 3 (2 thẻ định danh + 1 thẻ thường).",
+      "Dashboard hiển thị chính xác: \"Thẻ: Phát 3 — Thu 0 | Đang giữ: 3\"."
+    ]
+  },
+  {
+    "id": "TC-COMP-005",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Khai báo Đoàn vô danh (Số lượng khách đi cùng không cần khai báo tên)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Đoàn công nhân xây dựng 10 người vô danh + 1 Trưởng đoàn",
+    "steps": [
+      "1. Tại tab \"Đoàn vô danh (Anonymous)\", nhập số lượng khách vô danh: 10.",
+      "2. Không cần điền tên hay CCCD của 10 người này.",
+      "3. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Hệ thống lưu TotalGuests = 11 (1 trưởng đoàn + 10 vô danh).",
+      "Dashboard hiển thị \"11/11 khách\"."
+    ]
+  },
+  {
+    "id": "TC-COMP-006",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Cấp phát thẻ cho Đoàn vô danh: Thẻ thường và Danh sách thẻ RFID",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Cấp 10 thẻ thường và thêm 2 thẻ định danh RFID cho khách trong đoàn vô danh",
+    "steps": [
+      "1. Nhập số lượng thẻ thường cho đoàn vô danh: 10.",
+      "2. Nhập thêm danh sách mã thẻ RFID định danh: \"CARD-A1\", \"CARD-A2\".",
+      "3. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "CSDL lưu AnonymousCardCount = 10, AnonymousIdentityCardNumbers = [\"CARD-A1\", \"CARD-A2\"].",
+      "Tổng số thẻ an ninh đoàn đang giữ được tính toán chuẩn xác."
+    ]
+  },
+  {
+    "id": "TC-COMP-007",
+    "module": "M03",
+    "priority": "P2",
+    "name": "Đăng ký nhiều Phương tiện cho đoàn: Gán chủ xe linh hoạt",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "1 xe khách 29 chỗ (chủ xe: Đoàn) + 1 xe ô tô 4 chỗ (chủ xe: Trưởng đoàn)",
+    "steps": [
+      "1. Thêm 2 phương tiện trong tab Xe cộ.",
+      "2. Gán xe 1 cho Trưởng đoàn, xe 2 cho Đoàn vô danh.",
+      "3. Hoàn tất Check-in."
+    ],
+    "expected": [
+      "Tạo 2 bản ghi Vehicle với OwnerType tương ứng (MAIN và ANONYMOUSGROUP).",
+      "Dashboard hiển thị đầy đủ cả 2 biển số xe trên dòng lượt khách."
+    ]
+  },
+  {
+    "id": "TC-COMP-008",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Bổ sung Người đi cùng vào đoàn đang ở bên trong qua SupplementalCheckInModal",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Lượt khách đang inside, có thêm 2 thành viên đến muộn",
+    "steps": [
+      "1. Trên dòng lượt khách đang inside, nhấn nút \"Thêm\" (hoặc mở Chi tiết -> Bổ sung).",
+      "2. Modal \"SupplementalCheckInModal\" mở ra.",
+      "3. Chuyển sang tab Người đi cùng, thêm 2 thành viên mới kèm CCCD và thẻ an ninh.",
+      "4. Nhấn nút \"Xác nhận bổ sung\"."
+    ],
+    "expected": [
+      "Gọi API /station/visits/accompanying-persons thành công.",
+      "Quân số inside tăng thêm 2 người, tổng số khách tăng tương ứng.",
+      "Lịch sử dòng thời gian Timeline ghi nhận đợt bổ sung mới."
+    ]
+  },
+  {
+    "id": "TC-COMP-009",
+    "module": "M03",
+    "priority": "P2",
+    "name": "Bổ sung Phương tiện vào đoàn đang ở bên trong qua SupplementalCheckInModal",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Xe ô tô chở vật tư đến sau tham gia vào đoàn",
+    "steps": [
+      "1. Mở SupplementalCheckInModal của lượt khách đang inside.",
+      "2. Tại tab Xe cộ, thêm 1 xe ô tô tải biển số \"29C-123.45\".",
+      "3. Nhấn Xác nhận bổ sung."
+    ],
+    "expected": [
+      "Phương tiện mới được gắn vào Visit, số lượng xe của lượt khách tăng lên, hiển thị biển số mới trên Dashboard."
+    ]
+  },
+  {
+    "id": "TC-COMP-010",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Nghiệp vụ Cấp bù thẻ thiếu (Tab missing_cards trong SupplementalCheckInModal)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Thành viên lúc Check-in chưa được nhận thẻ, nay phát bù",
+    "steps": [
+      "1. Mở SupplementalCheckInModal, chọn tab \"Cấp bù thẻ thiếu (missing_cards)\".",
+      "2. Chọn thành viên đang thiếu thẻ, nhập mã thẻ mới cấp bù.",
+      "3. Xác nhận cập nhật."
+    ],
+    "expected": [
+      "Hệ thống cập nhật thành viên sang trạng thái IsCardIssued = true kèm mã thẻ mới.",
+      "Bộ đếm thẻ đang giữ của lượt khách tăng lên chính xác."
+    ]
+  },
+  {
+    "id": "TC-COMP-011",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Cờ Khách Lưu Trú Qua Đêm / Nhiều Ngày (isMultiDayVisit)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Trong modal Check-in hoặc modal Bổ sung, bật công tắc \"Lưu trú qua đêm / Nhiều ngày (isMultiDayVisit)\".",
+      "2. Xác nhận lưu."
+    ],
+    "expected": [
+      "CSDL cập nhật IsMultiDayVisit = true.",
+      "Background Service Auto Checkout khi quét cuối ngày sẽ BỎ QUA lượt khách này, không tự động đóng ca khách."
+    ]
+  },
+  {
+    "id": "TC-COMP-012",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Validation Chặn trùng lặp nội bộ đoàn",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Nhập Người đi cùng có cùng số CCCD hoặc cùng mã thẻ với Trưởng đoàn (hoặc với người đi cùng khác trong đoàn)."
+    ],
+    "expected": [
+      "Hệ thống báo lỗi trùng lặp nội bộ trong đoàn và chặn thao tác gửi dữ liệu."
+    ]
+  },
+  {
+    "id": "TC-COMP-013",
+    "module": "M03",
+    "priority": "P1",
+    "name": "Validation Chặn trùng lặp với lượt khách khác đang inside toàn trạm khi bổ sung",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Khi bổ sung thành viên hoặc xe cộ, nhập CCCD/Biển xe/Mã thẻ đang được sử dụng ở 1 lượt khách khác."
+    ],
+    "expected": [
+      "Hệ thống kiểm tra ràng buộc chéo và báo lỗi trùng lặp, bảo đảm tính duy nhất của mã thẻ và phương tiện bên trong cơ quan."
+    ]
+  },
+  {
+    "id": "TC-COMP-014",
+    "module": "M03",
+    "priority": "P2",
+    "name": "Lưu vết lịch sử đợt bổ sung thành viên",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Thực hiện bổ sung thành viên lần 1, sau đó bổ sung tiếp lần 2.",
+      "2. Mở tab Timeline trong VisitDetailsModal để kiểm tra."
+    ],
+    "expected": [
+      "Hiển thị rõ các sự kiện \"ADD\" (Bổ sung) riêng biệt kèm đợt (Batch), thời gian, tên trạm và tên cán bộ thực hiện."
+    ]
+  },
+  {
+    "id": "TC-COUT-001",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Check-out Toàn bộ đoàn: Thu hồi tất cả thẻ và đóng lượt khách",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Lượt khách đang inside, đã có thẻ và phương tiện.",
+    "steps": [
+      "1. Nhấn nút \"Checkout\" trên dòng lượt khách.",
+      "2. Modal CheckOutModal mở ra.",
+      "3. Tích chọn thu hồi tất cả thẻ định danh, thẻ thường và xác nhận xe ra về.",
+      "4. Nhấn nút \"Xác nhận Checkout\"."
+    ],
+    "expected": [
+      "Gọi API /station/visits/checkout thành công.",
+      "Lượt khách chuyển trạng thái Status = 2 (Đã ra), ghi nhận CheckOutTime.",
+      "Quân số inside giảm về 0, toàn bộ thẻ được thu hồi về kho."
+    ]
+  },
+  {
+    "id": "TC-COUT-002",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Check-out Từng phần: Một số thành viên về trước, người khác ở lại",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Đoàn 5 người, 2 người về trước, 3 người ở lại làm việc",
+    "steps": [
+      "1. Mở CheckOutModal.",
+      "2. Chỉ tích chọn 2 người cần checkout, bỏ tích Trưởng đoàn và các thành viên còn lại.",
+      "3. Thu hồi thẻ của 2 người về trước.",
+      "4. Xác nhận Checkout."
+    ],
+    "expected": [
+      "Hệ thống cập nhật CheckOutTime cho 2 thành viên được chọn, thu hồi thẻ của họ.",
+      "Lượt khách VẪN GIỮ trạng thái \"Trong đơn vị\", quân số inside hiển thị \"3/5 khách\"."
+    ]
+  },
+  {
+    "id": "TC-COUT-003",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Check-out Xe riêng độc lập: Xe ra trước người (hoặc người ra xe ở lại)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Khách gửi xe ô tô trong bãi qua đêm, người đi taxi về trước",
+    "steps": [
+      "1. Mở CheckOutModal, checkout toàn bộ người nhưng BỎ TÍCH ô xe ô tô (hoặc ngược lại: checkout xe riêng từ modal Chi tiết).",
+      "2. Xác nhận."
+    ],
+    "expected": [
+      "Người đã ra về nhưng xe vẫn còn trong bãi.",
+      "Dashboard hiển thị huy hiệu màu cam nhấp nháy: \"Chờ checkout xe\", lượt khách chưa bị đóng hoàn toàn."
+    ]
+  },
+  {
+    "id": "TC-COUT-004",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Thu hồi Thẻ Định Danh (RFID / Mã thẻ cụ thể) khi Checkout",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại CheckOutModal, quẹt thẻ RFID hoặc tích chọn mã thẻ của người checkout.",
+      "2. Xác nhận Checkout."
+    ],
+    "expected": [
+      "Cập nhật IsCardReturned = true cho mã thẻ đó, mã thẻ được giải phóng để cấp cho lượt khách mới."
+    ]
+  },
+  {
+    "id": "TC-COUT-005",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Thu hồi Thẻ Thường (Đếm số lượng): Cho phép trả đủ hoặc trả 1 phần",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Đoàn giữ 5 thẻ thường, lúc về chỉ trả 3 thẻ",
+    "steps": [
+      "1. Tại ô số lượng thẻ thường thu hồi, nhập 3 / 5 thẻ.",
+      "2. Xác nhận Checkout."
+    ],
+    "expected": [
+      "Hệ thống cập nhật AnonymousCardReturnedCount = 3.",
+      "Dashboard hiển thị: \"Thẻ: Phát 5 — Thu 3 | Đang giữ: 2\"."
+    ]
+  },
+  {
+    "id": "TC-COUT-006",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Thu hồi Thẻ của Đoàn vô danh (Cả thẻ thường và thẻ RFID danh sách)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại CheckOutModal của đoàn vô danh, tích chọn các mã thẻ RFID trả lại và số lượng thẻ thường trả lại.",
+      "2. Xác nhận Checkout."
+    ],
+    "expected": [
+      "Danh sách returnedAnonymousIdentityCardNumbers được cập nhật trong CSDL, thẻ được hoàn trả kho an ninh."
+    ]
+  },
+  {
+    "id": "TC-COUT-007",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Cảnh báo khi Checkout còn nợ thẻ",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Bỏ tích ô thu hồi thẻ nhưng vẫn nhấn nút Checkout."
+    ],
+    "expected": [
+      "Hệ thống hiển thị hộp thoại cảnh báo: \"Lượt khách còn nợ thẻ an ninh. Bạn có muốn báo mất thẻ hay xác nhận khách nợ thẻ không?\""
+    ]
+  },
+  {
+    "id": "TC-COUT-008",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Nghiệp vụ Báo Mất Thẻ khi Checkout: Ghi nhận cờ isCardLost",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Khi khách làm mất thẻ, chọn tùy chọn \"Báo mất thẻ\".",
+      "2. Nhập lý do mất thẻ: \"Khách làm rơi trong quá trình công tác\".",
+      "3. Xác nhận Checkout."
+    ],
+    "expected": [
+      "CSDL ghi nhận IsCardLost = true, LostAt = Now, LostNote = lý do.",
+      "Lượt khách hiển thị huy hiệu \"Chờ thu thẻ\", được đưa vào danh sách Báo cáo Thẻ mất."
+    ]
+  },
+  {
+    "id": "TC-COUT-009",
+    "module": "M04",
+    "priority": "P2",
+    "name": "Chụp ảnh Webcam tại thời điểm Check-out làm bằng chứng bàn giao",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Tại CheckOutModal, nhấn nút chụp ảnh camera lúc khách ra về.",
+      "2. Xác nhận Checkout."
+    ],
+    "expected": [
+      "Ảnh checkout được lưu vào CSDL, hiển thị đối sánh trong modal Chi tiết lượt khách."
+    ]
+  },
+  {
+    "id": "TC-COUT-010",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Tra cứu theo Mã số thẻ (RecoverLostCardModal)",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "testData": "Thẻ an ninh đã bị báo mất hôm qua được tìm thấy",
+    "steps": [
+      "1. Mở modal \"Thu hồi thẻ mất (RecoverLostCardModal)\" từ menu Tiện ích hoặc modal Chi tiết.",
+      "2. Chọn tab \"Thẻ định danh (Identity)\".",
+      "3. Nhập mã thẻ đã báo mất, nhấn nút \"Tra cứu\"."
+    ],
+    "expected": [
+      "Hệ thống tra cứu API /station/cards/lookup-lost (hoặc /admin/cards/lookup-lost).",
+      "Hiển thị chính xác thông tin: Tên khách làm mất, CCCD, Ngày giờ báo mất, Trạm tiếp nhận."
+    ]
+  },
+  {
+    "id": "TC-COUT-011",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Thu hồi theo Hồ sơ lượt khách đang nợ thẻ",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Trong RecoverLostCardModal, chọn tab \"Thẻ thường (Regular)\".",
+      "2. Chọn lượt khách đang nợ thẻ từ danh sách dropdown.",
+      "3. Nhập số lượng thẻ thu hồi, nhập ghi chú: \"Thu hồi thẻ khách gửi lại bảo vệ\".",
+      "4. Nhấn nút \"Xác nhận thu hồi thẻ\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API /visits/{id}/recover-cards thành công.",
+      "Bộ đếm thẻ nợ giảm xuống, thẻ được hoàn trả về kho khả dụng."
+    ]
+  },
+  {
+    "id": "TC-COUT-012",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Hoàn tất thu hồi thẻ mất: Cập nhật isCardLost = false, isCardReturned = true",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Sau khi xác nhận thu hồi thẻ mất, kiểm tra lại trạng thái lượt khách trên Dashboard và Báo cáo."
+    ],
+    "expected": [
+      "Huy hiệu \"Chờ thu thẻ\" biến mất, lượt khách chuyển sang trạng thái hoàn tất thu đủ thẻ.",
+      "Thẻ mất được gạch khỏi danh sách thất lạc trong Báo cáo Thẻ mất."
+    ]
+  },
+  {
+    "id": "TC-COUT-013",
+    "module": "M04",
+    "priority": "P2",
+    "name": "Xử lý lượt khách hết người nhưng xe còn bên trong",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Quan sát dòng lượt khách có insideGuests = 0 nhưng xe chưa checkout."
+    ],
+    "expected": [
+      "Cột Trạng thái hiển thị huy hiệu viền cam: \"Chờ checkout xe\".",
+      "Nút \"Checkout\" vẫn hiển thị để nhân viên cho xe ra khi chủ xe quay lại lấy."
+    ]
+  },
+  {
+    "id": "TC-COUT-014",
+    "module": "M04",
+    "priority": "P2",
+    "name": "Xử lý lượt khách hết người nhưng thẻ còn nợ",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Quan sát dòng lượt khách có insideGuests = 0 nhưng còn giữ thẻ chưa thu."
+    ],
+    "expected": [
+      "Cột Trạng thái hiển thị huy hiệu viền vàng: \"Chờ thu thẻ\".",
+      "Nút \"Checkout\" vẫn hiển thị để nhân viên thu hồi thẻ khi khách gửi trả."
+    ]
+  },
+  {
+    "id": "TC-COUT-015",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Tự động đóng hoàn toàn lượt khách khi quân số inside = 0, tất cả xe và thẻ đã xong",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Thu hồi chiếc thẻ cuối cùng hoặc cho chiếc xe cuối cùng ra về."
+    ],
+    "expected": [
+      "Hệ thống tự động chuyển trạng thái lượt khách thành \"Đã ra\" (Status = 2).",
+      "Không còn hiển thị nút Thêm / Checkout trên dòng này."
+    ]
+  },
+  {
+    "id": "TC-DASH-001",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Header Trực ban hiển thị Realtime Live Clock tiếng Việt",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Quan sát thanh Header trạm gác (/staff.html)."
+    ],
+    "expected": [
+      "Hiển thị chính xác Tên hệ thống, Tên trạm gác (MapPin), Thứ trong tuần, Ngày/tháng/năm và Giờ:phút:giây nhảy đều đặn từng giây.",
+      "Avatar nhân viên có chấm xanh lá biểu thị trạng thái đang trong ca trực."
+    ]
+  },
+  {
+    "id": "TC-DASH-002",
+    "module": "M05",
+    "priority": "P1",
+    "name": "Live Search đa đối tượng thông minh: Lọc tức thì danh sách khách",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Gõ từ khóa: \"30H\", \"An\", \"001099\", \"CARD\", \"Huy\"",
+    "steps": [
+      "1. Nhấp vào ô tìm kiếm nhanh trên Dashboard trạm.",
+      "2. Gõ từ khóa tìm kiếm bất kỳ."
+    ],
+    "expected": [
+      "Bảng danh sách lập tức lọc theo thời gian thực (Live Filter).",
+      "Khớp với cả Tên khách, Số CCCD, Biển số xe, Mã thẻ an ninh, Cán bộ tiếp đón hoặc Mục đích làm việc."
+    ]
+  },
+  {
+    "id": "TC-DASH-003",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Phím tắt toàn cục Ctrl + K focus nhanh ô tìm kiếm",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Đang ở bất kỳ vị trí nào trên Dashboard, nhấn tổ hợp phím Ctrl + K (hoặc Cmd + K trên macOS)."
+    ],
+    "expected": [
+      "Con trỏ chuột tự động focus vào ô tìm kiếm nhanh và bôi đen toàn bộ từ khóa hiện có để gõ mới ngay lập tức."
+    ]
+  },
+  {
+    "id": "TC-DASH-004",
+    "module": "M05",
+    "priority": "P1",
+    "name": "Popover Lọc theo 5 nhóm đối tượng (Multi-Category Search Filter)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Nhập từ khóa vào ô tìm kiếm.",
+      "2. Nhấn nút \"Chọn đối tượng\" (hoặc nút bộ lọc hiện ra bên cạnh ô tìm kiếm)."
+    ],
+    "expected": [
+      "Popover hiển thị 5 nhóm đối tượng: Khách & Người đi cùng, Biển số & Phương tiện, Thẻ an ninh, Cán bộ & Phòng ban, Cơ quan & Mục đích.",
+      "Cho phép tích chọn lọc trên từng nhóm mong muốn."
+    ]
+  },
+  {
+    "id": "TC-DASH-005",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Bộ đếm kết quả khớp thời gian thực (Match counter badges) trong Popover",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Gõ từ khóa có trong cả biển xe và tên khách",
+    "steps": [
+      "1. Gõ từ khóa và mở Popover lọc đối tượng."
+    ],
+    "expected": [
+      "Mỗi nhóm đối tượng hiển thị huy hiệu đếm số lượng bản ghi khớp (vd: \"2 khớp\", \"5 khớp\").",
+      "Người dùng dễ dàng biết từ khóa xuất hiện ở nhóm đối tượng nào."
+    ]
+  },
+  {
+    "id": "TC-DASH-006",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Nút Chọn tất cả / Bỏ chọn tất cả nhóm đối tượng tìm kiếm",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Trong Popover lọc đối tượng, nhấn nút \"Bỏ chọn tất cả\", sau đó nhấn \"Chọn tất cả\"."
+    ],
+    "expected": [
+      "Tất cả 5 nhóm đối tượng tự động đổi trạng thái checkbox tương ứng, danh sách kết quả cập nhật ngay lập tức."
+    ]
+  },
+  {
+    "id": "TC-DASH-007",
+    "module": "M05",
+    "priority": "P1",
+    "name": "Cửa sổ Tra cứu Hồ sơ Lịch sử Độc lập (AdvancedSearchModal - Phím tắt Ctrl + Shift + K)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Nhấn tổ hợp phím Ctrl + Shift + K (hoặc mở từ menu Tiện ích -> Tra cứu hồ sơ nâng cao)."
+    ],
+    "expected": [
+      "Cửa sổ AdvancedSearchModal mở ra với giao diện tra cứu chuyên sâu độc lập, không phụ thuộc vào bộ lọc của Dashboard."
+    ]
+  },
+  {
+    "id": "TC-DASH-008",
+    "module": "M05",
+    "priority": "P1",
+    "name": "Tra cứu chuyên sâu đa tiêu chí trong AdvancedSearchModal",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Trong AdvancedSearchModal, nhập Họ tên, chọn trạng thái \"Nợ thẻ (debt_card)\", chọn khoảng ngày.",
+      "2. Nhấn nút \"Tìm kiếm\"."
+    ],
+    "expected": [
+      "Gọi API tra cứu và trả về danh sách hồ sơ khớp chính xác.",
+      "Có nút \"Chi tiết\" để mở xem hồ sơ trực tiếp từ kết quả tìm kiếm."
+    ]
+  },
+  {
+    "id": "TC-DASH-009",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Chế độ hiển thị thống kê tổng quan (Stats View Mode: Ẩn / Tinh gọn / Chi tiết)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Trên khối thống kê Dashboard, chuyển đổi qua lại giữa 3 chế độ: \"Hiện chi tiết\", \"Hiện tinh gọn\", và \"Ẩn thống kê\".",
+      "2. Nhấn F5 tải lại trang."
+    ],
+    "expected": [
+      "Khối thống kê thay đổi kích thước hoặc ẩn đi để tối đa hóa không gian bảng danh sách khách.",
+      "Trạng thái được ghi nhớ vào localStorage (smartvms_stats_view_mode), không bị mất khi F5."
+    ]
+  },
+  {
+    "id": "TC-DASH-010",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Chế độ bảng danh sách khách (Table View Mode: Thu gọn Compact vs Chi tiết Detailed)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Mở menu Tiện ích, chuyển Chế độ xem bảng sang \"Thu gọn\".",
+      "2. Quan sát bảng danh sách khách."
+    ],
+    "expected": [
+      "Bảng ẩn avatar ảnh, giảm padding dòng, tăng số lượng lượt khách hiển thị trên màn hình.",
+      "Chuyển về \"Chi tiết\" hiển thị lại ảnh avatar và các thông tin mở rộng."
+    ]
+  },
+  {
+    "id": "TC-DASH-011",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Tùy biến Màu sắc và Độ trong suốt hàng (DisplaySettingsModal)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Mở menu Tiện ích -> \"Cài đặt màu sắc\".",
+      "2. Chọn màu hàng đang active, chỉnh thanh trượt độ mờ (Opacity), chọn màu hàng đã ra.",
+      "3. Nhấn \"Lưu cấu hình\"."
+    ],
+    "expected": [
+      "Bảng danh sách khách đổi màu nền và vạch viền chỉ thị đúng theo bảng màu vừa cấu hình."
+    ]
+  },
+  {
+    "id": "TC-DASH-012",
+    "module": "M05",
+    "priority": "P1",
+    "name": "Bộ lọc nguồn dữ liệu (Source Filter: Tất cả / Trực ban cổng / Sổ sách ngoại lệ)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Nhấp dropdown bộ lọc Nguồn dữ liệu trên toolbar.",
+      "2. Chọn \"Sổ sách ngoại lệ (dataentry)\"."
+    ],
+    "expected": [
+      "Bảng chỉ hiển thị các lượt khách do nhân viên DataEntry tạo ra (có huy hiệu tím \"Sổ sách ngoại lệ\").",
+      "Chọn \"Trực ban cổng (staff)\" chỉ hiển thị khách vào qua cổng trực tiếp."
+    ]
+  },
+  {
+    "id": "TC-DASH-013",
+    "module": "M05",
+    "priority": "P1",
+    "name": "Bộ lọc thời gian: Lọc nhanh và Khoảng ngày chặn tương lai",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Chọn mốc thời gian nhanh: \"Hôm nay\", \"7 ngày qua\", \"Tuần này\", \"Tháng này\".",
+      "2. Chọn khoảng ngày tùy chọn, thử chọn ngày mai (tương lai)."
+    ],
+    "expected": [
+      "Hàm clampDateInputToToday tự động chặn không cho chọn ngày vượt quá hôm nay.",
+      "Bảng dữ liệu làm mới chính xác theo khoảng ngày đã chọn."
+    ]
+  },
+  {
+    "id": "TC-DASH-014",
+    "module": "M05",
+    "priority": "P2",
+    "name": "Menu gom nhóm Tiện ích & Tùy chọn (SlidersHorizontal dropdown)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Nhấp nút \"Tiện ích\" trên toolbar bên cạnh nút Check-in."
+    ],
+    "expected": [
+      "Menu dropdown mở ra chứa gọn gàng 4 mục: Tra cứu hồ sơ nâng cao, Chế độ xem bảng, Cài đặt màu sắc, Thu hồi thẻ mất."
+    ]
+  },
+  {
+    "id": "TC-VDET-001",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Mở xem Chi tiết lượt khách (VisitDetailsModal)",
+    "platform": "Giao diện Web Trực ban, Admin & DataEntry",
+    "steps": [
+      "1. Nhấn nút \"Chi tiết\" (biểu tượng con mắt) trên bất kỳ dòng lượt khách nào."
+    ],
+    "expected": [
+      "Modal VisitDetailsModal mở ra với 3 tab: TỔNG QUAN (Overview), DÒNG THỜI GIAN (Timeline), THÀNH VIÊN (Members)."
+    ]
+  },
+  {
+    "id": "TC-VDET-002",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Tab Tổng quan (Overview): Thẻ KPI tóm tắt đầy đủ chỉ số",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Quan sát Tab Tổng quan của VisitDetailsModal."
+    ],
+    "expected": [
+      "Hiển thị thông tin Khách đại diện, Cán bộ tiếp đón, Mục đích, Cơ quan.",
+      "5 Thẻ KPI: Quân số hiện tại, Thẻ định danh đang giữ, Thẻ thường đang giữ, Phương tiện, Thẻ mất."
+    ]
+  },
+  {
+    "id": "TC-VDET-003",
+    "module": "M06",
+    "priority": "P2",
+    "name": "Cửa sổ con xem nhanh Quân số chi tiết từ Tab Tổng quan",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Tại Tab Tổng quan, nhấp vào Thẻ KPI Quân số (hoặc nút xem chi tiết quân số)."
+    ],
+    "expected": [
+      "Cửa sổ con mở ra liệt kê danh sách từng người, giờ vào, giờ ra và trạng thái cụ thể."
+    ]
+  },
+  {
+    "id": "TC-VDET-004",
+    "module": "M06",
+    "priority": "P2",
+    "name": "Cửa sổ con xem nhanh Thẻ an ninh & Thẻ thường từ Tab Tổng quan",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Nhấp vào Thẻ KPI Thẻ định danh hoặc Thẻ thường."
+    ],
+    "expected": [
+      "Cửa sổ con mở ra hiển thị bảng danh sách các mã thẻ đã cấp, người đang giữ, trạng thái đã thu hồi hay đang nợ."
+    ]
+  },
+  {
+    "id": "TC-VDET-005",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Cửa sổ con xem nhanh Phương tiện & Checkout từng xe trực tiếp",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Nhấp vào Thẻ KPI Phương tiện.",
+      "2. Trong danh sách xe, chọn 1 xe đang ở bên trong và nhấn nút \"Checkout xe này\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API /visits/vehicle-checkout, cập nhật giờ ra riêng cho xe đó ngay lập tức mà không ảnh hưởng tới người."
+    ]
+  },
+  {
+    "id": "TC-VDET-006",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Tab Dòng thời gian (Timeline): Hiển thị chuỗi sự kiện CHECK_IN, ADD, CHECK_OUT, RECOVER_CARD",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Chuyển sang Tab \"DÒNG THỜI GIAN (Timeline)\"."
+    ],
+    "expected": [
+      "Hiển thị chuỗi các mốc sự kiện theo chiều thời gian.",
+      "Mỗi sự kiện có badge phân loại, thời gian thực hiện, cổng trạm và cán bộ thực thi."
+    ]
+  },
+  {
+    "id": "TC-VDET-007",
+    "module": "M06",
+    "priority": "P2",
+    "name": "Đổi chiều sắp xếp Timeline: Mới nhất trước vs Cũ nhất trước",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Tại Tab Timeline, nhấn nút chuyển đổi thứ tự sắp xếp."
+    ],
+    "expected": [
+      "Danh sách sự kiện đảo chiều sắp xếp Newest First <-> Oldest First tức thì."
+    ]
+  },
+  {
+    "id": "TC-VDET-008",
+    "module": "M06",
+    "priority": "P2",
+    "name": "Thu gọn / Mở rộng chi tiết từng đợt sự kiện Timeline",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Nhấp vào tiêu đề của một đợt sự kiện để đóng/mở chi tiết."
+    ],
+    "expected": [
+      "Mở rộng xem chi tiết danh sách người vào/ra, xe vào/ra và thẻ thu hồi trong đợt đó."
+    ]
+  },
+  {
+    "id": "TC-VDET-009",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Tab Thành viên (Members): Danh sách toàn diện thành viên trong đoàn",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Chuyển sang Tab \"THÀNH VIÊN (Members)\"."
+    ],
+    "expected": [
+      "Liệt kê đầy đủ Trưởng đoàn, Người đi cùng có danh tính và Khách vô danh.",
+      "Hiển thị rõ ảnh chân dung, CCCD, mã thẻ đang giữ và trạng thái Vào/Ra."
+    ]
+  },
+  {
+    "id": "TC-VDET-010",
+    "module": "M06",
+    "priority": "P2",
+    "name": "Thư viện Đa Ảnh Lượt thăm (VisitPhotoGalleryModal + ZoomableImage)",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Nhấn nút \"Thư viện ảnh\" trong modal Chi tiết.",
+      "2. Nhấp vào một ảnh để xem ở chế độ phóng to."
+    ],
+    "expected": [
+      "VisitPhotoGalleryModal mở ra hiển thị lưới tất cả ảnh (Chân dung, Giấy tờ, Xe cộ, Checkout).",
+      "ZoomableImage cho phép phóng to, thu nhỏ và di chuyển xem chi tiết nét ảnh."
+    ]
+  },
+  {
+    "id": "TC-VDET-011",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Nút hành động nhanh liên thông từ modal Chi tiết",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Trong modal Chi tiết, nhấn nút \"Bổ sung người\", \"Checkout\", hoặc \"Thu hồi thẻ mất\"."
+    ],
+    "expected": [
+      "Mở modal thao tác tương ứng với lượt khách đã được chọn sẵn, không cần tìm lại trên bảng."
+    ]
+  },
+  {
+    "id": "TC-VDET-012",
+    "module": "M06",
+    "priority": "P2",
+    "name": "Đóng modal Chi tiết bằng phím Escape hoặc nút đóng ✕",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Nhấn phím Escape trên bàn phím hoặc nhấp nút ✕."
+    ],
+    "expected": [
+      "Modal đóng mượt mà, phục hồi lại vị trí scroll của bảng dữ liệu phía dưới."
+    ]
+  },
+  {
+    "id": "TC-DENT-001",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Đăng nhập Phân hệ Sổ sách Ngoại lệ (/dataentry.html)",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "testData": "Tài khoản: nhaplieu, Mật khẩu: 123456 (Role: DataEntry)",
+    "steps": [
+      "1. Đăng nhập tài khoản nhaplieu tại form đăng nhập.",
+      "2. Hệ thống tự động chuyển hướng sang trang /dataentry.html."
+    ],
+    "expected": [
+      "Giao diện chuyên biệt của Phân hệ Nhập liệu Sổ sách Ngoại lệ hiển thị.",
+      "Header hiển thị rõ tên nhân viên nhập liệu, địa điểm và các nút phím tắt F1, F3."
+    ]
+  },
+  {
+    "id": "TC-DENT-002",
+    "module": "M07",
+    "priority": "P2",
+    "name": "Thao tác Phím tắt toàn cục trong DataEntry: F1, F3, Escape",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Nhấn phím F1 -> Modal \"DataEntryModal\" mở ra.",
+      "2. Nhấn Escape -> Modal đóng lại.",
+      "3. Nhấn phím F3 -> Modal Hướng dẫn quy trình mở ra."
+    ],
+    "expected": [
+      "Các phím tắt hoạt động nhạy bén, ngăn chặn hành vi mặc định của trình duyệt (F1 help, F3 find)."
+    ]
+  },
+  {
+    "id": "TC-DENT-003",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Form Nhập sổ sách ngoại lệ (DataEntryModal): Nhập hồi tố ngày giờ quá khứ",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "testData": "Hồ sơ khách từ sổ giấy tuần trước: Giờ vào 08:30 ngày 01/10/2026",
+    "steps": [
+      "1. Mở DataEntryModal (F1).",
+      "2. Chọn ngày giờ vào trong quá khứ (Backdate).",
+      "3. Chọn Trạm tiếp đón và Cán bộ trực tiếp nhận từ sổ ghi chép."
+    ],
+    "expected": [
+      "Hệ thống cho phép lưu ngày giờ quá khứ hợp lệ, gán đúng trạm và cán bộ trực của thời điểm đó."
+    ]
+  },
+  {
+    "id": "TC-DENT-004",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Nhập đồng thời cả Check-in và Check-out (Khách đã vào và ra trong quá khứ)",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "testData": "Giờ vào 09:00, Giờ ra 11:30 ngày 02/10/2026",
+    "steps": [
+      "1. Bật tùy chọn \"Đã hoàn tất Check-out (Khách đã ra về)\".",
+      "2. Nhập giờ ra, chọn trạm ra và trạng thái thẻ (Đã trả / Nợ thẻ / Mất thẻ).",
+      "3. Nhấn nút \"Lưu hồ sơ sổ sách\"."
+    ],
+    "expected": [
+      "Lưu lượt khách với Status = 2 (Đã ra), CheckInTime và CheckOutTime đầy đủ.",
+      "Không làm tăng quân số inside hiện tại của cơ quan."
+    ]
+  },
+  {
+    "id": "TC-DENT-005",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Nhập chỉ Check-in (Khách vào qua đường ngoại lệ đang ở bên trong)",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Tắt tùy chọn \"Đã hoàn tất Check-out\".",
+      "2. Nhập giờ vào thực tế của khách.",
+      "3. Nhấn Lưu hồ sơ."
+    ],
+    "expected": [
+      "Lượt khách được tạo với Status = 1 (Trong đơn vị).",
+      "Quân số Inside toàn hệ thống cập nhật tăng lên, trạm gác và admin đều nhìn thấy."
+    ]
+  },
+  {
+    "id": "TC-DENT-006",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Nhập đoàn đông người, người đi cùng và nhiều phương tiện từ sổ trực",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Trong DataEntryModal, thêm 3 người đi cùng, 10 khách vô danh và 2 xe ô tô.",
+      "2. Lưu hồ sơ."
+    ],
+    "expected": [
+      "Tạo đầy đủ cấu trúc đoàn, thành viên và phương tiện trong CSDL SQLite."
+    ]
+  },
+  {
+    "id": "TC-DENT-007",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Đóng dấu kiểm toán tự động (Audit Trail: createdByType = 1)",
+    "platform": "Phân hệ Sổ sách DataEntry & Backend API",
+    "steps": [
+      "1. Tạo 1 hồ sơ từ trang /dataentry.html.",
+      "2. Kiểm tra bản ghi trong CSDL hoặc qua API /admin/visits?createdByType=1."
+    ],
+    "expected": [
+      "Bản ghi có CreatedByType = 1 (DataEntry), CreatedByName = \"nhaplieu\", CreatedLocation = phòng nhập, CreatedIpAddress = IP máy trạm."
+    ]
+  },
+  {
+    "id": "TC-DENT-008",
+    "module": "M07",
+    "priority": "P2",
+    "name": "Dashboard Sổ sách ngoại lệ: Thống kê và Bộ lọc chuyên sâu",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Sử dụng bộ lọc Trạng thái (Tất cả / Trong đơn vị / Đã ra), Lọc người nhập, Lọc thời gian trên DataEntryDashboard."
+    ],
+    "expected": [
+      "Bảng danh sách lọc chính xác, hiển thị đầy đủ thông tin xuất xứ sổ sách."
+    ]
+  },
+  {
+    "id": "TC-DENT-009",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Bổ sung người đi cùng sổ sách qua DataEntrySupplementalModal",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Trên hồ sơ sổ sách đang inside, nhấn nút \"Thêm\".",
+      "2. Thêm người đi cùng và phương tiện bổ sung."
+    ],
+    "expected": [
+      "Cập nhật bổ sung thành công, gắn nhãn do tài khoản DataEntry thực hiện."
+    ]
+  },
+  {
+    "id": "TC-DENT-010",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Checkout sổ sách qua DataEntryCheckOutModal",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Trên hồ sơ sổ sách đang inside, nhấn nút \"Checkout\".",
+      "2. Xác nhận thời gian ra và tình trạng thẻ."
+    ],
+    "expected": [
+      "Hồ sơ chuyển trạng thái CheckedOut thành công từ giao diện DataEntry."
+    ]
+  },
+  {
+    "id": "TC-DENT-011",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Thu hồi thẻ mất từ giao diện DataEntry",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Mở RecoverLostCardModal từ giao diện DataEntry.",
+      "2. Tra cứu và hoàn tất thu hồi thẻ mất phát sinh từ hồ sơ sổ sách."
+    ],
+    "expected": [
+      "Thẻ mất được thu hồi thành công, cập nhật kho thẻ dùng chung của đơn vị."
+    ]
+  },
+  {
+    "id": "TC-DENT-012",
+    "module": "M07",
+    "priority": "P2",
+    "name": "Xuất báo cáo Excel danh sách hồ sơ sổ sách đã nhập để đối soát",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Nhấn nút \"Xuất Excel\" trên Dashboard DataEntry."
+    ],
+    "expected": [
+      "Tải về file Excel chứa toàn bộ danh sách hồ sơ sổ sách kèm người nhập, thời gian và địa điểm."
+    ]
+  },
+  {
+    "id": "TC-DENT-013",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Xem chi tiết lượt khách sổ sách qua modal VisitDetailsModal",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Nhấn nút \"Chi tiết\" trên một dòng hồ sơ DataEntry."
+    ],
+    "expected": [
+      "Mở VisitDetailsModal hiển thị đầy đủ thông tin, timeline và thành viên đồng bộ như trạm gác."
+    ]
+  },
+  {
+    "id": "TC-DENT-014",
+    "module": "M07",
+    "priority": "P1",
+    "name": "Kiểm tra ping phiên làm việc DataEntry định kỳ",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Đăng nhập tài khoản nhaplieu trên máy 1.",
+      "2. Đăng nhập tài khoản nhaplieu trên máy 2 để chiếm phiên.",
+      "3. Quan sát máy 1 sau 10 giây."
+    ],
+    "expected": [
+      "Máy 1 ping API /admin/auth/status trả về 401 Unauthorized.",
+      "Hệ thống bật thông báo phiên hết hạn và tự động chuyển về trang đăng nhập."
+    ]
+  },
+  {
+    "id": "TC-ADMN-001",
+    "module": "M08",
+    "priority": "P2",
+    "name": "Giao diện Quản trị Admin mới: Sidebar thu gọn/mở rộng & Trạng thái Online",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Đăng nhập trang Admin (/index.html hoặc /admin.html).",
+      "2. Nhấn nút thu gọn Sidebar (ChevronLeft) rồi mở rộng lại (ChevronRight)."
+    ],
+    "expected": [
+      "Sidebar thu nhỏ mượt mà sang dạng icon (w-18) và mở rộng (w-64).",
+      "Footer hiển thị chỉ thị Online với hiệu ứng pulsing xanh lá và đồng hồ thời gian thực."
+    ]
+  },
+  {
+    "id": "TC-ADMN-002",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Hub Giám sát - Lịch sử Lượt thăm (HistoryTab): Master-Detail tra cứu siêu tốc",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào tab Giám sát & Tra cứu -> chọn sub-tab \"Lịch sử lượt thăm\".",
+      "2. Tìm kiếm theo tên khách, lọc theo khoảng ngày, lọc trạng thái."
+    ],
+    "expected": [
+      "Bảng lịch sử Master-Detail tải nhanh chóng, phân trang mượt mà.",
+      "Nhấp xem chi tiết mở modal VisitDetailsModal đầy đủ dữ liệu."
+    ]
+  },
+  {
+    "id": "TC-ADMN-003",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Hub Giám sát - Giám sát Ca trực (ShiftsTab): Xem ảnh webcam vào/ra ca",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào tab Giám sát & Tra cứu -> chọn sub-tab \"Giám sát ca trực\".",
+      "2. Quan sát danh sách các ca trực của các trạm gác.",
+      "3. Nhấp xem ảnh mở ca và ảnh kết thúc ca."
+    ],
+    "expected": [
+      "Hiển thị rõ ràng: Tên trạm, Cán bộ trực, Giờ bắt đầu, Giờ kết thúc, Thời lượng ca trực.",
+      "Ảnh chụp webcam lúc vào ca và ra ca hiển thị rõ nét, chứng minh cán bộ có mặt thực tế tại trạm."
+    ]
+  },
+  {
+    "id": "TC-ADMN-004",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Hub Giám sát - Đối soát Ngoại lệ (AuditEntryTab): Kiểm tra hồ sơ do DataEntry tạo",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào tab Giám sát & Tra cứu -> chọn sub-tab \"Đối soát ngoại lệ\".",
+      "2. Quan sát danh sách các bản ghi có CreatedByType = 1."
+    ],
+    "expected": [
+      "Bảng hiển thị chi tiết: Người nhập (nhaplieu), Thời gian tạo, Địa chỉ IP, Vị trí máy trạm, Thông tin khách.",
+      "Giúp cán bộ thanh tra phát hiện các sai lệch hoặc gian lận trong việc nhập khống hồ sơ sổ sách."
+    ]
+  },
+  {
+    "id": "TC-ADMN-005",
+    "module": "M08",
+    "priority": "P2",
+    "name": "Xuất Báo cáo Đối soát Ngoại lệ ra file Excel và PDF",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tại AuditEntryTab, nhấn nút \"Xuất Excel\" và \"Xuất PDF\"."
+    ],
+    "expected": [
+      "Xuất thành công file báo cáo đối soát có tiêu đề \"Báo cáo Đối soát Hồ sơ Nhập liệu Sổ sách Ngoại lệ\" kèm metadata ngày giờ lọc."
+    ]
+  },
+  {
+    "id": "TC-ADMN-006",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Hub Danh mục - Quản lý Cán bộ Trực ban (StaffManagement): Thêm, sửa, đổi phòng ban",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào tab Quản lý tài khoản -> chọn \"Tài khoản Cán bộ Trực ban\".",
+      "2. Thêm mới nhân viên trạm: Nhập Họ tên, Mã nhân viên (Nv002), CCCD, Số điện thoại, Phòng ban.",
+      "3. Nhấn Lưu."
+    ],
+    "expected": [
+      "Nhân viên mới được thêm vào danh sách, có thể dùng tài khoản này để đăng nhập tại trạm gác."
+    ]
+  },
+  {
+    "id": "TC-ADMN-007",
+    "module": "M08",
+    "priority": "P2",
+    "name": "Cấp quyền Dự phòng dùng CCCD mở ca (AllowCccdShiftAuth) cho cán bộ trạm",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Mở sửa thông tin nhân viên trong StaffManagement.",
+      "2. Bật cờ \"Cho phép dùng CCCD mở ca (AllowCccdShiftAuth)\".",
+      "3. Lưu thay đổi."
+    ],
+    "expected": [
+      "Nhân viên này khi đăng nhập tại trạm sẽ có quyền dùng CCCD mở ca thay cho webcam."
+    ]
+  },
+  {
+    "id": "TC-ADMN-008",
+    "module": "M08",
+    "priority": "P2",
+    "name": "Tải lên Ảnh thẻ đại diện cho cán bộ trực ban (Upload Avatar Photo)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tại form nhân viên, nhấp tải ảnh chân dung từ máy tính lên.",
+      "2. Lưu hồ sơ."
+    ],
+    "expected": [
+      "Ảnh thẻ được tải lên thư mục /uploads/staff/..., hiển thị trên Header trạm gác khi nhân viên trực."
+    ]
+  },
+  {
+    "id": "TC-ADMN-009",
+    "module": "M08",
+    "priority": "P2",
+    "name": "Nhập danh sách cán bộ hàng loạt từ file Excel (Import Staff Excel)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấn nút \"Import Excel\" trong StaffManagement.",
+      "2. Chọn file Excel danh sách nhân sự mẫu.",
+      "3. Xác nhận import."
+    ],
+    "expected": [
+      "Hệ thống đọc dữ liệu file Excel và thêm hàng loạt nhân viên vào hệ thống, hiển thị báo cáo số dòng thành công."
+    ]
+  },
+  {
+    "id": "TC-ADMN-010",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Xóa hàng loạt nhân sự đã nghỉ việc (Bulk Delete Staff)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tích chọn nhiều nhân viên trong danh mục.",
+      "2. Nhấn nút \"Xóa đã chọn\", xác nhận trong hộp thoại bảo vệ."
+    ],
+    "expected": [
+      "Các tài khoản nhân viên được xóa hoặc chuyển trạng thái không hoạt động an toàn."
+    ]
+  },
+  {
+    "id": "TC-ADMN-011",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Hub Danh mục - Quản lý Tài khoản Quản trị & Nhập liệu (AccountsTab)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào tab Quản lý tài khoản -> chọn \"Tài khoản Quản trị & Nhập liệu\".",
+      "2. Thêm mới tài khoản: Tên đăng nhập, Mật khẩu, Vai trò (Admin hoặc DataEntry)."
+    ],
+    "expected": [
+      "Tạo tài khoản thành công với mật khẩu băm an toàn."
+    ]
+  },
+  {
+    "id": "TC-ADMN-012",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Đổi mật khẩu tài khoản Admin và Đổi mật khẩu / Reset mật khẩu cho user khác",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấn nút \"Đổi mật khẩu\" trên thanh topbar hoặc trong danh sách tài khoản.",
+      "2. Nhập mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu mới."
+    ],
+    "expected": [
+      "Đổi mật khẩu thành công, lần đăng nhập sau phải dùng mật khẩu mới."
+    ]
+  },
+  {
+    "id": "TC-ADMN-013",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Phân quyền vai trò DataEntry: Chặn truy cập cấu hình hệ thống và backup",
+    "platform": "Giao diện Quản trị Admin & API",
+    "testData": "Tài khoản role DataEntry",
+    "steps": [
+      "1. Dùng token tài khoản DataEntry gọi API /admin/backup hoặc truy cập menu Cài đặt hệ thống."
+    ],
+    "expected": [
+      "Hệ thống ẩn menu cấu hình hoặc phản hồi 403 Forbidden: Tài khoản DataEntry chỉ có quyền xem và nhập liệu."
+    ]
+  },
+  {
+    "id": "TC-ADMN-014",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Khóa (Deactivate) tài khoản người dùng",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tắt công tắc kích hoạt (IsActive) của một tài khoản.",
+      "2. Thử dùng tài khoản đó đăng nhập."
+    ],
+    "expected": [
+      "Hệ thống từ chối đăng nhập với thông báo tài khoản bị khóa."
+    ]
+  },
+  {
+    "id": "TC-REPT-001",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Trung tâm Báo cáo (ReportsTab): Chu kỳ hành chính chuẩn Việt Nam",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào tab Báo cáo & Phân tích.",
+      "2. Lần lượt chọn các chu kỳ: \"Hôm nay\", \"Hôm qua\", \"Tuần này\", \"Tháng này\", \"Quý này\", \"Cả năm\"."
+    ],
+    "expected": [
+      "Hệ thống tự động tính toán chính xác ngày bắt đầu và ngày kết thúc tương ứng chu kỳ hành chính Việt Nam.",
+      "Dữ liệu báo cáo cập nhật đồng bộ."
+    ]
+  },
+  {
+    "id": "TC-REPT-002",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Lọc theo Khoảng ngày tùy chọn và Lọc theo Nhiều ngày rời rạc (discrete_dates)",
+    "platform": "Giao diện Quản trị Admin",
+    "testData": "Chọn 3 ngày ngắt quãng: 01/10/2026, 05/10/2026, 12/10/2026",
+    "steps": [
+      "1. Chuyển chế độ lọc ngày sang \"Chọn nhiều ngày rời rạc (discrete_dates)\".",
+      "2. Thêm từng ngày vào danh sách lọc.",
+      "3. Áp dụng."
+    ],
+    "expected": [
+      "Báo cáo lọc chính xác các lượt khách ra/vào đúng trong 3 ngày đã chọn, bỏ qua các ngày xen giữa."
+    ]
+  },
+  {
+    "id": "TC-REPT-003",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Lọc đa chiều: Cán bộ trực ban, Nguồn (Trực ban vs Sổ sách), Trạng thái thẻ, Phương tiện",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Kết hợp lọc theo Cán bộ trực ban cụ thể.",
+      "2. Lọc nguồn: Chỉ xem lượt khách từ \"Trực ban cổng\" hoặc \"Sổ sách ngoại lệ\".",
+      "3. Lọc trạng thái thẻ: \"Thẻ đã trả\", \"Thẻ đang nợ\", \"Thẻ báo mất\"."
+    ],
+    "expected": [
+      "Bộ lọc đa chiều kết hợp chuẩn xác, đáp ứng yêu cầu thanh tra kiểm tra chuyên sâu."
+    ]
+  },
+  {
+    "id": "TC-REPT-004",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Báo cáo Chuyên đề Thẻ Mất (LostCardsReportModal)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tại ReportsTab, nhấn nút \"Báo cáo Thẻ mất\".",
+      "2. Modal LostCardsReportModal mở ra."
+    ],
+    "expected": [
+      "Hiển thị danh sách tổng hợp toàn bộ các thẻ an ninh đang bị báo mất trên toàn hệ thống.",
+      "Liệt kê chi tiết: Mã thẻ, Họ tên khách làm mất, CCCD, SĐT, Trạm tiếp nhận, Thời gian mất, Trạng thái thu hồi."
+    ]
+  },
+  {
+    "id": "TC-REPT-005",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Xuất Báo cáo Lịch sử ra file Excel chuyên nghiệp (ExcelJS)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấn nút \"Xuất Excel\" trong ReportsTab."
+    ],
+    "expected": [
+      "File Excel (.xlsx) được tạo với thư viện ExcelJS.",
+      "Bảng tính có tiêu đề cơ quan, ngày lập báo cáo, khung viền bảng, định dạng căn giữa ngày giờ, tự động co giãn cột."
+    ]
+  },
+  {
+    "id": "TC-REPT-006",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Xuất Báo cáo Lịch sử ra file PDF in ấn chuẩn tiếng Việt có dấu (jsPDF + fontBase64)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấn nút \"Xuất PDF\" trong ReportsTab."
+    ],
+    "expected": [
+      "Tạo file PDF in ấn trực tiếp bằng jsPDF + autoTable.",
+      "Nhúng font chữ tiếng Việt fontBase64, hiển thị hoàn toàn chuẩn xác không bị lỗi font chữ có dấu."
+    ]
+  },
+  {
+    "id": "TC-REPT-007",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Xuất Báo cáo Thẻ mất ra Excel phục vụ công tác thanh tra tài sản",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Trong modal Báo cáo Thẻ mất, nhấn nút \"Xuất Excel\"."
+    ],
+    "expected": [
+      "Tải về file Excel danh sách chi tiết các thẻ an ninh thất lạc để bàn giao cho bộ phận quản trị cơ sở vật chất."
+    ]
+  },
+  {
+    "id": "TC-REPT-008",
+    "module": "M09",
+    "priority": "P2",
+    "name": "Dashboard Admin đồ thị thống kê lưu lượng khách",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Xem Bảng điều khiển (DashboardTab) trên trang Admin."
+    ],
+    "expected": [
+      "Hiển thị đồ thị trực quan: Phân bố lưu lượng khách theo khung giờ trong ngày, tỷ lệ phương tiện xe ô tô/xe máy, tỷ lệ hoàn trả thẻ."
+    ]
+  },
+  {
+    "id": "TC-REPT-009",
+    "module": "M09",
+    "priority": "P2",
+    "name": "Xuất báo cáo danh sách ca trực ra Excel phục vụ chấm công",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tại ShiftsTab, nhấn nút xuất file danh sách ca trực."
+    ],
+    "expected": [
+      "File Excel xuất ra chứa chi tiết thời lượng từng ca trực, cán bộ trực để phòng tổ chức cán bộ đối soát chấm công."
+    ]
+  },
+  {
+    "id": "TC-REPT-010",
+    "module": "M09",
+    "priority": "P2",
+    "name": "Khả năng lọc tìm kiếm từ khóa kết hợp trong Trung tâm Báo cáo",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhập từ khóa kết hợp trong ô tìm kiếm của ReportsTab."
+    ],
+    "expected": [
+      "Dữ liệu báo cáo lọc tức thì theo từ khóa nhập vào."
+    ]
+  },
+  {
+    "id": "TC-REPT-011",
+    "module": "M09",
+    "priority": "P1",
+    "name": "Mở xem chi tiết bất kỳ lượt khách nào trực tiếp từ bảng Báo cáo",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấp nút xem chi tiết trên một dòng trong bảng Báo cáo."
+    ],
+    "expected": [
+      "Mở VisitDetailsModal của lượt khách đó với đầy đủ 3 tab Tổng quan, Timeline và Thành viên."
+    ]
+  },
+  {
+    "id": "TC-REPT-012",
+    "module": "M09",
+    "priority": "P2",
+    "name": "Kiểm tra định dạng chuẩn tên file xuất báo cáo",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Xuất file và kiểm tra tên file được tải về máy tính."
+    ],
+    "expected": [
+      "Tên file tuân thủ quy tắc chuẩn: \"SmartVMS_BaoCao_LichSu_[NgayLapp].xlsx\" hoặc \"SmartVMS_TheMat_[Ngay].xlsx\"."
+    ]
+  },
+  {
+    "id": "TC-REPT-013",
+    "module": "M09",
+    "priority": "P2",
+    "name": "Đóng/mở khối bộ lọc báo cáo (Filter Collapse toggle) để tăng không gian xem bảng",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấn nút thu gọn bộ lọc trên đầu trang ReportsTab."
+    ],
+    "expected": [
+      "Khối bộ lọc thu gọn lại, bảng dữ liệu mở rộng tối đa màn hình."
+    ]
+  },
+  {
+    "id": "TC-SETT-001",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Cấu hình Vận hành (SettingsOperationPanel): Tên hệ thống & Cổng trực mặc định",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào Trung tâm Cài đặt -> Cấu hình Vận hành & Thiết bị.",
+      "2. Đổi tên hệ thống thành \"CỔNG KIỂM SOÁT AN NINH ĐƠN VỊ X\".",
+      "3. Lưu cấu hình."
+    ],
+    "expected": [
+      "Lưu thành công. Tiêu đề trên Header của trạm gác và admin tự động cập nhật tên mới."
+    ]
+  },
+  {
+    "id": "TC-SETT-002",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Cấu hình Giới hạn Thời gian lưu trú cảnh báo",
+    "platform": "Giao diện Quản trị Admin",
+    "testData": "Đặt giới hạn: 8 giờ",
+    "steps": [
+      "1. Thiết lập thời gian lưu trú cảnh báo = 8 giờ.",
+      "2. Lưu cài đặt."
+    ],
+    "expected": [
+      "Khi khách ở trong cơ quan quá 8 giờ, hệ thống đánh dấu cảnh báo màu cam trên Dashboard."
+    ]
+  },
+  {
+    "id": "TC-SETT-003",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Cấu hình Chính sách Thẻ an ninh",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Thiết lập quy định thẻ an ninh (bắt buộc cấp thẻ hoặc tùy chọn)."
+    ],
+    "expected": [
+      "Giao diện Check-in tuân thủ chính sách thẻ đã được thiết lập."
+    ]
+  },
+  {
+    "id": "TC-SETT-004",
+    "module": "M10",
+    "priority": "P1",
+    "name": "Trung tâm Sao lưu CSDL (BackupTab): Thực hiện Sao lưu thủ công",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Vào Trung tâm Cài đặt -> chọn tab \"Dữ liệu & Sao lưu CSDL\".",
+      "2. Nhấn nút \"Tạo bản sao lưu ngay\"."
+    ],
+    "expected": [
+      "Gọi API /admin/backup, hệ thống C# sao chép CSDL SQLite sang file sao lưu .bak có gắn mốc thời gian.",
+      "File sao lưu xuất hiện ngay trên bảng danh sách lịch sử sao lưu."
+    ]
+  },
+  {
+    "id": "TC-SETT-005",
+    "module": "M10",
+    "priority": "P1",
+    "name": "Tải file sao lưu (Download Backup) về máy tính cá nhân",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tại danh sách các bản backup, nhấn biểu tượng Tải về cạnh bản sao lưu vừa tạo."
+    ],
+    "expected": [
+      "Trình duyệt tải file CSDL .bak về máy tính của quản trị viên an toàn."
+    ]
+  },
+  {
+    "id": "TC-SETT-006",
+    "module": "M10",
+    "priority": "P1",
+    "name": "Khôi phục Dữ liệu (Restore Database) từ bản sao lưu",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Chọn 1 bản sao lưu trong danh sách.",
+      "2. Nhấn nút \"Khôi phục dữ liệu\", xác nhận cảnh báo an toàn."
+    ],
+    "expected": [
+      "Hệ thống C# tự động tạo 1 bản backup dự phòng trước khi khôi phục, sau đó nạp lại CSDL.",
+      "Toàn bộ dữ liệu được hoàn nguyên về đúng thời điểm của bản sao lưu."
+    ]
+  },
+  {
+    "id": "TC-SETT-007",
+    "module": "M10",
+    "priority": "P1",
+    "name": "Cấu hình Lịch Tự động Sao lưu (Auto Backup định kỳ)",
+    "platform": "Giao diện Quản trị Admin",
+    "testData": "Bật Auto Backup hàng ngày lúc 23:00, lưu tối đa 30 bản",
+    "steps": [
+      "1. Bật công tắc Auto Backup, đặt giờ sao lưu tự động và số bản tối đa.",
+      "2. Lưu cài đặt."
+    ],
+    "expected": [
+      "Hệ thống lưu cấu hình vào CSDL. Background Service tự động chạy theo lịch đã đặt."
+    ]
+  },
+  {
+    "id": "TC-SETT-008",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Quản lý Bản sao lưu cũ: Xem dung lượng và Xóa bản backup",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Kiểm tra dung lượng từng bản sao lưu trong danh sách.",
+      "2. Nhấn biểu tượng Thùng rác để xóa bản sao lưu cũ không còn dùng."
+    ],
+    "expected": [
+      "File backup bị xóa khỏi ổ cứng máy chủ, danh sách cập nhật ngay lập tức."
+    ]
+  },
+  {
+    "id": "TC-SETT-009",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Kiểm tra và cấu hình đường dẫn thư mục lưu trữ sao lưu",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Kiểm tra cấu hình đường dẫn thư mục lưu trữ backup trên máy chủ qua API /admin/browse-folder."
+    ],
+    "expected": [
+      "Đường dẫn hợp lệ và có quyền ghi trên ổ đĩa máy chủ Windows."
+    ]
+  },
+  {
+    "id": "TC-SETT-010",
+    "module": "M10",
+    "priority": "P1",
+    "name": "Hộp thoại cảnh báo xác nhận an toàn trước khi khôi phục CSDL",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Nhấn nút Khôi phục dữ liệu."
+    ],
+    "expected": [
+      "Hộp thoại cảnh báo hiển thị rõ ràng rủi ro ghi đè dữ liệu, yêu cầu quản trị viên xác nhận rõ ràng mới thực thi."
+    ]
+  },
+  {
+    "id": "TC-SETT-011",
+    "module": "M10",
+    "priority": "P1",
+    "name": "Tự động tạo bản backup dự phòng trước khi thực hiện restore",
+    "platform": "API / Backend C#",
+    "steps": [
+      "1. Thực hiện lệnh restore qua API /admin/restore."
+    ],
+    "expected": [
+      "Backend C# tự động tạo một file \"pre_restore_backup_...\" trước khi ghi đè CSDL, đảm bảo có thể rollback nếu cần."
+    ]
+  },
+  {
+    "id": "TC-SETT-012",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Kiểm tra dung lượng CSDL và trạng thái kết nối SQLite",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Quan sát card thông tin dung lượng file SQLite trong BackupTab."
+    ],
+    "expected": [
+      "Hiển thị chính xác kích thước file CSDL (vd: 15.4 MB) và trạng thái kết nối SQLite bình thường."
+    ]
+  },
+  {
+    "id": "TC-DEVC-001",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Kết nối DeviceService qua WebSocket (ws://localhost:6025/ws)",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Khởi động SmartVMS.Local.DeviceService.",
+      "2. Mở trang Web trạm gác /staff.html."
+    ],
+    "expected": [
+      "Trình duyệt thiết lập kết nối WebSocket tới ws://localhost:6025/ws.",
+      "Trạng thái thiết bị hiển thị Online, không có banner lỗi cảnh báo."
+    ]
+  },
+  {
+    "id": "TC-DEVC-002",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Đọc thẻ CCCD gắn chip qua đầu đọc PCSC / NFC",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Đặt thẻ CCCD gắn chip lên đầu đọc thẻ.",
+      "2. DeviceService phát hiện thẻ và đọc dữ liệu qua chuẩn vnMRTD."
+    ],
+    "expected": [
+      "Dữ liệu thẻ được đẩy qua WebSocket trong vòng dưới 2 giây.",
+      "Giao diện web tự động hiển thị thông tin công dân và ảnh chụp trên chip."
+    ]
+  },
+  {
+    "id": "TC-DEVC-003",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Quét mã QR thẻ CCCD qua máy quét 2D kết nối USB",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Quét mã QR trên thẻ CCCD."
+    ],
+    "expected": [
+      "Máy quét đọc mã thành công, ứng dụng web tự động phân giải chuỗi ký tự thành các trường thông tin tương ứng."
+    ]
+  },
+  {
+    "id": "TC-DEVC-004",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Đọc Thẻ An Ninh qua đầu đọc RFID (NFC/Mifare)",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Quẹt thẻ an ninh qua đầu đọc RFID khi đang ở ô nhập mã thẻ."
+    ],
+    "expected": [
+      "Mã thẻ RFID (UID) tự động điền vào ô mã thẻ trên form Check-in / Checkout / Thu hồi."
+    ]
+  },
+  {
+    "id": "TC-DEVC-005",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Điều khiển Đóng/Mở Barie / Cổng Barrier tự động qua Rơ-le",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Thực hiện Check-in hoặc Checkout thành công cho lượt khách có phương tiện."
+    ],
+    "expected": [
+      "DeviceService gửi tín hiệu điều khiển qua cổng COM/Relay kích mở barie cho xe qua cổng.",
+      "Sau khoảng trễ quy định, tín hiệu đóng barie được gửi an toàn."
+    ]
+  },
+  {
+    "id": "TC-DEVC-006",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Xử lý Ngắt kết nối DeviceService: Chuyển Offline & Không làm tắc cổng",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Tắt tiến trình DeviceService.",
+      "2. Quan sát giao diện trạm gác."
+    ],
+    "expected": [
+      "Hiển thị thông báo trạng thái Thiết bị Offline.",
+      "Phần mềm VẪN CHO PHÉP nhân viên nhập thủ công bình thường, không làm gián đoạn hay tắc nghẽn cổng gác."
+    ]
+  },
+  {
+    "id": "TC-DEVC-007",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Tự động Tái kết nối WebSocket (Auto-reconnect)",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Sau khi DeviceService bị ngắt, bật lại tiến trình DeviceService."
+    ],
+    "expected": [
+      "Trình duyệt tự động thăm dò và tái kết nối lại WebSocket thành công trong vòng 5 giây mà không cần nhân viên nhấn F5."
+    ]
+  },
+  {
+    "id": "TC-DEVC-008",
+    "module": "M11",
+    "priority": "P2",
+    "name": "Cấu hình thiết bị trong DeviceService (Cổng COM, Baudrate, IP)",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Kiểm tra cấu hình trong file appsettings.json của DeviceService."
+    ],
+    "expected": [
+      "Cấu hình thông số cổng COM, tốc độ truyền Baudrate và địa chỉ reader linh hoạt, dễ dàng thay đổi theo phần cứng thực tế."
+    ]
+  },
+  {
+    "id": "TC-DEVC-009",
+    "module": "M11",
+    "priority": "P2",
+    "name": "Kiểm tra thời gian đọc thẻ CCCD gắn chip dưới 2 giây",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Đặt thẻ CCCD và đo thời gian từ khi chạm thẻ đến khi dữ liệu hiển thị trên web."
+    ],
+    "expected": [
+      "Thời gian phản hồi đạt dưới 2.0 giây, bảo đảm tốc độ lưu thông nhanh tại cổng trực ban."
+    ]
+  },
+  {
+    "id": "TC-DEVC-010",
+    "module": "M11",
+    "priority": "P2",
+    "name": "Báo lỗi đọc thẻ khi thẻ đặt lệch hoặc rút ra quá sớm",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Đặt thẻ CCCD và lập tức rút ra trong khi đầu đọc đang truyền dữ liệu."
+    ],
+    "expected": [
+      "DeviceService bắt ngoại lệ CardCommunicationException, gửi thông báo \"Thẻ bị ngắt quãng, vui lòng giữ nguyên thẻ trên đầu đọc\", không crash service."
+    ]
+  },
+  {
+    "id": "TC-DEVC-011",
+    "module": "M11",
+    "priority": "P2",
+    "name": "Cấu hình thiết bị Webcam trong Device Settings của trạm",
+    "platform": "Thiết bị & Cổng gác",
+    "steps": [
+      "1. Vào cài đặt thiết bị của trạm gác, chọn camera mặc định cho mở ca và chụp ảnh khách."
+    ],
+    "expected": [
+      "Cấu hình được lưu và áp dụng đúng webcam đã chọn."
+    ]
+  },
+  {
+    "id": "TC-DEVC-012",
+    "module": "M11",
+    "priority": "P2",
+    "name": "Cảnh báo sự cố thiết bị ngoại vi qua banner DeviceErrorBanner",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Rút cáp USB đầu đọc thẻ khi đang làm việc."
+    ],
+    "expected": [
+      "Hiển thị dải cảnh báo DeviceErrorBanner màu vàng cam thông báo cụ thể thiết bị mất kết nối."
+    ]
+  },
+  {
+    "id": "TC-BKGD-001",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Dịch vụ Tự động Đóng Lượt thăm quá hạn (Auto Checkout Service)",
+    "platform": "Dịch vụ Ngầm C# Backend",
+    "steps": [
+      "1. Tạo lượt khách không có cờ isMultiDayVisit.",
+      "2. Chạy Auto Checkout Service (hoặc đổi thời gian quá hạn)."
+    ],
+    "expected": [
+      "Background Worker tự động quét và checkout lượt khách tồn đọng, cập nhật ghi chú tự động đóng, không để dồn khách ảo sang ngày hôm sau."
+    ]
+  },
+  {
+    "id": "TC-BKGD-002",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Cơ chế Chống Trùng lặp Lệnh qua ClientCommandId (Idempotency)",
+    "platform": "Dịch vụ Ngầm C# Backend & Web",
+    "steps": [
+      "1. Giả lập mạng chập chờn, nhấn nút Check-in liên tiếp nhiều lần với cùng 1 ClientCommandId."
+    ],
+    "expected": [
+      "Hệ thống backend kiểm tra ClientCommandId đã xử lý, trả về kết quả thành công của lệnh đầu tiên, KHÔNG TẠO 2 lượt khách trùng lặp trong CSDL."
+    ]
+  },
+  {
+    "id": "TC-BKGD-003",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Hệ thống Bản quyền Phần mềm (License System): Machine Fingerprint",
+    "platform": "Hệ thống Standalone",
+    "steps": [
+      "1. Kiểm tra xác thực license dựa trên Hardware Fingerprint (CPU ID, Motherboard UUID, MAC Address)."
+    ],
+    "expected": [
+      "Hệ thống chạy bình thường khi có khóa bản quyền hợp lệ khớp với phần cứng máy tính.",
+      "Nếu sao chép sang máy khác mà không có license, phần mềm thông báo yêu cầu kích hoạt bản quyền."
+    ]
+  },
+  {
+    "id": "TC-BKGD-004",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Hoạt động Độc lập Ngoại tuyến 100% (Offline Standalone)",
+    "platform": "Hệ thống Standalone",
+    "steps": [
+      "1. Rút hoàn toàn dây mạng Internet WAN (chỉ để mạng LAN nội bộ hoặc localhost).",
+      "2. Thực hiện toàn bộ quy trình: Đăng nhập, Mở ca, Check-in, Bổ sung, Checkout, Xuất báo cáo, Backup."
+    ],
+    "expected": [
+      "Toàn bộ các tính năng hoạt động mượt mà 100%, không phát sinh bất kỳ lỗi kết nối mạng nào."
+    ]
+  },
+  {
+    "id": "TC-BKGD-005",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Khả năng Chịu lỗi Mất điện đột ngột: CSDL SQLite WAL bảo toàn dữ liệu",
+    "platform": "Hệ thống Standalone",
+    "steps": [
+      "1. Thực hiện Check-in liên tục đồng thời tắt nóng tiến trình hoặc mất điện đột ngột.",
+      "2. Mở lại ứng dụng."
+    ],
+    "expected": [
+      "CSDL SQLite với chế độ Write-Ahead Logging (WAL) tự động phục hồi tính nhất quán, không bị lỗi corrupt database."
+    ]
+  },
+  {
+    "id": "TC-BKGD-006",
+    "module": "M12",
+    "priority": "P2",
+    "name": "Hiệu năng Tìm kiếm và Xử lý dưới tải (5,000+ lượt khách)",
+    "platform": "Giao diện Web UI & API",
+    "steps": [
+      "1. CSDL chứa 5,000 bản ghi lượt khách.",
+      "2. Thực hiện tìm kiếm và lọc dữ liệu trên Dashboard và Báo cáo."
+    ],
+    "expected": [
+      "Thời gian phản hồi hiển thị kết quả đạt dưới 100ms, không có hiện tượng giật lag giao diện."
+    ]
+  },
+  {
+    "id": "TC-BKGD-007",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Bảo mật phân quyền API: Endpoint /admin/* chặn truy cập khi thiếu token",
+    "platform": "API Backend",
+    "steps": [
+      "1. Dùng Postman hoặc curl gọi các API /admin/users, /admin/backup mà không gửi kèm token."
+    ],
+    "expected": [
+      "Backend phản hồi ngay lập tức 401 Unauthorized, không để lộ dữ liệu quản trị."
+    ]
+  },
+  {
+    "id": "TC-BKGD-008",
+    "module": "M12",
+    "priority": "P1",
+    "name": "Phòng chống XSS và SQL Injection trên các trường nhập liệu",
+    "platform": "Giao diện Web UI & API",
+    "testData": "Chuỗi nhập: <script>alert(\"xss\")</script> và ' OR 1=1 --",
+    "steps": [
+      "1. Nhập các chuỗi tấn công vào trường Họ tên, Mục đích, Biển số xe."
+    ],
+    "expected": [
+      "Entity Framework Core tham số hóa câu lệnh an toàn (Parametrized Queries), React tự động escape ký tự HTML, không bị thực thi mã độc."
+    ]
+  },
+  {
+    "id": "TC-BKGD-009",
+    "module": "M12",
+    "priority": "P2",
+    "name": "Cơ chế tự động dọn dẹp file tạm và ảnh rác định kỳ",
+    "platform": "Dịch vụ Ngầm C# Backend",
+    "steps": [
+      "1. Kiểm tra thư mục tạm /temp và /uploads."
+    ],
+    "expected": [
+      "Hệ thống tự động xóa các file tạm sinh ra trong quá trình xuất báo cáo sau khi hoàn tất."
+    ]
+  },
+  {
+    "id": "TC-BKGD-010",
+    "module": "M12",
+    "priority": "P2",
+    "name": "Cơ chế khóa CSDL SQLite (DB Lock) và tự động thử lại khi có xung đột ghi",
+    "platform": "Dịch vụ Ngầm C# Backend",
+    "steps": [
+      "1. Giả lập nhiều tiến trình cùng ghi vào CSDL SQLite đồng thời."
+    ],
+    "expected": [
+      "EF Core có cơ chế RetryOnFailure tự động chờ và thử lại, không ném lỗi SQLite busy/locked ra màn hình người dùng."
+    ]
+  },
+  {
+    "id": "TC-BKGD-011",
+    "module": "M12",
+    "priority": "P2",
+    "name": "Kiểm tra rò rỉ bộ nhớ (Memory Leak) khi ứng dụng chạy liên tục nhiều ngày",
+    "platform": "Giao diện Web UI & DeviceService",
+    "steps": [
+      "1. Giữ ứng dụng trạm gác mở liên tục trên trình duyệt trong môi trường thử nghiệm tải."
+    ],
+    "expected": [
+      "Mức tiêu thụ RAM của tab Chrome/Edge duy trì ổn định dưới 500MB, không tăng vọt không kiểm soát."
+    ]
+  },
+  {
+    "id": "TC-BKGD-012",
+    "module": "M12",
+    "priority": "P2",
+    "name": "Ghi nhật ký lỗi hệ thống (Error Logging): File log hàng ngày",
+    "platform": "Dịch vụ Ngầm C# Backend",
+    "steps": [
+      "1. Kiểm tra thư mục Logs của ứng dụng Backend C#."
+    ],
+    "expected": [
+      "Mỗi ngày tự động sinh file log (vd: log-20261006.txt) ghi nhận đầy đủ stack trace các ngoại lệ nếu có để phục vụ bảo trì."
+    ]
+  }
 ];
 
-// ================================================================
-// USERS (Hardcoded for Client-side Auth)
-// ================================================================
 const USERS = [
   { username: 'admin', password: '123', role: 'admin', name: 'Quản trị viên' },
   { username: 'admin', password: 'admin123', role: 'admin', name: 'Quản trị viên' },
@@ -662,10 +2498,7 @@ function loadState() {
       state.customTcs = Array.isArray(s.customTcs) ? s.customTcs : [];
       state.overrides = (s.overrides && typeof s.overrides === 'object') ? s.overrides : {};
       // Tự động đồng bộ chuẩn hóa danh mục 10 Module nếu phát hiện cache cũ bị lỗi
-      const isOutdated = !Array.isArray(s.modules) || s.modules.length === 0 ||
-        s.modules.some(m => m.id === 'M11') ||
-        !s.modules.some(m => m.id === 'M10') ||
-        s.modules.some(m => m.id === 'M06' && m.name.includes('Backup'));
+      const isOutdated = !Array.isArray(s.modules) || s.modules.length === 0 || s.modules.length !== DEFAULT_MODULES.length || DEFAULT_MODULES.some(dm => !s.modules.some(m => m.id === dm.id));
       state.modules = isOutdated ? JSON.parse(JSON.stringify(DEFAULT_MODULES)) : s.modules;
       state.currentUser = s.currentUser || null;
     } else {
@@ -2446,11 +4279,11 @@ function deleteModule(modId) {
 }
 
 function resetModulesToDefault() {
-  if (!confirm('⚠️ Bạn có chắc chắn muốn khôi phục danh mục Module về 10 Module mặc định ban đầu?')) return;
+  if (!confirm('⚠️ Bạn có chắc chắn muốn khôi phục danh mục Module về 12 Module mặc định ban đầu chuẩn SmartVMS Local 2026?')) return;
   state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
   saveState();
   populateModuleSelects();
-  showToast('🔄 Đã khôi phục 10 Module mặc định chuẩn SmartVMS v2.0', 'success');
+  showToast('🔄 Đã khôi phục 12 Module mặc định chuẩn SmartVMS Local 2026', 'success');
 
   renderSettings();
   if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
