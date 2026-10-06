@@ -4100,6 +4100,7 @@ function renderSettings() {
   </div>`;
 
   renderSettingsModules();
+  switchSettingsTab(state.settingsActiveTab || 'settings-session');
 }
 
 function saveSettings() {
