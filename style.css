@@ -1000,8 +1000,14 @@ body {
 .login-header p { font-size: 13px; color: var(--text-secondary); }
 
 /* ============================================================ RBAC (ROLE-BASED ACCESS CONTROL) */
-body.role-tester .admin-only {
+body.role-tester .admin-only,
+body.role-developer .admin-only {
   display: none !important;
+}
+
+body.role-developer .btn-stat {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* ============================================================ SUPABASE CLOUD STATUS BADGE */

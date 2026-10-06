@@ -3113,9 +3113,9 @@ function applyAuth() {
       document.body.classList.remove('role-developer');
     }
     
-    // Redirect if they are a tester trying to access settings
+    // Redirect if non-admin is trying to access settings
     const activePage = document.querySelector('.page.active');
-    if (state.currentUser.role === 'tester' && activePage && activePage.id === 'page-settings') {
+    if (state.currentUser.role !== 'admin' && activePage && activePage.id === 'page-settings') {
       navigate('dashboard');
     }
   }
@@ -3144,6 +3144,10 @@ function isOverriddenTc(id) {
 }
 
 function resetBuiltinTc(tcId) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền khôi phục Test Case gốc!', 'error');
+    return;
+  }
   if (!state.overrides || !state.overrides[tcId]) return;
   if (!confirm(`⚠️ Bạn có chắc chắn muốn khôi phục nội dung Test Case "${tcId}" về nguyên bản chuẩn ban đầu của hệ thống?`)) return;
   delete state.overrides[tcId];
@@ -3159,10 +3163,16 @@ function resetBuiltinTc(tcId) {
 // NAVIGATION
 // ================================================================
 function navigate(page) {
+  if (page === 'settings' && state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền truy cập Cài đặt hệ thống!', 'error');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(`page-${page}`).classList.add('active');
-  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  const targetPage = document.getElementById(`page-${page}`);
+  if (targetPage) targetPage.classList.add('active');
+  const targetNav = document.querySelector(`[data-page="${page}"]`);
+  if (targetNav) targetNav.classList.add('active');
   const titles = { dashboard:'Dashboard', testcases:'Test Cases', execute:'Thực thi Test', report:'Báo cáo', settings:'Cài đặt' };
   document.getElementById('breadcrumb').textContent = titles[page] || page;
   if (page === 'dashboard') renderDashboard();
@@ -3464,16 +3474,16 @@ function applyFilters() {
       <div class="action-btn-group">
         <button class="action-btn" onclick="openTcDetail('${tc.id}')" title="Xem chi tiết">🔍</button>
         <button class="action-btn run" onclick="quickNavigateExec('${tc.id}')" title="Thực thi test">▶</button>
-        <button class="action-btn edit" onclick="openEditTcModal('${tc.id}')" title="Chỉnh sửa">✏️</button>
-        <button class="action-btn clone" onclick="openCloneTcModal('${tc.id}')" title="Nhân bản">📋</button>
-        <button class="action-btn delete" onclick="deleteCustomTc('${tc.id}')" title="Xóa">🗑️</button>
+        <button class="action-btn edit admin-only" onclick="openEditTcModal('${tc.id}')" title="Chỉnh sửa">✏️</button>
+        <button class="action-btn clone admin-only" onclick="openCloneTcModal('${tc.id}')" title="Nhân bản">📋</button>
+        <button class="action-btn delete admin-only" onclick="deleteCustomTc('${tc.id}')" title="Xóa">🗑️</button>
       </div>` : `
       <div class="action-btn-group">
         <button class="action-btn" onclick="openTcDetail('${tc.id}')" title="Xem chi tiết">🔍</button>
         <button class="action-btn run" onclick="quickNavigateExec('${tc.id}')" title="Thực thi test">▶</button>
-        <button class="action-btn edit" onclick="openEditTcModal('${tc.id}')" title="Hiệu đính nội dung Test Case này">✏️</button>
-        ${isOverridden ? `<button class="action-btn reset" onclick="resetBuiltinTc('${tc.id}')" title="Khôi phục nguyên bản gốc" style="color:#d97706">🔄</button>` : ''}
-        <button class="action-btn clone" onclick="openCloneTcModal('${tc.id}')" title="Nhân bản test case này">📋</button>
+        <button class="action-btn edit admin-only" onclick="openEditTcModal('${tc.id}')" title="Hiệu đính nội dung Test Case này">✏️</button>
+        ${isOverridden ? `<button class="action-btn reset admin-only" onclick="resetBuiltinTc('${tc.id}')" title="Khôi phục nguyên bản gốc" style="color:#d97706">🔄</button>` : ''}
+        <button class="action-btn clone admin-only" onclick="openCloneTcModal('${tc.id}')" title="Nhân bản test case này">📋</button>
       </div>`;
     return `<tr>
       <td class="tc-code">${tc.id}</td>
@@ -3553,9 +3563,9 @@ function openTcDetail(tcId) {
     </div>` : ''}
     <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="closeModal('modal-tc');quickNavigateExec('${tcId}')">▶ Thực thi TC này</button>
-      <button class="btn btn-outline" onclick="closeModal('modal-tc');openCloneTcModal('${tcId}')">📋 Nhân bản</button>
-      <button class="btn btn-outline" onclick="closeModal('modal-tc');openEditTcModal('${tcId}')">✏️ ${isCustom ? 'Sửa' : 'Hiệu đính'}</button>
-      ${isOverriddenTc(tcId) ? `<button class="btn btn-outline" onclick="closeModal('modal-tc');resetBuiltinTc('${tcId}')" style="color:#d97706">🔄 Khôi phục gốc</button>` : ''}
+      <button class="btn btn-outline admin-only" onclick="closeModal('modal-tc');openCloneTcModal('${tcId}')">📋 Nhân bản</button>
+      <button class="btn btn-outline admin-only" onclick="closeModal('modal-tc');openEditTcModal('${tcId}')">✏️ ${isCustom ? 'Sửa' : 'Hiệu đính'}</button>
+      ${isOverriddenTc(tcId) ? `<button class="btn btn-outline admin-only" onclick="closeModal('modal-tc');resetBuiltinTc('${tcId}')" style="color:#d97706">🔄 Khôi phục gốc</button>` : ''}
       <button class="btn btn-outline" onclick="closeModal('modal-tc')">Đóng</button>
     </div>`;
   openModal('modal-tc');
@@ -3635,6 +3645,10 @@ function switchSettingsTab(subtab) {
 }
 
 function openModulesSettingTab() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền quản lý danh mục Modules!', 'error');
+    return;
+  }
   navigate('settings');
   switchSettingsTab('settings-modules');
 }
@@ -3666,9 +3680,9 @@ function renderExecDetail(tcId) {
           <div class="exec-top-actions">
             <button class="btn btn-outline btn-xs" onclick="prevTc('${tcId}')" title="Test case trước (Phím tắt: Alt + ←)">← Trước</button>
             <button class="btn btn-outline btn-xs" onclick="nextTc('${tcId}')" title="Test case tiếp theo (Phím tắt: Alt + →)">Tiếp →</button>
-            <button class="btn btn-outline btn-xs" onclick="openEditTcModal('${tcId}')" title="Sửa nội dung test case">✏️ Sửa</button>
-            ${isOverriddenTc(tcId) ? `<button class="btn btn-outline btn-xs" onclick="resetBuiltinTc('${tcId}')" style="color:#d97706" title="Khôi phục nguyên bản">🔄 Gốc</button>` : ''}
-            <button class="btn btn-outline btn-xs" onclick="openCloneTcModal('${tcId}')" title="Nhân bản test case này">📋 Nhân bản</button>
+            <button class="btn btn-outline btn-xs admin-only" onclick="openEditTcModal('${tcId}')" title="Sửa nội dung test case">✏️ Sửa</button>
+            ${isOverriddenTc(tcId) ? `<button class="btn btn-outline btn-xs admin-only" onclick="resetBuiltinTc('${tcId}')" style="color:#d97706" title="Khôi phục nguyên bản">🔄 Gốc</button>` : ''}
+            <button class="btn btn-outline btn-xs admin-only" onclick="openCloneTcModal('${tcId}')" title="Nhân bản test case này">📋 Nhân bản</button>
           </div>
         </div>
         <h2 class="exec-tc-header-name">${tc.name}</h2>
@@ -3903,6 +3917,10 @@ function renderExecDetail(tcId) {
 }
 
 function setStatus(tcId, status) {
+  if (state.currentUser && state.currentUser.role === 'developer') {
+    showToast('⚠️ Developer không trực tiếp duyệt Pass/Fail. Vui lòng cập nhật trạng thái xử lý lỗi (Defect Lifecycle: Đang sửa / Đã sửa) và để Tester nghiệm thu!', 'info');
+    return;
+  }
   const failEl = document.getElementById('ef-fail');
   const failReason = failEl ? failEl.value.trim() : ((state.results[tcId] && state.results[tcId].failReason) || '').trim();
   if (status === 'Fail' && !failReason) {
@@ -4104,6 +4122,10 @@ function renderSettings() {
 }
 
 function saveSettings() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền lưu Cài đặt hệ thống!', 'error');
+    return;
+  }
   state.session = {
     ...state.session,
     name: document.getElementById('set-session-name').value,
@@ -4130,9 +4152,19 @@ function updateSessionDisplay() {
 // ================================================================
 // SESSION MODAL
 // ================================================================
-function openNewSessionModal() { openModal('modal-session'); }
+function openNewSessionModal() { 
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền tạo phiên test!', 'error');
+    return;
+  }
+  openModal('modal-session'); 
+}
 
 function createNewSession() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền tạo phiên test!', 'error');
+    return;
+  }
   const name = document.getElementById('new-session-name').value.trim();
   const owner = document.getElementById('new-session-owner').value.trim();
   const version = document.getElementById('new-session-version').value.trim();
@@ -4167,6 +4199,10 @@ function generateNextCustomTcId(modId) {
 }
 
 function openAddTcModal(defaultModule) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền tạo Test Case mới!', 'error');
+    return;
+  }
   const modSelect = document.getElementById('tc-form-module');
   if (modSelect) {
     modSelect.innerHTML = getModules().map(m => `<option value="${m.id}">${m.id} - ${m.name}</option>`).join('');
@@ -4195,6 +4231,10 @@ function openAddTcModal(defaultModule) {
 }
 
 function openEditTcModal(tcId) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền chỉnh sửa Test Case!', 'error');
+    return;
+  }
   const all = getAllTcs();
   const tc = all.find(t => t.id === tcId);
   if (!tc) {
@@ -4228,6 +4268,10 @@ function openEditTcModal(tcId) {
 }
 
 function openCloneTcModal(tcId) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền nhân bản Test Case!', 'error');
+    return;
+  }
   const tc = getAllTcs().find(t => t.id === tcId);
   if (!tc) return;
   const modSelect = document.getElementById('tc-form-module');
@@ -4361,6 +4405,10 @@ function saveTcForm() {
 }
 
 function deleteCustomTc(tcId) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền xóa Test Case!', 'error');
+    return;
+  }
   if (!isCustomTc(tcId)) {
     showToast('⚠️ Không thể xóa các test case gốc chuẩn mực!', 'error');
     return;
@@ -4901,6 +4949,10 @@ function importData(evt) {
 }
 
 function resetResults() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền reset kết quả kiểm thử!', 'error');
+    return;
+  }
   if (!confirm('⚠️ Bạn chắc chắn muốn xóa toàn bộ kết quả test? Hành động này không thể hoàn tác.')) return;
   state.results = {};
   saveState();
@@ -5001,6 +5053,10 @@ function generateNextModuleId() {
 }
 
 function openAddModuleModal() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền thêm Module!', 'error');
+    return;
+  }
   document.getElementById('modal-module-title').textContent = '➕ Thêm Module mới';
   document.getElementById('module-form-mode').value = 'add';
   const idInput = document.getElementById('module-form-id');
@@ -5012,6 +5068,10 @@ function openAddModuleModal() {
 }
 
 function openEditModuleModal(modId) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền chỉnh sửa Module!', 'error');
+    return;
+  }
   const mod = getModules().find(m => m.id === modId);
   if (!mod) return;
   document.getElementById('modal-module-title').textContent = `✏️ Chỉnh sửa Module: ${mod.id}`;
@@ -5025,6 +5085,10 @@ function openEditModuleModal(modId) {
 }
 
 function saveModuleForm() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền lưu Module!', 'error');
+    return;
+  }
   const mode = document.getElementById('module-form-mode').value;
   const id = document.getElementById('module-form-id').value.trim();
   const name = document.getElementById('module-form-name').value.trim();
@@ -5066,6 +5130,10 @@ function saveModuleForm() {
 }
 
 function deleteModule(modId) {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền xóa Module!', 'error');
+    return;
+  }
   const allTcs = getAllTcs();
   const linkedCount = allTcs.filter(t => t.module === modId).length;
   if (linkedCount > 0) {
@@ -5090,6 +5158,10 @@ function deleteModule(modId) {
 }
 
 function resetModulesToDefault() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền khôi phục danh mục Module!', 'error');
+    return;
+  }
   if (!confirm('⚠️ Bạn có chắc chắn muốn khôi phục danh mục Module về 12 Module mặc định ban đầu chuẩn SmartVMS Local 2026?')) return;
   state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
   saveState();
@@ -5147,6 +5219,10 @@ function switchTestRun(runId) {
 }
 
 function openNewRunModal() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền tạo Đợt test mới!', 'error');
+    return;
+  }
   const nextNum = (state.runs || []).length + 1;
   document.getElementById('new-run-name').value = `Đợt ${nextNum} — Retest bản vá v2.${nextNum - 1}`;
   document.getElementById('new-run-version').value = `v2.${nextNum - 1}.0`;
@@ -5170,6 +5246,10 @@ function handleRunScopeChange(scope) {
 }
 
 function confirmCreateNewRun() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền tạo Đợt test mới!', 'error');
+    return;
+  }
   const name = document.getElementById('new-run-name').value.trim();
   const version = document.getElementById('new-run-version').value.trim();
   const owner = document.getElementById('new-run-owner').value.trim();
@@ -5455,6 +5535,11 @@ async function syncCommentToSupabase(comment) {
 // DEFECT LIFECYCLE WORKFLOW LOGIC
 // ================================================================
 function updateDefectStatus(tcId, newDefectStatus) {
+  const userRole = state.currentUser ? state.currentUser.role : 'tester';
+  if (userRole === 'developer' && (newDefectStatus === 'Retest Passed' || newDefectStatus === 'Retest Fail' || newDefectStatus === 'Reopened')) {
+    showToast('⚠️ Quyền hạn: Chỉ Tester hoặc QA Lead mới có quyền nghiệm thu (Retest Pass / Reopen) để đóng hoặc mở lại lỗi!', 'error');
+    return;
+  }
   if (!state.results[tcId]) state.results[tcId] = { status: 'Fail' };
   state.results[tcId].defectStatus = newDefectStatus;
   
