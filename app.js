@@ -4441,12 +4441,20 @@ function deleteCustomTc(tcId) {
 // SUPABASE CLOUD & REALTIME COLLABORATION MODULE
 // ================================================================
 const STORAGE_SB_KEY = 'smartvms_supabase_config';
+const DEFAULT_SUPABASE_URL = 'https://ilutfoarcrqxsgoapkct.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'sb_publishable_GiS2f75ruddsLkZhoHsq7g__LO1Qp-C';
+
+function cleanSupabaseUrl(url) {
+  if (!url) return '';
+  return url.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '').trim();
+}
+
 let supabaseClient = null;
 let realtimeChannel = null;
 
 let supabaseConfig = {
-  url: '',
-  anonKey: '',
+  url: DEFAULT_SUPABASE_URL,
+  anonKey: DEFAULT_SUPABASE_KEY,
   autoSync: true,
   status: 'disconnected' // 'disconnected' | 'connecting' | 'connected' | 'error'
 };
@@ -4456,12 +4464,18 @@ function loadSupabaseConfig() {
     const raw = localStorage.getItem(STORAGE_SB_KEY);
     if (raw) {
       const cfg = JSON.parse(raw);
-      supabaseConfig.url = cfg.url || '';
-      supabaseConfig.anonKey = cfg.anonKey || '';
+      supabaseConfig.url = cleanSupabaseUrl(cfg.url || DEFAULT_SUPABASE_URL);
+      supabaseConfig.anonKey = (cfg.anonKey || DEFAULT_SUPABASE_KEY).trim();
       supabaseConfig.autoSync = cfg.autoSync !== false;
+    } else {
+      supabaseConfig.url = DEFAULT_SUPABASE_URL;
+      supabaseConfig.anonKey = DEFAULT_SUPABASE_KEY;
+      supabaseConfig.autoSync = true;
     }
   } catch(e) {
     console.error('Lỗi đọc cấu hình Supabase:', e);
+    supabaseConfig.url = DEFAULT_SUPABASE_URL;
+    supabaseConfig.anonKey = DEFAULT_SUPABASE_KEY;
   }
 }
 
@@ -4603,8 +4617,13 @@ function handleRealtimePayload(payload) {
       status: newRecord.status,
       tester: newRecord.tester,
       runAt: newRecord.run_at,
+      defectStatus: newRecord.defect_status || 'None',
+      severity: newRecord.severity || null,
+      assignedDev: newRecord.assigned_dev || null,
+      fixVersion: newRecord.fix_version || null,
       failReason: newRecord.fail_reason || '',
-      note: newRecord.note || ''
+      note: newRecord.note || '',
+      evidences: Array.isArray(newRecord.evidences) ? newRecord.evidences : []
     };
     saveState();
 
@@ -4629,7 +4648,7 @@ async function saveAndConnectSupabase() {
   const keyEl = document.getElementById('sb-anon-key');
   const autoEl = document.getElementById('sb-auto-sync');
 
-  const url = urlEl ? urlEl.value.trim() : '';
+  const url = cleanSupabaseUrl(urlEl ? urlEl.value.trim() : '');
   const anonKey = keyEl ? keyEl.value.trim() : '';
   const autoSync = autoEl ? autoEl.checked : true;
 
@@ -4710,12 +4729,18 @@ async function pushLocalToSupabase() {
 
   try {
     const rows = tcIds.map(id => ({
+      run_id: state.currentRunId || 'run_001',
       tc_id: id,
       status: state.results[id].status,
       tester: state.results[id].tester || 'Tester',
       run_at: state.results[id].runAt || new Date().toISOString(),
+      defect_status: state.results[id].defectStatus || 'None',
+      severity: state.results[id].severity || null,
+      assigned_dev: state.results[id].assignedDev || null,
+      fix_version: state.results[id].fixVersion || null,
       fail_reason: state.results[id].failReason || null,
       note: state.results[id].note || null,
+      evidences: state.results[id].evidences || [],
       updated_at: new Date().toISOString()
     }));
 
@@ -4783,8 +4808,13 @@ async function pullSupabaseToLocal(opts = {}) {
           status: r.status,
           tester: r.tester,
           runAt: r.run_at,
+          defectStatus: r.defect_status || 'None',
+          severity: r.severity || null,
+          assignedDev: r.assigned_dev || null,
+          fixVersion: r.fix_version || null,
           failReason: r.fail_reason || '',
-          note: r.note || ''
+          note: r.note || '',
+          evidences: Array.isArray(r.evidences) ? r.evidences : []
         };
         count++;
       });
