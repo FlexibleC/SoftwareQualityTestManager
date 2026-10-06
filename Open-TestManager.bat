@@ -9,5 +9,6 @@ echo.
 echo He thong dang chay tren trinh duyet mac dinh.
 echo Tai khoan Admin: admin / 123
 echo Tai khoan Tester: tester / 123
+echo Tai khoan Dev: dev / 123
 echo.
 exit
