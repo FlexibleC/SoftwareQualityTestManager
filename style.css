@@ -241,11 +241,9 @@ body {
 /* ---- Page Content ---- */
 .page-content { flex: 1; padding: 28px 28px 40px; overflow-y: auto; }
 .page { display: none; }
-.page-title { margin-bottom: 20px; }
-.page-title h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1.2; margin: 0; }
-.page-title p { display: none !important; }
-.page-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
-.page-title-row .page-title { margin-bottom: 0; }
+.page.active { display: block; }
+.page-title { display: none !important; }
+.page-title-row { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 16px; flex-wrap: wrap; gap: 16px; }
 .page-title-actions { display: flex; align-items: center; gap: 10px; }
 
 /* ============================================================ BUTTONS */

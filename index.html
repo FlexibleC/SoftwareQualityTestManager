@@ -128,10 +128,6 @@
 
         <!-- ==================== DASHBOARD PAGE ==================== -->
         <div id="page-dashboard" class="page active">
-          <div class="page-title">
-            <h1>Dashboard Kiểm thử</h1>
-          </div>
-
           <!-- Stats Row -->
           <div class="stats-grid" id="stats-grid">
             <div class="stat-card stat-total">
@@ -247,16 +243,11 @@
 
         <!-- ==================== TEST CASES PAGE ==================== -->
         <div id="page-testcases" class="page">
-          <div class="page-title-row">
-            <div class="page-title">
-              <h1>Danh sách Test Cases</h1>
-            </div>
-            <div class="page-title-actions">
-              <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="navigate('settings')"
-                title="Đi tới cấu hình danh mục Modules">📁 Quản lý Modules</button>
-              <button class="btn btn-primary admin-only" id="btn-add-tc" onclick="openAddTcModal()">➕ Thêm Test Case
-                mới</button>
-            </div>
+          <div class="page-title-actions" style="justify-content: flex-end; margin-bottom: 16px;">
+            <button class="btn btn-outline admin-only" id="btn-manage-modules" onclick="navigate('settings')"
+              title="Đi tới cấu hình danh mục Modules">📁 Quản lý Modules</button>
+            <button class="btn btn-primary admin-only" id="btn-add-tc" onclick="openAddTcModal()">➕ Thêm Test Case
+              mới</button>
           </div>
 
           <!-- Filters -->
@@ -332,9 +323,7 @@
 
         <!-- ==================== EXECUTE PAGE ==================== -->
         <div id="page-execute" class="page">
-          <div class="page-title">
-            <h1>Thực thi Test</h1>
-          </div>
+
 
           <div class="execute-layout">
             <!-- Left: TC List -->
@@ -369,9 +358,7 @@
 
         <!-- ==================== REPORT PAGE ==================== -->
         <div id="page-report" class="page">
-          <div class="page-title">
-            <h1>Báo cáo Kiểm thử</h1>
-          </div>
+
 
           <!-- Report Header -->
           <div class="report-header card">
@@ -456,9 +443,7 @@
 
         <!-- ==================== SETTINGS PAGE ==================== -->
         <div id="page-settings" class="page">
-          <div class="page-title">
-            <h1>Cài đặt</h1>
-          </div>
+
 
           <div class="settings-grid">
             <div class="card">
