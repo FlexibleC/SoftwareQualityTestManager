@@ -2,7 +2,7 @@
 > Nền tảng Quản lý & Thực thi Kiểm thử Trực tuyến & Cục bộ chuyên nghiệp cho Hệ thống SmartVMS Local 2026
 
 ## 🌟 Tính Năng Nổi Bật
-- **161 Test Cases Chuẩn Hóa**: Khớp 100% từng nút bấm, màn hình và quy trình thực tế mới nhất của SmartVMS Local 2026 (12 Modules từ M01 đến M12).
+- **174 Test Cases Chuẩn Hóa**: Khớp 100% từng nút bấm, màn hình và quy trình thực tế mới nhất của SmartVMS Local 2026 (12 Modules từ M01 đến M12).
 - **Phản Ánh Nghiệp Vụ Mới Nhất**:
   - Giao diện Trực ban mới: Live Search đa đối tượng (5 nhóm, đếm kết quả, Ctrl+K), Tra cứu nâng cao độc lập (`AdvancedSearchModal`, Ctrl+Shift+K), Chế độ xem thống kê (Ẩn/Tinh gọn/Chi tiết), Chế độ bảng (Thu gọn/Chi tiết), Cài đặt màu hàng (`DisplaySettingsModal`).
   - Phân hệ Sổ sách Ngoại lệ (`DataEntry` - `/dataentry.html`): Nhập hồi tố từ sổ giấy, phím tắt F1/F3, tự động đóng dấu kiểm toán IP/địa điểm/người nhập.

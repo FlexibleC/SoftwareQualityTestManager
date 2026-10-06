@@ -1,6 +1,6 @@
 /* ============================================================
    SmartVMS Test Manager — Application Logic
-   Version 3.0 | 161 Test Cases | 12 Modules (SmartVMS Local 2026)
+   Version 3.0 | 174 Test Cases | 12 Modules (SmartVMS Local 2026)
    ============================================================ */
 
 'use strict';
@@ -1005,6 +1005,25 @@ const ALL_TCS = [
     ]
   },
   {
+    "id": "TC-COUT-016",
+    "module": "M04",
+    "priority": "P2",
+    "name": "Cập nhật Thông tin Lượt khách Đang Thăm (UpdateVisitModal)",
+    "platform": "Giao diện Web Trực ban",
+    "testData": "Khách đổi phương tiện hoặc đổi thẻ an ninh sau khi đã Check-in",
+    "steps": [
+      "1. Tại danh sách khách đang ở trong (Inside), nhấp nút Cập nhật (hoặc icon Edit) để mở UpdateVisitModal.",
+      "2. Chỉnh sửa mã thẻ khách đại diện hoặc điều chỉnh số thẻ cấp chung.",
+      "3. Cập nhật mã thẻ của từng Người đi cùng trong danh sách.",
+      "4. Đổi thông tin phương tiện (Biển số xe, Loại phương tiện) hoặc bật/tắt cờ Lưu trú nhiều ngày (isMultiDayVisit).",
+      "5. Nhấn \"Lưu cập nhật\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API POST /api/station/visits/update với payload hợp lệ.",
+      "Dữ liệu thẻ, phương tiện và cờ lưu trú được cập nhật ngay lập tức trên giao diện Trực ban mà không cần check-out/check-in lại."
+    ]
+  },
+  {
     "id": "TC-DASH-001",
     "module": "M05",
     "priority": "P4",
@@ -1369,6 +1388,36 @@ const ALL_TCS = [
     ]
   },
   {
+    "id": "TC-UIUX-013",
+    "module": "M06",
+    "priority": "P3",
+    "name": "Xem Hồ sơ Cá nhân Cán bộ Trực ban Đang trực (StaffSettingsModal)",
+    "platform": "Giao diện Web Trực ban",
+    "steps": [
+      "1. Nhấp vào tên hoặc avatar cán bộ trực ban trên thanh Header trạm gác.",
+      "2. Quan sát thông tin trong StaffSettingsModal."
+    ],
+    "expected": [
+      "StaffSettingsModal mở ra hiển thị đầy đủ: Ảnh thẻ đại diện, Mã nhân viên, Họ tên, Ngày sinh, Số CCCD, Điện thoại, Bộ phận và Chức vụ.",
+      "Đóng modal an toàn bằng nút đóng hoặc nhấp ra ngoài."
+    ]
+  },
+  {
+    "id": "TC-UIUX-014",
+    "module": "M06",
+    "priority": "P4",
+    "name": "Phóng to, Thu nhỏ và Soi chi tiết Ảnh bằng công cụ ZoomableImage",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "steps": [
+      "1. Mở Thư viện ảnh của một lượt khách bất kỳ (VisitPhotoGalleryModal).",
+      "2. Nhấp vào bất kỳ ảnh nào (Ảnh thẻ CCCD, ảnh biển số xe, ảnh chân dung).",
+      "3. Sử dụng con lăn chuột hoặc nút công cụ để phóng to (Zoom in), thu nhỏ (Zoom out), kéo rê (Pan) và xoay ảnh."
+    ],
+    "expected": [
+      "Công cụ ZoomableImage phản hồi mượt mà, cho phép cán bộ an ninh phóng to tối đa để soi rõ các ký tự trên giấy tờ tùy thân hoặc biển số xe."
+    ]
+  },
+  {
     "id": "TC-DENT-001",
     "module": "M07",
     "priority": "P1",
@@ -1574,6 +1623,35 @@ const ALL_TCS = [
     ]
   },
   {
+    "id": "TC-DENT-015",
+    "module": "M07",
+    "priority": "P3",
+    "name": "Sổ tay Quy trình & Hướng dẫn Nghiệp vụ Nhập liệu Ngoại lệ (DataEntryGuideTab)",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Tại giao diện DataEntry, nhấp vào tab \"Hướng dẫn\" (hoặc nhấn phím tắt F3).",
+      "2. Đọc các mục quy trình: Quy định nhập sổ hồi tố, xử lý khách nợ thẻ, đối soát sổ sách cuối ngày."
+    ],
+    "expected": [
+      "DataEntryGuideTab hiển thị nội dung trực quan, có các ví dụ thực tế và quy chuẩn nhập liệu được định dạng rõ ràng."
+    ]
+  },
+  {
+    "id": "TC-DENT-016",
+    "module": "M07",
+    "priority": "P2",
+    "name": "Bộ lọc Gộp Nguồn và Người tạo cuộc viếng thăm (originFilter)",
+    "platform": "Phân hệ Sổ sách DataEntry",
+    "steps": [
+      "1. Tại Dashboard DataEntry, chọn dropdown \"Nguồn & Người tạo\" (originFilter).",
+      "2. Chọn lọc \"Tất cả\", \"Chỉ trạm gác trực tiếp\", hoặc \"Tài khoản nhập liệu cụ thể (nhaplieu)\".",
+      "3. Quan sát danh sách lượt khách hiển thị."
+    ],
+    "expected": [
+      "Bảng danh sách lọc chính xác theo trường createdByType và createdBy, hiển thị đúng các hồ sơ tương ứng."
+    ]
+  },
+  {
     "id": "TC-ADMN-001",
     "module": "M08",
     "priority": "P4",
@@ -1774,6 +1852,54 @@ const ALL_TCS = [
     ],
     "expected": [
       "Hệ thống từ chối đăng nhập với thông báo tài khoản bị khóa."
+    ]
+  },
+  {
+    "id": "TC-ADMN-015",
+    "module": "M08",
+    "priority": "P1",
+    "name": "Cưỡng bức Check-out từ Phân hệ Quản trị Admin (InsideTab - handleForceCheckout)",
+    "platform": "Giao diện Quản trị Admin",
+    "testData": "Khách đã rời khỏi cơ quan nhưng trạm gác quên đóng phiên hoặc trường hợp khẩn cấp",
+    "steps": [
+      "1. Truy cập tab \"Khách trong đơn vị\" (InsideTab) trên Admin.",
+      "2. Tìm lượt khách cần đóng cưỡng bức, nhấp nút \"Cưỡng bức Check-out\".",
+      "3. Xác nhận trong hộp thoại bảo vệ: \"Admin cưỡng bức check-out từ trang Giám sát\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API POST /admin/visits/{id}/checkout ghi nhận checkOutTime hiện tại và ghi chú cưỡng bức của Admin.",
+      "Lượt khách được đóng trạng thái thành công, danh sách bên trong cập nhật thời gian thực."
+    ]
+  },
+  {
+    "id": "TC-ADMN-016",
+    "module": "M08",
+    "priority": "P2",
+    "name": "Quản lý Danh mục Cổng & Trạm Trực ban (StationsTab)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Truy cập tab \"Cổng & Trạm\" (StationsTab) thuộc Hub Danh mục.",
+      "2. Xem danh sách toàn bộ các cổng trạm trong đơn vị.",
+      "3. Nhấp \"Sửa\" một trạm: đổi tên trạm, đổi vị trí địa lý hoặc bật/tắt kích hoạt (isActive).",
+      "4. Nhấn \"Lưu thay đổi\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API PUT /admin/stations/{id} thành công.",
+      "Tên và thông tin trạm cập nhật tức thì trên toàn bộ hệ thống."
+    ]
+  },
+  {
+    "id": "TC-ADMN-017",
+    "module": "M08",
+    "priority": "P3",
+    "name": "Giám sát Tình trạng Kết nối Phần cứng Ngoại vi Thời gian thực (Hardware Status)",
+    "platform": "Giao diện Quản trị Admin",
+    "steps": [
+      "1. Tại Dashboard Admin, quan sát card Giám sát Phần cứng (Hardware Status).",
+      "2. Nhấp xem chi tiết modal Trạng thái Thiết bị (showHardwareModal)."
+    ],
+    "expected": [
+      "Hệ thống truy vấn API GET /admin/system/hardware-status, phản ánh chính xác trạng thái Online/Offline của: Đầu đọc chip CCCD, Đầu đọc thẻ RFID, Máy quét mã QR 2D và Camera."
     ]
   },
   {
@@ -2124,6 +2250,53 @@ const ALL_TCS = [
     ]
   },
   {
+    "id": "TC-SETT-013",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Cấu hình Hồ sơ Thiết bị Đọc thẻ (Device Profiles: W3, EA09N, EA09/W4 LAN)",
+    "platform": "Giao diện Quản trị Admin (SettingsDevicePanel)",
+    "steps": [
+      "1. Truy cập Trung tâm Cài đặt -> tab \"Thiết bị ngoại vi\".",
+      "2. Chọn 1 trong 3 mẫu hồ sơ thiết bị: W3 (USB HID), EA09N (Serial COM), hoặc EA09_W4_SOCKETIO (LAN Socket.io).",
+      "3. Cấu hình Socket.IO URL và LAN Domain Name (mặc định: smartvms).",
+      "4. Nhấn \"Lưu cấu hình\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API PUT /admin/device-profile lưu cấu hình thành công.",
+      "Thông số thiết bị được đồng bộ tới trạm gác và DeviceService."
+    ]
+  },
+  {
+    "id": "TC-SETT-014",
+    "module": "M10",
+    "priority": "P3",
+    "name": "Duyệt Thư mục Lưu trữ Máy chủ & Giám sát Dung lượng Ổ đĩa (Browse Folder & Disk Space)",
+    "platform": "Giao diện Quản trị Admin (SettingsBackupPanel)",
+    "steps": [
+      "1. Tại tab Sao lưu, nhấp nút \"Duyệt thư mục\" (FolderOpen) tại ô Thư mục sao lưu hoặc Thư mục ảnh ca trực.",
+      "2. Quan sát thanh dung lượng ổ cứng (Drive Total GB, Used GB, Free percent)."
+    ],
+    "expected": [
+      "Hệ thống truy vấn API GET /admin/browse-folder trả về danh sách thư mục hợp lệ trên hệ thống tập tin máy chủ Windows.",
+      "Dung lượng ổ cứng cập nhật chính xác theo thực tế phần cứng."
+    ]
+  },
+  {
+    "id": "TC-SETT-015",
+    "module": "M10",
+    "priority": "P2",
+    "name": "Cập nhật Tên miền Đơn vị và Tự động cấp mới Chứng chỉ SSL (SystemAdmin UpdateDomain)",
+    "platform": "API / Quản trị Hệ thống",
+    "testData": "Tên miền mới: smartvms.local (hoặc IP trạm gác)",
+    "steps": [
+      "1. Gửi request POST /api/SystemAdmin/update-domain với payload {\"domain\": \"smartvms.local\"}.",
+      "2. Quan sát log hệ thống và trạng thái dịch vụ."
+    ],
+    "expected": [
+      "Hệ thống ghi nhận tên miền mới vào appsettings.json, tự động chạy lệnh tái tạo chứng chỉ SSL cục bộ và restart Kestrel an toàn."
+    ]
+  },
+  {
     "id": "TC-DEVC-001",
     "module": "M11",
     "priority": "P1",
@@ -2287,6 +2460,22 @@ const ALL_TCS = [
     ]
   },
   {
+    "id": "TC-DEVC-013",
+    "module": "M11",
+    "priority": "P1",
+    "name": "Giải mã Chuyên sâu Dữ liệu Chip CCCD DG13 (vnMRTD Decoder Engine)",
+    "platform": "Dịch vụ Thiết bị DeviceService (vnMRTD)",
+    "testData": "Thẻ CCCD gắn chip vật lý chuẩn BCA",
+    "steps": [
+      "1. Đặt thẻ CCCD lên đầu đọc chip tiếp xúc hoặc contactless.",
+      "2. Quan sát log DeviceService và gói tin giải mã nhóm dữ liệu DG13 (DecodeDG13.cs)."
+    ],
+    "expected": [
+      "Thư viện vnMRTD giải mã chính xác ASN.1 DG13: Họ tên tiếng Việt có dấu đầy đủ, Ngày sinh, Giới tính, Quê quán, Nơi thường trú, Dân tộc, Tôn giáo, Đặc điểm nhận dạng, Ngày cấp và Số CMND cũ 9 số.",
+      "Gói tin JSON trả về client đầy đủ không bị lỗi font hay mất ký tự."
+    ]
+  },
+  {
     "id": "TC-BKGD-001",
     "module": "M12",
     "priority": "P1",
@@ -2446,6 +2635,24 @@ const ALL_TCS = [
     ],
     "expected": [
       "Mỗi ngày tự động sinh file log (vd: log-20261006.txt) ghi nhận đầy đủ stack trace các ngoại lệ nếu có để phục vụ bảo trì."
+    ]
+  },
+  {
+    "id": "TC-BKGD-013",
+    "module": "M12",
+    "priority": "P2",
+    "name": "Khởi chạy & Giám sát Dịch vụ qua Bảng điều khiển Desktop WPF (SmartVMS ControlPanel)",
+    "platform": "Ứng dụng Desktop Windows WPF (ControlPanel)",
+    "steps": [
+      "1. Khởi chạy ứng dụng SmartVMS.Local.ControlPanel.exe.",
+      "2. Quan sát cửa sổ StartupSplashWindow và MainWindow.",
+      "3. Kiểm tra trạng thái các dịch vụ: Backend API, DeviceService, Web UI.",
+      "4. Thu nhỏ ứng dụng xuống khay hệ thống (System Tray), nhấp đúp để mở lại.",
+      "5. Nhấp nút \"Mở giao diện Trạm gác\" hoặc \"Mở giao diện Admin\"."
+    ],
+    "expected": [
+      "ControlPanel hiển thị trực quan trạng thái xanh (Running) của toàn bộ các tiến trình con.",
+      "Thu nhỏ xuống System Tray hoạt động ổn định, mở đúng URL cục bộ trên trình duyệt mặc định."
     ]
   }
 ];
