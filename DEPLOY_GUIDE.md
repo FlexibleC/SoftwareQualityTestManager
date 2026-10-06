@@ -80,8 +80,12 @@ git push -u origin main
 
 ---
 
-### TÍNH NĂNG VƯỢT TRỘI KHI KẾT HỢP GITHUB + VERCEL + SUPABASE:
-- ⚡ **Realtime Multi-tester**: Tester A chấm Pass ở trạm 1, màn hình của Quản lý ở phòng họp tự nhảy kết quả tức thì không cần F5.
+### TÍNH NĂNG VƯỢT TRỘI TRÊN PHIÊN BẢN v3.0:
+- 🏃 **Quản lý Đợt Test Độc lập (Test Cycles)**: Tạo Đợt 1 (174 TC toàn diện), Đợt 2 (Smart Retest — chỉ kiểm tra 50 ca lỗi, tự động kế thừa các ca đã Pass), Đợt 3 (Nghiệm thu).
+- 📸 **Đính kèm Ảnh Bằng chứng siêu tốc**: Chụp màn hình rồi bấm **`Ctrl + V`** để dán ảnh trực tiếp, hoặc kéo thả file ảnh; có Lightbox phóng to và xoay ảnh 90°.
+- 💬 **Thảo luận & Phản hồi 2 chiều (Discussion Feed)**: Trao đổi thời gian thực giữa Tester, Dev và QA Lead ngay trên từng test case (hỗ trợ ghi chú commit fix lỗi).
+- 🐞 **Vòng đời Lỗi Chuẩn hóa (Defect Lifecycle)**: Đúng chuẩn *Test -> Lỗi -> Gán Dev -> Dev báo Đã sửa -> Tester Retest Pass (Đóng lỗi) / Reopen*.
+- ⚡ **Realtime Multi-tester**: Tester A chấm Pass/Fail ở trạm gác, màn hình của Quản lý và Dev ở phòng họp tự nhảy kết quả tức thì không cần F5.
 - 📱 **Responsive mọi thiết bị**: Sử dụng mượt mà trên iPhone, Android, iPad, Laptop.
 - 🛡️ **Offline-First**: Nếu mạng WiFi bị chập chờn, kết quả vẫn lưu an toàn trên máy, khi có mạng lại tự động đồng bộ lên Supabase Cloud.
 - 🔄 **Tự động cập nhật**: Mỗi khi bạn sửa code và push lên GitHub, Vercel sẽ tự động build và cập nhật bản mới nhất sau 10 giây.

@@ -105,13 +105,19 @@
             <span class="cloud-dot disconnected" id="cloud-dot"></span>
             <span id="cloud-status-text">Cloud: Chưa kết nối</span>
           </div>
-          <div class="session-info" id="session-info">
+          <div class="run-selector-group" id="header-run-group" title="Chọn Đợt kiểm thử (Test Run / Cycle)">
+            <label>🏃 Đợt:</label>
+            <select id="header-run-select" class="run-select-input" onchange="switchTestRun(this.value)">
+              <option value="run_001">Đợt 1 — Khảo sát v2.0</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm admin-only" onclick="openNewRunModal()" title="Tạo Đợt test mới (Retest / Regression)">+ Đợt mới</button>
+          <div class="session-info" id="session-info" style="display:none">
             <span class="dot dot-green"></span>
             <span id="session-name">Chưa có phiên test</span>
           </div>
           <button class="btn btn-outline btn-sm" id="theme-toggle-btn" onclick="toggleTheme()"
             title="Chuyển đổi giao diện Sáng / Tối">☀️ Sáng</button>
-          <button class="btn btn-primary btn-sm" onclick="openNewSessionModal()">+ Tạo phiên test</button>
           <button class="btn btn-outline btn-sm" onclick="exportReport()">⬇ Xuất báo cáo</button>
           <button class="btn btn-danger btn-sm" style="margin-left:8px;" onclick="handleLogout()">Đăng xuất</button>
         </div>
@@ -768,6 +774,63 @@
           <button class="btn btn-outline" onclick="closeModal('modal-module-form')">Hủy</button>
           <button class="btn btn-primary" onclick="saveModuleForm()">💾 Lưu Module</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Test Run Modal -->
+  <div class="modal-overlay" id="modal-run-create" onclick="closeModal('modal-run-create')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>🏃 Tạo Đợt Kiểm thử Mới (Test Run / Cycle)</h2>
+        <button class="modal-close" onclick="closeModal('modal-run-create')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Tên Đợt kiểm thử *</label>
+          <input type="text" id="new-run-name" placeholder="VD: Đợt 2 — Retest 50 ca lỗi bản vá v2.1" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Phiên bản phần mềm mục tiêu *</label>
+            <input type="text" id="new-run-version" value="v2.1.0" />
+          </div>
+          <div class="form-group">
+            <label>Người tạo đợt test *</label>
+            <input type="text" id="new-run-owner" value="QA Lead" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Phạm vi kiểm thử (Scope Mode) *</label>
+          <select id="new-run-scope" onchange="handleRunScopeChange(this.value)">
+            <option value="SMART_RETEST" selected>🎯 Smart Retest — Chỉ test lại các ca chưa đạt (Fail/Skip từ đợt trước, tự động kế thừa ca đã Pass)</option>
+            <option value="SELECTIVE_P1">⚡ Selective Regression — Retest ca lỗi + Toàn bộ ca P1 Critical của hệ thống</option>
+            <option value="FULL_RERUN">🔄 Milestone Re-run — Chạy lại toàn bộ 100% test cases từ đầu (Nghiệm thu)</option>
+          </select>
+          <div id="new-run-scope-hint" style="font-size:12px;color:var(--text-secondary);margin-top:6px;line-height:1.45;padding:8px 12px;background:rgba(99,102,241,0.06);border-radius:6px">
+            💡 <strong>Smart Retest:</strong> Hệ thống tự động lọc các ca Fail/Skip của đợt hiện tại để đưa vào đợt mới. Các ca đã Pass sẽ được giữ nguyên trạng thái kế thừa (Inherited Pass), giúp tiết kiệm thời gian tối đa!
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú đợt test (Tùy chọn)</label>
+          <textarea id="new-run-notes" rows="2" placeholder="Ghi chú mục tiêu đợt test, commit git liên quan, lưu ý môi trường..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" onclick="closeModal('modal-run-create')">Hủy bỏ</button>
+          <button class="btn btn-primary" onclick="confirmCreateNewRun()">🚀 Bắt đầu Đợt Test Mới</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal for Screenshots -->
+  <div class="lightbox-modal" id="modal-lightbox" onclick="closeLightbox()">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <img id="lightbox-img" src="" alt="Bằng chứng kiểm thử" />
+      <div class="lightbox-bar">
+        <button class="lightbox-btn" onclick="rotateLightboxImg()">🔄 Xoay 90°</button>
+        <button class="lightbox-btn" onclick="openLightboxOriginal()">🔗 Xem ảnh gốc</button>
+        <button class="lightbox-btn" onclick="closeLightbox()">✕ Đóng</button>
       </div>
     </div>
   </div>

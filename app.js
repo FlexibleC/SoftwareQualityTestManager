@@ -2953,9 +2953,10 @@ const ALL_TCS = [
 ];
 
 const USERS = [
-  { username: 'admin', password: '123', role: 'admin', name: 'Quản trị viên' },
-  { username: 'admin', password: 'admin123', role: 'admin', name: 'Quản trị viên' },
-  { username: 'tester', password: '123', role: 'tester', name: 'Tester thường' }
+  { username: 'admin', password: '123', role: 'admin', name: 'Quản trị viên (QA Lead)' },
+  { username: 'admin', password: 'admin123', role: 'admin', name: 'Quản trị viên (QA Lead)' },
+  { username: 'tester', password: '123', role: 'tester', name: 'Nguyễn Văn Nam (Tester)' },
+  { username: 'dev', password: '123', role: 'developer', name: 'Trần Quốc Tuấn (Developer)' }
 ];
 
 // ================================================================
@@ -2965,7 +2966,21 @@ let state = {
   modules: [],       // Configurable modules: [ { id, name, short } ]
   customTcs: [],     // User-added test cases: [ { id, module, priority, name, precondition, steps, expected, notes, isCustom: true, createdAt } ]
   overrides: {},     // Hiệu đính Test Cases chuẩn: { [tcId]: { name, priority, platform, testData, precondition, steps, expected, notes, updatedAt } }
-  results: {},       // { tcId: { status, tester, runAt, note, failReason } }
+  currentRunId: 'run_001',
+  runs: [
+    {
+      id: 'run_001',
+      name: 'Đợt 1 — Khảo sát Kiểm thử Toàn diện',
+      targetVersion: 'v2.0',
+      scopeType: 'ALL',
+      status: 'ACTIVE',
+      createdBy: 'QA Lead',
+      createdAt: '2026-10-06T00:00:00.000Z'
+    }
+  ],
+  runResults: {},    // { [runId]: { [tcId]: { status, tester, runAt, note, failReason, defectStatus, severity, assignedDev, fixVersion, evidences: [] } } }
+  comments: {},      // { [tcId]: [ { id, runId, tcId, author, role, content, createdAt } ] }
+  results: {},       // Active run results pointer: { tcId: { status, tester, runAt, note, failReason, defectStatus, severity, assignedDev, fixVersion, evidences: [] } }
   session: null,     // { name, owner, version, notes, createdAt }
   filters: { module: '', priority: '', status: '', type: '', search: '' },
   execFilters: { module: '', status: '', search: '' },
@@ -2980,7 +2995,15 @@ let state = {
 const STORAGE_KEY = 'smartvms_test_manager_v1';
 
 function saveState() {
+  if (!state.runResults) state.runResults = {};
+  if (!state.runResults[state.currentRunId]) state.runResults[state.currentRunId] = {};
+  state.runResults[state.currentRunId] = state.results; // Đồng bộ pointer kết quả đợt hiện tại
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    currentRunId: state.currentRunId,
+    runs: state.runs || [],
+    runResults: state.runResults || {},
+    comments: state.comments || {},
     results: state.results,
     session: state.session,
     customTcs: state.customTcs || [],
@@ -2995,11 +3018,26 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const s = JSON.parse(raw);
-      state.results = s.results || {};
+      state.currentRunId = s.currentRunId || 'run_001';
+      state.runs = Array.isArray(s.runs) && s.runs.length > 0 ? s.runs : [
+        { id: 'run_001', name: 'Đợt 1 — Khảo sát Kiểm thử Toàn diện', targetVersion: 'v2.0', scopeType: 'ALL', status: 'ACTIVE', createdBy: 'QA Lead', createdAt: '2026-10-06T00:00:00.000Z' }
+      ];
+      state.runResults = (s.runResults && typeof s.runResults === 'object') ? s.runResults : {};
+      state.comments = (s.comments && typeof s.comments === 'object') ? s.comments : {};
+
+      // Khôi phục kết quả đợt đầu nếu là dữ liệu phiên bản cũ
+      if (!state.runResults['run_001'] || Object.keys(state.runResults['run_001']).length === 0) {
+        if (s.results && Object.keys(s.results).length > 0) {
+          state.runResults['run_001'] = s.results;
+        } else {
+          state.runResults['run_001'] = {};
+        }
+      }
+      state.results = state.runResults[state.currentRunId] || {};
+
       state.session = s.session || null;
       state.customTcs = Array.isArray(s.customTcs) ? s.customTcs : [];
       state.overrides = (s.overrides && typeof s.overrides === 'object') ? s.overrides : {};
-      // Tự động đồng bộ chuẩn hóa danh mục 10 Module nếu phát hiện cache cũ bị lỗi
       const isOutdated = !Array.isArray(s.modules) || s.modules.length === 0 || s.modules.length !== DEFAULT_MODULES.length || DEFAULT_MODULES.some(dm => !s.modules.some(m => m.id === dm.id));
       state.modules = isOutdated ? JSON.parse(JSON.stringify(DEFAULT_MODULES)) : s.modules;
       state.currentUser = s.currentUser || null;
@@ -3054,10 +3092,17 @@ function applyAuth() {
     document.getElementById('current-user-name').textContent = state.currentUser.name;
     const roleEl = document.getElementById('current-user-role');
     if (state.currentUser.role === 'admin') {
-      roleEl.textContent = 'Admin';
+      roleEl.textContent = 'QA Lead (Admin)';
       roleEl.style.background = 'rgba(239, 68, 68, 0.1)';
       roleEl.style.color = '#ef4444';
       roleEl.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+      document.body.classList.remove('role-tester', 'role-developer');
+    } else if (state.currentUser.role === 'developer') {
+      roleEl.textContent = 'Developer';
+      roleEl.style.background = 'rgba(249, 115, 22, 0.1)';
+      roleEl.style.color = '#ea580c';
+      roleEl.style.borderColor = 'rgba(249, 115, 22, 0.2)';
+      document.body.classList.add('role-developer');
       document.body.classList.remove('role-tester');
     } else {
       roleEl.textContent = 'Tester';
@@ -3065,6 +3110,7 @@ function applyAuth() {
       roleEl.style.color = '#3b82f6';
       roleEl.style.borderColor = 'rgba(59, 130, 246, 0.2)';
       document.body.classList.add('role-tester');
+      document.body.classList.remove('role-developer');
     }
     
     // Redirect if they are a tester trying to access settings
@@ -3209,6 +3255,9 @@ function populateModuleSelects() {
 // STATUS / PRIORITY HELPERS
 // ================================================================
 function statusBadge(status) {
+  if (status === 'Inherited Pass') {
+    return `<span class="badge-inherited" title="Kế thừa kết quả Đạt từ Đợt kiểm thử trước">🌿 Kế thừa Pass</span>`;
+  }
   const map = { 'Pass':'✅ Pass', 'Fail':'❌ Fail', 'Skip':'⏭ Skip', 'Not Run':'⏳ Chưa chạy', 'In Progress':'🔄 Đang chạy' };
   const cls = (status || 'Not Run').replace(' ', '-');
   return `<span class="status-badge status-${cls}">${map[status || 'Not Run'] || status}</span>`;
@@ -3569,6 +3618,11 @@ function renderExecDetail(tcId) {
   const r = state.results[tcId] || {};
   const isCustom = isCustomTc(tcId);
   const card = document.getElementById('exec-detail-card');
+  const comments = (state.comments && state.comments[tcId]) || [];
+  const evidences = r.evidences || [];
+
+  const isFailed = r.status === 'Fail' || (r.defectStatus && r.defectStatus !== 'None');
+
   card.innerHTML = `<div class="exec-detail">
     <div class="exec-tc-header">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -3578,28 +3632,35 @@ function renderExecDetail(tcId) {
       <div class="exec-tc-header-name">${tc.name}</div>
       <div class="exec-tc-header-module">${getModuleName(tc.module)} · ${priorityBadge(tc.priority)} ${tc.platform ? `· <span style="color:#4338ca;font-weight:600">💻 ${tc.platform}</span>` : ''}</div>
     </div>
+
     ${tc.testData ? `<div class="exec-section" style="background:#f1f5f9;padding:12px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:16px">
       <div style="font-size:11.5px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px">Dữ liệu đầu vào (Test Data)</div>
       <div style="font-family:monospace;font-size:13px;color:#0f172a;white-space:pre-wrap;word-break:break-word">${tc.testData}</div>
     </div>` : ''}
+
     ${tc.precondition ? `<div class="exec-section">
       <div class="exec-section-title">⚙️ Điều kiện tiên quyết</div>
       <div class="exec-section-content">${tc.precondition}</div>
     </div>` : ''}
+
     ${tc.steps ? `<div class="exec-section">
       <div class="exec-section-title">📝 Các bước thực hiện</div>
       <div class="exec-section-content"><ul>${tc.steps.map(s=>`<li>${s}</li>`).join('')}</ul></div>
     </div>` : ''}
+
     <div class="exec-section">
       <div class="exec-section-title">✅ Kết quả mong đợi</div>
       <div class="exec-section-content"><ul>${(tc.expected||[]).map(e=>`<li>${e}</li>`).join('')}</ul></div>
     </div>
+
     ${tc.notes ? `<div class="exec-section">
       <div class="exec-section-title">📌 Ghi chú kỹ thuật</div>
       <div class="exec-section-content">${tc.notes}</div>
     </div>` : ''}
+
+    <!-- Kết quả thực tế -->
     <div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🎯 Kết quả thực tế</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🎯 Kết quả thực tế đợt này</div>
       <div class="status-selector" id="status-sel-${tcId}">
         ${['Pass','Fail','Skip','In Progress'].map(s => {
           const cls = s.replace(' ','');
@@ -3608,20 +3669,124 @@ function renderExecDetail(tcId) {
         }).join('')}
       </div>
     </div>
+
     <div class="exec-form">
-      <div class="form-group">
-        <label>Người thực hiện test</label>
-        <input type="text" id="ef-tester" value="${r.tester || (state.currentUser ? state.currentUser.name : '')}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Người thực hiện test</label>
+          <input type="text" id="ef-tester" value="${r.tester || (state.currentUser ? state.currentUser.name : '')}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
+        </div>
+        <div class="form-group">
+          <label>Thời điểm thực thi</label>
+          <input type="text" value="${r.runAt ? new Date(r.runAt).toLocaleString('vi-VN') : 'Chưa chạy'}" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed" />
+        </div>
       </div>
+
       <div class="form-group">
         <label>Lý do lỗi (khi Fail)</label>
-        <input type="text" id="ef-fail" placeholder="Mô tả lỗi thực tế gặp phải..." value="${r.failReason||''}" onchange="updateTcField('${tcId}','failReason',this.value)" />
+        <input type="text" id="ef-fail" placeholder="Mô tả ngắn gọn lỗi thực tế gặp phải..." value="${r.failReason||''}" onchange="updateTcField('${tcId}','failReason',this.value)" />
       </div>
-      <div class="form-group">
-        <label>Ghi chú thêm</label>
-        <textarea id="ef-note" placeholder="Ghi chú, môi trường test, screenshot path..." onchange="updateTcField('${tcId}','note',this.value)">${r.note||''}</textarea>
+
+      <!-- VÒNG ĐỜI LỖI (DEFECT LIFECYCLE) NẾU CÓ LỖI -->
+      ${isFailed ? `
+      <div class="defect-box">
+        <div class="defect-box-title">
+          <span>🐞 Vòng Đời Lỗi (Defect Tracking Lifecycle)</span>
+          <span class="status-badge" style="background:#fee2e2;color:#dc2626">${r.defectStatus || 'New'}</span>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Mức độ nghiêm trọng (Severity)</label>
+            <select id="ef-sev" onchange="updateTcField('${tcId}','severity',this.value)">
+              <option value="Blocker" ${r.severity==='Blocker'?'selected':''}>🔴 Blocker (Chặn đứng)</option>
+              <option value="Critical" ${r.severity==='Critical'||!r.severity?'selected':''}>🟠 Critical (Nghiêm trọng)</option>
+              <option value="Major" ${r.severity==='Major'?'selected':''}>🟡 Major (Lớn)</option>
+              <option value="Minor" ${r.severity==='Minor'?'selected':''}>🟢 Minor (Nhẹ / Giao diện)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Lập trình viên phụ trách (Assigned Dev)</label>
+            <input type="text" id="ef-dev" placeholder="VD: Trần Quốc Tuấn" value="${r.assignedDev||'Trần Quốc Tuấn (Dev)'}" onchange="updateTcField('${tcId}','assignedDev',this.value)" />
+          </div>
+          <div class="form-group">
+            <label>Bản build sửa lỗi (Fix Version)</label>
+            <input type="text" id="ef-fixver" placeholder="VD: v2.1.2-build.8" value="${r.fixVersion||''}" onchange="updateTcField('${tcId}','fixVersion',this.value)" />
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:8px">Chuyển trạng thái xử lý:</div>
+        <div class="defect-actions-bar">
+          <button class="btn-defect btn-defect-inprog" onclick="updateDefectStatus('${tcId}', 'In Progress')">👨‍💻 Dev: Đang sửa</button>
+          <button class="btn-defect btn-defect-resolved" onclick="updateDefectStatus('${tcId}', 'Resolved')">🔧 Dev: Đã sửa (Chờ Retest)</button>
+          <button class="btn-defect btn-defect-retest-ok" onclick="updateDefectStatus('${tcId}', 'Retest Passed')">✅ Tester: Retest Pass (Đóng lỗi)</button>
+          <button class="btn-defect btn-defect-reopen" onclick="updateDefectStatus('${tcId}', 'Reopened')">🔄 Tester: Retest Fail (Mở lại)</button>
+        </div>
+      </div>` : ''}
+
+      <!-- BẰNG CHỨNG HÌNH ẢNH (EVIDENCES & SCREENSHOTS) -->
+      <div class="evidence-section">
+        <div class="evidence-section-title">
+          <span>📸 Bằng chứng kiểm thử & Ảnh chụp màn hình</span>
+          <span style="font-size:11px;color:var(--accent-light);font-weight:normal">${evidences.length} ảnh đính kèm</span>
+        </div>
+
+        <div class="evidence-dropzone" id="dz-${tcId}" onclick="document.getElementById('ev-file-${tcId}').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEvidenceUpload('${tcId}', event.dataTransfer.files)">
+          <div class="dz-icon">📸</div>
+          <div><strong>Kéo thả ảnh vào đây</strong> hoặc nhấn để chọn file</div>
+          <div class="dz-hint">💡 Hoặc chỉ cần chụp màn hình rồi bấm <strong>Ctrl + V</strong> để dán ảnh trực tiếp siêu tốc!</div>
+          <input type="file" id="ev-file-${tcId}" accept="image/*" multiple style="display:none" onchange="handleEvidenceUpload('${tcId}', this.files)" />
+        </div>
+
+        ${evidences.length > 0 ? `
+        <div class="evidence-grid">
+          ${evidences.map(ev => `
+            <div class="evidence-card" title="${ev.name}">
+              <img src="${ev.url}" onclick="openLightbox('${ev.url}', '${ev.name}')" alt="Screenshot" />
+              <button class="evidence-delete" onclick="removeEvidence('${tcId}', '${ev.id}')" title="Xóa ảnh">✕</button>
+              <div class="evidence-caption">${ev.name}</div>
+            </div>
+          `).join('')}
+        </div>` : ''}
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+
+      <!-- TRAO ĐỔI THẢO LUẬN 2 CHIỀU (QA - DEV DISCUSSION) -->
+      <div class="comments-section">
+        <div class="comments-header">
+          <span>💬 Thảo luận & Phản hồi kỹ thuật (${comments.length})</span>
+          <span style="font-size:11px;color:var(--text-muted);font-weight:normal">Phản hồi giữa Tester, Dev và QA Lead</span>
+        </div>
+
+        <div class="comment-feed" id="comment-feed-${tcId}">
+          ${comments.length === 0 ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;padding:8px 0">Chưa có trao đổi nào. Hãy để lại ghi chú hoặc phản hồi cho đội ngũ phát triển.</div>` :
+            comments.map(c => {
+              const roleClass = c.role === 'developer' ? 'role-tag-dev' : c.role === 'admin' ? 'role-tag-lead' : 'role-tag-tester';
+              const roleName = c.role === 'developer' ? 'Developer' : c.role === 'admin' ? 'QA Lead' : 'Tester';
+              return `<div class="comment-item">
+                <div class="comment-meta">
+                  <div class="comment-author">
+                    <span>${c.author || 'Thành viên'}</span>
+                    <span class="comment-role-tag ${roleClass}">${roleName}</span>
+                  </div>
+                  <div class="comment-time">${new Date(c.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'})} · ${new Date(c.createdAt).toLocaleDateString('vi-VN')}</div>
+                </div>
+                <div class="comment-body">${c.content}</div>
+              </div>`;
+            }).join('')
+          }
+        </div>
+
+        <div class="comment-input-box">
+          <textarea id="comment-input-${tcId}" placeholder="Nhập bình luận, phản hồi commit fix, yêu cầu kiểm tra lại..."></textarea>
+          <button class="btn btn-primary" onclick="addComment('${tcId}')" style="height:58px;padding:0 16px">Gửi 💬</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px">
+        <label>Ghi chú kỹ thuật bổ sung</label>
+        <textarea id="ef-note" placeholder="Ghi chú, môi trường test, lưu ý bổ sung..." onchange="updateTcField('${tcId}','note',this.value)">${r.note||''}</textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
         <button class="btn btn-outline" onclick="prevTc('${tcId}')">← TC trước</button>
         <button class="btn btn-outline" onclick="nextTc('${tcId}')">TC tiếp →</button>
         <button class="btn btn-outline" onclick="openEditTcModal('${tcId}')">✏️ ${isCustom ? 'Sửa TC này' : 'Hiệu đính TC này'}</button>
@@ -3644,6 +3809,14 @@ function setStatus(tcId, status) {
   state.results[tcId].status = status;
   state.results[tcId].runAt = new Date().toISOString();
   
+  if (status === 'Fail') {
+    if (!state.results[tcId].defectStatus || state.results[tcId].defectStatus === 'None') {
+      state.results[tcId].defectStatus = 'New';
+    }
+  } else if (status === 'Pass' && state.results[tcId].defectStatus && state.results[tcId].defectStatus !== 'None') {
+    state.results[tcId].defectStatus = 'Retest Passed';
+  }
+
   const testerEl = document.getElementById('ef-tester');
   if (testerEl && testerEl.value) state.results[tcId].tester = testerEl.value;
   
@@ -4325,12 +4498,18 @@ async function syncSingleResultToSupabase(tcId) {
 
   try {
     const payload = {
+      run_id: state.currentRunId || 'run_001',
       tc_id: tcId,
       status: r.status,
       tester: r.tester || (state.currentUser ? state.currentUser.name : 'Unknown'),
       run_at: r.runAt || new Date().toISOString(),
+      defect_status: r.defectStatus || 'None',
+      severity: r.severity || null,
+      assigned_dev: r.assignedDev || null,
+      fix_version: r.fixVersion || null,
       fail_reason: r.failReason || null,
       note: r.note || null,
+      evidences: r.evidences || [],
       updated_at: new Date().toISOString()
     };
     const { error } = await supabaseClient.from('test_results').upsert(payload);
@@ -4803,9 +4982,371 @@ document.addEventListener('DOMContentLoaded', () => {
   loadState();
   initSupabase(true);
   populateModuleSelects();
+  updateRunSelectorUI();
   updateSessionDisplay();
   applyAuth(); // Apply login state
   navigate('dashboard');
   const all = getAllTcs();
-  console.log(`✅ SmartVMS Test Manager loaded | ${all.length} Test Cases (${ALL_TCS.length} Chuẩn + ${state.customTcs.length} Tùy chỉnh) | ${getModules().length} Modules`);
+  console.log(`✅ SmartVMS Test Manager v3.0 loaded | ${all.length} Test Cases | Đợt hiện tại: ${state.currentRunId}`);
 });
+
+// ================================================================
+// MULTI-RUN / TEST CYCLES MANAGEMENT LOGIC
+// ================================================================
+function updateRunSelectorUI() {
+  const sel = document.getElementById('header-run-select');
+  if (!sel) return;
+  sel.innerHTML = (state.runs || []).map(r => 
+    `<option value="${r.id}" ${r.id === state.currentRunId ? 'selected' : ''}>${r.name} (${r.targetVersion || 'v2.0'})</option>`
+  ).join('');
+}
+
+function switchTestRun(runId) {
+  if (!state.runResults) state.runResults = {};
+  if (!state.runResults[runId]) state.runResults[runId] = {};
+  state.currentRunId = runId;
+  state.results = state.runResults[runId];
+  saveState();
+  updateRunSelectorUI();
+  applyFilters();
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-execute').classList.contains('active')) filterExecList();
+  if (document.getElementById('page-report').classList.contains('active')) renderReport();
+  
+  const currentRun = (state.runs || []).find(r => r.id === runId);
+  showToast(`🏃 Đã chuyển sang: ${currentRun ? currentRun.name : runId}`, 'info');
+}
+
+function openNewRunModal() {
+  const nextNum = (state.runs || []).length + 1;
+  document.getElementById('new-run-name').value = `Đợt ${nextNum} — Retest bản vá v2.${nextNum - 1}`;
+  document.getElementById('new-run-version').value = `v2.${nextNum - 1}.0`;
+  document.getElementById('new-run-owner').value = state.currentUser ? state.currentUser.name : 'QA Lead';
+  document.getElementById('new-run-scope').value = 'SMART_RETEST';
+  document.getElementById('new-run-notes').value = '';
+  handleRunScopeChange('SMART_RETEST');
+  openModal('modal-run-create');
+}
+
+function handleRunScopeChange(scope) {
+  const hint = document.getElementById('new-run-scope-hint');
+  if (!hint) return;
+  if (scope === 'SMART_RETEST') {
+    hint.innerHTML = '💡 <strong>Smart Retest:</strong> Tự động lọc các ca Fail/Skip của đợt trước để đưa vào đợt mới. Các ca đã Pass được giữ nguyên trạng thái kế thừa (Inherited Pass), giúp tester chỉ tập trung vào các ca lỗi!';
+  } else if (scope === 'SELECTIVE_P1') {
+    hint.innerHTML = '💡 <strong>Selective Regression:</strong> Retest toàn bộ các ca lỗi + Toàn bộ các ca mức P1 (Critical) của toàn hệ thống để đảm bảo không bị lỗi dây chuyền.';
+  } else {
+    hint.innerHTML = '💡 <strong>Milestone Re-run:</strong> Đưa toàn bộ 100% test cases về trạng thái "Chưa chạy" để nghiệm thu toàn diện từ đầu. Kết quả các đợt trước vẫn được lưu nguyên vẹn.';
+  }
+}
+
+function confirmCreateNewRun() {
+  const name = document.getElementById('new-run-name').value.trim();
+  const version = document.getElementById('new-run-version').value.trim();
+  const owner = document.getElementById('new-run-owner').value.trim();
+  const scope = document.getElementById('new-run-scope').value;
+  const notes = document.getElementById('new-run-notes').value.trim();
+  
+  if (!name || !version) {
+    showToast('⚠️ Vui lòng nhập Tên đợt kiểm thử và Phiên bản phần mềm!', 'error');
+    return;
+  }
+  
+  const parentRunId = state.currentRunId;
+  const parentResults = state.runResults[parentRunId] || state.results || {};
+  const newRunId = 'run_' + Date.now();
+  const allTcs = getAllTcs();
+  const newResults = {};
+  
+  let inheritedCount = 0;
+  let retestCount = 0;
+  
+  allTcs.forEach(tc => {
+    const prev = parentResults[tc.id];
+    const prevStatus = prev ? prev.status : 'Not Run';
+    
+    if (scope === 'SMART_RETEST') {
+      if (prevStatus === 'Pass' || prevStatus === 'Inherited Pass') {
+        newResults[tc.id] = {
+          status: 'Inherited Pass',
+          tester: prev.tester || 'Inherited',
+          runAt: prev.runAt,
+          note: `[Kế thừa Pass từ ${state.runs.find(r=>r.id===parentRunId)?.name || 'Đợt trước'}]`
+        };
+        inheritedCount++;
+      } else {
+        newResults[tc.id] = {
+          status: 'Not Run',
+          tester: '',
+          defectStatus: prev?.defectStatus || (prevStatus === 'Fail' ? 'Ready for Retest' : 'None'),
+          severity: prev?.severity,
+          assignedDev: prev?.assignedDev,
+          failReason: prev?.failReason || '',
+          note: prev?.failReason ? `Lỗi đợt trước: ${prev.failReason}` : ''
+        };
+        retestCount++;
+      }
+    } else if (scope === 'SELECTIVE_P1') {
+      if ((prevStatus === 'Pass' || prevStatus === 'Inherited Pass') && tc.priority !== 'P1') {
+        newResults[tc.id] = {
+          status: 'Inherited Pass',
+          tester: prev.tester || 'Inherited',
+          runAt: prev.runAt
+        };
+        inheritedCount++;
+      } else {
+        newResults[tc.id] = { status: 'Not Run', tester: '', failReason: prev?.failReason || '' };
+        retestCount++;
+      }
+    } else {
+      newResults[tc.id] = { status: 'Not Run', tester: '' };
+      retestCount++;
+    }
+  });
+  
+  const newRunObj = {
+    id: newRunId,
+    name,
+    targetVersion: version,
+    scopeType: scope,
+    status: 'ACTIVE',
+    parentRunId,
+    createdBy: owner,
+    notes,
+    createdAt: new Date().toISOString()
+  };
+  
+  if (!state.runs) state.runs = [];
+  state.runs.push(newRunObj);
+  if (!state.runResults) state.runResults = {};
+  state.runResults[newRunId] = newResults;
+  state.currentRunId = newRunId;
+  state.results = newResults;
+  
+  saveState();
+  closeModal('modal-run-create');
+  updateRunSelectorUI();
+  applyFilters();
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-execute').classList.contains('active')) filterExecList();
+  if (document.getElementById('page-report').classList.contains('active')) renderReport();
+  
+  syncRunToSupabase(newRunObj);
+  
+  showToast(`🚀 Đã khởi tạo ${name}! Kế thừa ${inheritedCount} ca Pass, cần kiểm thử ${retestCount} ca.`, 'success');
+}
+
+async function syncRunToSupabase(run) {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.from('test_runs').upsert({
+      id: run.id,
+      name: run.name,
+      target_version: run.targetVersion,
+      scope_type: run.scopeType,
+      status: run.status,
+      parent_run_id: run.parentRunId,
+      created_by: run.createdBy,
+      notes: run.notes
+    });
+  } catch(e) {
+    console.error('Lỗi sync run to Supabase:', e);
+  }
+}
+
+// ================================================================
+// EVIDENCE UPLOAD & LIGHTBOX LOGIC
+// ================================================================
+let currentLightboxRotation = 0;
+let currentLightboxSrc = '';
+
+function openLightbox(src, caption) {
+  const modal = document.getElementById('modal-lightbox');
+  const img = document.getElementById('lightbox-img');
+  if (!modal || !img) return;
+  currentLightboxSrc = src;
+  currentLightboxRotation = 0;
+  img.src = src;
+  img.style.transform = 'rotate(0deg)';
+  modal.classList.add('open');
+}
+
+function closeLightbox() {
+  const modal = document.getElementById('modal-lightbox');
+  if (modal) modal.classList.remove('open');
+}
+
+function rotateLightboxImg() {
+  currentLightboxRotation = (currentLightboxRotation + 90) % 360;
+  const img = document.getElementById('lightbox-img');
+  if (img) img.style.transform = `rotate(${currentLightboxRotation}deg)`;
+}
+
+function openLightboxOriginal() {
+  if (currentLightboxSrc) window.open(currentLightboxSrc, '_blank');
+}
+
+function handleEvidenceUpload(tcId, files) {
+  if (!files || !files.length) return;
+  if (!state.results[tcId]) state.results[tcId] = { status: 'Not Run' };
+  const r = state.results[tcId];
+  if (!r.evidences) r.evidences = [];
+  
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) {
+      showToast('⚠️ Vui lòng chỉ chọn tệp hình ảnh (PNG, JPG, WebP)!', 'error');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = e => {
+      compressImage(e.target.result, 1280, 0.82, (compressedDataUrl) => {
+        const evidence = {
+          id: 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          name: file.name,
+          url: compressedDataUrl,
+          uploadedBy: state.currentUser ? state.currentUser.name : 'Tester',
+          createdAt: new Date().toISOString()
+        };
+        r.evidences.push(evidence);
+        saveState();
+        renderExecDetail(tcId);
+        syncSingleResultToSupabase(tcId);
+        showToast(`📸 Đã đính kèm ảnh: ${file.name}`, 'success');
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressImage(dataUrl, maxDim, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width;
+    let h = img.height;
+    if (w > maxDim || h > maxDim) {
+      if (w > h) {
+        h = Math.round((h * maxDim) / w);
+        w = maxDim;
+      } else {
+        w = Math.round((w * maxDim) / h);
+        h = maxDim;
+      }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const compressed = canvas.toDataURL('image/webp', quality);
+    callback(compressed);
+  };
+  img.src = dataUrl;
+}
+
+function removeEvidence(tcId, evId) {
+  const r = state.results[tcId];
+  if (!r || !r.evidences) return;
+  r.evidences = r.evidences.filter(ev => ev.id !== evId);
+  saveState();
+  renderExecDetail(tcId);
+  syncSingleResultToSupabase(tcId);
+  showToast('🗑️ Đã xóa ảnh bằng chứng', 'info');
+}
+
+// Lắng nghe sự kiện paste ảnh từ Clipboard (Ctrl + V)
+window.addEventListener('paste', e => {
+  if (!document.getElementById('page-execute')?.classList.contains('active')) return;
+  const tcId = state.selectedTcId;
+  if (!tcId) return;
+  
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const blob = items[i].getAsFile();
+      if (blob) {
+        handleEvidenceUpload(tcId, [blob]);
+        showToast('📋 Đã nhận ảnh chụp màn hình từ Clipboard (Ctrl+V)!', 'success');
+        break;
+      }
+    }
+  }
+});
+
+// ================================================================
+// DISCUSSION COMMENTS & FEEDBACK LOGIC
+// ================================================================
+function addComment(tcId) {
+  const input = document.getElementById(`comment-input-${tcId}`);
+  if (!input) return;
+  const content = input.value.trim();
+  if (!content) return;
+  
+  if (!state.comments) state.comments = {};
+  if (!state.comments[tcId]) state.comments[tcId] = [];
+  
+  const user = state.currentUser || { name: 'Tester', role: 'tester' };
+  const comment = {
+    id: 'cm_' + Date.now(),
+    runId: state.currentRunId,
+    tcId,
+    author: user.name,
+    role: user.role,
+    content,
+    createdAt: new Date().toISOString()
+  };
+  
+  state.comments[tcId].push(comment);
+  input.value = '';
+  saveState();
+  renderExecDetail(tcId);
+  syncCommentToSupabase(comment);
+  showToast('💬 Đã gửi bình luận phản hồi', 'success');
+}
+
+async function syncCommentToSupabase(comment) {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.from('test_comments').insert({
+      run_id: comment.runId,
+      tc_id: comment.tcId,
+      user_name: comment.author,
+      user_role: comment.role,
+      content: comment.content,
+      created_at: comment.createdAt
+    });
+  } catch(e) {
+    console.error('Lỗi sync comment to Supabase:', e);
+  }
+}
+
+// ================================================================
+// DEFECT LIFECYCLE WORKFLOW LOGIC
+// ================================================================
+function updateDefectStatus(tcId, newDefectStatus) {
+  if (!state.results[tcId]) state.results[tcId] = { status: 'Fail' };
+  state.results[tcId].defectStatus = newDefectStatus;
+  
+  const devEl = document.getElementById('ef-dev');
+  if (devEl) state.results[tcId].assignedDev = devEl.value.trim();
+  const sevEl = document.getElementById('ef-sev');
+  if (sevEl) state.results[tcId].severity = sevEl.value;
+  const fixEl = document.getElementById('ef-fixver');
+  if (fixEl) state.results[tcId].fixVersion = fixEl.value.trim();
+  
+  if (newDefectStatus === 'Retest Passed') {
+    state.results[tcId].status = 'Pass';
+    showToast(`✅ [Retest Passed] Đóng lỗi ${tcId}! Chuyển trạng thái sang PASS.`, 'success');
+  } else if (newDefectStatus === 'Reopened') {
+    state.results[tcId].status = 'Fail';
+    showToast(`🔄 [Reopened] Mở lại lỗi ${tcId}! Đã chuyển lại cho Developer.`, 'error');
+  } else {
+    showToast(`⚡ Cập nhật vòng đời lỗi ${tcId}: ${newDefectStatus}`, 'info');
+  }
+  
+  saveState();
+  renderExecDetail(tcId);
+  filterExecList();
+  syncSingleResultToSupabase(tcId);
+}
