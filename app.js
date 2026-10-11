@@ -511,15 +511,18 @@ const ALL_TCS = [
     "priority": "P1",
     "name": "Validation Chặn trùng Thẻ An Ninh: Mã thẻ đang cấp cho lượt khác chưa trả",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập mã thẻ an ninh: \"CARD-001\".",
+    "testData": "Nhập mã thẻ an ninh định danh: \"CARD-001\" (hoặc quét thẻ RFID).",
     "steps": [
-      "1. Mở modal Check-in, nhập mã thẻ \"CARD-8801\"."
+      "1. Mở modal Check-in khách mới.",
+      "2. Nhập thông tin khách, tại ô Mã thẻ định danh, nhập \"CARD-001\" (hoặc quét thẻ RFID).",
+      "3. Nhấn nút \"Lưu / Check-in\"."
     ],
     "expected": [
-      "Hệ thống phát hiện mã thẻ đang active trong danh sách thẻ chưa trả.",
-      "Hiển thị cảnh báo lỗi: \"Mã thẻ này đang được sử dụng bởi khách khác bên trong đơn vị.\""
+      "Hệ thống phát hiện mã thẻ đang thuộc về một lượt khách khác đang ở trạng thái Inside.",
+      "Giao diện cảnh báo chặn Check-in: \"Mã thẻ \\\"CARD-001\\\" hiện đang được sử dụng ở một lượt viếng thăm khác chưa Check-Out!\".",
+      "Hệ thống không cho phép lưu và ngăn chặn việc cấp trùng thẻ cho 2 lượt khách đồng thời."
     ],
-    "precondition": "Mã thẻ \"CARD-001\" đang được cấp cho 1 lượt khách khác đang inside chưa thu hồi."
+    "precondition": "Mã thẻ \"CARD-001\" đang được cấp cho 1 lượt khách khác (Khách chính hoặc người đi cùng) đang ở bên trong cơ quan (chưa Check-Out)."
   },
   {
     "id": "TC-CKIN-012",
@@ -698,17 +701,18 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Cấp phát thẻ cho Đoàn vô danh: Thẻ thường và Danh sách thẻ RFID",
     "platform": "Giao diện Web Trực ban",
-    "testData": "Cấp 3 thẻ thường + 2 thẻ định danh (\"CARD-003\", \"CARD-004\").",
+    "testData": "Đoàn 5 khách vô danh: Cấp 3 thẻ thường + 2 thẻ định danh (\"CARD-A01\", \"CARD-A02\").",
     "steps": [
-      "1. Nhập số lượng thẻ thường cho đoàn vô danh: 10.",
-      "2. Nhập thêm danh sách mã thẻ RFID định danh: \"CARD-A1\", \"CARD-A2\".",
-      "3. Hoàn tất Check-in."
+      "1. Tại modal Check-in đoàn, ở phần cấp thẻ cho 5 khách vô danh, nhập số lượng Thẻ thường = 3.",
+      "2. Nhập/quét danh sách 2 mã thẻ định danh RFID: \"CARD-A01\", \"CARD-A02\".",
+      "3. Kiểm tra tổng số thẻ cấp cho đoàn vô danh = 5 thẻ, sau đó nhấn \"Lưu Check-in\"."
     ],
     "expected": [
-      "CSDL lưu AnonymousCardCount = 10, AnonymousIdentityCardNumbers = [\"CARD-A1\", \"CARD-A2\"].",
-      "Tổng số thẻ an ninh đoàn đang giữ được tính toán chuẩn xác."
+      "Hệ thống lưu trữ thành công vào CSDL: AnonymousCardCount = 3, AnonymousIdentityCardNumbers = [\"CARD-A01\", \"CARD-A02\"].",
+      "Tổng số thẻ an ninh đoàn vô danh đang giữ được tính toán chuẩn xác (3 thẻ thường + 2 thẻ định danh = 5 thẻ).",
+      "Trực ban theo dõi được danh sách chi tiết từng thẻ được phân bổ cho đoàn vô danh trong modal Chi tiết lượt khách."
     ],
-    "precondition": "Khai báo khách vô danh = 5 người."
+    "precondition": "Khai báo đoàn khách gồm 1 Trưởng đoàn và 5 khách vô danh đi cùng (Tổng 6 người)."
   },
   {
     "id": "TC-COMP-007",
@@ -941,30 +945,40 @@ const ALL_TCS = [
     "priority": "P2",
     "name": "Thu hồi Thẻ của Đoàn vô danh (Cả thẻ thường và thẻ RFID danh sách)",
     "platform": "Giao diện Web Trực ban",
+    "precondition": "Đoàn khách vô danh được cấp đồng thời 3 thẻ thường và 2 thẻ định danh RFID (\"CARD-A01\", \"CARD-A02\"). Cả đoàn làm thủ tục Check-out ra về cùng lúc.",
+    "testData": "CheckOutModal đoàn: Thu hồi đủ 3 thẻ thường (nhập ô Thu hồi = 3) và tích chọn hoàn trả cả 2 mã thẻ định danh \"CARD-A01\", \"CARD-A02\".",
     "steps": [
-      "1. Tại CheckOutModal của đoàn vô danh, tích chọn các mã thẻ RFID trả lại và số lượng thẻ thường trả lại.",
-      "2. Xác nhận Checkout."
+      "1. Mở CheckOutModal trên dòng đoàn khách vô danh.",
+      "2. Tại phần Thẻ thường của đoàn vô danh: Nhập số lượng thẻ thu hồi = 3.",
+      "3. Tại phần Danh sách thẻ định danh của đoàn vô danh: Tích chọn cả 2 mã \"CARD-A01\" và \"CARD-A02\" vào danh sách hoàn trả.",
+      "4. Nhấn \"Xác nhận Checkout\"."
     ],
     "expected": [
-      "Danh sách returnedAnonymousIdentityCardNumbers được cập nhật trong CSDL, thẻ được hoàn trả kho an ninh."
-    ],
-    "precondition": "Đoàn vô danh có cả thẻ thường và danh sách thẻ RFID.",
-    "testData": "CheckOutModal: Thu hồi đầy đủ số lượng thẻ thường và tích trả các thẻ RFID."
+      "Hệ thống cập nhật thành công: AnonymousCardReturnedCount = 3 và ReturnedAnonymousIdentityCardNumbers lưu đủ [\"CARD-A01\", \"CARD-A02\"].",
+      "Toàn bộ thẻ đoàn vô danh được ghi nhận hoàn trả đầy đủ, không phát sinh nợ thẻ hay báo mất.",
+      "Các mã thẻ \"CARD-A01\" và \"CARD-A02\" được giải phóng trạng thái active, sẵn sàng để cấp phát cho lượt khách mới."
+    ]
   },
   {
     "id": "TC-COUT-007",
     "module": "M04",
     "priority": "P1",
-    "name": "Cảnh báo khi Checkout còn nợ thẻ",
+    "name": "Chính sách Cấm Nợ Thẻ Định Danh khi Check-out (ALLOW_LATE_CARD_RETURN_NAMED = false)",
     "platform": "Giao diện Web Trực ban",
+    "precondition": "Hệ thống bật chính sách cấm nợ thẻ: allowLateCardReturnNamed = false. Lượt khách có thẻ định danh (\"CARD-001\") đang làm thủ tục Check-out.",
+    "testData": "CheckOutModal: Thẻ \"CARD-001\" của khách. Quan sát trạng thái các nút thao tác thẻ [Trả thẻ] / [Nợ thẻ] / [Báo mất].",
     "steps": [
-      "1. Bỏ tích ô thu hồi thẻ nhưng vẫn nhấn nút Checkout."
+      "1. Mở CheckOutModal trên dòng khách đang giữ thẻ định danh \"CARD-001\".",
+      "2. Quan sát badge chính sách hiển thị trên header modal: \"Thẻ định danh: Bắt buộc thu hồi\".",
+      "3. Quan sát nút \"Nợ thẻ (DEBT)\" ở dòng thẻ \"CARD-001\": Nút bị vô hiệu hóa (disabled, khóa mờ).",
+      "4. Thử rê chuột vào nút \"Nợ thẻ\": Hệ thống hiển thị tooltip giải thích \"Chính sách hệ thống không cho phép nợ thẻ định danh khi ra cổng\".",
+      "5. Kiểm tra các lựa chọn hợp lệ: Trực ban chỉ có thể chọn \"Trả thẻ (RETURN)\" hoặc nếu khách làm mất thẻ thì chọn \"Báo mất thẻ (LOST)\"."
     ],
     "expected": [
-      "Hệ thống hiển thị hộp thoại cảnh báo: \"Lượt khách còn nợ thẻ an ninh. Bạn có muốn báo mất thẻ hay xác nhận khách nợ thẻ không?\""
-    ],
-    "precondition": "Hệ thống cấu hình ALLOW_LATE_CARD_RETURN_NAMED = false (chặn nợ thẻ).",
-    "testData": "CheckOutModal: Chưa thu hồi thẻ mà nhấn Checkout."
+      "Hệ thống tuân thủ nghiêm ngặt chính sách cấm nợ thẻ định danh: Không cho phép trực ban chọn Nợ thẻ khi khách check-out ra khỏi đơn vị.",
+      "Nếu khách không thể giao nộp thẻ, trực ban bắt buộc phải chuyển sang nghiệp vụ \"Báo mất thẻ (LOST)\" và ghi rõ lý do mất.",
+      "Ngăn chặn triệt để tình trạng thất thoát thẻ định danh mà không có người chịu trách nhiệm."
+    ]
   },
   {
     "id": "TC-COUT-008",
@@ -1052,17 +1066,23 @@ const ALL_TCS = [
     "id": "TC-COUT-012",
     "module": "M04",
     "priority": "P1",
-    "name": "Hoàn tất thu hồi thẻ mất: Cập nhật isCardLost = false, isCardReturned = true",
-    "platform": "Giao diện Web Trực ban & Admin",
+    "name": "Kiểm tra Tính Toàn Vẹn & Nhất Quán Dữ Liệu Xuyên Suốt sau khi Thu Hồi Thẻ Mất (E2E Consistency)",
+    "platform": "Web Trực ban, Chi tiết lượt khách, Báo cáo & Check-in",
+    "precondition": "Một lượt khách đã hoàn tất thủ tục thu hồi thẻ mất (thẻ định danh '#901' hoặc thẻ thường của đoàn) thông qua RecoverLostCardModal.",
+    "testData": "Kiểm tra dữ liệu đối soát tại 4 vị trí: Dashboard Trực ban, Modal Chi tiết (VisitDetailsModal), Báo cáo Thẻ mất (LostCardsReportModal), và Form Check-in mới.",
     "steps": [
-      "1. Sau khi xác nhận thu hồi thẻ mất, kiểm tra lại trạng thái lượt khách trên Dashboard và Báo cáo."
+      "1. Tại Dashboard Trực ban: Tìm dòng lượt khách vừa được thu hồi thẻ mất, kiểm tra badge trạng thái thẻ và cột ghi chú.",
+      "2. Mở modal Chi tiết lượt khách (VisitDetailsModal): Mở tab \"Sổ đối soát thẻ\", kiểm tra dòng thẻ vừa thu hồi hiển thị trạng thái \"ĐÃ THU HỒI\" (màu xanh).",
+      "3. Chuyển sang tab \"Dòng thời gian (Timeline)\" của lượt khách: Kiểm tra sự kiện \"Thu hồi thẻ mất (RecoverLostCard)\" được ghi nhận chuẩn xác với thời gian, cán bộ và ghi chú thu hồi.",
+      "4. Vào Trung tâm Báo cáo -> Báo cáo Thẻ mất (LostCardsReportModal): Kiểm tra thẻ vừa thu hồi đã được cập nhật trạng thái \"Đã thu hồi\" và không còn nằm trong bộ lọc thẻ đang mất.",
+      "5. Mở modal Check-in cho một khách mới: Nhập mã thẻ an ninh vừa được thu hồi ('#901') và xác nhận Check-in."
     ],
     "expected": [
-      "Huy hiệu \"Chờ thu thẻ\" biến mất, lượt khách chuyển sang trạng thái hoàn tất thu đủ thẻ.",
-      "Thẻ mất được gạch khỏi danh sách thất lạc trong Báo cáo Thẻ mất."
-    ],
-    "precondition": "Đã hoàn tất lệnh thu hồi thẻ mất qua API /visits/{id}/recover-cards.",
-    "testData": "Quan sát trạng thái thẻ trong kho an ninh và lịch sử lượt khách."
+      "1. Dashboard: Huy hiệu cảnh báo \"Chờ thu thẻ\" hoặc \"Mất thẻ\" chuyển sang trạng thái xanh an toàn (\"Đã thu đủ thẻ\").",
+      "2. Sổ đối soát thẻ & Timeline: Bản ghi giao dịch RecoverLostCard được lưu trữ nguyên vẹn, minh bạch dữ liệu kiểm toán.",
+      "3. Báo cáo Thẻ mất: Dữ liệu đồng bộ tức thì, số lượng thẻ mất còn lại trên toàn đơn vị giảm tương ứng.",
+      "4. Check-in mới: Hệ thống cho phép cấp phát thẻ '#901' bình thường mà KHÔNG bị chặn lỗi \"Thẻ đang ở trạng thái BÁO MẤT\"."
+    ]
   },
   {
     "id": "TC-COUT-013",
@@ -1451,17 +1471,24 @@ const ALL_TCS = [
   {
     "id": "TC-VDET-004",
     "module": "M06",
-    "priority": "P4",
-    "name": "Cửa sổ con xem nhanh Thẻ an ninh & Thẻ thường từ Tab Tổng quan",
+    "priority": "P2",
+    "name": "Tra cứu & Đối soát Thẻ An ninh Toàn đoàn qua Modal Chuyên dụng (Sổ đối soát thẻ)",
     "platform": "Giao diện Web Trực ban & Admin",
+    "precondition": "Lượt khách (hoặc đoàn khách) có cấp phát cả thẻ định danh, thẻ người đi cùng và thẻ thường của đoàn vô danh.",
+    "testData": "Modal Chi tiết lượt khách (VisitDetailsModal) -> Khối \"Thẻ an ninh\" -> Nút \"Xem sổ đối soát thẻ ↗\".",
     "steps": [
-      "1. Nhấp vào Thẻ KPI Thẻ định danh hoặc Thẻ thường."
+      "1. Mở modal Chi tiết lượt khách (VisitDetailsModal) của một đoàn khách.",
+      "2. Tại Khối Thẻ an ninh, quan sát các thẻ KPI tóm tắt (Tổng phát, Đã thu hồi, Còn nợ, Đang báo mất).",
+      "3. Nhấn nút \"Xem sổ đối soát thẻ ↗\".",
+      "4. Cửa sổ con độc lập \"Sổ Theo Dõi & Đối Soát Thẻ An Ninh Toàn Đoàn\" mở ra.",
+      "5. Kiểm tra bảng danh sách chi tiết: STT, Mã thẻ, Loại thẻ, Đối tượng được giao, Tiến độ, Tình trạng thu hồi và Cột thao tác nghiệp vụ."
     ],
     "expected": [
-      "Cửa sổ con mở ra hiển thị bảng danh sách các mã thẻ đã cấp, người đang giữ, trạng thái đã thu hồi hay đang nợ."
-    ],
-    "precondition": "Lượt khách được cấp cả thẻ định danh và thẻ thường.",
-    "testData": "Tại tab Overview, nhấp vào thẻ Thẻ an ninh để mở popover chi tiết."
+      "1. Modal Sổ đối soát thẻ hiển thị đầy đủ, rõ ràng toàn bộ danh mục thẻ an ninh đã cấp cho đoàn khách.",
+      "2. Phân loại chuẩn xác từng dòng: Thẻ Trưởng đoàn, Thẻ người đi cùng, Thẻ định danh đoàn vô danh, Thẻ thường đoàn vô danh.",
+      "3. Banner cảnh báo phía trên hiển thị chính xác số thẻ còn nợ hoặc thông báo màu xanh \"✓ Đã thu hồi đủ\" nếu không còn nợ thẻ.",
+      "4. Cột Thao tác cung cấp nút \"Báo mất thẻ\" cho các thẻ còn đang giữ, hỗ trợ xử lý sự cố trực tiếp mà không cần chờ đến lúc check-out."
+    ]
   },
   {
     "id": "TC-VDET-005",
