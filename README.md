@@ -1,13 +1,20 @@
-# SmartVMS Test Manager v3.0
+# SmartVMS Test Manager v3.1
 > Nền tảng Quản lý & Thực thi Kiểm thử Trực tuyến & Cục bộ chuyên nghiệp cho Hệ thống SmartVMS Local 2026
 
 ## 🌟 Tính Năng Nổi Bật
-- **174 Test Cases Chuẩn Hóa**: Khớp 100% từng nút bấm, màn hình và quy trình thực tế mới nhất của SmartVMS Local 2026 (12 Modules từ M01 đến M12).
+- **179 Test Cases Chuẩn Hóa**: Khớp 100% từng nút bấm, màn hình và quy trình thực tế mới nhất của SmartVMS Local 2026 (12 Modules từ M01 đến M12), bao phủ trọn vẹn toàn bộ các kịch bản bình thường và ngoại lệ.
 - **Phản Ánh Nghiệp Vụ Mới Nhất**:
   - Giao diện Trực ban mới: Live Search đa đối tượng (5 nhóm, đếm kết quả, Ctrl+K), Tra cứu nâng cao độc lập (`AdvancedSearchModal`, Ctrl+Shift+K), Chế độ xem thống kê (Ẩn/Tinh gọn/Chi tiết), Chế độ bảng (Thu gọn/Chi tiết), Cài đặt màu hàng (`DisplaySettingsModal`).
   - Phân hệ Sổ sách Ngoại lệ (`DataEntry` - `/dataentry.html`): Nhập hồi tố từ sổ giấy, phím tắt F1/F3, tự động đóng dấu kiểm toán IP/địa điểm/người nhập.
   - Quản trị Admin Hubs: Monitoring (`HistoryTab`, `ShiftsTab`, `AuditEntryTab`), Directory (`StaffManagement`, `AccountsTab`), Settings (`SettingsOperationPanel`, `BackupTab`), Reports (`ReportsTab` với ExcelJS, PDF tiếng Việt có dấu, `LostCardsReportModal`).
-  - Quy trình Xử lý Thẻ mất & Thu hồi Thẻ mất (`RecoverLostCardModal`): Tra cứu và thu hồi thẻ mất vào kho an ninh.
+  - **Quy trình Xử lý Thẻ mất & Thu hồi Thẻ mất Toàn diện**:
+    + Chặn cấp phát lại thẻ đang báo mất khi Check-In cổng (`TC-CKIN-016`).
+    + Check-Out báo mất thẻ an ninh định danh và thẻ thường đoàn vô danh (`TC-COUT-008`, `TC-COUT-017`, `TC-COUT-018`).
+    + Tra cứu và thu hồi thẻ định danh qua mã số thẻ (`TC-COUT-010` - Tab 1).
+    + Thu hồi thẻ thường đoàn qua danh sách đoàn báo mất (`TC-COUT-011` - Tab 2, khắc phục triệt để lỗi 404).
+    + Báo mất thẻ và thu hồi thẻ giữa chừng trực tiếp trong Sổ theo dõi & Đối soát thẻ (`TC-VDET-015`, `TC-VDET-016`).
+    + Nhập liệu sổ sách ngoại lệ ghi nhận thẻ mất sinh transaction toàn vẹn (`TC-DENT-008`).
+    + Báo cáo chuyên đề thẻ mất & thất lạc toàn diện (`TC-REPT-004`).
   - Dòng thời gian Timeline (`VisitDetailsModal`): Xem chuỗi sự kiện CHECK_IN, ADD, CHECK_OUT, RECOVER_CARD, các cửa sổ con chi tiết quân số, thẻ, phương tiện.
 - **Hỗ trợ Hiệu đính Trực tiếp (Override & Reset)**: Cho phép tester chỉnh sửa nội dung bất kỳ test case nào ngay trên giao diện Web, có nút khôi phục nguyên bản gốc.
 - **Lưu trữ Cục bộ & Supabase Realtime Cloud Sync**: Hoạt động 100% ngoại tuyến (Offline) bằng LocalStorage, đồng thời hỗ trợ đồng bộ đám mây PostgreSQL thời gian thực khi kết nối Internet.

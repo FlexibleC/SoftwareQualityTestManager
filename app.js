@@ -1,6 +1,6 @@
 /* ============================================================
    SmartVMS Test Manager — Application Logic
-   Version 3.0 | 174 Test Cases | 12 Modules (SmartVMS Local 2026)
+   Version 3.1 | 179 Test Cases | 12 Modules (SmartVMS Local 2026)
    ============================================================ */
 
 'use strict';
@@ -585,6 +585,26 @@ const ALL_TCS = [
     "testData": "Chụp ảnh webcam đầu xe và biển số xe khi check-in."
   },
   {
+    "id": "TC-CKIN-016",
+    "module": "M02",
+    "priority": "P1",
+    "name": "Chặn cấp phát lại Thẻ đang báo mất khi Check-In tại cổng (Khách chính & Người đi cùng)",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Hệ thống có thẻ an ninh '#901' (hoặc mã bất kỳ) đang trong tình trạng báo mất chưa thu hồi (của khách chính, người đi cùng hoặc đoàn vô danh).",
+    "testData": "Tại form Check-in cổng: Nhập Tên khách: \"Lê Văn Thắng\", CCCD: \"001099000888\", SĐT: \"0987654321\", Ô Mã thẻ an ninh nhập = \"901\" (hoặc \"#901\").",
+    "steps": [
+      "1. Trên Dashboard Trực ban (/staff.html), nhấn nút \"+ Check-in khách mới\".",
+      "2. Điền đầy đủ thông tin cá nhân khách viếng thăm (Họ tên, CCCD, SĐT, Cơ quan, Người đón, Mục đích).",
+      "3. Tại ô \"Mã thẻ an ninh\", nhập số thẻ đang trong trạng thái báo mất: 901 (hoặc #901).",
+      "4. Nhấn nút \"Check-in\"."
+    ],
+    "expected": [
+      "Hệ thống từ chối thực hiện lệnh Check-In, API /station/visits/checkin trả về cảnh báo lỗi nghiệp vụ.",
+      "Hiển thị thông báo rõ ràng trên màn hình: \"Thẻ số 901 đang báo mất bởi khách [Tên khách] (Lượt ngày DD/MM/YYYY). Cần làm thủ tục thu hồi trước khi cấp phát.\"",
+      "Lượt khách không được tạo vào CSDL với thẻ báo mất này, bảo đảm an toàn kho thẻ kiểm soát cổng."
+    ]
+  },
+  {
     "id": "TC-COMP-001",
     "module": "M03",
     "priority": "P1",
@@ -950,19 +970,22 @@ const ALL_TCS = [
     "id": "TC-COUT-008",
     "module": "M04",
     "priority": "P1",
-    "name": "Nghiệp vụ Báo Mất Thẻ khi Checkout: Ghi nhận cờ isCardLost",
+    "name": "Nghiệp vụ Báo Mất Thẻ khi Checkout: Ghi nhận cờ isCardLost và Transaction LostCard",
     "platform": "Giao diện Web Trực ban",
+    "precondition": "Đoàn khách đang ở trong đơn vị, được cấp thẻ an ninh có số '#901'. Khách làm mất thẻ trong khuôn viên trước khi ra cổng.",
+    "testData": "Lượt khách VST-001, Khách chính giữ thẻ '#901'. CheckOutModal: Chọn trạng thái thẻ \"Báo mất thẻ (LOST)\", nhập lý do mất: \"Khách làm rơi trong quá trình công tác tại đơn vị\".",
     "steps": [
-      "1. Khi khách làm mất thẻ, chọn tùy chọn \"Báo mất thẻ\".",
-      "2. Nhập lý do mất thẻ: \"Khách làm rơi trong quá trình công tác\".",
-      "3. Xác nhận Checkout."
+      "1. Trên Dashboard Trực ban, nhấp nút \"Checkout\" trên dòng lượt khách VST-001.",
+      "2. Tại CheckOutModal, ở dòng thẻ '#901' của Khách chính (hoặc Người đi cùng), chuyển trạng thái sang \"Báo mất thẻ (LOST)\".",
+      "3. Nhập lý do mất thẻ: \"Khách làm rơi trong quá trình công tác tại đơn vị\".",
+      "4. Nhấn nút \"Xác nhận Checkout\"."
     ],
     "expected": [
-      "CSDL ghi nhận IsCardLost = true, LostAt = Now, LostNote = lý do.",
-      "Lượt khách hiển thị huy hiệu \"Chờ thu thẻ\", được đưa vào danh sách Báo cáo Thẻ mất."
-    ],
-    "precondition": "Khách làm rơi mất thẻ an ninh trong quá trình di chuyển trong đơn vị.",
-    "testData": "CheckOutModal: Chọn trạng thái thẻ \"Báo mất thẻ (LOST)\", nhập lý do mất thẻ."
+      "API /station/visits/checkout xử lý thành công, cho phép đoàn hoàn tất thủ tục ra cổng.",
+      "CSDL ghi nhận IsCardLost = true, IsCardReturned = false, LostAt = Now, LostNote = \"Khách làm rơi...\".",
+      "Hệ thống tự động sinh 1 bản ghi VisitTransaction với ActionType = LostCard (4), EntityType = MainVisitor (1), CardNumber = \"901\".",
+      "Lượt khách hiển thị huy hiệu \"Chờ thu thẻ\" (hoặc ghi nhận hoàn tất thu hồi khi áp dụng chính sách cho phép ra)."
+    ]
   },
   {
     "id": "TC-COUT-009",
@@ -984,38 +1007,46 @@ const ALL_TCS = [
     "id": "TC-COUT-010",
     "module": "M04",
     "priority": "P1",
-    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Tra cứu theo Mã số thẻ (RecoverLostCardModal)",
+    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Tra cứu theo Mã số thẻ (Tab 1 RecoverLostCardModal)",
     "platform": "Giao diện Web Trực ban & Admin",
-    "testData": "RecoverLostCardModal (tab Identity): Nhập mã thẻ \"CARD-001\" -> Tra cứu.",
+    "precondition": "Thẻ '#901' hoặc '#803' đã bị báo mất trước đó. Người nhặt được mang trả lại bốt gác an ninh.",
+    "testData": "RecoverLostCardModal -> Tab \"Thẻ định danh (Identity)\": Nhập mã thẻ \"901\" (hoặc \"#901\"), Ghi chú: \"Bảo vệ nhặt được tại sảnh tòa nhà\".",
     "steps": [
-      "1. Mở modal \"Thu hồi thẻ mất (RecoverLostCardModal)\" từ menu Tiện ích hoặc modal Chi tiết.",
-      "2. Chọn tab \"Thẻ định danh (Identity)\".",
-      "3. Nhập mã thẻ đã báo mất, nhấn nút \"Tra cứu\"."
+      "1. Nhấn nút \"Thu hồi thẻ mất\" trên thanh công cụ Header (hoặc nút \"Thu hồi thẻ mất\" trong modal Chi tiết lượt khách).",
+      "2. Tại Tab 1 \"Thẻ định danh (Identity)\", nhập mã thẻ \"901\" (hoặc quét thẻ RFID), nhấn nút \"Tra cứu\".",
+      "3. Quan sát khung kết quả tra cứu hiển thị thông tin hồ sơ liên quan.",
+      "4. Nhập ghi chú thu hồi thẻ: \"Bảo vệ nhặt được tại sảnh tòa nhà\".",
+      "5. Nhấn nút \"Thu hồi thẻ này\"."
     ],
     "expected": [
-      "Hệ thống tra cứu API /station/cards/lookup-lost (hoặc /admin/cards/lookup-lost).",
-      "Hiển thị chính xác thông tin: Tên khách làm mất, CCCD, Ngày giờ báo mất, Trạm tiếp nhận."
-    ],
-    "precondition": "Thẻ \"CARD-001\" bị báo mất hôm trước nay được tìm thấy và mang trả lại bốt gác."
+      "Hệ thống gọi API /station/cards/lookup-lost (hoặc /admin/cards/lookup-lost) trả về chính xác: Tên khách làm mất, Số CCCD, Trạm báo mất, Thời gian mất.",
+      "Khi bấm \"Thu hồi thẻ này\", hệ thống gọi API /station/visits/{id}/recover-cards (hoặc /admin/visits/{id}/recover-cards) thành công.",
+      "CSDL cập nhật IsCardLost = false, IsCardReturned = true; Sinh bản ghi VisitTransaction với ActionType = RecoverLostCard (5).",
+      "Thẻ 901 được giải phóng hoàn toàn khỏi danh sách thẻ mất và sẵn sàng để cấp phát lại cho khách mới."
+    ]
   },
   {
     "id": "TC-COUT-011",
     "module": "M04",
     "priority": "P2",
-    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Thu hồi theo Hồ sơ lượt khách đang nợ thẻ",
+    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Thu hồi Thẻ Thường qua Danh Sách Đoàn Mất (Tab 2 RecoverLostCardModal - Đã sửa lỗi 404)",
     "platform": "Giao diện Web Trực ban & Admin",
+    "precondition": "Hệ thống có lượt khách đoàn vô danh đang báo mất thẻ thường (AnonymousCardLostCount > 0).",
+    "testData": "RecoverLostCardModal -> Tab \"Thẻ khách thường (Regular)\": Chọn đoàn khách từ danh sách dropdown, Số lượng thu hồi: 1 (hoặc 2 thẻ), Ghi chú: \"Khách gửi bưu điện trả lại thẻ\".",
     "steps": [
-      "1. Trong RecoverLostCardModal, chọn tab \"Thẻ thường (Regular)\".",
-      "2. Chọn lượt khách đang nợ thẻ từ danh sách dropdown.",
-      "3. Nhập số lượng thẻ thu hồi, nhập ghi chú: \"Thu hồi thẻ khách gửi lại bảo vệ\".",
-      "4. Nhấn nút \"Xác nhận thu hồi thẻ\"."
+      "1. Mở modal \"Thu hồi thẻ mất (RecoverLostCardModal)\" từ Header hoặc modal Chi tiết.",
+      "2. Chuyển sang Tab 2 \"Thẻ khách thường (Regular)\".",
+      "3. Quan sát dropdown \"Chọn đoàn khách báo mất thẻ\": Hệ thống tự động gọi API /station/cards/lost-regular-visits (hoặc /admin/cards/lost-regular-visits) tải danh sách.",
+      "4. Chọn đoàn khách trong dropdown (hiển thị rõ tên khách, ngày giờ vào/ra, số lượng thẻ đang báo mất).",
+      "5. Nhập số lượng thẻ tìm thấy thu hồi: 1 (hoặc tối đa bằng số thẻ đang mất).",
+      "6. Nhập ghi chú thu hồi và nhấn nút \"Xác nhận thu hồi thẻ\"."
     ],
     "expected": [
-      "Hệ thống gọi API /visits/{id}/recover-cards thành công.",
-      "Bộ đếm thẻ nợ giảm xuống, thẻ được hoàn trả về kho khả dụng."
-    ],
-    "precondition": "Lượt khách đang có nợ thẻ thường trong danh sách nợ thẻ.",
-    "testData": "RecoverLostCardModal (tab Regular): Chọn lượt khách nợ thẻ, nhập số lượng thẻ thu hồi = 2."
+      "Dropdown tải danh sách các đoàn báo mất thẻ thường thành công, không gặp lỗi HTTP 404.",
+      "Gọi API /station/visits/{id}/recover-cards thành công với regularCardCount.",
+      "CSDL cập nhật: AnonymousCardLostCount giảm tương ứng, AnonymousCardReturnedCount tăng tương ứng.",
+      "Sinh bản ghi VisitTransaction với ActionType = RecoverLostCard (5), CardType = \"regular\", Quantity = số thẻ thu hồi."
+    ]
   },
   {
     "id": "TC-COUT-012",
@@ -1100,6 +1131,48 @@ const ALL_TCS = [
       "Dữ liệu thẻ, phương tiện và cờ lưu trú được cập nhật ngay lập tức trên giao diện Trực ban mà không cần check-out/check-in lại."
     ],
     "precondition": "Khách đang ở bên trong; Khách đổi xe, đổi thẻ hoặc xin lưu trú qua đêm sau khi đã check-in."
+  },
+  {
+    "id": "TC-COUT-017",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Check-out Báo Mất Thẻ Thường Cấp Chung cho Đoàn Vô Danh",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Đoàn khách vô danh gồm 5 người được cấp 5 thẻ thường (không số). Lúc ra cổng, đoàn chỉ trả 3 thẻ, làm mất 2 thẻ.",
+    "testData": "CheckOutModal đoàn vô danh: Tổng phát: 5 thẻ. Ô \"Thu hồi thẻ thường\": nhập 3. Ô \"Báo mất thẻ thường\": nhập 2.",
+    "steps": [
+      "1. Nhấn Checkout trên dòng đoàn khách vô danh đã phát 5 thẻ thường.",
+      "2. Tại CheckOutModal, ô số thẻ thường thu hồi nhập = 3.",
+      "3. Tại ô số thẻ thường báo mất, nhập = 2.",
+      "4. Nhấn nút \"Xác nhận Checkout\"."
+    ],
+    "expected": [
+      "Gọi API /station/visits/checkout thành công.",
+      "CSDL ghi nhận AnonymousCardReturnedCount = 3, AnonymousCardLostCount = 2, số thẻ nợ còn lại = 0 (5 - 3 - 2 = 0).",
+      "Tự động sinh 2 bản ghi VisitTransaction: 1 giao dịch ReturnCard (Qty=3) và 1 giao dịch LostCard (Qty=2, CardType='regular').",
+      "Đoàn khách hoàn tất Checkout mà không bị chặn do nợ thẻ."
+    ]
+  },
+  {
+    "id": "TC-COUT-018",
+    "module": "M04",
+    "priority": "P1",
+    "name": "Check-out Báo Mất Thẻ An Ninh Định Danh của Đoàn Vô Danh (Bảo toàn danh sách gốc)",
+    "platform": "Giao diện Web Trực ban",
+    "precondition": "Đoàn khách vô danh được cấp 3 thẻ định danh có số: '#801', '#802', '#803'. Đoàn trả 2 thẻ #801, #802 và làm mất thẻ #803.",
+    "testData": "CheckOutModal: Danh sách thẻ RFID: Tích chọn trả #801, #802; Tích chọn báo mất thẻ #803.",
+    "steps": [
+      "1. Mở CheckOutModal của đoàn khách vô danh.",
+      "2. Tại danh sách Thẻ an ninh có số của đoàn: tích chọn thu hồi cho thẻ #801 và #802.",
+      "3. Tích chọn trạng thái Báo mất cho thẻ #803.",
+      "4. Nhấn nút \"Xác nhận Checkout\"."
+    ],
+    "expected": [
+      "API xử lý thành công. Mảng gốc AnonymousIdentityCardNumbers vẫn giữ nguyên vẹn [\"801\", \"802\", \"803\"] (không bị xóa phần tử).",
+      "CSDL ghi nhận ReturnedAnonymousIdentityCardNumbers = [\"801\", \"802\"], LostAnonymousIdentityCardNumbers = [\"803\"].",
+      "Số thẻ nợ được tính chính xác bằng 0 (các thẻ đã phát đều đã được trả hoặc ghi nhận mất).",
+      "Sinh 2 bản ghi VisitTransaction: ReturnCard cho 801, 802 và LostCard cho 803."
+    ]
   },
   {
     "id": "TC-DASH-001",
@@ -1550,6 +1623,50 @@ const ALL_TCS = [
     "testData": "Nhấp vào 1 ảnh bất kỳ -> Dùng con lăn chuột phóng to (zoom), kéo rê (pan) để soi chi tiết."
   },
   {
+    "id": "TC-VDET-015",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Báo mất Thẻ An Ninh Giữa Chừng trong Sổ Đối Soát Thẻ (VisitDetailsModal)",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "precondition": "Đoàn khách đang ở bên trong khuôn viên (chưa check-out). Khách làm rơi thẻ an ninh trong phòng họp và báo trực ban.",
+    "testData": "VisitDetailsModal của đoàn khách -> Khối Kiểm soát thẻ -> Bấm \"Xem sổ đối soát thẻ ↗\" -> Dòng thẻ đang nợ -> Bấm \"Báo mất\" -> Nhập lý do: \"Khách báo rơi thẻ tại tầng 3 phòng hội thảo\".",
+    "steps": [
+      "1. Trên Dashboard Trực ban, nhấp vào dòng lượt khách đang ở trong đơn vị để mở VisitDetailsModal.",
+      "2. Tại khối \"Kiểm soát & Đối soát thẻ an ninh\", nhấp nút \"Xem sổ đối soát thẻ ↗\".",
+      "3. Trong bảng đối soát chi tiết, tìm dòng thẻ đang nợ (có nhãn \"⚠️ Đang nợ thẻ\").",
+      "4. Nhấp nút \"Báo mất\" màu đỏ tại cột Thao tác.",
+      "5. Modal \"Xác nhận báo mất thẻ an ninh\" hiển thị: Kiểm tra thông tin mã thẻ, người giữ; Nhập lý do mất; Với thẻ thường chọn số lượng mất.",
+      "6. Nhấn \"Xác nhận báo mất\"."
+    ],
+    "expected": [
+      "Hệ thống gọi API POST /station/visits/{id}/report-lost-card (hoặc /admin/visits/{id}/report-lost-card) thành công.",
+      "Dòng thẻ chuyển ngay sang nhãn \"❌ Đã báo mất\", cột Thao tác tự động chuyển sang nút \"Thu hồi\".",
+      "Khách và đoàn VẪN Ở TRẠNG THÁI \"Trong đơn vị\" (không bị cưỡng chế check-out).",
+      "Tab Dòng thời gian (Timeline) tự động thêm 1 sự kiện \"Báo mất thẻ an ninh\" kèm lý do và trạm tiếp nhận."
+    ]
+  },
+  {
+    "id": "TC-VDET-016",
+    "module": "M06",
+    "priority": "P1",
+    "name": "Thu hồi Thẻ Mất Nhanh Trực Tiếp từ Sổ Đối Soát Thẻ (VisitDetailsModal)",
+    "platform": "Giao diện Web Trực ban & Admin",
+    "precondition": "Lượt khách có thẻ đang ở trạng thái \"❌ Đã báo mất\".",
+    "testData": "Tại bảng Sổ theo dõi & Đối soát thẻ trong VisitDetailsModal: Nhấp nút \"Thu hồi\" màu xanh lá tại cột Thao tác của dòng thẻ báo mất.",
+    "steps": [
+      "1. Mở VisitDetailsModal của lượt khách có thẻ bị báo mất.",
+      "2. Nhấp nút \"Xem sổ đối soát thẻ ↗\" (hoặc nút \"Thu hồi thẻ mất\" tại khối Thống kê thẻ).",
+      "3. Tìm dòng thẻ có trạng thái \"❌ Đã báo mất\", nhấp nút \"Thu hồi\" màu xanh lá.",
+      "4. Modal RecoverLostCardModal tự động bật lên với thông tin lượt thăm đã được chọn sẵn.",
+      "5. Nhập ghi chú và nhấn \"Thu hồi thẻ này\" (hoặc \"Xác nhận thu hồi thẻ\")."
+    ],
+    "expected": [
+      "Modal RecoverLostCardModal mở ra ngay lập tức với đúng ngữ cảnh của lượt khách.",
+      "Thực hiện thu hồi thành công, thẻ đổi trạng thái thành \"✓ Đã thu hồi\".",
+      "Bộ đếm thẻ mất giảm xuống, bộ đếm đã thu hồi tăng lên, sổ đối soát cập nhật tức thì."
+    ]
+  },
+  {
     "id": "TC-DENT-001",
     "module": "M07",
     "priority": "P1",
@@ -1672,16 +1789,21 @@ const ALL_TCS = [
     "id": "TC-DENT-008",
     "module": "M07",
     "priority": "P2",
-    "name": "Dashboard Sổ sách ngoại lệ: Thống kê và Bộ lọc chuyên sâu",
+    "name": "Nhập dữ liệu hồi tố Lượt khách có Thẻ mất: Kiểm toán Transaction toàn vẹn",
     "platform": "Phân hệ Sổ sách DataEntry",
+    "precondition": "Truy cập phân hệ /dataentry.html.",
+    "testData": "Nhập 1 lượt khách từ sổ giấy có thẻ chính báo mất và đoàn vô danh có 2 thẻ thường báo mất.",
     "steps": [
-      "1. Sử dụng bộ lọc Trạng thái (Tất cả / Trong đơn vị / Đã ra), Lọc người nhập, Lọc thời gian trên DataEntryDashboard."
+      "1. Mở trang Nhập ngoại lệ /dataentry.html.",
+      "2. Nhập thông tin đoàn khách (Khách chính, người đi cùng, đoàn vô danh), chọn giờ vào và bật tùy chọn \"Đã check-out\", chọn giờ ra.",
+      "3. Đánh dấu trạng thái thẻ: Thẻ chính chọn \"Mất thẻ\", Đoàn vô danh: phát 5 thẻ thường, thu hồi 3 thẻ, báo mất 2 thẻ.",
+      "4. Nhấn nút \"Lưu hồ sơ sổ sách\"."
     ],
     "expected": [
-      "Bảng danh sách lọc chính xác, hiển thị đầy đủ thông tin xuất xứ sổ sách."
-    ],
-    "precondition": "Dashboard DataEntry có nhiều bản ghi hồ sơ ngoại lệ.",
-    "testData": "Sử dụng bộ lọc trạng thái (Inside / Outside) và bộ lọc thời gian."
+      "Lưu thành công vào SQLite qua ManualEntryController.",
+      "Hệ thống sinh đầy đủ các bản ghi VisitTransaction (IssueCard, ReturnCard, LostCard) cho cả thẻ định danh và thẻ thường của đoàn vô danh.",
+      "Báo cáo Thẻ mất (LostCardsReportModal) và Sổ đối soát hiển thị đầy đủ bản ghi này kèm dấu kiểm toán IP, địa điểm và người nhập."
+    ]
   },
   {
     "id": "TC-DENT-009",
@@ -2150,18 +2272,21 @@ const ALL_TCS = [
     "id": "TC-REPT-004",
     "module": "M09",
     "priority": "P1",
-    "name": "Báo cáo Chuyên đề Thẻ Mất (LostCardsReportModal)",
+    "name": "Báo cáo Chuyên đề Thẻ Mất & Thất lạc Toàn diện (LostCardsReportModal)",
     "platform": "Giao diện Quản trị Admin",
+    "precondition": "Trong đơn vị có phát sinh các trường hợp báo mất thẻ an ninh (từ Check-out cổng, từ Sổ đối soát thẻ hoặc từ DataEntry).",
+    "testData": "ReportsTab -> Nhấp nút \"Báo cáo Thẻ mất\" -> Lọc theo khoảng ngày hoặc từ khóa.",
     "steps": [
-      "1. Tại ReportsTab, nhấn nút \"Báo cáo Thẻ mất\".",
-      "2. Modal LostCardsReportModal mở ra."
+      "1. Tại ReportsTab của Quản trị Admin (/admin.html), nhấn nút \"Báo cáo Thẻ mất\".",
+      "2. Modal LostCardsReportModal mở ra.",
+      "3. Quan sát danh sách tổng hợp các thẻ an ninh thất lạc trên toàn hệ thống.",
+      "4. Thử tìm kiếm theo Mã thẻ, Tên khách hoặc Lọc theo trạng thái \"Chưa thu hồi\" / \"Đã thu hồi\"."
     ],
     "expected": [
-      "Hiển thị danh sách tổng hợp toàn bộ các thẻ an ninh đang bị báo mất trên toàn hệ thống.",
-      "Liệt kê chi tiết: Mã thẻ, Họ tên khách làm mất, CCCD, SĐT, Trạm tiếp nhận, Thời gian mất, Trạng thái thu hồi."
-    ],
-    "precondition": "Trong đơn vị có các trường hợp báo mất thẻ an ninh.",
-    "testData": "Nhấp nút \"Báo cáo Thẻ mất\" để mở LostCardsReportModal."
+      "Liệt kê chính xác toàn bộ thẻ định danh và thẻ thường đang bị báo mất trên toàn hệ thống.",
+      "Hiển thị chi tiết: Mã thẻ, Loại thẻ, Họ tên khách, Số CCCD, SĐT, Cơ quan, Trạm gác tiếp nhận, Cán bộ ghi nhận, Thời gian báo mất, Trạng thái (Chưa thu hồi / Đã thu hồi).",
+      "Cho phép xuất báo cáo chuyên đề thẻ mất ra Excel hoặc PDF chuẩn tiếng Việt có dấu."
+    ]
   },
   {
     "id": "TC-REPT-005",
