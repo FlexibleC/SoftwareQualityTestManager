@@ -1,6 +1,6 @@
 @echo off
 echo ========================================================
-echo       SMARTVMS TEST MANAGER v3.0 - KHOI DONG
+echo       SMARTVMS TEST MANAGER v3.1 - KHOI DONG
 echo ========================================================
 echo.
 echo Dang mo Phan mem Quan ly Kiem thu SmartVMS Local...
