@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cài Đặt & Quản Trị Hệ Thống - Admin QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/settings.css" />
+</head>
+<body>
+  <!-- Admin Executive Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="../admin/index.html" class="vms-brand">
+        <div class="vms-brand-icon">👑</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Quản Trị & Cài Đặt</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="../admin/index.html" class="nav-item">📊 Tổng quan</a>
+          <a href="../admin/assignments.html" class="nav-item">📌 Giao việc</a>
+          <a href="../admin/testcases.html" class="nav-item">📋 Kịch bản</a>
+          <a href="../admin/reports.html" class="nav-item">📈 Báo cáo</a>
+          <a href="../admin/settings.html" class="nav-item active">⚙️ Cài đặt & Quản trị</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile" title="Tài khoản Quản trị">
+        <div class="vms-user-avatar">A</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Nguyễn Văn Huy</span>
+          <span class="vms-user-role">QA Lead (Admin)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')">🧪 Sang Tester</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">⚙️ Trung Tâm Quản Trị & Cài Đặt Hệ Thống</h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Quản lý danh mục Dự án, Phân quyền Người dùng, Phân hệ nghiệp vụ và Sao lưu CSDL</div>
+      </div>
+    </div>
+
+    <!-- Settings Subtabs Navigation -->
+    <div class="settings-tabs-nav">
+      <button type="button" class="settings-tab-btn active" data-subtab="projects" onclick="switchSettingsTab('projects')">🏢 1. Quản Lý Danh Mục Dự Án</button>
+      <button type="button" class="settings-tab-btn" data-subtab="users" onclick="switchSettingsTab('users')">👥 2. Quản Lý Người Dùng & Phân Quyền</button>
+      <button type="button" class="settings-tab-btn" data-subtab="modules" onclick="switchSettingsTab('modules')">📁 3. Quản Lý Phân Hệ (Modules)</button>
+      <button type="button" class="settings-tab-btn" data-subtab="session" onclick="switchSettingsTab('session')">📝 4. Thông Tin Phiên Kiểm Thử</button>
+      <button type="button" class="settings-tab-btn" data-subtab="storage" onclick="switchSettingsTab('storage')">💾 5. Quản Lý Dữ Liệu & Sao Lưu Local</button>
+    </div>
+
+    <!-- TAB 1: PROJECTS MANAGEMENT -->
+    <div class="settings-tab-pane active" id="settings-pane-projects">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+        <div>
+          <h3 style="font-size:15px; font-weight:800; color:var(--text-primary); margin:0">🏢 Danh Sách Các Dự Án Phần Mềm Đang Quản Trị</h3>
+          <div style="font-size:12px; color:var(--text-muted)">Nhấp "Chọn Dự Án" để chuyển ngữ cảnh làm việc cho toàn bộ hệ thống</div>
+        </div>
+        <div style="display:flex; gap:8px">
+          <button type="button" class="btn btn-primary btn-sm" onclick="openAddProjectModal()">➕ Thêm Dự Án Mới</button>
+        </div>
+      </div>
+
+      <!-- Projects Cards Grid -->
+      <div id="settings-projects-cards-grid" class="projects-grid">
+        <!-- Rendered via settings.js -->
+      </div>
+
+      <!-- Active Project Versions Table -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <h3 id="active-proj-versions-title">📦 Quản Lý Phiên Bản Phần Mềm Dự Án Hiện Hành</h3>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openAddVersionModal()">➕ Thêm Phiên Bản Mới</button>
+        </div>
+        <table class="asg-tc-table" style="table-layout:auto">
+          <thead>
+            <tr>
+              <th style="width:110px">Phiên bản</th>
+              <th style="width:240px">Nhãn hiển thị</th>
+              <th style="width:150px; text-align:center">Trạng thái</th>
+              <th style="width:130px; text-align:center">Hạn mục tiêu</th>
+              <th>Ghi chú / Changelog</th>
+              <th style="width:120px; text-align:center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="project-versions-tbody">
+            <!-- Rendered via settings.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Active Project Test Cycles Table (QUẢN LÝ ĐỢT KIỂM THỬ) -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px">
+          <div>
+            <h3 id="active-proj-cycles-title" style="display:flex; align-items:center; gap:8px">
+              🎯 Quản Lý Các Đợt Kiểm Thử (Test Cycles): SmartVMS — Quản lý Khách & Ra vào
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Cấu hình các vòng/đợt kiểm thử độc lập (Đợt 1 khảo sát, Đợt 2 Re-test sửa lỗi & Hồi quy, Đợt 3 Nghiệm thu...) theo chuẩn ISO/IEC/IEEE 29119-3
+            </div>
+          </div>
+          <div style="display:flex; gap:8px">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openAddCycleModal()">➕ Thêm Đợt Kiểm Thử Mới</button>
+          </div>
+        </div>
+
+        <!-- Version Filter Toolbar for Test Cycles -->
+        <div id="cycles-version-filter-container"></div>
+
+        <table class="asg-tc-table" style="table-layout:auto">
+          <thead>
+            <tr>
+              <th style="width:100px; text-align:center">Mã Đợt</th>
+              <th style="width:280px">Tên Đợt Kiểm Thử & Mục Tiêu</th>
+              <th style="width:100px; text-align:center">Phiên bản</th>
+              <th style="width:140px; text-align:center">Loại kiểm thử</th>
+              <th style="width:140px; text-align:center">Phạm vi Kịch bản</th>
+              <th style="width:160px; text-align:center">Tiến độ & Kết quả</th>
+              <th style="width:150px; text-align:center">Thời gian</th>
+              <th style="width:120px; text-align:center">Trạng thái</th>
+              <th style="width:230px; text-align:center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="project-cycles-tbody">
+            <!-- Rendered via settings.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: USERS & ACCESS CONTROL (RBAC) -->
+    <div class="settings-tab-pane" id="settings-pane-users">
+      <!-- Users KPI Metric Cards -->
+      <div class="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon">👥</div>
+          <div class="stat-body">
+            <div class="stat-value" id="usr-stat-total">0</div>
+            <div class="stat-label">Tổng người dùng</div>
+          </div>
+        </div>
+        <div class="stat-card stat-pass">
+          <div class="stat-icon">👑</div>
+          <div class="stat-body">
+            <div class="stat-value" id="usr-stat-admin" style="color:var(--primary)">0</div>
+            <div class="stat-label">Quản lý (Admin/PM)</div>
+          </div>
+        </div>
+        <div class="stat-card stat-info">
+          <div class="stat-icon">🧪</div>
+          <div class="stat-body">
+            <div class="stat-value" id="usr-stat-tester" style="color:#0284c7">0</div>
+            <div class="stat-label">Kiểm thử viên (Tester)</div>
+          </div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #8b5cf6">
+          <div class="stat-icon">💻</div>
+          <div class="stat-body">
+            <div class="stat-value" id="usr-stat-dev" style="color:#8b5cf6">0</div>
+            <div class="stat-label">Lập trình viên (Dev)</div>
+          </div>
+        </div>
+        <div class="stat-card stat-fail">
+          <div class="stat-icon">🔒</div>
+          <div class="stat-body">
+            <div class="stat-value" id="usr-stat-locked" style="color:var(--danger)">0</div>
+            <div class="stat-label">Tạm khóa (Disabled)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px">
+          <div>
+            <h3>👥 Danh Sách Nhân Sự & Phân Quyền Vai Trò</h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">Quản lý tài khoản, mật khẩu, vai trò và phân công dự án</div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openAddUserModal()">➕ Thêm Người Dùng Mới</button>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div style="padding:14px 20px; border-bottom:1px solid var(--border-light); background:var(--bg-surface)" class="filter-toolbar">
+          <div class="filter-group">
+            <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Lọc vai trò:</span>
+            <button type="button" class="btn btn-xs btn-outline user-role-filter-btn active" data-role="" onclick="filterUsersByRole('')">Tất cả</button>
+            <button type="button" class="btn btn-xs btn-outline user-role-filter-btn" data-role="admin" onclick="filterUsersByRole('admin')">👑 Admin/PM</button>
+            <button type="button" class="btn btn-xs btn-outline user-role-filter-btn" data-role="tester" onclick="filterUsersByRole('tester')">🧪 Tester</button>
+            <button type="button" class="btn btn-xs btn-outline user-role-filter-btn" data-role="developer" onclick="filterUsersByRole('developer')">💻 Developer</button>
+            <button type="button" class="btn btn-xs btn-outline user-role-filter-btn" data-role="LOCKED" onclick="filterUsersByRole('LOCKED')">🔒 Tạm khóa</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <input type="text" placeholder="🔍 Tìm tên, username, email..." oninput="handleUserSearch(this.value)" style="padding:5px 12px; font-size:12.5px; width:240px; border-radius:var(--radius-md); border:1px solid var(--border)" />
+          </div>
+        </div>
+
+        <table class="asg-tc-table" style="table-layout:auto">
+          <thead>
+            <tr>
+              <th style="width:260px">Họ và tên & Email</th>
+              <th style="width:130px">Tên đăng nhập</th>
+              <th style="width:160px">Vai trò (Role)</th>
+              <th>Dự án phụ trách</th>
+              <th style="width:160px; text-align:center">Tải kiểm thử</th>
+              <th style="width:130px; text-align:center">Trạng thái</th>
+              <th style="width:190px; text-align:center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <!-- Rendered via settings.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: MODULES MANAGEMENT -->
+    <div class="settings-tab-pane" id="settings-pane-modules">
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px">
+          <div>
+            <h3 id="settings-modules-title">📁 Danh Mục Phân Hệ Nghiệp Vụ Của Dự Án</h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">Quản lý danh sách các phân hệ nghiệp vụ, đồng bộ theo Dự án và Phiên bản kiểm thử</div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openAddModuleModal()">➕ Thêm Phân Hệ Mới</button>
+        </div>
+
+        <!-- Project & Version Context Filter for Modules -->
+        <div id="settings-modules-toolbar"></div>
+
+        <table class="asg-tc-table" style="table-layout:auto">
+          <thead>
+            <tr>
+              <th style="width:60px; text-align:center">STT</th>
+              <th style="width:110px; text-align:center">Mã Phân hệ</th>
+              <th style="width:260px">Tên Phân hệ nghiệp vụ</th>
+              <th>Mô tả chức năng</th>
+              <th style="width:140px; text-align:center">Phiên bản áp dụng</th>
+              <th style="width:130px; text-align:center">Số kịch bản</th>
+              <th style="width:100px; text-align:center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="settings-modules-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: SESSION SETTINGS -->
+    <div class="settings-tab-pane" id="settings-pane-session">
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-title">📌 Thiết Lập Phiên Kiểm Thử Hiện Hành</div>
+          <div class="form-group">
+            <label>Tên phiên kiểm thử</label>
+            <input type="text" id="setting-session-name" placeholder="VD: Sprint 1 - Regression Test" />
+          </div>
+          <div class="form-group">
+            <label>Người chịu trách nhiệm chính</label>
+            <input type="text" id="setting-session-owner" placeholder="VD: Nguyễn Văn Huy (QA Lead)" />
+          </div>
+          <div class="form-group">
+            <label>Phiên bản phần mềm mục tiêu</label>
+            <input type="text" id="setting-session-version" placeholder="VD: SmartVMS v2.0" />
+          </div>
+          <div class="form-group">
+            <label>Mục tiêu & Ghi chú đợt test</label>
+            <textarea id="setting-session-notes" rows="3" placeholder="Mục tiêu đánh giá chất lượng..."></textarea>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="saveSessionSettings()">💾 Lưu Cấu Hình Phiên</button>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">ℹ️ Thông Tin Trạng Thái Phiên</div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">🎯 Đợt kiểm thử hiện hành</span>
+              <span class="action-desc" id="setting-session-active-cycle-desc">Đang tải thông tin đợt test...</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" onclick="switchSettingsTab('projects')">⚙️ Cấu hình đợt test</button>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Chuẩn chất lượng áp dụng</span>
+              <span class="action-desc">ISO/IEC/IEEE 29119-3:2021 & ISO/IEC 25010:2023</span>
+            </div>
+            <span class="badge badge-pass">Đã kích hoạt</span>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Cơ chế lưu trữ CSDL</span>
+              <span class="action-desc">LocalStorage HTML5 + JSON Backup</span>
+            </div>
+            <span class="badge" style="background:#e0e7ff; color:#3730a3">Offline Ready</span>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Khả năng mở rộng CSDL</span>
+              <span class="action-desc">Supabase Cloud Realtime Sync Ready</span>
+            </div>
+            <span class="badge badge-nr">Đồng bộ sẵn sàng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: DATA MANAGEMENT & BACKUP -->
+    <div class="settings-tab-pane" id="settings-pane-storage">
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-title">📦 Sao Lưu & Phục Hồi CSDL</div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Tải file sao lưu (JSON)</span>
+              <span class="action-desc">Tải toàn bộ dự án, kịch bản, kết quả, người dùng về máy tính</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="exportFullBackup()">⬇ Xuất JSON</button>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Khôi phục từ tệp JSON</span>
+              <span class="action-desc">Nạp lại dữ liệu từ tệp sao lưu trước đó</span>
+            </div>
+            <label class="btn btn-outline btn-sm" style="cursor:pointer">
+              ⬆ Nạp JSON
+              <input type="file" accept=".json" style="display:none" onchange="importFullBackup(this)" />
+            </label>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title" style="color:#dc2626">Xóa toàn bộ dữ liệu</span>
+              <span class="action-desc">Reset sạch sẽ toàn bộ dữ liệu về trạng thái ban đầu</span>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllData()">🗑️ Reset</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">📊 Thống Kê Dung Lượng CSDL</div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Tổng số dự án</span></div>
+            <strong id="stat-storage-projects">0</strong>
+          </div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Tổng số người dùng</span></div>
+            <strong id="stat-storage-users">0</strong>
+          </div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Tổng số phân hệ</span></div>
+            <strong id="stat-storage-modules">0</strong>
+          </div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Tổng số kịch bản test</span></div>
+            <strong id="stat-storage-tcs">0</strong>
+          </div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Số lượt phân công việc</span></div>
+            <strong id="stat-storage-asgs">0</strong>
+          </div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Kết quả đã ghi nhận</span></div>
+            <strong id="stat-storage-results">0</strong>
+          </div>
+          <div class="action-row">
+            <div class="action-info"><span class="action-title">Dung lượng LocalStorage</span></div>
+            <strong id="stat-storage-size" style="color:var(--primary)">0 KB</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODALS -->
+  <!-- ============================================================== -->
+
+  <!-- Modal Thêm/Sửa Dự Án -->
+  <div class="modal-overlay" id="modal-project-form" onclick="closeModal('modal-project-form')">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-proj-title">➕ Thêm Dự Án Mới</h3>
+        <button class="modal-close" onclick="closeModal('modal-project-form')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="pf-id" />
+        <div class="form-group">
+          <label>Mã Dự Án * (Viết hoa, không dấu, VD: SMARTPARK)</label>
+          <input type="text" id="pf-code" placeholder="VD: SMARTPARK" />
+        </div>
+        <div class="form-group">
+          <label>Tên Dự Án *</label>
+          <input type="text" id="pf-name" placeholder="VD: SmartParking — Quản lý Bãi xe" />
+        </div>
+        <div class="form-group">
+          <label>Lĩnh vực Nghiệp vụ (Domain)</label>
+          <input type="text" id="pf-domain" placeholder="VD: Giao thông Thông minh (ITS & Smart Parking)" />
+        </div>
+        <div class="form-group">
+          <label>Người phụ trách chính / QA Lead (PM)</label>
+          <input type="text" id="pf-lead" placeholder="VD: Nguyễn Văn Huy" />
+        </div>
+        <div class="form-group">
+          <label>Phiên bản khởi tạo ban đầu</label>
+          <input type="text" id="pf-version" placeholder="VD: v1.0.0" />
+        </div>
+        <div class="form-group">
+          <label>Bộ Tiêu Chuẩn Áp Dụng (phân cách bằng dấu phẩy)</label>
+          <input type="text" id="pf-standards" placeholder="VD: ISO 9001:2015, ISO/IEC/IEEE 29119, ISO/IEC 25010" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-project-form')">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmSaveProject()">💾 Lưu Dự Án</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm Phiên Bản Dự Án -->
+  <div class="modal-overlay" id="modal-version-form" onclick="closeModal('modal-version-form')">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>➕ Thêm Phiên Bản Phần Mềm Mới</h3>
+        <button class="modal-close" onclick="closeModal('modal-version-form')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Mã Phiên Bản * (VD: v2.1)</label>
+          <input type="text" id="vf-tag" placeholder="VD: v2.1" />
+        </div>
+        <div class="form-group">
+          <label>Nhãn Hiển Thị (Label)</label>
+          <input type="text" id="vf-label" placeholder="VD: v2.1-MultiSite Cloud Sync" />
+        </div>
+        <div class="form-group">
+          <label>Trạng Thái Kiểm Thử</label>
+          <select id="vf-status" style="width:100%; padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border)">
+            <option value="IN_QA">IN_QA (Đang kiểm thử)</option>
+            <option value="IN_DEV">IN_DEV (Đang lập trình)</option>
+            <option value="RELEASED">RELEASED (Đã phát hành)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Hạn Mục Tiêu Hoàn Thành (Target Date)</label>
+          <input type="date" id="vf-date" />
+        </div>
+        <div class="form-group">
+          <label>Ghi Chú / Changelog Đợt Phát Hành</label>
+          <textarea id="vf-changelog" rows="3" placeholder="Mô tả các tính năng nâng cấp..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-version-form')">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmAddVersion()">💾 Thêm Phiên Bản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm/Sửa Người Dùng & Phân Quyền -->
+  <div class="modal-overlay" id="modal-user-form" onclick="closeModal('modal-user-form')">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-user-title">➕ Thêm Người Dùng Mới</h3>
+        <button class="modal-close" onclick="closeModal('modal-user-form')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="uf-id" />
+        <div class="form-group">
+          <label>Họ và Tên Đầy Đủ *</label>
+          <input type="text" id="uf-name" placeholder="VD: Nguyễn Văn Nam" />
+        </div>
+        <div class="form-group">
+          <label>Tên Đăng Nhập (Username) *</label>
+          <input type="text" id="uf-username" placeholder="VD: nam.nv" />
+        </div>
+        <div class="form-group">
+          <label>Mật Khẩu *</label>
+          <input type="text" id="uf-password" placeholder="Mật khẩu truy cập" />
+        </div>
+        <div class="form-group">
+          <label>Địa Chỉ Email</label>
+          <input type="email" id="uf-email" placeholder="VD: nam.nv@smartvms.local" />
+        </div>
+        <div class="form-group">
+          <label>Vai Trò Hệ Thống (Role) *</label>
+          <select id="uf-role" style="width:100%; padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border)">
+            <option value="tester">🧪 Kiểm thử viên (Tester)</option>
+            <option value="admin">👑 Quản trị viên (QA Lead / PM)</option>
+            <option value="developer">💻 Lập trình viên (Developer)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dự Án Được Phân Công Phụ Trách</label>
+          <div id="uf-projects-checkboxes" class="checkbox-grid">
+            <!-- Populated via settings.js -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-user-form')">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmSaveUser()">💾 Lưu Người Dùng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reset Mật Khẩu Người Dùng -->
+  <div class="modal-overlay" id="modal-reset-password" onclick="closeModal('modal-reset-password')">
+    <div class="modal-dialog" style="max-width:440px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>🔑 Đổi Mật Khẩu Người Dùng</h3>
+        <button class="modal-close" onclick="closeModal('modal-reset-password')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="pwd-user-id" />
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px">
+          Tài khoản: <strong id="pwd-user-name" style="color:var(--text-primary)">--</strong>
+        </div>
+        <div class="form-group">
+          <label>Mật Khẩu Mới *</label>
+          <input type="text" id="pwd-new-val" placeholder="Nhập mật khẩu mới" />
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px">
+          <button type="button" class="btn btn-outline btn-xs" onclick="document.getElementById('pwd-new-val').value='123'">Gán mặc định "123"</button>
+          <button type="button" class="btn btn-outline btn-xs" onclick="document.getElementById('pwd-new-val').value='Admin@2026!'">Gán "Admin@2026!"</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-reset-password')">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmResetPassword()">💾 Xác Nhận Đổi MK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm Phân Hệ -->
+  <div class="modal-overlay" id="modal-add-module" onclick="closeModal('modal-add-module')">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>➕ Thêm Phân Hệ Nghiệp Vụ Mới</h3>
+        <button class="modal-close" onclick="closeModal('modal-add-module')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Mã Phân hệ *</label>
+          <input type="text" id="new-mod-id" placeholder="VD: M13" />
+        </div>
+        <div class="form-group">
+          <label>Tên Phân hệ *</label>
+          <input type="text" id="new-mod-name" placeholder="VD: Tích hợp Hệ thống Thanh toán" />
+        </div>
+        <div class="form-group">
+          <label>Mô tả chi tiết</label>
+          <textarea id="new-mod-desc" rows="3" placeholder="Mô tả chức năng nghiệp vụ..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-module')">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmAddModule()">💾 Lưu Phân Hệ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm / Chỉnh Sửa Đợt Kiểm Thử (Test Cycle) -->
+  <div class="modal-overlay" id="modal-cycle-form" onclick="closeModal('modal-cycle-form')">
+    <div class="modal-dialog" style="max-width:580px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-cycle-title">➕ Thêm Đợt Kiểm Thử Mới</h3>
+        <button class="modal-close" onclick="closeModal('modal-cycle-form')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cf-id" />
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div class="form-group">
+            <label>Mã Đợt (Code) *</label>
+            <input type="text" id="cf-code" placeholder="VD: ROUND-2 hoặc CYC-02" />
+          </div>
+          <div class="form-group">
+            <label>Thuộc Phiên Bản *</label>
+            <select id="cf-version" class="form-control" style="width:100%; padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border)">
+              <!-- Dynamic options -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tên Đợt Kiểm Thử *</label>
+          <input type="text" id="cf-name" placeholder="VD: Đợt 2 — Re-test sửa lỗi & Kiểm thử Hồi quy" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div class="form-group">
+            <label>Loại Kiểm Thử (Target Suite) *</label>
+            <select id="cf-suite" class="form-control" style="width:100%; padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border)">
+              <option value="REGRESSION">🔄 Regression (Kiểm thử Hồi quy)</option>
+              <option value="SMOKE">💨 Smoke Test (Kiểm thử nhanh / Khảo sát)</option>
+              <option value="SANITY">🧪 Sanity Test (Kiểm tra sửa lỗi)</option>
+              <option value="PERF_STRESS">⚡ Performance & Stress (Tải cao điểm)</option>
+              <option value="SECURITY_FRAUD">🛡️ Security & Fraud (An ninh bảo mật)</option>
+              <option value="INTEGRATION_HW">🔌 Integration (Tích hợp thiết bị/Phần cứng)</option>
+              <option value="ACCEPTANCE_UAT">🏆 Acceptance / UAT (Nghiệm thu Go-Live)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Trạng Thái Đợt Test *</label>
+            <select id="cf-status" class="form-control" style="width:100%; padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border)">
+              <option value="ACTIVE">🟢 ACTIVE (Đang diễn ra)</option>
+              <option value="PLANNED">🟡 PLANNED (Lập kế hoạch)</option>
+              <option value="CLOSED">⚪ CLOSED (Đã đóng / Nghiệm thu xong)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div class="form-group">
+            <label>Ngày bắt đầu</label>
+            <input type="date" id="cf-start-date" />
+          </div>
+          <div class="form-group">
+            <label>Hạn kết thúc kế hoạch</label>
+            <input type="date" id="cf-end-date" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Mục Tiêu & Phạm Vi Đợt Test</label>
+          <textarea id="cf-description" rows="3" placeholder="Mô tả phạm vi nghiệm thu, các kịch bản hoặc phân hệ trọng tâm cần retest..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-cycle-form')">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="confirmSaveCycle()">💾 Lưu Đợt Kiểm Thử</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cấu Hình Phạm Vi Kịch Bản Cho Đợt Kiểm Thử (Streamlined & Full-Workspace Test Cycle Scope Modal) -->
+  <div class="modal-overlay" id="modal-cycle-scope" onclick="closeModal('modal-cycle-scope')">
+    <div class="modal-dialog scope-modal-dialog" onclick="event.stopPropagation()">
+      
+      <!-- 1. TOP HEADER BAR: TITLE, CONTEXT BADGES & CLOSE (Height ~42px) -->
+      <div class="scope-header-bar">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0; flex:1">
+          <h3 id="modal-scope-title" style="margin:0; font-size:15.5px; font-weight:800; display:flex; align-items:center; gap:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+            🎯 Cấu Hình Phạm Vi Kịch Bản
+          </h3>
+          <span id="modal-scope-status-badge"></span>
+          <span id="modal-scope-suite-badge"></span>
+          <span id="modal-scope-version-badge" class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-family:monospace; font-weight:800; font-size:11px"></span>
+          <span id="modal-scope-dates-badge" style="font-size:11.5px; color:var(--text-muted); font-weight:600"></span>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-cycle-scope')" title="Đóng" style="font-size:22px; line-height:1; padding:2px 8px; border-radius:var(--radius-sm); border:none; background:transparent; cursor:pointer">&times;</button>
+      </div>
+
+      <!-- 2. STREAMLINED ACTION & STATS RIBBON (Height ~38px) -->
+      <div class="scope-presets-strip">
+        <!-- Quick Presets -->
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+          <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">⚡ Bộ chọn:</span>
+          <button type="button" class="scope-preset-btn" onclick="applyScopePreset('ALL')" title="Chọn toàn bộ test case của phiên bản này">⚡ Tất cả</button>
+          <button type="button" class="scope-preset-btn" onclick="applyScopePreset('SMOKE')" title="Chọn các bài test P1 quan trọng nhất" style="color:#b45309">💨 Smoke (P1)</button>
+          <button type="button" class="scope-preset-btn" onclick="applyScopePreset('REGRESSION')" title="Chọn bài test P1 và P2" style="color:#1d4ed8">🔄 Regression (P1+P2)</button>
+          <button type="button" class="scope-preset-btn scope-preset-btn-danger" onclick="applyScopePreset('FAILED_RECENT')" title="Chọn các bài test từng bị lỗi ở đợt trước để Re-test">⚠️ Lỗi đợt trước (Re-test)</button>
+          <button type="button" class="scope-preset-btn" onclick="applyScopePreset('CLEAR')" title="Bỏ chọn tất cả" style="color:var(--text-muted)">✕ Bỏ chọn</button>
+        </div>
+
+        <!-- Sleek Stats Pills (Compact Replacement for 5 Chunky Cards) -->
+        <div class="scope-stat-ribbon">
+          <div class="scope-stat-pill scope-stat-pill-primary" title="Số kịch bản đã chọn cho đợt test này">
+            🎯 Đã chọn: <strong id="scope-stat-selected" style="margin-left:3px">0 / 0 (0%)</strong>
+          </div>
+          <div class="scope-stat-pill scope-stat-pill-danger" title="Số kịch bản bị lỗi ở các đợt trước cần kiểm tra lại">
+            ⚠️ <strong id="scope-stat-fail" style="margin-left:2px">0 lỗi cần Re-test</strong>
+          </div>
+          <div class="scope-stat-pill scope-stat-pill-success" title="Số kịch bản đã từng pass ở đợt trước">
+            ✅ <strong id="scope-stat-pass" style="margin-left:2px">0 đã Pass</strong>
+          </div>
+          <div class="scope-stat-pill" style="color:var(--text-muted)" title="Số kịch bản chưa từng chạy đợt nào">
+            ⚪ <span id="scope-stat-untested" style="margin-left:2px">0 chưa test</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. SINGLE-ROW COMPACT FILTER TOOLBAR (Height ~36px) -->
+      <div class="scope-filter-strip">
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:200px">
+          <span style="color:var(--text-muted); font-size:12px">🔍</span>
+          <input type="text" id="scope-search-kw" placeholder="Tìm theo mã TC, tiêu đề, mục tiêu..." oninput="handleScopeFilterChange()" style="flex:1" />
+        </div>
+
+        <select id="scope-filter-prio" onchange="handleScopeFilterChange()" title="Lọc theo mức ưu tiên">
+          <option value="">🏷️ Tất cả ưu tiên</option>
+          <option value="P1">P1 — Smoke / Rất cao</option>
+          <option value="P2">P2 — Regression / Cao</option>
+          <option value="P3">P3 — Trung bình</option>
+          <option value="P4">P4 — Thấp</option>
+        </select>
+
+        <select id="scope-filter-selection" onchange="handleScopeFilterChange()" title="Lọc theo trạng thái chọn">
+          <option value="">🔘 Trạng thái: Tất cả</option>
+          <option value="SELECTED">✅ Chỉ bài ĐÃ CHỌN</option>
+          <option value="UNSELECTED">⬜ Chỉ bài CHƯA CHỌN</option>
+        </select>
+
+        <select id="scope-filter-history" onchange="handleScopeFilterChange()" title="Lọc theo kết quả các đợt test trước">
+          <option value="">🧪 Lịch sử: Tất cả</option>
+          <option value="FAIL" style="color:#dc2626; font-weight:700">❌ Từng BỊ LỖI (Cần Re-test)</option>
+          <option value="PASS" style="color:#16a34a; font-weight:700">✅ Đã từng PASS ở đợt trước</option>
+          <option value="UNTESTED" style="color:#64748b">⚪ Chưa từng thực hiện (Bài mới)</option>
+        </select>
+
+        <button type="button" class="btn btn-xs btn-outline" onclick="resetScopeFilters()" title="Đặt lại bộ lọc">🔄 Đặt lại</button>
+
+        <div style="font-size:11.5px; font-weight:700; color:var(--text-muted); margin-left:auto; white-space:nowrap">
+          Đang lọc: <strong id="scope-filtered-count" style="color:var(--text-primary)">0</strong> kịch bản
+        </div>
+      </div>
+
+      <!-- 4. EXPANDED TWO-PANE SPLIT CONTAINER -->
+      <div style="flex:1; display:flex; min-height:0; overflow:hidden; background:var(--bg-main)">
+        
+        <!-- LEFT PANE: MODULES LIST (Width 350px) -->
+        <div style="width:350px; flex-shrink:0; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg-surface)">
+          <!-- Left Pane Header -->
+          <div style="padding:10px 14px; background:var(--bg-surface); border-bottom:1px solid var(--border-light); display:flex; align-items:center; justify-content:space-between">
+            <div style="font-weight:700; font-size:12.5px; color:var(--text-primary); display:flex; align-items:center; gap:6px">
+              <span>📁 Phân Hệ Nghiệp Vụ</span>
+              <span class="badge badge-nr" id="scope-mod-total-badge" style="font-size:11px">14</span>
+            </div>
+            <div style="display:flex; gap:4px">
+              <button type="button" class="btn btn-xs btn-outline" onclick="toggleAllModulesScope(true)" title="Chọn toàn bộ bài test của tất cả phân hệ" style="font-size:11px; padding:2px 6px">☑️ Tất cả</button>
+              <button type="button" class="btn btn-xs btn-outline" onclick="toggleAllModulesScope(false)" title="Bỏ chọn toàn bộ bài test của tất cả phân hệ" style="font-size:11px; padding:2px 6px">⬜ Bỏ hết</button>
+            </div>
+          </div>
+
+          <!-- Left Pane Modules Scrollable List -->
+          <div style="flex:1; overflow-y:auto; padding:4px 0" id="scope-modules-list">
+            <!-- Dynamically populated via settings.js -->
+          </div>
+        </div>
+
+        <!-- RIGHT PANE: TEST CASES TABLE OF SELECTED MODULE -->
+        <div style="flex:1; display:flex; flex-direction:column; min-width:0; background:var(--bg-surface)">
+          <!-- Right Pane Header Toolbar -->
+          <div style="padding:10px 18px; border-bottom:1px solid var(--border-light); background:var(--bg-surface); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px" id="scope-active-mod-header">
+            <!-- Populated dynamically via settings.js -->
+          </div>
+
+          <!-- Test Cases Scrollable Table Container -->
+          <div style="flex:1; overflow-y:auto; padding:0">
+            <table class="asg-tc-table" style="table-layout:auto; margin:0; border:none; width:100%">
+              <thead style="position:sticky; top:0; z-index:2; background:var(--bg-surface); box-shadow:0 1px 2px rgba(0,0,0,0.06)">
+                <tr>
+                  <th style="width:44px; text-align:center">
+                    <input type="checkbox" id="scope-select-all-filtered" onchange="handleToggleSelectAllFiltered(this.checked)" title="Chọn/Bỏ chọn tất cả bài đang hiển thị" style="cursor:pointer" />
+                  </th>
+                  <th style="width:125px; text-align:center">Mã Kịch bản</th>
+                  <th style="width:90px; text-align:center">Phân hệ</th>
+                  <th style="min-width:300px">Tiêu đề & Mục tiêu kiểm thử</th>
+                  <th style="width:95px; text-align:center">Độ ưu tiên</th>
+                  <th style="width:115px; text-align:center">Loại kiểm thử</th>
+                  <th style="width:310px; text-align:center">Tình trạng ở các Đợt test trước</th>
+                </tr>
+              </thead>
+              <tbody id="modal-scope-tbody">
+                <!-- Dynamically populated via settings.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. MODAL FOOTER -->
+      <div class="modal-footer" style="flex-shrink:0; justify-content:space-between; align-items:center; background:var(--bg-surface); border-top:1px solid var(--border); padding:12px 24px">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+          <span class="badge badge-pass" id="scope-footer-count-badge" style="font-size:12.5px; font-weight:700; padding:6px 14px">
+            0 bài test được kích hoạt
+          </span>
+          <span style="font-size:12px; color:var(--text-muted)" id="scope-footer-rate-text">
+            (chiếm 0% kịch bản phiên bản)
+          </span>
+          <span style="font-size:12px; color:var(--text-secondary)" id="scope-footer-modules-summary">
+            | Phủ trên 0 phân hệ
+          </span>
+        </div>
+        <div style="display:flex; gap:10px">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-cycle-scope')" style="padding:8px 18px">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="confirmSaveCycleScope()" style="padding:8px 22px; font-weight:700">💾 Lưu Phạm Vi Đợt Test</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/settings.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initSettingsModule();
+    });
+  </script>
+</body>
+</html>

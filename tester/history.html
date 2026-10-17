@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lịch Sử Thực Thi & Phiên Test - Tester QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css?v=20261014" />
+  <link rel="stylesheet" href="../shared/css/testcases.css?v=20261014" />
+  <link rel="stylesheet" href="../shared/css/reports.css?v=20261014" />
+  <link rel="stylesheet" href="../shared/css/adhoc.css?v=20261014" />
+  <style>
+    .hist-session-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .hist-session-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hist-session-meta {
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .hist-session-notes {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .hist-table th, .hist-table td {
+      vertical-align: middle;
+    }
+    @media (max-width: 768px) {
+      .hist-session-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Tester Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon">🧪</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Kiểm Thử Viên (Tester)</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="index.html" class="nav-item">📝 Việc của tôi</a>
+          <a href="execution.html" class="nav-item">▶️ Thực thi</a>
+          <a href="history.html" class="nav-item active">🕒 Lịch sử & Phiên test</a>
+          <a href="reports.html" class="nav-item">📈 Báo cáo cá nhân</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <button type="button" class="btn-adhoc-trigger" onclick="openAdhocDefectModal()" title="Báo cáo lỗi phát sinh không có trong Test Case">🐞 Báo Lỗi Ngoài Kịch Bản</button>
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile">
+        <div class="vms-user-avatar">T</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role">Kiểm thử viên (Tester)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')">👑 Sang Admin</button>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('dev')">💻 Sang Dev</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <!-- Header Row -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">🕒 Lịch Sử Thực Thi & Các Phiên Kiểm Thử Của Tôi</h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Nhật ký thực thi kiểm thử thời gian thực (Test Execution Audit Log - ISO/IEC/IEEE 29119-3 Clause 7)</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px">
+        <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Dự án:</span>
+        <select id="hist-project-select" onchange="switchProject(this.value)" class="topbar-select" style="background:var(--bg-card); color:var(--text-primary); border-color:var(--border)"></select>
+        <button type="button" class="btn btn-adhoc-trigger" onclick="openAdhocDefectModal()">🐞 Báo Lỗi Ngoài Kịch Bản</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="printHistory()">🖨️ In Nhật Ký</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="exportHistoryHtml()">⬇️ Xuất File Báo Cáo</button>
+      </div>
+    </div>
+
+    <!-- Active Test Session Info Card -->
+    <div class="hist-session-card">
+      <div>
+        <div class="hist-session-title">
+          <span>🎯 Phiên Kiểm Thử Hiện Tại: <span id="hist-session-name">Sprint 1 - Regression Test</span></span>
+          <span class="badge badge-pass" style="font-size:10px; background:#10b981; color:#fff">🟢 ĐANG HOẠT ĐỘNG</span>
+        </div>
+        <div class="hist-session-meta">
+          <span>👤 Quản trị / QA Lead: <strong id="hist-session-owner">Nguyễn Văn Huy</strong></span>
+          <span>💻 Phiên bản phần mềm: <strong id="hist-session-version">SmartVMS Local v2.0</strong></span>
+          <span>📑 Tiêu chuẩn: <strong>ISO 9001:2015 Clause 8.5.2 & ISO 29119-3</strong></span>
+        </div>
+        <div class="hist-session-notes" id="hist-session-notes">Kiểm thử toàn diện 12 phân hệ nghiệp vụ và đối soát kết quả với đặc tả SRS.</div>
+      </div>
+      <div style="text-align:right">
+        <a href="execution.html" class="btn btn-primary btn-sm" style="background:#38bdf8; color:#0f172a; font-weight:800; border:none">▶️ Tiếp Tục Thực Thi</a>
+      </div>
+    </div>
+
+    <!-- 4 KPI Metrics -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">📜</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-hist-total">0</div>
+          <div class="stat-label">Tổng lượt test đã ghi nhận</div>
+        </div>
+      </div>
+      <div class="stat-card stat-pass">
+        <div class="stat-icon">✅</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-hist-pass" style="color:var(--success)">0</div>
+          <div class="stat-label">Lượt Đạt (Pass)</div>
+        </div>
+      </div>
+      <div class="stat-card stat-fail">
+        <div class="stat-icon">❌</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-hist-fail" style="color:var(--danger)">0</div>
+          <div class="stat-label">Lượt Phát hiện Lỗi (Fail)</div>
+        </div>
+      </div>
+      <div class="stat-card stat-skip">
+        <div class="stat-icon">⏭</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-hist-skip" style="color:#d97706">0</div>
+          <div class="stat-label">Lượt Bỏ qua / Bị chặn</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>Phiên kiểm thử (Session)</label>
+        <select id="filter-hist-session" onchange="renderHistoryLogs()"></select>
+      </div>
+      <div class="filter-group">
+        <label>Phân hệ</label>
+        <select id="filter-hist-module" onchange="renderHistoryLogs()"></select>
+      </div>
+      <div class="filter-group">
+        <label>Đánh giá kết quả</label>
+        <select id="filter-hist-status" onchange="renderHistoryLogs()">
+          <option value="">Tất cả kết quả</option>
+          <option value="Pass">✅ Đã Đạt (Pass)</option>
+          <option value="Fail">❌ Bị Lỗi (Fail)</option>
+          <option value="Blocked">⛔ Bị chặn (Blocked)</option>
+          <option value="Skip">⏭ Bỏ qua (Skip)</option>
+        </select>
+      </div>
+      <div class="filter-search-group">
+        <label>Tìm kiếm nhật ký</label>
+        <input type="text" id="filter-hist-search" placeholder="🔍 Mã kịch bản, tiêu đề, ghi chú kết quả thực tế..." oninput="renderHistoryLogs()" />
+      </div>
+      <div style="display:flex; align-items:flex-end">
+        <button type="button" class="btn btn-outline btn-sm" onclick="resetHistoryFilters()">Đặt lại</button>
+      </div>
+    </div>
+
+    <!-- Execution Log Table Card -->
+    <div class="card" style="padding:0; overflow:hidden">
+      <div class="card-header" style="border-bottom:1px solid var(--border)">
+        <div style="font-weight:700; font-size:13px; color:var(--text-primary)">
+          📋 Nhật Ký Thực Thi Kiểm Thử Chi Tiết (<span id="hist-log-count">0</span> lượt chạy)
+        </div>
+      </div>
+      <div class="tc-table-wrapper">
+        <table class="tc-table hist-table">
+          <thead>
+            <tr>
+              <th style="width:145px">Thời Gian Thực Thi</th>
+              <th style="width:115px">Mã Kịch Bản</th>
+              <th style="width:75px; text-align:center">Phân Hệ</th>
+              <th style="width:230px">Tiêu Đề Kịch Bản</th>
+              <th style="width:115px; text-align:center">Đánh Giá</th>
+              <th>Kết Quả Thực Tế & Lỗi Ghi Nhận</th>
+              <th style="width:85px; text-align:center">Bằng Chứng</th>
+              <th style="width:115px; text-align:center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="hist-logs-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Chi Tiết Nhật Ký Kiểm Thử (ISO 29119-3) -->
+  <div class="modal-overlay" id="modal-hist-detail" onclick="closeModal('modal-hist-detail')">
+    <div class="modal-dialog modal-lg" onclick="event.stopPropagation()" style="max-width:800px">
+      <div class="modal-header">
+        <h3>Chi Tiết Nhật Ký Thực Thi (ISO/IEC/IEEE 29119-3)</h3>
+        <button class="modal-close" onclick="closeModal('modal-hist-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-hist-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-hist-detail')">Đóng</button>
+        <button class="btn btn-primary" id="btn-modal-retest">▶️ Chạy Lại Kịch Bản Này</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="modal-overlay" id="lightbox-modal" onclick="closeLightbox()">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="max-width:90vw; background:transparent; border:none; box-shadow:none; text-align:center">
+      <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; margin-bottom:8px">
+        <h4 id="lightbox-title" style="margin:0; font-size:14px">Ảnh chụp bằng chứng lỗi</h4>
+        <button onclick="closeLightbox()" style="color:#fff; background:none; border:none; font-size:24px; cursor:pointer">&times;</button>
+      </div>
+      <img id="lightbox-img" src="" alt="Evidence" style="max-width:85vw; max-height:80vh; border-radius:8px; border:2px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,0.5)" />
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="../data/enterprise_projects_manifest.js?v=20261014_hist"></script>
+  <script src="../data/smartvms_test_catalog.js?v=20261014_hist"></script>
+  <script src="../shared/js/core.js?v=20261014_hist"></script>
+  <script src="../shared/js/adhoc-defect.js?v=20261014_hist"></script>
+  <script src="../shared/js/history.js?v=20261014_hist"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initHistoryModule();
+    });
+  </script>
+</body>
+</html>

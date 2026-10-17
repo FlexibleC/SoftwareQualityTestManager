@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Việc Của Tôi - Tester QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css?v=20261015" />
+  <link rel="stylesheet" href="../shared/css/testcases.css?v=20261015" />
+  <link rel="stylesheet" href="../shared/css/adhoc.css?v=20261015" />
+  <script>
+    if (window.location.pathname === '/tester') {
+      window.location.replace('/tester/');
+    }
+  </script>
+  <style>
+    /* ==========================================================================
+       SMARTVMS QA HUB - TESTER WORKSPACE (3-TIER CASCADE & MATRIX SUMMARY)
+       ========================================================================== */
+
+    /* 3-Tier Interactive Cascade Bar */
+    .tester-cascade-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 8px 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .tester-cascade-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+    }
+    .tester-cascade-prj {
+      background: rgba(30, 64, 175, 0.05);
+      border-color: rgba(30, 64, 175, 0.2);
+    }
+    .tester-cascade-ver {
+      background: rgba(37, 99, 235, 0.05);
+      border-color: rgba(37, 99, 235, 0.2);
+    }
+    .tester-cascade-cycle {
+      background: rgba(21, 128, 61, 0.05);
+      border-color: rgba(21, 128, 61, 0.2);
+      flex: 1;
+      min-width: 280px;
+    }
+    .tester-cascade-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .tester-cascade-select {
+      height: 30px !important;
+      padding: 0 10px !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 5px !important;
+      background: var(--bg-card) !important;
+      color: var(--text-primary) !important;
+      outline: none;
+      cursor: pointer;
+      width: auto !important;
+      margin: 0 !important;
+    }
+    .tester-cascade-select:focus {
+      border-color: var(--primary) !important;
+    }
+    .tester-cascade-sep {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      user-select: none;
+    }
+
+    /* Quick Pick Chips Bar */
+    .tester-quickpick-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .quickpick-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      margin-right: 4px;
+    }
+    .quickpick-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      user-select: none;
+    }
+    .quickpick-chip:hover {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .quickpick-chip.active {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #fff !important;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+    .quickpick-chip.active .chip-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+    .chip-count {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: var(--bg-body);
+      color: var(--text-muted);
+    }
+
+    /* 2-Mode View Tabs Navigation */
+    .tester-view-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .tester-tabs-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tester-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tester-tab-btn:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .tester-tab-btn.active {
+      background: #2563eb;
+      color: #fff !important;
+      border-color: #1d4ed8;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+    .tester-tab-badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
+    .tester-tab-btn.active .tester-tab-badge {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+
+    /* Executive Summary Matrix Table */
+    .summary-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .summary-matrix-table th {
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+      white-space: nowrap;
+    }
+    .summary-matrix-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text-primary);
+    }
+    .summary-matrix-table tr:hover td {
+      background: rgba(37, 99, 235, 0.03);
+    }
+    .matrix-cycle-code {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: monospace;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .matrix-progress-track {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--bg-body);
+      overflow: hidden;
+      display: flex;
+      width: 130px;
+      margin-top: 4px;
+      border: 1px solid var(--border-light);
+    }
+    .matrix-seg-pass { background: #22c55e; }
+    .matrix-seg-fail { background: #ef4444; }
+    .matrix-seg-blocked { background: #991b1b; }
+    .matrix-seg-wip { background: #f59e0b; }
+    .matrix-seg-notrun { background: #cbd5e1; }
+
+    /* Compact Actions & Buttons */
+    .task-run-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: #2563eb;
+      color: #fff !important;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .task-run-btn:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <!-- Tester Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon">🧪</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Kiểm Thử Viên (Tester)</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="index.html" class="nav-item active">📝 Việc của tôi</a>
+          <a href="execution.html" class="nav-item">▶️ Thực thi</a>
+          <a href="history.html" class="nav-item">🕒 Lịch sử & Phiên test</a>
+          <a href="reports.html" class="nav-item">📈 Báo cáo cá nhân</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <button type="button" class="btn-adhoc-trigger" onclick="openAdhocDefectModal()" title="Báo cáo lỗi phát sinh không có trong Test Case">🐞 Báo Lỗi Ngoài Kịch Bản</button>
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile">
+        <div class="vms-user-avatar">T</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role">Kiểm thử viên (Tester)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')" title="Chuyển sang vai trò Admin">👑 Sang Admin</button>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('dev')" title="Chuyển sang vai trò Developer">💻 Sang Dev</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <!-- Header Title Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📝 Nhiệm Vụ Kiểm Thử Của Tôi</h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:2px">Danh sách các kịch bản kiểm thử được phân công đích danh theo từng đợt test</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px">
+        <a href="execution.html" class="btn btn-primary btn-sm">▶️ Mở Bàn Thực Thi</a>
+        <a href="history.html" class="btn btn-outline btn-sm">🕒 Xem Lịch Sử Test</a>
+      </div>
+    </div>
+
+    <!-- Active Test Session Banner (ISO 29119-3) -->
+    <div style="background:linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color:#fff; border-radius:8px; padding:10px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; box-shadow:0 3px 10px rgba(37,99,235,0.15)">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px">
+          <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; font-size:10.5px; font-weight:800; text-transform:uppercase">🎯 Phiên Kiểm Thử Đang Chạy</span>
+          <span style="font-size:11px; opacity:0.9">Phiên bản: <strong id="sess-ver-banner">SmartVMS Local v2.0</strong></span>
+        </div>
+        <div style="font-size:14px; font-weight:800; margin-top:2px" id="sess-name-banner">Sprint 1 - Regression Test</div>
+        <div style="font-size:11px; opacity:0.85; margin-top:1px" id="sess-notes-banner">Kiểm thử toàn diện các phân hệ nghiệp vụ trọng yếu</div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <a href="history.html" style="background:#fff; color:#1d4ed8; font-weight:700; font-size:11.5px; padding:5px 12px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px">🕒 Lịch sử & Phiên test của tôi →</a>
+      </div>
+    </div>
+
+    <!-- 1. Interactive 3-Tier Cascade Scope Selection Bar (Project -> Version -> Assigned Cycles) -->
+    <div class="tester-cascade-bar">
+      <!-- Tier 1: Project -->
+      <div class="tester-cascade-item tester-cascade-prj">
+        <span class="tester-cascade-label">🏢 DỰ ÁN:</span>
+        <select id="tester-project-select" class="tester-cascade-select" onchange="handleTesterProjectChange(this.value)"></select>
+      </div>
+
+      <span class="tester-cascade-sep">➔</span>
+
+      <!-- Tier 2: Version -->
+      <div class="tester-cascade-item tester-cascade-ver">
+        <span class="tester-cascade-label">📦 PHIÊN BẢN:</span>
+        <select id="tester-version-select" class="tester-cascade-select" onchange="handleTesterVersionChange(this.value)"></select>
+      </div>
+
+      <span class="tester-cascade-sep">➔</span>
+
+      <!-- Tier 3: Assigned Cycle (Only cycles with tasks for current tester) -->
+      <div class="tester-cascade-item tester-cascade-cycle">
+        <span class="tester-cascade-label">🎯 ĐỢT TEST ĐƯỢC GIAO:</span>
+        <select id="tester-cycle-select" class="tester-cascade-select" onchange="handleTesterCycleChange(this.value)" style="width:100%"></select>
+      </div>
+    </div>
+
+    <!-- 2. Quick Pick Cycles Bar (1-Click Switch between Assigned Test Cycles) -->
+    <div class="tester-quickpick-bar" id="tester-quickpick-bar">
+      <!-- Dynamically populated chips -->
+    </div>
+
+    <!-- 3. Two-Mode View Switcher (Overview Summary vs Detail Test Cases) -->
+    <div class="tester-view-tabs">
+      <div class="tester-tabs-group">
+        <button type="button" id="tab-btn-summary" class="tester-tab-btn active" onclick="switchTesterView('summary')">
+          📊 Bảng Tổng Hợp Tiến Độ Đợt Test <span class="tester-tab-badge" id="badge-cycle-count">0</span>
+        </button>
+        <button type="button" id="tab-btn-detail" class="tester-tab-btn" onclick="switchTesterView('detail')">
+          📝 Danh Sách Kịch Bản Chi Tiết <span class="tester-tab-badge" id="badge-task-count">0</span>
+        </button>
+      </div>
+      <div style="font-size:11.5px; color:var(--text-muted); font-weight:600">
+        💡 <span id="current-scope-caption">SmartVMS (v2.0)</span>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW MODE 1: BẢNG TỔNG HỢP TIẾN ĐỘ ĐỢT TEST (Executive Summary Matrix)      -->
+    <!-- ========================================================================= -->
+    <div id="tester-view-summary">
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
+          <div>
+            <div style="font-weight:700; font-size:13px; color:var(--text-primary)">
+              📊 Ma Trận Tổng Hợp Tiến Độ Các Đợt Kiểm Thử Được Giao
+            </div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+              Hệ thống tự động lọc và chỉ hiển thị những đợt test có phân công kịch bản cho tài khoản của bạn.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="switchTesterView('detail')">
+            📝 Vào Danh Sách Kịch Bản Chi Tiết →
+          </button>
+        </div>
+
+        <div style="overflow-x:auto">
+          <table class="summary-matrix-table">
+            <thead>
+              <tr>
+                <th style="min-width:260px">Đợt Kiểm Thử</th>
+                <th style="width:110px; text-align:center">Phiên Bản</th>
+                <th style="width:190px">Chu Kỳ Thực Hiện</th>
+                <th style="width:110px; text-align:center">Số Bài Giao</th>
+                <th style="width:180px">Tiến Độ Thực Thi</th>
+                <th style="width:230px; text-align:center">Chi Tiết Kết Quả</th>
+                <th style="width:120px; text-align:center">Trạng Thái Đợt</th>
+                <th style="width:160px; text-align:center">Thao Tác Nhanh</th>
+              </tr>
+            </thead>
+            <tbody id="summary-matrix-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW MODE 2: DANH SÁCH KỊCH BẢN CHI TIẾT (Detailed Test Cases Execution)  -->
+    <!-- ========================================================================= -->
+    <div id="tester-view-detail" style="display:none">
+      <!-- KPI Ribbon for Active Scope -->
+      <div class="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon">📋</div>
+          <div class="stat-body">
+            <div class="stat-value" id="my-kpi-total">0</div>
+            <div class="stat-label">Việc được giao</div>
+          </div>
+        </div>
+        <div class="stat-card stat-pass">
+          <div class="stat-icon">✅</div>
+          <div class="stat-body">
+            <div class="stat-value" id="my-kpi-pass" style="color:var(--success)">0</div>
+            <div class="stat-label">Đã Đạt (Pass)</div>
+          </div>
+        </div>
+        <div class="stat-card stat-fail">
+          <div class="stat-icon">❌</div>
+          <div class="stat-body">
+            <div class="stat-value" id="my-kpi-fail" style="color:var(--danger)">0</div>
+            <div class="stat-label">Phát hiện Lỗi (Fail)</div>
+          </div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #991b1b">
+          <div class="stat-icon">⛔</div>
+          <div class="stat-body">
+            <div class="stat-value" id="my-kpi-blocked" style="color:#991b1b">0</div>
+            <div class="stat-label">Bị chặn (Blocked)</div>
+          </div>
+        </div>
+        <div class="stat-card stat-skip">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-body">
+            <div class="stat-value" id="my-kpi-pending" style="color:#d97706">0</div>
+            <div class="stat-label">Chưa chạy / Đang làm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Ribbon -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Phân hệ</label>
+          <select id="filter-module" onchange="renderMyTasks()"></select>
+        </div>
+        <div class="filter-group">
+          <label>Loại kịch bản (ISO)</label>
+          <select id="filter-type" onchange="renderMyTasks()">
+            <option value="">Tất cả loại kịch bản</option>
+            <option value="Chức năng">⚡ Chức năng</option>
+            <option value="Ngoại lệ">🛡️ Ngoại lệ & Giá trị biên</option>
+            <option value="Tích hợp">🔌 Tích hợp Thiết bị ngoại vi</option>
+            <option value="Bảo mật">🔐 Bảo mật & Chống gian lận</option>
+            <option value="Hiệu năng">🚀 Tải & Hiệu năng cao điểm</option>
+            <option value="Độ tin cậy">📡 Ngoại tuyến & Chịu lỗi LAN</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Trạng thái thực thi</label>
+          <select id="filter-status" onchange="renderMyTasks()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Not Run">⚪ Chưa chạy</option>
+            <option value="WIP">⏳ Đang thực hiện (WIP)</option>
+            <option value="PASSED">✅ Đã Đạt (Pass)</option>
+            <option value="FAILED">❌ Bị Lỗi (Fail)</option>
+            <option value="BLOCKED">⛔ Bị chặn (Blocked)</option>
+            <option value="SKIP">⏭ Bỏ qua (Skip)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Mức ưu tiên</label>
+          <select id="filter-priority" onchange="renderMyTasks()">
+            <option value="">Tất cả ưu tiên</option>
+            <option value="P1">P1 - Rất cao</option>
+            <option value="P2">P2 - Cao</option>
+            <option value="P3">P3 - Trung bình</option>
+            <option value="P4">P4 - Thấp</option>
+          </select>
+        </div>
+        <div class="filter-search-group">
+          <label>Tìm kiếm</label>
+          <input type="text" id="filter-search" placeholder="🔍 Nhập mã, tiêu đề kịch bản..." oninput="renderMyTasks()" />
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:6px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="resetMyFilters()">Đặt lại</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="switchTesterView('summary')" title="Quay lại Bảng tổng hợp các đợt test">📊 Bảng Tổng Hợp</button>
+        </div>
+      </div>
+
+      <!-- Detailed Tasks Table Card -->
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+          <div style="font-weight:700; font-size:13px; color:var(--text-primary)">
+            📋 Danh Sách Kịch Bản Được Giao (<span id="my-task-count">0</span> bài)
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted)" id="detail-active-cycle-name">
+            Đợt test: Đang hiển thị
+          </div>
+        </div>
+        <div class="tc-table-wrapper" style="overflow-x:hidden">
+          <table class="tc-table" style="table-layout:fixed; width:100%">
+            <thead>
+              <tr>
+                <th style="width:110px">Mã Kịch Bản</th>
+                <th style="width:75px; text-align:center">Phân Hệ</th>
+                <th>Tiêu Đề Kịch Bản</th>
+                <th style="width:145px; text-align:center">Đợt Kiểm Thử</th>
+                <th style="width:75px; text-align:center">Ưu Tiên</th>
+                <th style="width:125px; text-align:center">Loại Kịch Bản</th>
+                <th style="width:145px; text-align:center">Thời Gian Hạn</th>
+                <th style="width:115px; text-align:center">Trạng Thái</th>
+                <th style="width:110px; text-align:center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="my-tasks-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Chi Tiết Test Case -->
+  <div class="modal-overlay" id="modal-tc-detail" onclick="closeModal('modal-tc-detail')">
+    <div class="modal-dialog modal-lg" onclick="event.stopPropagation()" style="max-width:850px">
+      <div class="modal-header">
+        <h3 id="modal-tc-title">Chi Tiết Kịch Bản Kiểm Thử</h3>
+        <button class="modal-close" onclick="closeModal('modal-tc-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-tc-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-tc-detail')">Đóng</button>
+        <button class="btn btn-primary" id="btn-modal-start-test" onclick="startTestFromModal()">▶️ Bắt Đầu Chạy Test</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="../data/enterprise_projects_manifest.js?v=20261015"></script>
+  <script src="../data/smartvms_test_catalog.js?v=20261015"></script>
+  <script src="../shared/js/core.js?v=20261015"></script>
+  <script src="../shared/js/adhoc-defect.js?v=20261015"></script>
+  <script>
+    let activeModalTcId = null;
+    let currentTesterView = 'summary'; // 'summary' | 'detail'
+    let selectedTesterVersion = '';
+    let selectedTesterCycleId = '';    // '' means All Assigned Cycles, or specific cycleId
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTesterWorkspace();
+    });
+
+    function initTesterWorkspace() {
+      initCoreState();
+      const p = getActiveProject();
+      if (!p) return;
+
+      // Update session banner
+      const s = state.session || {};
+      const elName = document.getElementById('sess-name-banner');
+      const elVer = document.getElementById('sess-ver-banner');
+      const elNotes = document.getElementById('sess-notes-banner');
+      if (elName) elName.textContent = s.name || 'Sprint 1 - Regression Test';
+      if (elVer) elVer.textContent = s.version || 'v2.0';
+      if (elNotes) elNotes.textContent = s.notes || 'Kiểm thử toàn diện các phân hệ nghiệp vụ';
+
+      // Set initial version
+      selectedTesterVersion = p.activeVersion || (p.versions && p.versions[0]?.version) || '';
+
+      // Populate Cascade Tiers
+      populateCascadeProjects(p.id);
+      populateCascadeVersions(p.id);
+      populateCascadeCycles(p.id, selectedTesterVersion);
+
+      // Populate Filter modules
+      populateModuleFilter();
+
+      // Render Views
+      renderQuickPickChips();
+      renderSummaryMatrix();
+      renderMyTasks();
+      updateCaption();
+    }
+
+    // =========================================================================
+    // 3-TIER CASCADE CONTROLS
+    // =========================================================================
+    function populateCascadeProjects(activeId) {
+      const sel = document.getElementById('tester-project-select');
+      if (!sel) return;
+      sel.innerHTML = '';
+      const u = getCurrentUser();
+      const accessiblePrjs = getAccessibleProjects(u);
+      
+      accessiblePrjs.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        if (p.id === activeId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.value = activeId;
+    }
+
+    function populateCascadeVersions(projectId) {
+      const verSel = document.getElementById('tester-version-select');
+      if (!verSel) return;
+      const p = (state.projects || []).find(x => x.id === projectId) || getActiveProject();
+      if (!p) return;
+
+      const versions = p.versions || [{ version: p.activeVersion || 'v2.0', label: p.activeVersion || 'v2.0' }];
+      if (!selectedTesterVersion || (!versions.some(v => v.version === selectedTesterVersion) && selectedTesterVersion !== '')) {
+        selectedTesterVersion = p.activeVersion || versions[0]?.version || '';
+      }
+
+      let options = versions.map(v => `
+        <option value="${escapeHtml(v.version)}" ${v.version === selectedTesterVersion ? 'selected' : ''}>
+          ${escapeHtml(v.version)} ${v.label ? `— ${escapeHtml(v.label)}` : ''} ${v.version === p.activeVersion ? '★' : ''}
+        </option>
+      `).join('');
+
+      options = `<option value="">-- Tất cả phiên bản --</option>` + options;
+      verSel.innerHTML = options;
+      verSel.value = selectedTesterVersion;
+    }
+
+    function populateCascadeCycles(projectId, version) {
+      const cycleSel = document.getElementById('tester-cycle-select');
+      if (!cycleSel) return;
+      const u = getCurrentUser();
+      
+      // Filter ONLY cycles where this tester has tasks assigned!
+      const assignedCycles = getAssignedCyclesForTester(u, projectId, version);
+      
+      // Calculate total assigned tasks in this project/version
+      const currentUsername = u.username || 'tester';
+      const myAsgs = (state.assignments || []).filter(a => {
+        if (a.projectId && a.projectId !== projectId) return false;
+        if (a.assigneeUsername !== currentUsername && a.assigneeUsername !== 'tester') return false;
+        if (version) {
+          const cyc = getCycleById(a.cycleId);
+          if (cyc && cyc.version && cyc.version !== version && !cyc.version.startsWith(version)) return false;
+        }
+        return true;
+      });
+
+      if (assignedCycles.length === 0) {
+        cycleSel.innerHTML = `<option value="">(Không có đợt test nào được giao cho bạn)</option>`;
+        selectedTesterCycleId = '';
+        return;
+      }
+
+      let optionsHtml = `<option value="">⚡ Tất cả đợt test được giao (Tổng ${myAsgs.length} bài)</option>`;
+      optionsHtml += assignedCycles.map(c => `
+        <option value="${c.id}" ${c.id === selectedTesterCycleId ? 'selected' : ''}>
+          ${c.status === 'ACTIVE' ? '🟢' : c.status === 'CLOSED' ? '🔒' : '⏳'} ${escapeHtml(c.name)} (${c.version}) — [${c.assignedTaskCount} bài]
+        </option>
+      `).join('');
+
+      cycleSel.innerHTML = optionsHtml;
+      
+      // Validate current selection
+      if (selectedTesterCycleId && !assignedCycles.some(c => c.id === selectedTesterCycleId)) {
+        selectedTesterCycleId = '';
+      }
+      cycleSel.value = selectedTesterCycleId;
+    }
+
+    function handleTesterProjectChange(projectId) {
+      if (!projectId) return;
+      setActiveProject(projectId);
+      const p = getActiveProject();
+      selectedTesterVersion = p?.activeVersion || (p?.versions && p.versions[0]?.version) || '';
+      selectedTesterCycleId = '';
+
+      populateCascadeVersions(projectId);
+      populateCascadeCycles(projectId, selectedTesterVersion);
+      populateModuleFilter();
+      renderQuickPickChips();
+      renderSummaryMatrix();
+      renderMyTasks();
+      updateCaption();
+
+      showToast(`🏢 Đã chuyển dự án: ${p?.name || projectId}`, 'info');
+    }
+
+    function handleTesterVersionChange(version) {
+      selectedTesterVersion = version;
+      selectedTesterCycleId = '';
+      populateCascadeCycles(state.activeProjectId, version);
+      renderQuickPickChips();
+      renderSummaryMatrix();
+      renderMyTasks();
+      updateCaption();
+
+      showToast(`📦 Đã lọc phiên bản: ${version || 'Tất cả phiên bản'}`, 'info');
+    }
+
+    function handleTesterCycleChange(cycleId) {
+      selectedTesterCycleId = cycleId;
+      if (cycleId) {
+        setActiveCycle(cycleId);
+      }
+      renderQuickPickChips();
+      renderSummaryMatrix();
+      renderMyTasks();
+      updateCaption();
+
+      const cycle = getCycleById(cycleId);
+      showToast(cycleId ? `🎯 Đã chọn đợt test: ${cycle?.name || cycleId}` : '⚡ Đã chọn: Tất cả đợt test được giao', 'info');
+    }
+
+    // =========================================================================
+    // QUICK PICK CHIPS (1-Click Switch)
+    // =========================================================================
+    function renderQuickPickChips() {
+      const container = document.getElementById('tester-quickpick-bar');
+      if (!container) return;
+      const u = getCurrentUser();
+      const currentUsername = u.username || 'tester';
+      const assignedCycles = getAssignedCyclesForTester(u, state.activeProjectId, selectedTesterVersion);
+
+      // Total count
+      const myAsgs = (state.assignments || []).filter(a => {
+        if (a.projectId && a.projectId !== state.activeProjectId) return false;
+        return a.assigneeUsername === currentUsername || a.assigneeUsername === 'tester';
+      });
+
+      let chipsHtml = `
+        <span class="quickpick-title">⚡ Chọn nhanh đợt test:</span>
+        <button type="button" class="quickpick-chip ${selectedTesterCycleId === '' ? 'active' : ''}" onclick="handleTesterCycleChange('')" title="Xem tất cả bài kiểm thử được giao">
+          <span>⚡ Tất cả đợt</span>
+          <span class="chip-count">${myAsgs.length}</span>
+        </button>
+      `;
+
+      assignedCycles.forEach(c => {
+        const cycleTasks = myAsgs.filter(a => a.cycleId === c.id);
+        let failCount = 0;
+        let passCount = 0;
+        let pendingCount = 0;
+        cycleTasks.forEach(a => {
+          const res = state.results ? state.results[a.tcId] : null;
+          const s = ((res ? res.status : a.status) || 'Not Run').toUpperCase();
+          if (s === 'FAIL' || s === 'FAILED') failCount++;
+          else if (s === 'PASS' || s === 'PASSED') passCount++;
+          else pendingCount++;
+        });
+
+        const statusIcon = c.status === 'ACTIVE' ? '🟢' : c.status === 'CLOSED' ? '🔒' : '⏳';
+        const isAct = c.id === selectedTesterCycleId;
+        const subNote = failCount > 0 ? ` • <span style="color:${isAct ? '#fecaca' : '#dc2626'}">${failCount} lỗi</span>` : '';
+
+        chipsHtml += `
+          <button type="button" class="quickpick-chip ${isAct ? 'active' : ''}" onclick="handleTesterCycleChange('${c.id}')" title="${escapeHtml(c.name)} (${c.version})">
+            <span>${statusIcon} ${escapeHtml(c.code || c.name)}</span>
+            <span class="chip-count">${c.assignedTaskCount} bài</span>
+            ${subNote}
+          </button>
+        `;
+      });
+
+      container.innerHTML = chipsHtml;
+    }
+
+    // =========================================================================
+    // VIEW SWITCHER (Summary vs Detail)
+    // =========================================================================
+    function switchTesterView(viewMode) {
+      currentTesterView = viewMode;
+      const btnSummary = document.getElementById('tab-btn-summary');
+      const btnDetail = document.getElementById('tab-btn-detail');
+      const viewSummary = document.getElementById('tester-view-summary');
+      const viewDetail = document.getElementById('tester-view-detail');
+
+      if (viewMode === 'summary') {
+        btnSummary?.classList.add('active');
+        btnDetail?.classList.remove('active');
+        if (viewSummary) viewSummary.style.display = 'block';
+        if (viewDetail) viewDetail.style.display = 'none';
+        renderSummaryMatrix();
+      } else {
+        btnSummary?.classList.remove('active');
+        btnDetail?.classList.add('active');
+        if (viewSummary) viewSummary.style.display = 'none';
+        if (viewDetail) viewDetail.style.display = 'block';
+        renderMyTasks();
+      }
+    }
+
+    function openCycleDetailView(cycleId) {
+      selectedTesterCycleId = cycleId;
+      const sel = document.getElementById('tester-cycle-select');
+      if (sel) sel.value = cycleId;
+      
+      switchTesterView('detail');
+      renderQuickPickChips();
+      renderMyTasks();
+      updateCaption();
+
+      const cycle = getCycleById(cycleId);
+      showToast(`📝 Mở chi tiết kịch bản: ${cycle?.name || cycleId}`, 'info');
+    }
+
+    function updateCaption() {
+      const capEl = document.getElementById('current-scope-caption');
+      if (!capEl) return;
+      const p = getActiveProject();
+      const cyc = selectedTesterCycleId ? getCycleById(selectedTesterCycleId) : null;
+      let text = `${p?.name || 'SmartVMS'} (${selectedTesterVersion || 'Tất cả phiên bản'})`;
+      if (cyc) {
+        text += ` ➔ 🎯 ${cyc.code || cyc.name}`;
+      } else {
+        text += ` ➔ ⚡ Tất cả đợt test được giao`;
+      }
+      capEl.textContent = text;
+
+      const actCycleNameEl = document.getElementById('detail-active-cycle-name');
+      if (actCycleNameEl) {
+        actCycleNameEl.innerHTML = cyc ? `Đang lọc: <strong>${escapeHtml(cyc.name)}</strong>` : 'Đang lọc: <strong>Tất cả đợt test được giao</strong>';
+      }
+    }
+
+    // =========================================================================
+    // VIEW 1: RENDER SUMMARY MATRIX
+    // =========================================================================
+    function renderSummaryMatrix() {
+      const tbody = document.getElementById('summary-matrix-tbody');
+      if (!tbody) return;
+
+      const u = getCurrentUser();
+      const currentUsername = u.username || 'tester';
+      const assignedCycles = getAssignedCyclesForTester(u, state.activeProjectId, selectedTesterVersion);
+      
+      // Update badge counts
+      const badgeCycleCount = document.getElementById('badge-cycle-count');
+      if (badgeCycleCount) badgeCycleCount.textContent = assignedCycles.length;
+
+      const myAsgs = (state.assignments || []).filter(a => {
+        if (a.projectId && a.projectId !== state.activeProjectId) return false;
+        return a.assigneeUsername === currentUsername || a.assigneeUsername === 'tester';
+      });
+
+      const badgeTaskCount = document.getElementById('badge-task-count');
+      if (badgeTaskCount) badgeTaskCount.textContent = myAsgs.length;
+
+      if (assignedCycles.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align:center; padding:36px 16px; color:var(--text-muted)">
+              <div style="font-size:24px; margin-bottom:8px">📭</div>
+              <div style="font-weight:700; font-size:13px; color:var(--text-primary)">Chưa có đợt test nào được giao việc cho bạn trong phạm vi này.</div>
+              <div style="font-size:12px; margin-top:4px">Vui lòng liên hệ QA Lead (Nguyễn Văn Huy) để được phân công kịch bản kiểm thử.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = assignedCycles.map(c => {
+        const cycleTasks = myAsgs.filter(a => a.cycleId === c.id);
+        const total = cycleTasks.length;
+        let pass = 0, fail = 0, blocked = 0, wip = 0, notRun = 0;
+
+        cycleTasks.forEach(a => {
+          const res = state.results ? state.results[a.tcId] : null;
+          const s = ((res ? res.status : a.status) || 'Not Run').toUpperCase();
+          if (s === 'PASS' || s === 'PASSED') pass++;
+          else if (s === 'FAIL' || s === 'FAILED') fail++;
+          else if (s === 'BLOCKED') blocked++;
+          else if (s === 'WIP') wip++;
+          else notRun++;
+        });
+
+        const pending = wip + notRun;
+        const passPct = total > 0 ? Math.round((pass / total) * 100) : 0;
+        const failPct = total > 0 ? Math.round((fail / total) * 100) : 0;
+        const blockedPct = total > 0 ? Math.round((blocked / total) * 100) : 0;
+        const wipPct = total > 0 ? Math.round((wip / total) * 100) : 0;
+        const notRunPct = total > 0 ? Math.max(0, 100 - passPct - failPct - blockedPct - wipPct) : 100;
+
+        const isCurrentActive = c.id === selectedTesterCycleId;
+        const statusBadgeHtml = c.status === 'ACTIVE' 
+          ? `<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700">🟢 Đang Mở</span>` 
+          : c.status === 'CLOSED' 
+          ? `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700">🔒 Đã Đóng</span>` 
+          : `<span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700">⏳ Kế Hoạch</span>`;
+
+        return `
+          <tr style="${isCurrentActive ? 'background:rgba(37,99,235,0.04);' : ''}">
+            <td>
+              <div style="display:flex; align-items:center; gap:8px">
+                <span class="matrix-cycle-code">${escapeHtml(c.code || 'ROUND')}</span>
+                <div>
+                  <div style="font-weight:700; font-size:13px; color:var(--text-primary)">
+                    ${escapeHtml(c.name)}
+                  </div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px">
+                    Mục tiêu: <strong style="color:var(--text-secondary)">${escapeHtml(getTestSuiteLabel(c.targetSuite || 'REGRESSION'))}</strong>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td style="text-align:center">
+              <span class="badge" style="background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; font-family:monospace; font-weight:700">
+                ${escapeHtml(c.version || 'v2.0')}
+              </span>
+            </td>
+            <td>
+              <div style="font-size:11.5px; font-weight:600; color:var(--text-primary)">
+                ${c.startDate || '2026-10-15'} ➔ ${c.endDate || '2026-10-25'}
+              </div>
+              <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px">
+                ${c.status === 'ACTIVE' ? '⚡ Đang trong giai đoạn kiểm thử' : 'Đã kết thúc chu kỳ'}
+              </div>
+            </td>
+            <td style="text-align:center">
+              <span style="font-size:14px; font-weight:800; color:var(--text-primary)">${total}</span>
+              <span style="font-size:11px; color:var(--text-muted)"> bài</span>
+            </td>
+            <td>
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:700">
+                <span style="color:var(--success)">${passPct}% Hoàn thành</span>
+                <span style="color:var(--text-muted)">${pass}/${total}</span>
+              </div>
+              <div class="matrix-progress-track">
+                <div class="matrix-seg-pass" style="width:${passPct}%" title="Đã Đạt: ${pass}"></div>
+                <div class="matrix-seg-fail" style="width:${failPct}%" title="Bị Lỗi: ${fail}"></div>
+                <div class="matrix-seg-blocked" style="width:${blockedPct}%" title="Bị Chặn: ${blocked}"></div>
+                <div class="matrix-seg-wip" style="width:${wipPct}%" title="Đang làm: ${wip}"></div>
+                <div class="matrix-seg-notrun" style="width:${notRunPct}%" title="Chưa chạy: ${notRun}"></div>
+              </div>
+            </td>
+            <td style="text-align:center">
+              <div style="display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:center">
+                <span class="badge" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-size:10px; font-weight:700">✅ ${pass}</span>
+                <span class="badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:10px; font-weight:700">❌ ${fail}</span>
+                <span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:10px; font-weight:700">⏳ ${pending}</span>
+              </div>
+            </td>
+            <td style="text-align:center">
+              ${statusBadgeHtml}
+            </td>
+            <td style="text-align:center">
+              <div style="display:inline-flex; align-items:center; gap:6px">
+                <button type="button" class="btn btn-primary btn-xs" onclick="openCycleDetailView('${c.id}')" title="Xem chi tiết danh sách ${total} kịch bản">
+                  🔍 Xem Kịch Bản
+                </button>
+                <a href="execution.html" class="btn btn-outline btn-xs" title="Mở bàn thực thi kiểm thử">
+                  ▶️ Test
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // VIEW 2: RENDER DETAILED TEST CASES
+    // =========================================================================
+    function populateModuleFilter() {
+      const sel = document.getElementById('filter-module');
+      if (!sel) return;
+      const u = getCurrentUser();
+      const mods = getAccessibleModulesForUser(u, state.activeProjectId);
+      sel.innerHTML = `<option value="">Tất cả phân hệ được giao (${mods.length})</option>`;
+      mods.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `[${m.id}] ${m.name}`;
+        sel.appendChild(opt);
+      });
+    }
+
+    function resetMyFilters() {
+      if (document.getElementById('filter-module')) document.getElementById('filter-module').value = '';
+      if (document.getElementById('filter-type')) document.getElementById('filter-type').value = '';
+      if (document.getElementById('filter-status')) document.getElementById('filter-status').value = '';
+      if (document.getElementById('filter-priority')) document.getElementById('filter-priority').value = '';
+      if (document.getElementById('filter-search')) document.getElementById('filter-search').value = '';
+      renderMyTasks();
+    }
+
+    function renderMyTasks() {
+      const tbody = document.getElementById('my-tasks-tbody');
+      if (!tbody) return;
+
+      const modVal = document.getElementById('filter-module')?.value || '';
+      const typeVal = document.getElementById('filter-type')?.value || '';
+      const stVal = document.getElementById('filter-status')?.value || '';
+      const prioVal = document.getElementById('filter-priority')?.value || '';
+      const kw = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
+
+      const allTcs = getAllTcs();
+      const tcMap = {};
+      allTcs.forEach(t => { tcMap[t.id] = t; });
+
+      // Current user
+      const currentUser = getCurrentUser();
+      const currentUsername = currentUser.username || 'tester';
+
+      // Filter assignments for this tester in active project
+      const myAsgs = (state.assignments || []).filter(a => {
+        if (a.projectId && a.projectId !== state.activeProjectId) return false;
+        if (a.assigneeUsername !== currentUsername && a.assigneeUsername !== 'tester') return false;
+        
+        // Version filter
+        if (selectedTesterVersion) {
+          const cyc = getCycleById(a.cycleId);
+          if (cyc && cyc.version && cyc.version !== selectedTesterVersion && !cyc.version.startsWith(selectedTesterVersion)) {
+            return false;
+          }
+        }
+
+        // Test cycle filter (if specific cycle selected)
+        if (selectedTesterCycleId && a.cycleId !== selectedTesterCycleId) return false;
+
+        return true;
+      });
+
+      // Update KPIs for active scope
+      let totalCount = myAsgs.length;
+      let passCount = 0;
+      let failCount = 0;
+      let blockedCount = 0;
+      let pendingCount = 0;
+
+      myAsgs.forEach(a => {
+        const res = state.results ? state.results[a.tcId] : null;
+        const curStatus = ((res ? res.status : a.status) || 'Not Run').toUpperCase();
+        if (curStatus === 'PASS' || curStatus === 'PASSED') passCount++;
+        else if (curStatus === 'FAIL' || curStatus === 'FAILED') failCount++;
+        else if (curStatus === 'BLOCKED') blockedCount++;
+        else pendingCount++;
+      });
+
+      document.getElementById('my-kpi-total').textContent = totalCount;
+      document.getElementById('my-kpi-pass').textContent = passCount;
+      document.getElementById('my-kpi-fail').textContent = failCount;
+      if (document.getElementById('my-kpi-blocked')) {
+        document.getElementById('my-kpi-blocked').textContent = blockedCount;
+      }
+      document.getElementById('my-kpi-pending').textContent = pendingCount;
+
+      // Filter list
+      const filtered = myAsgs.filter(a => {
+        const tc = tcMap[a.tcId] || { title: a.tcId, module: a.module, priority: a.priority, type: 'Chức năng' };
+        const res = state.results ? state.results[a.tcId] : null;
+        const curStatus = (res ? res.status : (a.status || 'Not Run')).toUpperCase();
+
+        if (modVal && a.module !== modVal && tc.module !== modVal) return false;
+        if (typeVal) {
+          const tcType = tc.type || 'Chức năng';
+          if (!tcType.toLowerCase().includes(typeVal.toLowerCase())) return false;
+        }
+        if (prioVal && a.priority !== prioVal && tc.priority !== prioVal) return false;
+        if (stVal) {
+          const s = curStatus;
+          if (stVal === 'PASSED' && s !== 'PASS' && s !== 'PASSED') return false;
+          if (stVal === 'FAILED' && s !== 'FAIL' && s !== 'FAILED') return false;
+          if (stVal === 'BLOCKED' && s !== 'BLOCKED') return false;
+          if (stVal === 'WIP' && s !== 'WIP' && s !== 'IN PROGRESS') return false;
+          if (stVal === 'Not Run' && s !== 'NOT RUN' && s !== 'NEW') return false;
+          if (stVal === 'SKIP' && s !== 'SKIP') return false;
+        }
+        if (kw) {
+          const matchId = a.tcId.toLowerCase().includes(kw);
+          const matchTitle = (tc.title || tc.name || '').toLowerCase().includes(kw);
+          if (!matchId && !matchTitle) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('my-task-count').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:var(--text-muted)">Không có kịch bản kiểm thử nào phù hợp với bộ lọc hiện tại.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(a => {
+        const tc = tcMap[a.tcId] || { title: a.tcId, name: a.tcId, module: a.module || 'M01', priority: a.priority || 'P2', type: 'Chức năng' };
+        const res = state.results ? state.results[a.tcId] : null;
+        const curStatus = res ? res.status : (a.status || 'Not Run');
+        const badgeHtml = statusBadge(curStatus);
+
+        const dateRange = (a.startDate && a.dueDate) ? `${a.startDate} → ${a.dueDate}` : (a.dueDate || 'Chưa đặt');
+        const prioBadge = renderCompactPriorityBadge(tc.priority || a.priority);
+        const cycleObj = getCycleById(a.cycleId) || getActiveCycle(state.activeProjectId);
+        const cycleBadge = cycleObj 
+          ? `<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-size:10.5px" title="${escapeHtml(cycleObj.name)}">🎯 ${escapeHtml(cycleObj.code || cycleObj.name)}</span>` 
+          : '<span class="badge badge-nr">Đợt 1</span>';
+
+        return `
+          <tr>
+            <td style="width:110px"><span class="tc-badge-id" onclick="viewMyTaskDetail('${a.tcId}')" title="Xem chi tiết">[${a.tcId}]</span></td>
+            <td style="width:75px; text-align:center"><span class="tc-badge-id">[${a.module || tc.module || 'M01'}]</span></td>
+            <td><div class="tc-title-cell" title="${escapeHtml(tc.title || tc.name || '')}">${escapeHtml(tc.title || tc.name || '')}</div></td>
+            <td style="width:145px; text-align:center">${cycleBadge}</td>
+            <td style="width:75px; text-align:center">${prioBadge}</td>
+            <td style="width:125px; text-align:center">${getTestTypeBadge(tc.type)}</td>
+            <td style="width:145px; text-align:center; font-size:11.5px; color:var(--text-muted)">${dateRange}</td>
+            <td style="width:115px; text-align:center">${badgeHtml}</td>
+            <td style="width:110px; text-align:center">
+              <div style="display:inline-flex; align-items:center; gap:6px">
+                <a href="execution.html?tc=${a.tcId}" class="task-run-btn" title="Chạy kịch bản này">▶️ Test</a>
+                <button type="button" class="btn btn-outline btn-xs" onclick="viewMyTaskDetail('${a.tcId}')" title="Xem chi tiết">🔍</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderCompactPriorityBadge(priority) {
+      const p = (priority || 'P3').toUpperCase();
+      if (p === 'P1') {
+        return `<span class="badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #f87171; font-weight:800; font-size:11px; padding:2px 6px">P1</span>`;
+      }
+      if (p === 'P2') {
+        return `<span class="badge" style="background:#ffedd5; color:#c2410c; border:1px solid #fdba74; font-weight:800; font-size:11px; padding:2px 6px">P2</span>`;
+      }
+      if (p === 'P3') {
+        return `<span class="badge" style="background:#fef9c3; color:#a16207; border:1px solid #fde047; font-weight:800; font-size:11px; padding:2px 6px">P3</span>`;
+      }
+      return `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; font-size:11px; padding:2px 6px">P4</span>`;
+    }
+
+    // =========================================================================
+    // MODAL DETAIL VIEW (ISO 29119-3)
+    // =========================================================================
+    function viewMyTaskDetail(tcId) {
+      activeModalTcId = tcId;
+      const allTcs = getAllTcs();
+      const tc = allTcs.find(t => t.id === tcId);
+      if (!tc) return;
+
+      const res = state.results ? state.results[tcId] : null;
+      const reqId = tc.reqId || `SRS-SMARTVMS-${tc.module || 'M01'}`;
+      const platform = tc.platform || 'Desktop / Web Client';
+
+      document.getElementById('modal-tc-title').innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; padding-right:24px">
+          <span><strong style="color:var(--primary); font-family:monospace">[${tc.id}]</strong> ${escapeHtml(tc.title || tc.name || '')}</span>
+          <button type="button" class="btn btn-outline btn-xs" onclick="navigator.clipboard.writeText('${tc.id}'); showToast('📋 Đã chép mã kịch bản!', 'info')">📋 Chép mã</button>
+        </div>
+      `;
+      const body = document.getElementById('modal-tc-body');
+      
+      let stepsHtml = '';
+      if (Array.isArray(tc.steps) && tc.steps.length > 0) {
+        stepsHtml = tc.steps.map((s, idx) => `
+          <div style="display:flex; gap:8px; margin-bottom:6px; font-size:12px; background:var(--bg-body); padding:6px 10px; border-radius:4px">
+            <span style="font-weight:700; color:var(--primary); min-width:20px">${idx + 1}.</span>
+            <span>${escapeHtml(s)}</span>
+          </div>
+        `).join('');
+      } else if (typeof tc.steps === 'string') {
+        stepsHtml = `<div style="font-size:12px; line-height:1.5; background:var(--bg-body); padding:8px 10px; border-radius:4px">${escapeHtml(tc.steps)}</div>`;
+      } else {
+        stepsHtml = `<div style="font-size:12px; color:var(--text-muted)">Chưa cập nhật các bước thực hiện chi tiết.</div>`;
+      }
+
+      let execStatusHtml = '';
+      if (res) {
+        execStatusHtml = `
+          <div style="background:var(--bg-surface); padding:10px 14px; border-radius:6px; border:1px solid var(--border); margin-bottom:12px; font-size:12px">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+              <strong>Trạng thái thực thi gần nhất:</strong>
+              <span>${statusBadge(res.status)}</span>
+            </div>
+            ${res.actualResult ? `<div style="margin-top:4px"><strong>Kết quả thực tế:</strong> ${escapeHtml(res.actualResult)}</div>` : ''}
+            ${res.failReason ? `<div style="margin-top:4px; color:#dc2626"><strong>Lý do lỗi:</strong> ${escapeHtml(res.failReason)}</div>` : ''}
+            ${res.defectCategory ? `<div style="margin-top:4px; font-size:11px; color:var(--text-muted)">Phân loại lỗi: <strong>${escapeHtml(res.defectCategory)}</strong> | RCA: ${escapeHtml(res.rca || 'Đang phân tích')}</div>` : ''}
+          </div>
+        `;
+      }
+
+      body.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; background:var(--bg-surface); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px; font-size:12px">
+          <div><span style="color:var(--text-muted)">Phân hệ:</span> <strong>${getModuleName(tc.module)}</strong></div>
+          <div><span style="color:var(--text-muted)">Mã SRS:</span> <strong style="color:var(--primary); font-family:monospace">${reqId}</strong></div>
+          <div><span style="color:var(--text-muted)">Loại kiểm thử (ISO):</span> ${getTestTypeBadge(tc.type)}</div>
+          <div><span style="color:var(--text-muted)">Bộ kịch bản:</span> <span class="badge" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1">🎯 ${getTestSuiteLabel(tc.suite)}</span></div>
+          <div><span style="color:var(--text-muted)">Mức ưu tiên:</span> ${renderCompactPriorityBadge(tc.priority)}</div>
+          <div><span style="color:var(--text-muted)">Nền tảng:</span> <strong>${escapeHtml(platform)}</strong></div>
+        </div>
+
+        ${execStatusHtml}
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px; font-size:12px">
+          <div style="background:var(--bg-body); padding:10px 12px; border-radius:6px; border:1px solid var(--border)">
+            <div style="font-weight:700; margin-bottom:4px; color:var(--text-primary)">Tiền điều kiện (Precondition):</div>
+            <div style="color:var(--text-secondary)">${escapeHtml(tc.precondition || 'Môi trường sẵn sàng, tài khoản phân quyền hợp lệ.')}</div>
+          </div>
+          <div style="background:var(--bg-body); padding:10px 12px; border-radius:6px; border:1px solid var(--border)">
+            <div style="font-weight:700; margin-bottom:4px; color:var(--text-primary)">Dữ liệu kiểm thử (Test Data):</div>
+            <div style="color:var(--text-secondary); font-family:monospace">${escapeHtml(tc.testData || 'Sử dụng dữ liệu mẫu hệ thống SmartVMS.')}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px">
+          <div style="font-weight:700; font-size:12.5px; margin-bottom:6px; color:var(--text-primary)">Các bước thực hiện (Test Steps - ISO 29119-3):</div>
+          ${stepsHtml}
+        </div>
+
+        <div style="background:rgba(34,197,94,0.08); padding:12px 14px; border-radius:8px; border:1px solid #86efac; color:#15803d; margin-bottom:12px">
+          <div style="font-weight:700; font-size:12.5px; margin-bottom:4px">🎯 Kết quả kỳ vọng (Expected Result):</div>
+          <div style="font-size:12px; line-height:1.5">${Array.isArray(tc.expected) ? tc.expected.map(e => `• ${escapeHtml(e)}`).join('<br/>') : escapeHtml(tc.expected || 'Hệ thống vận hành trơn tru đúng đặc tả')}</div>
+        </div>
+
+        ${tc.notes ? `
+          <div style="font-size:11.5px; color:var(--text-muted); background:var(--bg-body); padding:8px 12px; border-radius:6px; border:1px dashed var(--border)">
+            <strong>Ghi chú kỹ thuật:</strong> ${escapeHtml(tc.notes)}
+          </div>
+        ` : ''}
+      `;
+      openModal('modal-tc-detail');
+    }
+
+    function startTestFromModal() {
+      if (activeModalTcId) {
+        window.location.href = `execution.html?tc=${activeModalTcId}`;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+/* ==========================================================================
+   SMARTVMS QA HUB - AD-HOC DEFECT / INCIDENT REPORTING STYLES
+   ISO/IEC/IEEE 29119-3:2021 Clause 8 & ISO 9001:2015 Clause 8.7
+   ========================================================================== */
+
+/* Quick Action Topbar Button */
+.btn-adhoc-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.btn-adhoc-trigger:hover {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.45);
+}
+.btn-adhoc-trigger:active {
+  transform: translateY(0);
+}
+
+/* Modal Styling Enhancements */
+.adhoc-modal-dialog {
+  max-width: 820px;
+  width: 95%;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 20px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.adhoc-modal-header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #ea580c;
+}
+
+.adhoc-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fdba74;
+}
+
+.adhoc-badge-iso {
+  background: rgba(234, 88, 12, 0.25);
+  border: 1px solid #ea580c;
+  color: #ffedd5;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.adhoc-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.adhoc-grid-3 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 12px;
+}
+
+.adhoc-callout {
+  background: rgba(234, 88, 12, 0.08);
+  border-left: 4px solid #ea580c;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+.adhoc-preview-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.adhoc-thumb-wrap {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+}
+
+.adhoc-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.adhoc-thumb-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Admin Unscripted Defect Section */
+.admin-adhoc-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(234, 88, 12, 0.3);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-adhoc-header {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.1) 0%, rgba(234, 88, 12, 0.03) 100%);
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(234, 88, 12, 0.2);
+}
+
+.admin-adhoc-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #c2410c;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-theme="dark"] .admin-adhoc-title {
+  color: #fb923c;
+}

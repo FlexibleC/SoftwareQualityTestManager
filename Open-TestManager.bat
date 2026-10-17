@@ -1,14 +1,15 @@
 @echo off
 echo ========================================================
-echo       SMARTVMS TEST MANAGER v3.1 - KHOI DONG
+echo   HE THONG QUAN LY KIEM THU ^& DANH GIA CHAT LUONG PHAN MEM
 echo ========================================================
 echo.
-echo Dang mo Phan mem Quan ly Kiem thu SmartVMS Local...
+echo Dang mo tren trinh duyet...
+echo Ho tro cac du an: SmartVMS, SmartParking, SmartAccess...
 start "" "%~dp0index.html"
 echo.
-echo He thong dang chay tren trinh duyet mac dinh.
-echo Tai khoan Admin: admin / 123
-echo Tai khoan Tester: tester / 123
-echo Tai khoan Dev: dev / 123
+echo Tai khoan su dung:
+echo - Quan ly: admin / 123
+echo - Nguoi kiem tra: tester / 123
+echo - Lap trinh vien: dev / 123
 echo.
 exit

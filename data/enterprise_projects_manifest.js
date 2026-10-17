@@ -1,0 +1,29 @@
+/* Auto-generated Enterprise Projects Manifest for SmartVMS Platform */
+window.OPENQAS_ENTERPRISE_MANIFEST = {
+  "activeProjectId": "PRJ-SMARTVMS",
+  "projects": [
+    {
+      "id": "PRJ-SMARTVMS",
+      "code": "SMARTVMS",
+      "name": "SmartVMS — Quản lý Khách & Ra vào",
+      "domain": "An ninh & Kiểm soát Ra vào Cơ quan",
+      "lead": "Nguyễn Văn Huy (Project Manager)",
+      "standards": [
+        "ISO 9001:2015",
+        "ISO/IEC/IEEE 29119",
+        "ISO/IEC 25010"
+      ],
+      "activeVersion": "v2.0",
+      "versions": [
+        {
+          "version": "v2.0",
+          "label": "v2.0-SingleSite 2026",
+          "status": "IN_QA",
+          "targetDate": "2026-10-30",
+          "changelog": "Phiên bản Offline Standalone cho trụ sở đơn lẻ (204 TCs)"
+        }
+      ]
+    }
+  ],
+  "catalogs": {}
+};

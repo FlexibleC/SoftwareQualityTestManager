@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Tổng Quan - Admin QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/reports.css" />
+</head>
+<body>
+  <!-- Admin Executive Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="../admin/index.html" class="vms-brand">
+        <div class="vms-brand-icon">👑</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Quản Trị & Điều Hành</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="../admin/index.html" class="nav-item active">📊 Tổng quan</a>
+          <a href="../admin/assignments.html" class="nav-item">📌 Giao việc</a>
+          <a href="../admin/testcases.html" class="nav-item">📋 Kịch bản</a>
+          <a href="../admin/reports.html" class="nav-item">📈 Báo cáo</a>
+          <a href="../admin/settings.html" class="nav-item">⚙️ Cài đặt</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile">
+        <div class="vms-user-avatar">A</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Nguyễn Văn Huy</span>
+          <span class="vms-user-role">QA Lead (Admin)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')">🧪 Sang Tester</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📊 Trung Tâm Điều Hành & Giám Sát Chất Lượng Dự Án</h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tổng quan tiến độ thực thi kiểm thử và tải công việc của toàn bộ dự án</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px">
+        <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Dự án đang xem:</span>
+        <select id="dash-project-select" onchange="switchProject(this.value)" class="topbar-select" style="background:var(--bg-card); color:var(--text-primary); border-color:var(--border)">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">📦</div>
+        <div class="stat-body">
+          <div class="stat-value" id="dash-total">0</div>
+          <div class="stat-label">Tổng số kịch bản</div>
+        </div>
+      </div>
+      <div class="stat-card stat-pass">
+        <div class="stat-icon">✅</div>
+        <div class="stat-body">
+          <div class="stat-value" id="dash-pass" style="color:#16a34a">0</div>
+          <div class="stat-label">Kiểm thử Đạt</div>
+        </div>
+      </div>
+      <div class="stat-card stat-fail">
+        <div class="stat-icon">❌</div>
+        <div class="stat-body">
+          <div class="stat-value" id="dash-fail" style="color:#dc2626">0</div>
+          <div class="stat-label">Phát hiện Lỗi</div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #991b1b">
+        <div class="stat-icon">⛔</div>
+        <div class="stat-body">
+          <div class="stat-value" id="dash-blocked" style="color:#991b1b">0</div>
+          <div class="stat-label">Bị chặn (Blocked)</div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #2563eb">
+        <div class="stat-icon">📌</div>
+        <div class="stat-body">
+          <div class="stat-value" id="dash-asg" style="color:#2563eb">0</div>
+          <div class="stat-label">Đã phân công</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Cards Grid -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:20px">
+      <div class="card" style="cursor:pointer; transition:transform 0.15s, box-shadow 0.15s" onclick="window.location.href='../admin/assignments.html'">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
+          <div style="width:40px; height:40px; border-radius:8px; background:rgba(37,99,235,0.1); display:flex; align-items:center; justify-content:center; font-size:20px">📌</div>
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">Điều Phối & Giao Việc</h3>
+            <span style="font-size:11.5px; color:var(--text-muted)">Phân bổ test case & Ma trận nhân sự</span>
+          </div>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5">
+          Quản lý tải tester toàn dự án, giao kịch bản theo phân hệ hoặc giao lẻ từng test case với 8 cột tường minh.
+        </div>
+        <div style="margin-top:12px; font-weight:700; color:var(--primary); font-size:12px">Truy cập phân hệ Giao việc ➔</div>
+      </div>
+
+      <div class="card" style="cursor:pointer; transition:transform 0.15s, box-shadow 0.15s" onclick="window.location.href='../admin/testcases.html'">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
+          <div style="width:40px; height:40px; border-radius:8px; background:rgba(22,163,74,0.1); display:flex; align-items:center; justify-content:center; font-size:20px">📋</div>
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">Danh Mục Kịch Bản</h3>
+            <span style="font-size:11.5px; color:var(--text-muted)">Tra cứu & Đặc tả test case</span>
+          </div>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5">
+          Toàn bộ 12 phân hệ nghiệp vụ, dữ liệu đầu vào, điều kiện tiên quyết và kết quả kỳ vọng chuẩn ISO 29119.
+        </div>
+        <div style="margin-top:12px; font-weight:700; color:var(--success); font-size:12px">Tra cứu danh mục kịch bản ➔</div>
+      </div>
+
+      <div class="card" style="cursor:pointer; transition:transform 0.15s, box-shadow 0.15s" onclick="window.location.href='../admin/reports.html'">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
+          <div style="width:40px; height:40px; border-radius:8px; background:rgba(217,119,6,0.1); display:flex; align-items:center; justify-content:center; font-size:20px">📈</div>
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">Báo Cáo Chất Lượng</h3>
+            <span style="font-size:11.5px; color:var(--text-muted)">Thống kê đa chiều & Biểu đồ</span>
+          </div>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5">
+          Biểu đồ Doughnut tỉ lệ đạt/lỗi, phân tích theo phân hệ, so sánh giữa các dự án và xuất file HTML.
+        </div>
+        <div style="margin-top:12px; font-weight:700; color:var(--warning); font-size:12px">Xem báo cáo chi tiết ➔</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const p = getActiveProject();
+      if (!p) return;
+      const tcs = p.testCases || [];
+      const asgs = (state.assignments || []).filter(a => a.projectId === p.id);
+      let pass = 0, fail = 0, blocked = 0;
+      tcs.forEach(t => {
+        const r = state.results ? state.results[t.id] : null;
+        if (r) {
+          const s = (r.status || '').toUpperCase();
+          if (s === 'PASS' || s === 'PASSED') pass++;
+          else if (s === 'FAIL' || s === 'FAILED') fail++;
+          else if (s === 'BLOCKED') blocked++;
+        }
+      });
+
+      document.getElementById('dash-total').textContent = tcs.length;
+      document.getElementById('dash-pass').textContent = pass;
+      document.getElementById('dash-fail').textContent = fail;
+      if (document.getElementById('dash-blocked')) {
+        document.getElementById('dash-blocked').textContent = blocked;
+      }
+      document.getElementById('dash-asg').textContent = asgs.length;
+
+      const sel = document.getElementById('dash-project-select');
+      if (sel) {
+        sel.innerHTML = getAllProjects().map(pr => `<option value="${pr.id}" ${pr.id === p.id ? 'selected' : ''}>${pr.name}</option>`).join('');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+{
+  "schema": "https://smartvms.local/schemas/test-catalog-v4.json",
+  "title": "SmartParking — Danh mục Kịch bản Kiểm thử Hệ thống Bãi xe Thông minh",
+  "projectId": "PRJ-SMARTPARK",
+  "version": "1.2.0",
+  "modules": [
+    {
+      "id": "PK01",
+      "name": "Làn xe Vào & Nhận diện Biển số ANPR",
+      "short": "Làn Vào"
+    },
+    {
+      "id": "PK02",
+      "name": "Làn xe Ra & Tính cước / Thanh toán QR",
+      "short": "Làn Ra & Cước"
+    },
+    {
+      "id": "PK03",
+      "name": "Quản lý Vé tháng & Cư dân",
+      "short": "Vé Tháng"
+    },
+    {
+      "id": "PK04",
+      "name": "Báo cáo Doanh thu & Chốt ca Trực ban",
+      "short": "Báo cáo & Ca"
+    },
+    {
+      "id": "PK05",
+      "name": "Điều khiển Barie, Cảm biến Loop & Đèn tín hiệu",
+      "short": "Thiết bị Barie"
+    }
+  ],
+  "testCases": [
+    {
+      "id": "TC-PARK-001",
+      "module": "PK01",
+      "priority": "P1",
+      "name": "Nhận diện biển số xe máy tự động làn vào (Camera LPR)",
+      "platform": "Phần mềm Trạm thu phí Kiosk",
+      "testData": "Biển số xe: 29B1-12345, loại xe: Xe máy.",
+      "precondition": "Camera ANPR hoạt động tốt, xe kích hoạt vòng từ Loop vào vị trí chụp.",
+      "steps": [
+        "1. Xe máy tiến vào làn, đè lên vòng từ cảm ứng Loop 1.",
+        "2. Camera tự động kích hoạt chụp ảnh biển số và toàn cảnh người lái.",
+        "3. Bảo vệ quẹt thẻ chip Mifare làn vào."
+      ],
+      "expected": [
+        "Phần mềm nhận dạng chuỗi ký tự biển số với độ chính xác >95%.",
+        "Ghi nhận mã thẻ, thời gian vào và mở barie làn vào cho xe đi qua."
+      ]
+    },
+    {
+      "id": "TC-PARK-002",
+      "module": "PK01",
+      "priority": "P2",
+      "name": "Xử lý biển số bẩn hoặc bị che khuất làn vào",
+      "platform": "Phần mềm Trạm thu phí Kiosk",
+      "testData": "Biển số dính bùn, mờ chữ.",
+      "precondition": "Xe máy vào làn.",
+      "steps": [
+        "1. Camera chụp ảnh nhưng engine OCR trả về độ tin cậy thấp (<60%).",
+        "2. Phần mềm bật cảnh báo màu vàng yêu cầu nhập tay.",
+        "3. Bảo vệ nhấn phím F2 sửa biển số thủ công."
+      ],
+      "expected": [
+        "Hệ thống cho phép sửa biển số thủ công và lưu cờ cảnh báo Biển số nhập tay trong biên bản kiểm toán."
+      ]
+    },
+    {
+      "id": "TC-PARK-003",
+      "module": "PK02",
+      "priority": "P1",
+      "name": "Đối soát biển số lúc ra và tự động tính tiền vé lượt",
+      "platform": "Phần mềm Trạm thu phí Làn Ra",
+      "testData": "Quẹt lại thẻ của xe 29B1-12345 lúc vào.",
+      "precondition": "Xe đã vào làn 3 tiếng trước.",
+      "steps": [
+        "1. Xe ra làn, quẹt thẻ RFID.",
+        "2. Camera làn ra tự động chụp ảnh biển số xe ra.",
+        "3. Hệ thống so sánh ảnh vào và ảnh ra."
+      ],
+      "expected": [
+        "Hiển thị song song 2 ảnh: Ảnh xe lúc vào và ảnh xe lúc ra.",
+        "Biển số trùng khớp 100%, tự động tính cước: 5.000 VNĐ.",
+        "Hiển thị mã VietQR động trên màn hình phụ cho khách quét mã thanh toán."
+      ]
+    },
+    {
+      "id": "TC-PARK-004",
+      "module": "PK02",
+      "priority": "P1",
+      "name": "Cảnh báo còi hú khi biển số ra KHÔNG TRÙNG biển số vào",
+      "platform": "Phần mềm Trạm thu phí Làn Ra",
+      "testData": "Thẻ vào cấp cho xe 29B1-123.45 nhưng xe ra là xe 30E-999.88.",
+      "precondition": "Thẻ quẹt hợp lệ nhưng xe ra khác xe vào.",
+      "steps": [
+        "1. Quẹt thẻ tại làn ra.",
+        "2. Engine so sánh phát hiện biển số không khớp."
+      ],
+      "expected": [
+        "Phần mềm bật cảnh báo ĐỎ BIỂN SỐ KHÔNG TRÙNG KHỚP, phát còi cảnh báo.",
+        "Barie bị khóa cứng không cho xe vượt qua, yêu cầu xác minh bảo vệ."
+      ]
+    },
+    {
+      "id": "TC-PARK-005",
+      "module": "PK05",
+      "priority": "P1",
+      "name": "Chống kẹp xe của Barie tự động khi xe chưa qua hết",
+      "platform": "Hộp điều khiển Barie & Vòng từ Loop an toàn",
+      "testData": "Xe ô tô dừng giữa cần barie.",
+      "precondition": "Barie đang ở vị trí nâng.",
+      "steps": [
+        "1. Xe ô tô tiến vào giữa làn nhưng dừng lại dưới cần barie.",
+        "2. Hết thời gian chờ đóng tự động (Timeout 10s)."
+      ],
+      "expected": [
+        "Vòng từ Loop an toàn phát hiện còn kim loại xe bên dưới, ngăn lệnh đóng barie.",
+        "Cần barie giữ nguyên vị trí giương cao, tuyệt đối không hạ xuống kẹp xe."
+      ]
+    }
+  ]
+}

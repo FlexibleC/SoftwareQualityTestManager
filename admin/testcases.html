@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Danh Mục Kịch Bản - Admin QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/testcases.css" />
+  <link rel="stylesheet" href="../shared/css/adhoc.css" />
+</head>
+<body>
+  <!-- Admin Executive Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="../admin/index.html" class="vms-brand">
+        <div class="vms-brand-icon">👑</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Quản Trị Kịch Bản</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="../admin/index.html" class="nav-item">📊 Tổng quan</a>
+          <a href="../admin/assignments.html" class="nav-item">📌 Giao việc</a>
+          <a href="../admin/testcases.html" class="nav-item active">📋 Kịch bản</a>
+          <a href="../admin/reports.html" class="nav-item">📈 Báo cáo</a>
+          <a href="../admin/settings.html" class="nav-item">⚙️ Cài đặt</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile">
+        <div class="vms-user-avatar">A</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Nguyễn Văn Huy</span>
+          <span class="vms-user-role">QA Lead (Admin)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')">🧪 Sang Tester</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📋 Danh Mục Kịch Bản Kiểm Thử Chuẩn</h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tra cứu, cập nhật và quản lý toàn diện các kịch bản kiểm thử của dự án</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px">
+        <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0">
+          ⬆️ Nạp JSON
+          <input type="file" accept=".json" style="display:none" onchange="importCatalogJson(this)" />
+        </label>
+        <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogJson()">⬇️ Xuất JSON</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openAddTcModal()">➕ Thêm Test Case Mới</button>
+      </div>
+    </div>
+
+    <!-- Unscripted Defects / Incident Review Card (ISO 29119-3 Clause 8) -->
+    <div id="admin-adhoc-container" class="admin-adhoc-card" style="display:none; margin-bottom:16px">
+      <div class="admin-adhoc-header">
+        <div class="admin-adhoc-title">
+          <span>🚨 Sự Cố & Lỗi Ngoài Kịch Bản Cần Thẩm Định (ISO 29119-3 Incident Report)</span>
+          <span class="badge" id="admin-adhoc-badge" style="background:#ea580c; color:#fff; font-size:11px">0 sự cố mới</span>
+        </div>
+        <div style="font-size:11.5px; color:var(--text-muted)">Các lỗi do Tester phát hiện ngoài kịch bản - QA Lead có thể chuyển nhanh thành Test Case hoặc giao Dev</div>
+      </div>
+      <div style="padding:12px 16px; overflow-x:auto" id="admin-adhoc-content"></div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>Phân hệ (Module)</label>
+        <select id="filter-module" onchange="renderTestcasesTable()"></select>
+      </div>
+      <div class="filter-group">
+        <label>Mức ưu tiên</label>
+        <select id="filter-priority" onchange="renderTestcasesTable()">
+          <option value="">Tất cả mức độ</option>
+          <option value="P1">🔴 P1 - Critical</option>
+          <option value="P2">🟠 P2 - Important</option>
+          <option value="P3">🟡 P3 - Medium</option>
+          <option value="P4">🟢 P4 - Low</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Loại kiểm thử (ISO 25010)</label>
+        <select id="filter-type" onchange="renderTestcasesTable()">
+          <option value="">Tất cả loại (ISO 25010)</option>
+          <option value="Chức năng">📋 Chức năng (Functional)</option>
+          <option value="Ngoại lệ">⚡ Ngoại lệ (Negative / Edge)</option>
+          <option value="Tích hợp">🔌 Tích hợp Thiết bị (Hardware)</option>
+          <option value="Bảo mật">🛡️ Bảo mật & Phân quyền (Security)</option>
+          <option value="Hiệu năng">⏱️ Hiệu năng & Tải (Performance)</option>
+          <option value="Độ tin cậy">📶 Độ tin cậy & Chịu lỗi (Reliability)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Bộ kịch bản (Test Suite)</label>
+        <select id="filter-suite" onchange="renderTestcasesTable()">
+          <option value="">Tất cả bộ kịch bản (6 Suites)</option>
+          <option value="SMOKE">⚡ Smoke Test (Khởi động)</option>
+          <option value="REGRESSION">🔄 Regression Test (Hồi quy chuẩn)</option>
+          <option value="INTEGRATION_HW">🔌 Tích hợp Thiết bị Ngoại vi</option>
+          <option value="SECURITY_FRAUD">🛡️ Bảo mật & Chống gian lận</option>
+          <option value="PERF_STRESS">⏱️ Tải cao điểm & Hiệu năng</option>
+          <option value="FAILOVER_OFFLINE">📶 Ngoại tuyến & Chịu lỗi</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Trạng thái</label>
+        <select id="filter-status" onchange="renderTestcasesTable()">
+          <option value="">Tất cả trạng thái</option>
+          <option value="Pass">✅ Đã Đạt (Pass)</option>
+          <option value="Fail">❌ Bị Lỗi (Fail)</option>
+          <option value="Blocked">⛔ Bị chặn (Blocked)</option>
+          <option value="Not Run">⚪ Chưa chạy</option>
+          <option value="Skip">⏭ Bỏ qua</option>
+          <option value="In Progress">⏳ Đang test</option>
+        </select>
+      </div>
+      <div class="filter-group" style="flex:1; min-width:180px">
+        <label>Tìm kiếm kịch bản</label>
+        <input type="text" id="filter-search" placeholder="Nhập mã TC, tên, dữ liệu hoặc mô tả..." oninput="renderTestcasesTable()" />
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="resetFilters()" style="margin-bottom:1px">Đặt lại</button>
+      <div style="margin-left:auto; font-size:12px; font-weight:700; color:var(--text-muted); padding-bottom:6px" id="tc-total-count">-- test cases</div>
+    </div>
+
+    <!-- Test Cases Table -->
+    <div class="tc-table-container">
+      <table class="tc-table">
+        <thead>
+          <tr>
+            <th style="width:36px; text-align:center"><input type="checkbox" style="cursor:pointer" title="Chọn tất cả" /></th>
+            <th style="width:125px; text-align:center">Mã kịch bản</th>
+            <th style="width:90px; text-align:center">Ưu tiên</th>
+            <th style="width:95px; text-align:center">Phân hệ</th>
+            <th style="width:135px; text-align:center">Loại kịch bản (ISO)</th>
+            <th>Tên kịch bản & Mục tiêu kiểm thử</th>
+            <th style="width:115px; text-align:center">Trạng thái</th>
+            <th style="width:140px">Người test</th>
+            <th style="width:165px; text-align:center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="tc-table-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal Chi Tiết Test Case (ISO 29119-3 & ISO 9001 8.5.2) -->
+  <div class="modal-overlay" id="modal-tc-detail" onclick="closeModal('modal-tc-detail')">
+    <div class="modal-dialog modal-lg" onclick="event.stopPropagation()" style="max-width:850px">
+      <div class="modal-header">
+        <h3 id="modal-tc-title">Chi Tiết Test Case</h3>
+        <button class="modal-close" onclick="closeModal('modal-tc-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-tc-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-tc-detail')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm / Chỉnh Sửa / Hiệu Đính Test Case (ISO 9001 Clause 7.5 & ISO 29119-3) -->
+  <div class="modal-overlay" id="modal-tc-form" onclick="closeModal('modal-tc-form')">
+    <div class="modal-dialog modal-lg" onclick="event.stopPropagation()" style="max-width:850px">
+      <div class="modal-header">
+        <h3 id="modal-tc-form-title">Thêm / Hiệu Đính Kịch Bản Kiểm Thử</h3>
+        <button class="modal-close" onclick="closeModal('modal-tc-form')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tc-form-mode" value="add" />
+        <input type="hidden" id="tc-form-orig-id" value="" />
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:12px">
+          <div class="form-group">
+            <label>Mã kịch bản (TC-ID) *</label>
+            <input type="text" id="tc-form-id" placeholder="VD: TC-M02-001" style="font-family:monospace; font-weight:700" />
+          </div>
+          <div class="form-group">
+            <label>Phân hệ (Module) *</label>
+            <select id="tc-form-module"></select>
+          </div>
+          <div class="form-group">
+            <label>Mức độ ưu tiên *</label>
+            <select id="tc-form-priority">
+              <option value="P1">🔴 P1 - Rất cao (Critical)</option>
+              <option value="P2" selected>🟠 P2 - Quan trọng (Important)</option>
+              <option value="P3">🟡 P3 - Trung bình (Medium)</option>
+              <option value="P4">🟢 P4 - Thấp (Low)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:12px">
+          <div class="form-group">
+            <label>Nền tảng / Môi trường (Platform)</label>
+            <input type="text" id="tc-form-platform" placeholder="VD: Giao diện Web Trực ban, Cổng ra ô tô..." />
+          </div>
+          <div class="form-group">
+            <label>Loại kiểm thử (ISO 25010)</label>
+            <select id="tc-form-type">
+              <option value="Chức năng" selected>Chức năng (Functional)</option>
+              <option value="Ngoại lệ">Ngoại lệ (Negative / Edge)</option>
+              <option value="Tích hợp">Tích hợp thiết bị (Hardware)</option>
+              <option value="Bảo mật">Bảo mật & Phân quyền (Security)</option>
+              <option value="Hiệu năng">Hiệu năng & Tải (Performance)</option>
+              <option value="Độ tin cậy">Độ tin cậy & Chịu lỗi (Reliability)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bộ kịch bản (Test Suite)</label>
+            <select id="tc-form-suite">
+              <option value="SMOKE">⚡ Smoke Test (Khởi động)</option>
+              <option value="REGRESSION" selected>🔄 Regression Test (Hồi quy)</option>
+              <option value="INTEGRATION_HW">🔌 Tích hợp Thiết bị Ngoại vi</option>
+              <option value="SECURITY_FRAUD">🛡️ Bảo mật & Chống gian lận</option>
+              <option value="PERF_STRESS">⏱️ Tải cao điểm & Hiệu năng</option>
+              <option value="FAILOVER_OFFLINE">📶 Ngoại tuyến & Chịu lỗi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Truy vết Yêu cầu SRS (ISO 9001)</label>
+            <input type="text" id="tc-form-req-id" placeholder="VD: REQ-VMS-016" style="font-family:monospace" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Tên kịch bản & Mục tiêu kiểm thử (Objective) *</label>
+          <input type="text" id="tc-form-name" placeholder="VD: Check-out và thu hồi thẻ thường đoàn vô danh báo mất..." />
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Dữ liệu thử nghiệm (Test Data / Payload Inputs - ISO 29119-3)</label>
+          <textarea id="tc-form-testdata" rows="2" placeholder="VD: Biển số xe: 29A-999.99, Mã thẻ RFID: 0019283746, CCCD: 001099001234..." style="font-family:monospace; font-size:12.5px"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Điều kiện tiên quyết (Preconditions)</label>
+          <input type="text" id="tc-form-precondition" placeholder="VD: Đoàn khách đã check-in trước đó; Cổng barrier đang ở trạng thái đóng." />
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
+          <div class="form-group">
+            <label>Các bước thực hiện (Mỗi bước 1 dòng)</label>
+            <textarea id="tc-form-steps" rows="4" placeholder="1. Quẹt thẻ tại đầu đọc cổng ra&#10;2. Hệ thống hiển thị cảnh báo thẻ mất&#10;3. Bấm xác nhận thu hồi thẻ"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Kết quả kỳ vọng (Mỗi kết quả 1 dòng)</label>
+            <textarea id="tc-form-expected" rows="4" placeholder="Hệ thống ghi nhận sự kiện RECOVER_CARD&#10;Barrier mở cho phương tiện xuất trạm&#10;Cập nhật trạng thái thẻ về kho"></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú kỹ thuật bổ sung (Notes / ISO 9001 Review Notes)</label>
+          <input type="text" id="tc-form-notes" placeholder="Ghi chú về phiên bản kiểm toán hoặc cấu hình thiết bị..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-tc-form')">Hủy</button>
+        <button class="btn btn-primary" onclick="saveTcForm()">💾 Lưu Kịch Bản Kiểm Thử</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/adhoc-defect.js"></script>
+  <script src="../shared/js/testcases.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initTestcasesModule();
+    });
+  </script>
+</body>
+</html>

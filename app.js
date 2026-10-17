@@ -1,75 +1,30 @@
 /* ============================================================
    SmartVMS Test Manager — Application Logic
-   Version 3.1 | 179 Test Cases | 12 Modules (SmartVMS Local 2026)
+   Version 3.4 | 214 Test Cases Chuẩn hóa Thực tế | 12 Modules (SmartVMS Local SingleSite 2026)
    ============================================================ */
 
 'use strict';
 
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ================================================================
 // DATA: 12 MODULES — SMARTVMS LOCAL 2026 CHUẨN HÓA
 // ================================================================
-const DEFAULT_MODULES = [
-  {
-    "id": "M01",
-    "name": "Xác thực, Phân quyền & Quản lý Ca trực",
-    "short": "Auth & Ca trực"
-  },
-  {
-    "id": "M02",
-    "name": "Check-in Khách Đơn & Cấp phát Thẻ",
-    "short": "Check-in Khách"
-  },
-  {
-    "id": "M03",
-    "name": "Khách Đoàn, Người đi cùng & Lưu trú Qua đêm",
-    "short": "Đoàn & Đi cùng"
-  },
-  {
-    "id": "M04",
-    "name": "Check-out, Quản lý Phương tiện & Thu hồi Thẻ mất",
-    "short": "Check-out & Thẻ"
-  },
-  {
-    "id": "M05",
-    "name": "Giao diện Trực ban Cải tiến & Tra cứu Nâng cao",
-    "short": "Trực ban & Tra cứu"
-  },
-  {
-    "id": "M06",
-    "name": "Chi tiết Lượt khách & Dòng thời gian Timeline",
-    "short": "Chi tiết & Timeline"
-  },
-  {
-    "id": "M07",
-    "name": "Phân hệ Sổ sách Ngoại lệ - DataEntry",
-    "short": "Sổ sách DataEntry"
-  },
-  {
-    "id": "M08",
-    "name": "Quản trị Admin & Giám sát Vận hành",
-    "short": "Admin & Giám sát"
-  },
-  {
-    "id": "M09",
-    "name": "Trung tâm Báo cáo, Thống kê & Báo cáo Thẻ mất",
-    "short": "Báo cáo & Thống kê"
-  },
-  {
-    "id": "M10",
-    "name": "Cấu hình Hệ thống, Trạm gác & Sao lưu CSDL",
-    "short": "Cấu hình & Backup"
-  },
-  {
-    "id": "M11",
-    "name": "Thiết bị Ngoại vi, DeviceService & Tương tác Cổng",
-    "short": "Thiết bị & Barie"
-  },
-  {
-    "id": "M12",
-    "name": "Dịch vụ Ngầm, Tính toàn vẹn, Bản quyền & Chịu lỗi",
-    "short": "Dịch vụ ngầm & NFR"
-  }
-];
+// ================================================================
+// DATA LAYER: NẠP TỪ TỆP DỮ LIỆU ĐỘC LẬP (CHUẨN ISO 29119-3)
+// Không gắn cứng test cases trong mã nguồn ứng dụng!
+// Dữ liệu kịch bản được quản lý tại: data/smartvms_test_catalog.json
+// ================================================================
+const _catalog = (typeof window !== 'undefined' && window.SMARTVMS_DEFAULT_CATALOG) || { modules: [], testCases: [] };
+const DEFAULT_MODULES = _catalog.modules || [];
 
 function getModules() {
   if (!state.modules || !Array.isArray(state.modules) || state.modules.length === 0) {
@@ -78,7 +33,6 @@ function getModules() {
   return state.modules;
 }
 
-// Backward-compatibility proxy for MODULES
 try {
   Object.defineProperty(window, 'MODULES', {
     get: () => getModules(),
@@ -86,3023 +40,8 @@ try {
   });
 } catch(e) {}
 
-const ALL_TCS = [
-  {
-    "id": "TC-AUTH-001",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Đăng nhập Trạm gác hợp lệ bằng tài khoản trạm (Không mật khẩu)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Tên đăng nhập: \"Nv001a1\" (không cần mật khẩu).",
-    "precondition": "Backend API đang chạy; Cán bộ \"NV001\" (Nguyễn Văn Huy) có trạng thái kích hoạt trong CSDL.",
-    "steps": [
-      "1. Truy cập trang web Trạm gác (/staff.html).",
-      "2. Nhập Tên đăng nhập trạm (vd: Nv001a1), nhấn Đăng nhập (hệ thống trạm không yêu cầu mật khẩu)."
-    ],
-    "expected": [
-      "Hệ thống tự động chuẩn hóa chữ thường, xác thực thành công và lưu Token đăng nhập trạm.",
-      "Nếu trạm chưa có ca trực nào đang mở, popup \"Xác nhận chụp ảnh vào ca\" sẽ tự động hiện lên."
-    ]
-  },
-  {
-    "id": "TC-AUTH-002",
-    "module": "M01",
-    "priority": "P4",
-    "name": "Đăng nhập trạm không phân biệt hoa/thường",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập xen kẽ hoa thường: \"NV001A1\", \"nv001a1\", hoặc \"Nv001a1\".",
-    "steps": [
-      "1. Nhập username xen kẽ chữ hoa chữ thường.",
-      "2. Nhấn nút Đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống tự động chuẩn hóa chữ thường và đăng nhập thành công, không phát sinh lỗi."
-    ],
-    "precondition": "Trang đăng nhập trạm (/staff.html) đang mở."
-  },
-  {
-    "id": "TC-AUTH-003",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Đăng nhập trạm thất bại: Tên tài khoản không tồn tại",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Tên đăng nhập không tồn tại: \"khongtontai999\".",
-    "steps": [
-      "1. Nhập tài khoản không tồn tại trong hệ thống.",
-      "2. Nhấn Đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống chặn lại và hiển thị thông báo: \"User không hợp lệ hoặc nhân viên chưa được kích hoạt.\""
-    ],
-    "precondition": "Trang đăng nhập trạm (/staff.html) đang mở."
-  },
-  {
-    "id": "TC-AUTH-004",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Đăng nhập trạm thất bại: Tài khoản bị khóa (Inactive)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Tên đăng nhập của nhân viên bị khóa.",
-    "steps": [
-      "1. Nhập tài khoản nhân viên đã bị vô hiệu hóa.",
-      "2. Nhấn Đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống từ chối đăng nhập, hiển thị thông báo: \"User không hợp lệ hoặc nhân viên chưa được kích hoạt.\""
-    ],
-    "precondition": "Tài khoản nhân viên đã bị tắt cờ IsActive (Inactive) trong Admin Staff Management."
-  },
-  {
-    "id": "TC-AUTH-005",
-    "module": "M01",
-    "priority": "P2",
-    "name": "Xử lý xung đột phiên trạm: Phát hiện trạm đang có phiên mở dở dang",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Tài khoản cán bộ nhận ca: \"Nv001a1\".",
-    "steps": [
-      "1. Đăng nhập vào trạm đang có phiên trực chưa được đóng hoàn tất.",
-      "2. Quan sát nút hành động hiển thị trên màn hình đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống hiển thị nút màu đỏ \"Ép Bắt Đầu Ca Mới\".",
-      "Khi nhân viên nhấn nút này, hệ thống tự động đóng phiên cũ và khởi tạo ca trực mới cho nhân viên."
-    ],
-    "precondition": "Trạm gác \"STATION_A\" đang có 1 ca trực dở dang chưa được đóng bởi phiên trước."
-  },
-  {
-    "id": "TC-AUTH-006",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Mở ca trực bằng Camera (Webcam): Live Preview & Lưu ảnh chứng thực",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Nhân viên trực ban đứng trước ống kính camera.",
-    "precondition": "Thiết bị Webcam đã kết nối máy trạm; Trực ban đã đăng nhập hợp lệ và popup mở ca hiện lên.",
-    "steps": [
-      "1. Tại popup \"Xác nhận chụp ảnh vào ca\", cấp quyền truy cập Camera nếu trình duyệt yêu cầu.",
-      "2. Quan sát khung hình camera trực tiếp (Live Preview) hiển thị rõ nét khuôn mặt nhân viên.",
-      "3. Nhấn nút \"Vào ca\" (biểu tượng Camera)."
-    ],
-    "expected": [
-      "Hệ thống chụp lại khung hình webcam, tải ảnh lên thư mục /uploads/shifts/... làm bằng chứng mở ca.",
-      "ShiftSession mới được tạo trong CSDL, popup tự động đóng và chuyển thẳng vào Dashboard làm việc.",
-      "Header trạm cập nhật họ tên nhân viên và hiển thị chấm xanh lá \"Đang trong ca trực\"."
-    ]
-  },
-  {
-    "id": "TC-AUTH-007",
-    "module": "M01",
-    "priority": "P3",
-    "name": "Lựa chọn thiết bị Camera khi mở ca (Đa camera)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Dropdown chọn thiết bị Camera trong popup mở ca.",
-    "steps": [
-      "1. Tại popup Mở ca trực, quan sát dropdown danh sách camera khả dụng.",
-      "2. Nhấp chọn camera khác trong danh sách dropdown."
-    ],
-    "expected": [
-      "Khung Live Preview chuyển đổi nguồn video sang camera vừa chọn mượt mà, không bị treo trình duyệt."
-    ],
-    "precondition": "Máy tính trạm gắn từ 2 Webcam trở lên (ví dụ Webcam tích hợp và Webcam USB ngoài)."
-  },
-  {
-    "id": "TC-AUTH-008",
-    "module": "M01",
-    "priority": "P3",
-    "name": "Hủy mở ca trực (Hủy chụp ảnh vào ca)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Khi popup \"Xác nhận chụp ảnh vào ca\" hiển thị, nhấn nút \"Hủy bỏ\"."
-    ],
-    "expected": [
-      "Hệ thống hủy phiên đăng nhập trạm, giải phóng luồng camera và quay lại màn hình Đăng nhập ban đầu."
-    ],
-    "precondition": "Popup \"Xác nhận chụp ảnh vào ca\" đang hiển thị.",
-    "testData": "Nhấp nút \"Hủy bỏ\" hoặc biểu tượng đóng ✕."
-  },
-  {
-    "id": "TC-AUTH-009",
-    "module": "M01",
-    "priority": "P2",
-    "name": "Mở ca trực dự phòng bằng thẻ CCCD gắn chip (Khi Camera hỏng)",
-    "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Thẻ CCCD chip số \"026088008100\" đặt lên đầu đọc.",
-    "precondition": "Camera trạm bị hỏng; Cờ \"AllowCccdShiftAuth\" được bật; Cán bộ NV001 có số CCCD \"026088008100\" trong hồ sơ.",
-    "steps": [
-      "1. Tại popup Mở ca, nhấn liên kết \"Dùng CCCD thay Camera\".",
-      "2. Chuyển sang giao diện xác thực CCCD, đặt thẻ CCCD lên đầu đọc chip.",
-      "3. Hệ thống hiển thị số CCCD và thông tin đọc được, nhấn \"Xác nhận vào ca\"."
-    ],
-    "expected": [
-      "Hệ thống đối soát số CCCD đọc được với hồ sơ nhân viên trong CSDL.",
-      "Khớp số CCCD -> Mở ca thành công, popup đóng lại và chuyển vào Dashboard trạm gác."
-    ]
-  },
-  {
-    "id": "TC-AUTH-010",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Từ chối mở ca bằng thẻ CCCD của người khác",
-    "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Thẻ CCCD mang số \"001099000888\" (không khớp hồ sơ).",
-    "steps": [
-      "1. Chọn mở ca bằng CCCD dự phòng.",
-      "2. Quẹt thẻ CCCD không trùng với số CCCD lưu trong hồ sơ tài khoản đang đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống từ chối mở ca và báo lỗi: \"Số CCCD không khớp với hồ sơ nhân viên trong hệ thống.\""
-    ],
-    "precondition": "Cán bộ đăng nhập là NV001 (\"026088008100\"); Sử dụng thẻ CCCD người khác quẹt mở ca."
-  },
-  {
-    "id": "TC-AUTH-011",
-    "module": "M01",
-    "priority": "P2",
-    "name": "Tách biệt nghiệp vụ: \"Đăng xuất\" (thoát UI) vs \"Rời ca\" (kết thúc ca trực)",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Trạm gác đang trong ca trực hoạt động (ShiftSession đang Active).",
-    "steps": [
-      "1. Nhấp nút \"Đăng xuất\" trên thanh Header (nút bên cạnh nút Rời ca màu đỏ).",
-      "2. Kiểm tra thông báo và trạng thái phiên trực trên hệ thống."
-    ],
-    "expected": [
-      "Hệ thống xóa token phiên giao diện và quay về màn hình Login.",
-      "Ca trực (ShiftSession) vẫn tiếp tục DUY TRÌ chạy ngầm, không bị đóng để bàn giao ca tạm thời."
-    ],
-    "testData": "Nhấp nút \"Đăng xuất\" (thoát giao diện, ca trực vẫn giữ nguyên)."
-  },
-  {
-    "id": "TC-AUTH-012",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Kết thúc ca trực (\"Rời ca\"): Chụp ảnh bàn giao và đóng ShiftSession",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Trạm gác đang trong ca trực hoạt động; Hết giờ ca trực cần bàn giao ca.",
-    "steps": [
-      "1. Nhấp nút màu đỏ \"Rời ca\" trên thanh Header.",
-      "2. Popup \"Xác nhận rời ca trực\" hiển thị live webcam.",
-      "3. Nhấn nút \"Rời ca\" để xác nhận chụp ảnh kết thúc phiên trực."
-    ],
-    "expected": [
-      "Hệ thống chụp ảnh kết thúc ca, gọi API /station/shift-sessions/end.",
-      "ShiftSession cập nhật thời gian ra EndTime, chuyển trạng thái Ended.",
-      "Màn hình tự động quay về trang Đăng nhập trạm."
-    ],
-    "testData": "Nhấp nút \"Rời ca\" (EndShiftModal) -> chụp ảnh webcam xác nhận kết thúc ca."
-  },
-  {
-    "id": "TC-AUTH-013",
-    "module": "M01",
-    "priority": "P3",
-    "name": "Khôi phục ca trực sau Reload (F5) hoặc mở lại trình duyệt",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Trạm gác đang trong ca trực hợp lệ.",
-    "steps": [
-      "1. Đang làm việc trên Dashboard trạm, nhấn phím F5 hoặc đóng tab và mở lại URL /staff.html."
-    ],
-    "expected": [
-      "Hệ thống tự động đọc token lưu trong localStorage, gọi /station/auth/status và /station/shift-sessions/active.",
-      "Hiển thị thẳng vào Dashboard làm việc, không bắt đăng nhập hay mở ca lại."
-    ],
-    "testData": "Nhấn phím F5 hoặc đóng tab và mở lại URL /staff.html."
-  },
-  {
-    "id": "TC-AUTH-014",
-    "module": "M01",
-    "priority": "P1",
-    "name": "Đăng nhập Phân hệ Quản trị Admin: Yêu cầu Mật khẩu & Xử lý xung đột phiên",
-    "platform": "Giao diện Quản trị Admin",
-    "testData": "Tài khoản Admin: \"admin\", Mật khẩu: \"admin123\".",
-    "steps": [
-      "1. Truy cập /admin.html (hoặc /staff.html?login_as=admin).",
-      "2. Nhập tên tài khoản và mật khẩu admin.",
-      "3. Thử nhấp biểu tượng mắt kính để ẩn/hiện mật khẩu, sau đó nhấn Đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống xác thực mật khẩu qua thuật toán băm bảo mật.",
-      "Nếu phát hiện tài khoản đang đăng nhập nơi khác, cung cấp nút \"Ép Đăng Xuất Phiên Cũ\".",
-      "Đăng nhập thành công chuyển hướng vào trang Quản trị Admin với đầy đủ menu sidebar."
-    ],
-    "precondition": "Trang Quản trị Admin (/index.html hoặc /admin.html) đang mở."
-  },
-  {
-    "id": "TC-CKIN-001",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Check-in Khách đi bộ cơ bản: Nhập thủ công đầy đủ thông tin",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Họ tên: \"Trần Văn An\", CCCD: \"001099000111\", SĐT: \"0912345678\", Mục đích: \"Liên hệ công tác\", Cán bộ đón: \"Đ/c Trần Hưng\", Phòng ban: \"Ban Quản lý\".",
-    "precondition": "Ca trực trạm gác đang mở; Modal Check-in đang hiển thị.",
-    "steps": [
-      "1. Trên Dashboard trạm, nhấn nút \"+ Check-in khách mới\".",
-      "2. Điền đầy đủ Họ tên, Số CCCD, Số điện thoại, Cơ quan, Người đón, Mục đích.",
-      "3. Chọn Không dùng xe cộ.",
-      "4. Nhấn nút \"Check-in\"."
-    ],
-    "expected": [
-      "Gọi API /station/visits/checkin thành công, lưu bản ghi Visit vào CSDL SQLite.",
-      "Modal tự đóng, Dashboard cập nhật ngay dòng khách Nguyễn Văn An với trạng thái \"Trong đơn vị\".",
-      "Bộ đếm quân số inside trên header tăng lên 1."
-    ]
-  },
-  {
-    "id": "TC-CKIN-002",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Check-in tự động bằng đọc thẻ CCCD gắn chip qua DeviceService",
-    "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Thẻ CCCD gắn chip vật lý chuẩn BCA.",
-    "steps": [
-      "1. Mở modal Check-in.",
-      "2. Đặt thẻ CCCD gắn chip lên đầu đọc thẻ PCSC.",
-      "3. Quan sát các trường trên form Check-in."
-    ],
-    "expected": [
-      "DeviceService đọc chip và đẩy dữ liệu qua WebSocket.",
-      "Form tự động điền: Họ tên, Số CCCD 12 số, Ngày sinh, Giới tính, Quê quán, Địa chỉ thường trú.",
-      "Hiển thị huy hiệu xác thực chip màu xanh lá bảo đảm tính pháp lý."
-    ],
-    "precondition": "DeviceService WebSocket online; Đầu đọc chip PCSC/NFC đã cắm thẻ CCCD gắn chip."
-  },
-  {
-    "id": "TC-CKIN-003",
-    "module": "M02",
-    "priority": "P2",
-    "name": "Check-in tự động bằng quét mã QR thẻ CCCD qua máy quét 2D",
-    "platform": "Giao diện Web Trực ban & Thiết bị",
-    "testData": "Mã QR trên mặt thẻ CCCD (chuỗi chuẩn BCA phân tách bởi dấu gạch đứng |).",
-    "steps": [
-      "1. Mở modal Check-in.",
-      "2. Đưa vùng mã QR trên thẻ CCCD qua luồng sáng của máy quét 2D."
-    ],
-    "expected": [
-      "Máy quét bíp và gửi chuỗi QR chuẩn Bộ Công An vào ứng dụng.",
-      "Hệ thống tự động giải mã chuỗi chuẩn, bóc tách chính xác Số CCCD, CMND cũ, Họ tên, Ngày sinh, Giới tính, Địa chỉ."
-    ],
-    "precondition": "Máy quét mã QR 2D đã kết nối cổng USB máy trạm."
-  },
-  {
-    "id": "TC-CKIN-004",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Chụp ảnh chân dung khách chính trực tiếp qua Webcam khi Check-in",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Mở modal Check-in, nhấp vào khung camera chân dung.",
-      "2. Hướng camera về phía khách, nhấn nút Chụp ảnh."
-    ],
-    "expected": [
-      "Ảnh chân dung hiển thị ngay trong khung avatar của form Check-in.",
-      "Sau khi lưu lượt khách, ảnh đại diện xuất hiện rõ ràng trên bảng danh sách của Dashboard."
-    ],
-    "precondition": "Webcam trạm gác hoạt động; Modal Check-in đang mở.",
-    "testData": "Khách đứng trước ống kính; Nhấp nút chụp ảnh chân dung."
-  },
-  {
-    "id": "TC-CKIN-005",
-    "module": "M02",
-    "priority": "P3",
-    "name": "Chụp đa ảnh bổ sung (Giấy tờ tùy thân, tài sản) bằng Multi-shot camera modal",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại form Check-in, nhấn biểu tượng Camera chụp đa ảnh bổ sung.",
-      "2. Chụp mặt trước CCCD, mặt sau CCCD và giấy giới thiệu công tác.",
-      "3. Nhấn \"Hoàn tất\"."
-    ],
-    "expected": [
-      "Danh sách các ảnh chụp thêm hiển thị dưới dạng carousel thu nhỏ trong form Check-in.",
-      "Các đường dẫn ảnh được lưu vào trường AdditionalPhotoPaths trong CSDL."
-    ],
-    "precondition": "Modal Check-in đang mở; Khách có mang theo giấy giới thiệu hoặc tài sản cần lưu ảnh.",
-    "testData": "MultiShotCameraModal: Chụp 2 ảnh giấy tờ tùy thân bổ sung."
-  },
-  {
-    "id": "TC-CKIN-006",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Check-in cấp Thẻ Định Danh (RFID / Mã thẻ an ninh cụ thể)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Chọn loại thẻ: \"Thẻ định danh (Identity)\", Mã thẻ: \"CARD-001\".",
-    "steps": [
-      "1. Tại phần Cấp thẻ an ninh trên form Check-in, chọn loại thẻ \"Thẻ định danh (Identity)\".",
-      "2. Nhập mã thẻ \"CARD-8801\" (hoặc quẹt thẻ qua đầu đọc RFID).",
-      "3. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Lượt khách lưu trường CardNumber = \"CARD-8801\", IsCardIssued = true, CardType = \"identity\".",
-      "Trên bảng Dashboard hiển thị thông tin thẻ phát \"1\", trạng thái \"Giữ 1 thẻ\"."
-    ],
-    "precondition": "Kho thẻ an ninh trạm có sẵn thẻ RFID chưa được cấp phát."
-  },
-  {
-    "id": "TC-CKIN-007",
-    "module": "M02",
-    "priority": "P2",
-    "name": "Check-in cấp Thẻ Thường (Cấp chung đếm số lượng không nhập mã)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại phần Cấp thẻ, chọn loại thẻ \"Thẻ thường (Regular)\".",
-      "2. Không cần nhập mã số thẻ.",
-      "3. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Lượt khách lưu trường CardType = \"regular\", IsCardIssued = true, CardNumber = null.",
-      "Dashboard ghi nhận đã phát 1 thẻ thường, tính vào số lượng thẻ cần thu hồi lúc ra về."
-    ],
-    "precondition": "Modal Check-in đang mở.",
-    "testData": "Chọn loại thẻ: \"Thẻ thường (Regular)\" (hệ thống tăng bộ đếm số lượng, không cần nhập mã)."
-  },
-  {
-    "id": "TC-CKIN-008",
-    "module": "M02",
-    "priority": "P2",
-    "name": "Check-in không cấp thẻ an ninh (Khu vực mở / Sảnh tiếp dân)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại phần Cấp thẻ, chọn loại thẻ \"Không cấp thẻ (None)\".",
-      "2. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Lưu lượt khách với CardType = \"none\", IsCardIssued = false.",
-      "Cột thẻ trên Dashboard hiển thị \"Đã thu đủ thẻ\" (không nợ thẻ)."
-    ],
-    "precondition": "Khu vực tiếp dân mở hoặc sảnh cơ quan không yêu cầu thẻ an ninh.",
-    "testData": "Chọn loại thẻ: \"Không cấp thẻ\"."
-  },
-  {
-    "id": "TC-CKIN-009",
-    "module": "M02",
-    "priority": "P2",
-    "name": "Check-in có Phương tiện: Đăng ký loại xe từ danh mục chuẩn hóa",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Loại xe: \"Ô tô 4 chỗ\", Biển số xe: \"30A-999.88\", Chủ xe: \"Khách đại diện\".",
-    "steps": [
-      "1. Chuyển sang tab Phương tiện trên form Check-in.",
-      "2. Chọn loại xe từ danh mục chuẩn (STANDARD_VEHICLE_TYPES: Ô tô, Xe máy, Xe tải...).",
-      "3. Nhập Biển số xe \"30H-999.88\", chủ xe gán cho khách chính.",
-      "4. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Bản ghi Vehicle được tạo liên kết với Visit, lưu PlateNumber = \"30H-999.88\", Type = \"Ô tô 7 chỗ\".",
-      "Dashboard hiển thị thẻ biển số \"30H-999.88 (Ô tô 7 chỗ)\", đếm \"Xe: Đăng ký 1 — Còn bên trong: 1\"."
-    ],
-    "precondition": "Khách di chuyển bằng phương tiện cơ giới vào cơ quan."
-  },
-  {
-    "id": "TC-CKIN-010",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Validation Chặn trùng CCCD: Khách có số CCCD đang ở bên trong",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập số CCCD: \"001099000111\" để Check-in thêm lượt mới.",
-    "steps": [
-      "1. Mở modal Check-in khách mới.",
-      "2. Nhập số CCCD \"001099000001\".",
-      "3. Quan sát thông báo kiểm tra ràng buộc chéo (Cross-visit constraint)."
-    ],
-    "expected": [
-      "Hệ thống hiển thị cảnh báo đỏ ngay dưới ô nhập CCCD: \"Số CCCD này hiện đang có 1 lượt khách ở trong đơn vị chưa Checkout.\"",
-      "Nút Check-in bị chặn, không cho phép gửi trùng lặp."
-    ],
-    "precondition": "Khách mang số CCCD \"001099000111\" đang ở bên trong cơ quan (chưa Checkout)."
-  },
-  {
-    "id": "TC-CKIN-011",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Validation Chặn trùng Thẻ An Ninh: Mã thẻ đang cấp cho lượt khác chưa trả",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập mã thẻ an ninh định danh: \"CARD-001\" (hoặc quét thẻ RFID).",
-    "steps": [
-      "1. Mở modal Check-in khách mới.",
-      "2. Nhập thông tin khách, tại ô Mã thẻ định danh, nhập \"CARD-001\" (hoặc quét thẻ RFID).",
-      "3. Nhấn nút \"Lưu / Check-in\"."
-    ],
-    "expected": [
-      "Hệ thống phát hiện mã thẻ đang thuộc về một lượt khách khác đang ở trạng thái Inside.",
-      "Giao diện cảnh báo chặn Check-in: \"Mã thẻ \\\"CARD-001\\\" hiện đang được sử dụng ở một lượt viếng thăm khác chưa Check-Out!\".",
-      "Hệ thống không cho phép lưu và ngăn chặn việc cấp trùng thẻ cho 2 lượt khách đồng thời."
-    ],
-    "precondition": "Mã thẻ \"CARD-001\" đang được cấp cho 1 lượt khách khác (Khách chính hoặc người đi cùng) đang ở bên trong cơ quan (chưa Check-Out)."
-  },
-  {
-    "id": "TC-CKIN-012",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Validation Chặn trùng Biển số xe: Phương tiện đang ở bên trong cơ quan",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập biển số xe: \"30A-999.88\" (hoặc \"30A99988\").",
-    "steps": [
-      "1. Mở modal Check-in, thêm phương tiện với biển số \"30H-999.88\"."
-    ],
-    "expected": [
-      "Hệ thống cảnh báo: \"Biển số xe 30H-999.88 hiện đang ở trong đơn vị chưa Checkout.\""
-    ],
-    "precondition": "Xe biển số \"30A-999.88\" đang gửi lại bên trong cơ quan chưa checkout."
-  },
-  {
-    "id": "TC-CKIN-013",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Validation Bỏ trống các trường bắt buộc",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Mở modal Check-in và bấm trực tiếp nút \"Check-in\" khi chưa điền thông tin."
-    ],
-    "expected": [
-      "Hệ thống chặn submit, hiển thị tóm tắt lỗi các trường còn thiếu (Họ tên, CCCD, Mục đích, Người đón)."
-    ],
-    "precondition": "Modal Check-in đang mở.",
-    "testData": "Để trống Họ tên, CCCD, Mục đích hoặc Cán bộ tiếp đón rồi nhấn Check-in."
-  },
-  {
-    "id": "TC-CKIN-014",
-    "module": "M02",
-    "priority": "P3",
-    "name": "Tự động Upsert gợi ý Khách quen khi nhập số CCCD cũ",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Nhập đúng số CCCD đã từng vào: hệ thống tự động điền Họ tên, SĐT, Đơn vị công tác.",
-    "steps": [
-      "1. Mở modal Check-in, gõ số CCCD cũ.",
-      "2. Rời tiêu điểm (blur) khỏi ô nhập CCCD."
-    ],
-    "expected": [
-      "Hệ thống tự động tra cứu và điền sẵn Họ tên, Số điện thoại và Cơ quan của khách từ lịch sử.",
-      "Tiết kiệm thời gian gõ phím cho nhân viên trực ban."
-    ],
-    "precondition": "Khách đã từng đến cơ quan và thông tin đã được lưu trong bảng Visitors."
-  },
-  {
-    "id": "TC-CKIN-015",
-    "module": "M02",
-    "priority": "P4",
-    "name": "Chụp ảnh phương tiện (Biển số xe và đầu xe) khi Check-in",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại tab Phương tiện, nhấp nút chụp ảnh phương tiện.",
-      "2. Chụp biển số và đầu xe ô tô."
-    ],
-    "expected": [
-      "Ảnh xe được đính kèm vào phương tiện, lưu vào CSDL làm cơ sở đối soát lúc xe ra."
-    ],
-    "precondition": "Khách Check-in có đăng ký phương tiện.",
-    "testData": "Chụp ảnh webcam đầu xe và biển số xe khi check-in."
-  },
-  {
-    "id": "TC-CKIN-016",
-    "module": "M02",
-    "priority": "P1",
-    "name": "Chặn cấp phát lại Thẻ đang báo mất khi Check-In tại cổng (Khách chính & Người đi cùng)",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Hệ thống có thẻ an ninh '#901' (hoặc mã bất kỳ) đang trong tình trạng báo mất chưa thu hồi (của khách chính, người đi cùng hoặc đoàn vô danh).",
-    "testData": "Tại form Check-in cổng: Nhập Tên khách: \"Lê Văn Thắng\", CCCD: \"001099000888\", SĐT: \"0987654321\", Ô Mã thẻ an ninh nhập = \"901\" (hoặc \"#901\").",
-    "steps": [
-      "1. Trên Dashboard Trực ban (/staff.html), nhấn nút \"+ Check-in khách mới\".",
-      "2. Điền đầy đủ thông tin cá nhân khách viếng thăm (Họ tên, CCCD, SĐT, Cơ quan, Người đón, Mục đích).",
-      "3. Tại ô \"Mã thẻ an ninh\", nhập số thẻ đang trong trạng thái báo mất: 901 (hoặc #901).",
-      "4. Nhấn nút \"Check-in\"."
-    ],
-    "expected": [
-      "Hệ thống từ chối thực hiện lệnh Check-In, API /station/visits/checkin trả về cảnh báo lỗi nghiệp vụ.",
-      "Hiển thị thông báo rõ ràng trên màn hình: \"Thẻ số 901 đang báo mất bởi khách [Tên khách] (Lượt ngày DD/MM/YYYY). Cần làm thủ tục thu hồi trước khi cấp phát.\"",
-      "Lượt khách không được tạo vào CSDL với thẻ báo mất này, bảo đảm an toàn kho thẻ kiểm soát cổng."
-    ]
-  },
-  {
-    "id": "TC-COMP-001",
-    "module": "M03",
-    "priority": "P1",
-    "name": "Tạo đoàn Check-in ban đầu: Thêm nhiều Người đi cùng có danh tính",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Tab Người đi cùng: Thêm \"Lê Thị Bích\", CCCD: \"001188000222\", SĐT: \"0988111222\", Nữ.",
-    "steps": [
-      "1. Tại form Check-in, chuyển sang tab \"Người đi cùng (Companions)\".",
-      "2. Nhấn nút \"+ Thêm người đi cùng\".",
-      "3. Điền Họ tên, Số CCCD, SĐT, Giới tính cho từng người đi cùng.",
-      "4. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Lưu lượt thăm với TotalGuests = 3, InsideGuests = 3.",
-      "Bảng danh sách Dashboard hiển thị huy hiệu \"3/3 khách\".",
-      "Xem chi tiết hiển thị đầy đủ danh sách 2 người đi cùng."
-    ],
-    "precondition": "Modal Check-in đang mở; Đoàn khách có từ 2 người trở lên."
-  },
-  {
-    "id": "TC-COMP-002",
-    "module": "M03",
-    "priority": "P2",
-    "name": "Đọc Chip CCCD hoặc Quét QR độc lập cho từng Người đi cùng",
-    "platform": "Giao diện Web Trực ban & Thiết bị",
-    "steps": [
-      "1. Tại tab Người đi cùng, chọn thành viên thứ 2.",
-      "2. Nhấn nút \"Quét chip\" (hoặc \"Quét QR\") dành riêng cho thành viên này.",
-      "3. Đặt thẻ CCCD của thành viên lên đầu đọc."
-    ],
-    "expected": [
-      "Thông tin cá nhân của thành viên thứ 2 được điền chính xác, không ghi đè vào thông tin của Trưởng đoàn."
-    ],
-    "precondition": "Người đi cùng có mang theo thẻ CCCD gắn chip hoặc mã QR.",
-    "testData": "Nhấp biểu tượng Quét chip / QR riêng tại dòng của Người đi cùng."
-  },
-  {
-    "id": "TC-COMP-003",
-    "module": "M03",
-    "priority": "P3",
-    "name": "Chụp ảnh chân dung và giấy tờ riêng cho từng Người đi cùng",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại mục của Người đi cùng, nhấn nút Camera chụp ảnh chân dung.",
-      "2. Nhấn Multi-shot chụp ảnh giấy tờ của người đi cùng."
-    ],
-    "expected": [
-      "Ảnh của người đi cùng được lưu riêng biệt vào trường PhotoPath / DocumentPhoto của đối tượng AccompanyingPerson."
-    ],
-    "precondition": "Đoàn khách yêu cầu nhận diện hình ảnh từng thành viên.",
-    "testData": "MultiShotCameraModal: Chụp ảnh chân dung riêng cho Người đi cùng."
-  },
-  {
-    "id": "TC-COMP-004",
-    "module": "M03",
-    "priority": "P2",
-    "name": "Cấp phát thẻ linh hoạt cho từng Người đi cùng",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Người 1: Thẻ định danh \"CARD-002\", Người 2: Thẻ thường, Người 3: Không cấp thẻ.",
-    "steps": [
-      "1. Thiết lập thẻ cho Trưởng đoàn và từng người đi cùng theo các cấu hình khác nhau.",
-      "2. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Hệ thống tính tổng số thẻ phát = 3 (2 thẻ định danh + 1 thẻ thường).",
-      "Dashboard hiển thị chính xác: \"Thẻ: Phát 3 — Thu 0 | Đang giữ: 3\"."
-    ],
-    "precondition": "Thành viên trong đoàn nhận các loại thẻ khác nhau theo vị trí làm việc."
-  },
-  {
-    "id": "TC-COMP-005",
-    "module": "M03",
-    "priority": "P2",
-    "name": "Khai báo Đoàn vô danh (Số lượng khách đi cùng không cần khai báo tên)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Tab Khách vô danh: Nhập số lượng khách vô danh = 5.",
-    "steps": [
-      "1. Tại tab \"Đoàn vô danh (Anonymous)\", nhập số lượng khách vô danh: 10.",
-      "2. Không cần điền tên hay CCCD của 10 người này.",
-      "3. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Hệ thống lưu TotalGuests = 11 (1 trưởng đoàn + 10 vô danh).",
-      "Dashboard hiển thị \"11/11 khách\"."
-    ],
-    "precondition": "Đoàn công nhân thi công hoặc đoàn du khách đông người không kiểm soát từng danh tính."
-  },
-  {
-    "id": "TC-COMP-006",
-    "module": "M03",
-    "priority": "P2",
-    "name": "Cấp phát thẻ cho Đoàn vô danh: Thẻ thường và Danh sách thẻ RFID",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Đoàn 5 khách vô danh: Cấp 3 thẻ thường + 2 thẻ định danh (\"CARD-A01\", \"CARD-A02\").",
-    "steps": [
-      "1. Tại modal Check-in đoàn, ở phần cấp thẻ cho 5 khách vô danh, nhập số lượng Thẻ thường = 3.",
-      "2. Nhập/quét danh sách 2 mã thẻ định danh RFID: \"CARD-A01\", \"CARD-A02\".",
-      "3. Kiểm tra tổng số thẻ cấp cho đoàn vô danh = 5 thẻ, sau đó nhấn \"Lưu Check-in\"."
-    ],
-    "expected": [
-      "Hệ thống lưu trữ thành công vào CSDL: AnonymousCardCount = 3, AnonymousIdentityCardNumbers = [\"CARD-A01\", \"CARD-A02\"].",
-      "Tổng số thẻ an ninh đoàn vô danh đang giữ được tính toán chuẩn xác (3 thẻ thường + 2 thẻ định danh = 5 thẻ).",
-      "Trực ban theo dõi được danh sách chi tiết từng thẻ được phân bổ cho đoàn vô danh trong modal Chi tiết lượt khách."
-    ],
-    "precondition": "Khai báo đoàn khách gồm 1 Trưởng đoàn và 5 khách vô danh đi cùng (Tổng 6 người)."
-  },
-  {
-    "id": "TC-COMP-007",
-    "module": "M03",
-    "priority": "P2",
-    "name": "Đăng ký nhiều Phương tiện cho đoàn: Gán chủ xe linh hoạt",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Xe 1: \"29B-123.45\" (Xe 16 chỗ), Xe 2: \"29A-678.90\" (Ô tô 4 chỗ); Gán chủ xe tương ứng.",
-    "steps": [
-      "1. Thêm 2 phương tiện trong tab Xe cộ.",
-      "2. Gán xe 1 cho Trưởng đoàn, xe 2 cho Đoàn vô danh.",
-      "3. Hoàn tất Check-in."
-    ],
-    "expected": [
-      "Tạo 2 bản ghi Vehicle với OwnerType tương ứng (MAIN và ANONYMOUSGROUP).",
-      "Dashboard hiển thị đầy đủ cả 2 biển số xe trên dòng lượt khách."
-    ],
-    "precondition": "Đoàn đi nhiều xe khác nhau."
-  },
-  {
-    "id": "TC-COMP-008",
-    "module": "M03",
-    "priority": "P1",
-    "name": "Bổ sung Người đi cùng vào đoàn đang ở bên trong qua SupplementalCheckInModal",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "SupplementalCheckInModal (tab companions): Thêm \"Phạm Văn C\", CCCD: \"001199000333\".",
-    "steps": [
-      "1. Trên dòng lượt khách đang inside, nhấn nút \"Thêm\" (hoặc mở Chi tiết -> Bổ sung).",
-      "2. Modal \"SupplementalCheckInModal\" mở ra.",
-      "3. Chuyển sang tab Người đi cùng, thêm 2 thành viên mới kèm CCCD và thẻ an ninh.",
-      "4. Nhấn nút \"Xác nhận bổ sung\"."
-    ],
-    "expected": [
-      "Gọi API /station/visits/accompanying-persons thành công.",
-      "Quân số inside tăng thêm 2 người, tổng số khách tăng tương ứng.",
-      "Lịch sử dòng thời gian Timeline ghi nhận đợt bổ sung mới."
-    ],
-    "precondition": "Đoàn khách đang ở bên trong (Inside); Có thêm thành viên đến sau muốn vào đoàn."
-  },
-  {
-    "id": "TC-COMP-009",
-    "module": "M03",
-    "priority": "P2",
-    "name": "Bổ sung Phương tiện vào đoàn đang ở bên trong qua SupplementalCheckInModal",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "SupplementalCheckInModal (tab vehicles): Thêm xe \"29C-555.66\" (Xe tải).",
-    "steps": [
-      "1. Mở SupplementalCheckInModal của lượt khách đang inside.",
-      "2. Tại tab Xe cộ, thêm 1 xe ô tô tải biển số \"29C-123.45\".",
-      "3. Nhấn Xác nhận bổ sung."
-    ],
-    "expected": [
-      "Phương tiện mới được gắn vào Visit, số lượng xe của lượt khách tăng lên, hiển thị biển số mới trên Dashboard."
-    ],
-    "precondition": "Đoàn khách đang ở bên trong; Có thêm xe chở vật tư của đoàn đến bổ sung."
-  },
-  {
-    "id": "TC-COMP-010",
-    "module": "M03",
-    "priority": "P3",
-    "name": "Nghiệp vụ Cấp bù thẻ thiếu (Tab missing_cards trong SupplementalCheckInModal)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "SupplementalCheckInModal (tab missing_cards): Cấp bù mã thẻ định danh cho thành viên còn thiếu.",
-    "steps": [
-      "1. Mở SupplementalCheckInModal, chọn tab \"Cấp bù thẻ thiếu (missing_cards)\".",
-      "2. Chọn thành viên đang thiếu thẻ, nhập mã thẻ mới cấp bù.",
-      "3. Xác nhận cập nhật."
-    ],
-    "expected": [
-      "Hệ thống cập nhật thành viên sang trạng thái IsCardIssued = true kèm mã thẻ mới.",
-      "Bộ đếm thẻ đang giữ của lượt khách tăng lên chính xác."
-    ],
-    "precondition": "Đoàn khách ban đầu chưa được cấp đủ thẻ (ví dụ hết thẻ tạm thời lúc check-in)."
-  },
-  {
-    "id": "TC-COMP-011",
-    "module": "M03",
-    "priority": "P1",
-    "name": "Cờ Khách Lưu Trú Qua Đêm / Nhiều Ngày (isMultiDayVisit)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Trong modal Check-in hoặc modal Bổ sung, bật công tắc \"Lưu trú qua đêm / Nhiều ngày (isMultiDayVisit)\".",
-      "2. Xác nhận lưu."
-    ],
-    "expected": [
-      "CSDL cập nhật IsMultiDayVisit = true.",
-      "Background Service Auto Checkout khi quét cuối ngày sẽ BỎ QUA lượt khách này, không tự động đóng ca khách."
-    ],
-    "precondition": "Khách đến làm việc dự án kéo dài qua đêm hoặc nhiều ngày liên tục.",
-    "testData": "Tích chọn cờ \"Lưu trú qua đêm / nhiều ngày (isMultiDayVisit)\"."
-  },
-  {
-    "id": "TC-COMP-012",
-    "module": "M03",
-    "priority": "P1",
-    "name": "Validation Chặn trùng lặp nội bộ đoàn",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Nhập Người đi cùng có cùng số CCCD hoặc cùng mã thẻ với Trưởng đoàn (hoặc với người đi cùng khác trong đoàn)."
-    ],
-    "expected": [
-      "Hệ thống báo lỗi trùng lặp nội bộ trong đoàn và chặn thao tác gửi dữ liệu."
-    ],
-    "precondition": "Đang nhập danh sách Người đi cùng trong modal Check-in.",
-    "testData": "Nhập trùng số CCCD \"001099000111\" của Trưởng đoàn cho Người đi cùng."
-  },
-  {
-    "id": "TC-COMP-013",
-    "module": "M03",
-    "priority": "P1",
-    "name": "Validation Chặn trùng lặp với lượt khách khác đang inside toàn trạm khi bổ sung",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Khi bổ sung thành viên hoặc xe cộ, nhập CCCD/Biển xe/Mã thẻ đang được sử dụng ở 1 lượt khách khác."
-    ],
-    "expected": [
-      "Hệ thống kiểm tra ràng buộc chéo và báo lỗi trùng lặp, bảo đảm tính duy nhất của mã thẻ và phương tiện bên trong cơ quan."
-    ],
-    "precondition": "Đang thực hiện bổ sung thành viên qua SupplementalCheckInModal.",
-    "testData": "Nhập CCCD của một người đang ở trong cơ quan thuộc một đoàn khác."
-  },
-  {
-    "id": "TC-COMP-014",
-    "module": "M03",
-    "priority": "P4",
-    "name": "Lưu vết lịch sử đợt bổ sung thành viên",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Thực hiện bổ sung thành viên lần 1, sau đó bổ sung tiếp lần 2.",
-      "2. Mở tab Timeline trong VisitDetailsModal để kiểm tra."
-    ],
-    "expected": [
-      "Hiển thị rõ các sự kiện \"ADD\" (Bổ sung) riêng biệt kèm đợt (Batch), thời gian, tên trạm và tên cán bộ thực hiện."
-    ],
-    "precondition": "Đã hoàn tất một đợt bổ sung thành viên/xe qua SupplementalCheckInModal.",
-    "testData": "Quan sát dòng thời gian Timeline của lượt khách."
-  },
-  {
-    "id": "TC-COUT-001",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Check-out Toàn bộ đoàn: Thu hồi tất cả thẻ và đóng lượt khách",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Đoàn khách làm việc xong, toàn bộ thành viên và phương tiện cùng ra về.",
-    "steps": [
-      "1. Nhấn nút \"Checkout\" trên dòng lượt khách.",
-      "2. Modal CheckOutModal mở ra.",
-      "3. Tích chọn thu hồi tất cả thẻ định danh, thẻ thường và xác nhận xe ra về.",
-      "4. Nhấn nút \"Xác nhận Checkout\"."
-    ],
-    "expected": [
-      "Gọi API /station/visits/checkout thành công.",
-      "Lượt khách chuyển trạng thái Status = 2 (Đã ra), ghi nhận CheckOutTime.",
-      "Quân số inside giảm về 0, toàn bộ thẻ được thu hồi về kho."
-    ],
-    "testData": "CheckOutModal: Nhấp nút \"Chọn tất cả\" -> Thu hồi toàn bộ thẻ -> Xác nhận Checkout."
-  },
-  {
-    "id": "TC-COUT-002",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Check-out Từng phần: Một số thành viên về trước, người khác ở lại",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "CheckOutModal: Bỏ chọn trưởng đoàn (mainStillIn = true), chỉ tích chọn Người đi cùng về trước.",
-    "steps": [
-      "1. Mở CheckOutModal.",
-      "2. Chỉ tích chọn 2 người cần checkout, bỏ tích Trưởng đoàn và các thành viên còn lại.",
-      "3. Thu hồi thẻ của 2 người về trước.",
-      "4. Xác nhận Checkout."
-    ],
-    "expected": [
-      "Hệ thống cập nhật CheckOutTime cho 2 thành viên được chọn, thu hồi thẻ của họ.",
-      "Lượt khách VẪN GIỮ trạng thái \"Trong đơn vị\", quân số inside hiển thị \"3/5 khách\"."
-    ],
-    "precondition": "Đoàn khách có một số người về trước, trưởng đoàn hoặc người khác ở lại làm việc tiếp."
-  },
-  {
-    "id": "TC-COUT-003",
-    "module": "M04",
-    "priority": "P2",
-    "name": "Check-out Xe riêng độc lập: Xe ra trước người (hoặc người ra xe ở lại)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Thực hiện Checkout riêng cho phương tiện qua API /visits/vehicle-checkout.",
-    "steps": [
-      "1. Mở CheckOutModal, checkout toàn bộ người nhưng BỎ TÍCH ô xe ô tô (hoặc ngược lại: checkout xe riêng từ modal Chi tiết).",
-      "2. Xác nhận."
-    ],
-    "expected": [
-      "Người đã ra về nhưng xe vẫn còn trong bãi.",
-      "Dashboard hiển thị huy hiệu màu cam nhấp nháy: \"Chờ checkout xe\", lượt khách chưa bị đóng hoàn toàn."
-    ],
-    "precondition": "Xe của khách ra về trước, hoặc khách về bằng phương tiện công cộng để xe lại bãi gửi."
-  },
-  {
-    "id": "TC-COUT-004",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Thu hồi Thẻ Định Danh (RFID / Mã thẻ cụ thể) khi Checkout",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại CheckOutModal, quẹt thẻ RFID hoặc tích chọn mã thẻ của người checkout.",
-      "2. Xác nhận Checkout."
-    ],
-    "expected": [
-      "Cập nhật IsCardReturned = true cho mã thẻ đó, mã thẻ được giải phóng để cấp cho lượt khách mới."
-    ],
-    "precondition": "Khách được cấp Thẻ định danh \"CARD-001\" khi check-in; Khách trả thẻ tại bốt gác.",
-    "testData": "CheckOutModal: Trạng thái thẻ khách đại diện chọn \"Trả thẻ (RETURN)\"."
-  },
-  {
-    "id": "TC-COUT-005",
-    "module": "M04",
-    "priority": "P2",
-    "name": "Thu hồi Thẻ Thường (Đếm số lượng): Cho phép trả đủ hoặc trả 1 phần",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "CheckOutModal: Ô số thẻ thu hồi nhập = 3 (cho phép nợ thẻ theo cấu hình).",
-    "steps": [
-      "1. Tại ô số lượng thẻ thường thu hồi, nhập 3 / 5 thẻ.",
-      "2. Xác nhận Checkout."
-    ],
-    "expected": [
-      "Hệ thống cập nhật AnonymousCardReturnedCount = 3.",
-      "Dashboard hiển thị: \"Thẻ: Phát 5 — Thu 3 | Đang giữ: 2\"."
-    ],
-    "precondition": "Đoàn mượn 5 thẻ thường; Lúc về trả 3 thẻ, nợ lại 2 thẻ để người sau mang ra."
-  },
-  {
-    "id": "TC-COUT-006",
-    "module": "M04",
-    "priority": "P2",
-    "name": "Thu hồi Thẻ của Đoàn vô danh (Cả thẻ thường và thẻ RFID danh sách)",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Đoàn khách vô danh được cấp đồng thời 3 thẻ thường và 2 thẻ định danh RFID (\"CARD-A01\", \"CARD-A02\"). Cả đoàn làm thủ tục Check-out ra về cùng lúc.",
-    "testData": "CheckOutModal đoàn: Thu hồi đủ 3 thẻ thường (nhập ô Thu hồi = 3) và tích chọn hoàn trả cả 2 mã thẻ định danh \"CARD-A01\", \"CARD-A02\".",
-    "steps": [
-      "1. Mở CheckOutModal trên dòng đoàn khách vô danh.",
-      "2. Tại phần Thẻ thường của đoàn vô danh: Nhập số lượng thẻ thu hồi = 3.",
-      "3. Tại phần Danh sách thẻ định danh của đoàn vô danh: Tích chọn cả 2 mã \"CARD-A01\" và \"CARD-A02\" vào danh sách hoàn trả.",
-      "4. Nhấn \"Xác nhận Checkout\"."
-    ],
-    "expected": [
-      "Hệ thống cập nhật thành công: AnonymousCardReturnedCount = 3 và ReturnedAnonymousIdentityCardNumbers lưu đủ [\"CARD-A01\", \"CARD-A02\"].",
-      "Toàn bộ thẻ đoàn vô danh được ghi nhận hoàn trả đầy đủ, không phát sinh nợ thẻ hay báo mất.",
-      "Các mã thẻ \"CARD-A01\" và \"CARD-A02\" được giải phóng trạng thái active, sẵn sàng để cấp phát cho lượt khách mới."
-    ]
-  },
-  {
-    "id": "TC-COUT-007",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Chính sách Cấm Nợ Thẻ Định Danh khi Check-out (ALLOW_LATE_CARD_RETURN_NAMED = false)",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Hệ thống bật chính sách cấm nợ thẻ: allowLateCardReturnNamed = false. Lượt khách có thẻ định danh (\"CARD-001\") đang làm thủ tục Check-out.",
-    "testData": "CheckOutModal: Thẻ \"CARD-001\" của khách. Quan sát trạng thái các nút thao tác thẻ [Trả thẻ] / [Nợ thẻ] / [Báo mất].",
-    "steps": [
-      "1. Mở CheckOutModal trên dòng khách đang giữ thẻ định danh \"CARD-001\".",
-      "2. Quan sát badge chính sách hiển thị trên header modal: \"Thẻ định danh: Bắt buộc thu hồi\".",
-      "3. Quan sát nút \"Nợ thẻ (DEBT)\" ở dòng thẻ \"CARD-001\": Nút bị vô hiệu hóa (disabled, khóa mờ).",
-      "4. Thử rê chuột vào nút \"Nợ thẻ\": Hệ thống hiển thị tooltip giải thích \"Chính sách hệ thống không cho phép nợ thẻ định danh khi ra cổng\".",
-      "5. Kiểm tra các lựa chọn hợp lệ: Trực ban chỉ có thể chọn \"Trả thẻ (RETURN)\" hoặc nếu khách làm mất thẻ thì chọn \"Báo mất thẻ (LOST)\"."
-    ],
-    "expected": [
-      "Hệ thống tuân thủ nghiêm ngặt chính sách cấm nợ thẻ định danh: Không cho phép trực ban chọn Nợ thẻ khi khách check-out ra khỏi đơn vị.",
-      "Nếu khách không thể giao nộp thẻ, trực ban bắt buộc phải chuyển sang nghiệp vụ \"Báo mất thẻ (LOST)\" và ghi rõ lý do mất.",
-      "Ngăn chặn triệt để tình trạng thất thoát thẻ định danh mà không có người chịu trách nhiệm."
-    ]
-  },
-  {
-    "id": "TC-COUT-008",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Nghiệp vụ Báo Mất Thẻ khi Checkout: Ghi nhận cờ isCardLost và Transaction LostCard",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Đoàn khách đang ở trong đơn vị, được cấp thẻ an ninh có số '#901'. Khách làm mất thẻ trong khuôn viên trước khi ra cổng.",
-    "testData": "Lượt khách VST-001, Khách chính giữ thẻ '#901'. CheckOutModal: Chọn trạng thái thẻ \"Báo mất thẻ (LOST)\", nhập lý do mất: \"Khách làm rơi trong quá trình công tác tại đơn vị\".",
-    "steps": [
-      "1. Trên Dashboard Trực ban, nhấp nút \"Checkout\" trên dòng lượt khách VST-001.",
-      "2. Tại CheckOutModal, ở dòng thẻ '#901' của Khách chính (hoặc Người đi cùng), chuyển trạng thái sang \"Báo mất thẻ (LOST)\".",
-      "3. Nhập lý do mất thẻ: \"Khách làm rơi trong quá trình công tác tại đơn vị\".",
-      "4. Nhấn nút \"Xác nhận Checkout\"."
-    ],
-    "expected": [
-      "API /station/visits/checkout xử lý thành công, cho phép đoàn hoàn tất thủ tục ra cổng.",
-      "CSDL ghi nhận IsCardLost = true, IsCardReturned = false, LostAt = Now, LostNote = \"Khách làm rơi...\".",
-      "Hệ thống tự động sinh 1 bản ghi VisitTransaction với ActionType = LostCard (4), EntityType = MainVisitor (1), CardNumber = \"901\".",
-      "Lượt khách hiển thị huy hiệu \"Chờ thu thẻ\" (hoặc ghi nhận hoàn tất thu hồi khi áp dụng chính sách cho phép ra)."
-    ]
-  },
-  {
-    "id": "TC-COUT-009",
-    "module": "M04",
-    "priority": "P3",
-    "name": "Chụp ảnh Webcam tại thời điểm Check-out làm bằng chứng bàn giao",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Tại CheckOutModal, nhấn nút chụp ảnh camera lúc khách ra về.",
-      "2. Xác nhận Checkout."
-    ],
-    "expected": [
-      "Ảnh checkout được lưu vào CSDL, hiển thị đối sánh trong modal Chi tiết lượt khách."
-    ],
-    "precondition": "Modal Check-out đang mở; Bốt gác có camera giám sát lối ra.",
-    "testData": "Nhấp chụp ảnh webcam bàn giao thẻ và ra về."
-  },
-  {
-    "id": "TC-COUT-010",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Tra cứu theo Mã số thẻ (Tab 1 RecoverLostCardModal)",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "precondition": "Thẻ '#901' hoặc '#803' đã bị báo mất trước đó. Người nhặt được mang trả lại bốt gác an ninh.",
-    "testData": "RecoverLostCardModal -> Tab \"Thẻ định danh (Identity)\": Nhập mã thẻ \"901\" (hoặc \"#901\"), Ghi chú: \"Bảo vệ nhặt được tại sảnh tòa nhà\".",
-    "steps": [
-      "1. Nhấn nút \"Thu hồi thẻ mất\" trên thanh công cụ Header (hoặc nút \"Thu hồi thẻ mất\" trong modal Chi tiết lượt khách).",
-      "2. Tại Tab 1 \"Thẻ định danh (Identity)\", nhập mã thẻ \"901\" (hoặc quét thẻ RFID), nhấn nút \"Tra cứu\".",
-      "3. Quan sát khung kết quả tra cứu hiển thị thông tin hồ sơ liên quan.",
-      "4. Nhập ghi chú thu hồi thẻ: \"Bảo vệ nhặt được tại sảnh tòa nhà\".",
-      "5. Nhấn nút \"Thu hồi thẻ này\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API /station/cards/lookup-lost (hoặc /admin/cards/lookup-lost) trả về chính xác: Tên khách làm mất, Số CCCD, Trạm báo mất, Thời gian mất.",
-      "Khi bấm \"Thu hồi thẻ này\", hệ thống gọi API /station/visits/{id}/recover-cards (hoặc /admin/visits/{id}/recover-cards) thành công.",
-      "CSDL cập nhật IsCardLost = false, IsCardReturned = true; Sinh bản ghi VisitTransaction với ActionType = RecoverLostCard (5).",
-      "Thẻ 901 được giải phóng hoàn toàn khỏi danh sách thẻ mất và sẵn sàng để cấp phát lại cho khách mới."
-    ]
-  },
-  {
-    "id": "TC-COUT-011",
-    "module": "M04",
-    "priority": "P2",
-    "name": "Nghiệp vụ THU HỒI THẺ MẤT: Thu hồi Thẻ Thường qua Danh Sách Đoàn Mất (Tab 2 RecoverLostCardModal - Đã sửa lỗi 404)",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "precondition": "Hệ thống có lượt khách đoàn vô danh đang báo mất thẻ thường (AnonymousCardLostCount > 0).",
-    "testData": "RecoverLostCardModal -> Tab \"Thẻ khách thường (Regular)\": Chọn đoàn khách từ danh sách dropdown, Số lượng thu hồi: 1 (hoặc 2 thẻ), Ghi chú: \"Khách gửi bưu điện trả lại thẻ\".",
-    "steps": [
-      "1. Mở modal \"Thu hồi thẻ mất (RecoverLostCardModal)\" từ Header hoặc modal Chi tiết.",
-      "2. Chuyển sang Tab 2 \"Thẻ khách thường (Regular)\".",
-      "3. Quan sát dropdown \"Chọn đoàn khách báo mất thẻ\": Hệ thống tự động gọi API /station/cards/lost-regular-visits (hoặc /admin/cards/lost-regular-visits) tải danh sách.",
-      "4. Chọn đoàn khách trong dropdown (hiển thị rõ tên khách, ngày giờ vào/ra, số lượng thẻ đang báo mất).",
-      "5. Nhập số lượng thẻ tìm thấy thu hồi: 1 (hoặc tối đa bằng số thẻ đang mất).",
-      "6. Nhập ghi chú thu hồi và nhấn nút \"Xác nhận thu hồi thẻ\"."
-    ],
-    "expected": [
-      "Dropdown tải danh sách các đoàn báo mất thẻ thường thành công, không gặp lỗi HTTP 404.",
-      "Gọi API /station/visits/{id}/recover-cards thành công với regularCardCount.",
-      "CSDL cập nhật: AnonymousCardLostCount giảm tương ứng, AnonymousCardReturnedCount tăng tương ứng.",
-      "Sinh bản ghi VisitTransaction với ActionType = RecoverLostCard (5), CardType = \"regular\", Quantity = số thẻ thu hồi."
-    ]
-  },
-  {
-    "id": "TC-COUT-012",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Kiểm tra Tính Toàn Vẹn & Nhất Quán Dữ Liệu Xuyên Suốt sau khi Thu Hồi Thẻ Mất (E2E Consistency)",
-    "platform": "Web Trực ban, Chi tiết lượt khách, Báo cáo & Check-in",
-    "precondition": "Một lượt khách đã hoàn tất thủ tục thu hồi thẻ mất (thẻ định danh '#901' hoặc thẻ thường của đoàn) thông qua RecoverLostCardModal.",
-    "testData": "Kiểm tra dữ liệu đối soát tại 4 vị trí: Dashboard Trực ban, Modal Chi tiết (VisitDetailsModal), Báo cáo Thẻ mất (LostCardsReportModal), và Form Check-in mới.",
-    "steps": [
-      "1. Tại Dashboard Trực ban: Tìm dòng lượt khách vừa được thu hồi thẻ mất, kiểm tra badge trạng thái thẻ và cột ghi chú.",
-      "2. Mở modal Chi tiết lượt khách (VisitDetailsModal): Mở tab \"Sổ đối soát thẻ\", kiểm tra dòng thẻ vừa thu hồi hiển thị trạng thái \"ĐÃ THU HỒI\" (màu xanh).",
-      "3. Chuyển sang tab \"Dòng thời gian (Timeline)\" của lượt khách: Kiểm tra sự kiện \"Thu hồi thẻ mất (RecoverLostCard)\" được ghi nhận chuẩn xác với thời gian, cán bộ và ghi chú thu hồi.",
-      "4. Vào Trung tâm Báo cáo -> Báo cáo Thẻ mất (LostCardsReportModal): Kiểm tra thẻ vừa thu hồi đã được cập nhật trạng thái \"Đã thu hồi\" và không còn nằm trong bộ lọc thẻ đang mất.",
-      "5. Mở modal Check-in cho một khách mới: Nhập mã thẻ an ninh vừa được thu hồi ('#901') và xác nhận Check-in."
-    ],
-    "expected": [
-      "1. Dashboard: Huy hiệu cảnh báo \"Chờ thu thẻ\" hoặc \"Mất thẻ\" chuyển sang trạng thái xanh an toàn (\"Đã thu đủ thẻ\").",
-      "2. Sổ đối soát thẻ & Timeline: Bản ghi giao dịch RecoverLostCard được lưu trữ nguyên vẹn, minh bạch dữ liệu kiểm toán.",
-      "3. Báo cáo Thẻ mất: Dữ liệu đồng bộ tức thì, số lượng thẻ mất còn lại trên toàn đơn vị giảm tương ứng.",
-      "4. Check-in mới: Hệ thống cho phép cấp phát thẻ '#901' bình thường mà KHÔNG bị chặn lỗi \"Thẻ đang ở trạng thái BÁO MẤT\"."
-    ]
-  },
-  {
-    "id": "TC-COUT-013",
-    "module": "M04",
-    "priority": "P4",
-    "name": "Xử lý lượt khách hết người nhưng xe còn bên trong",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Quan sát dòng lượt khách có insideGuests = 0 nhưng xe chưa checkout."
-    ],
-    "expected": [
-      "Cột Trạng thái hiển thị huy hiệu viền cam: \"Chờ checkout xe\".",
-      "Nút \"Checkout\" vẫn hiển thị để nhân viên cho xe ra khi chủ xe quay lại lấy."
-    ],
-    "precondition": "Đoàn khách đã checkout hết người nhưng xe tải của đoàn gửi lại qua đêm.",
-    "testData": "Quan sát cột Trạng thái của dòng lượt khách trên Dashboard Trực ban."
-  },
-  {
-    "id": "TC-COUT-014",
-    "module": "M04",
-    "priority": "P4",
-    "name": "Xử lý lượt khách hết người nhưng thẻ còn nợ",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Quan sát dòng lượt khách có insideGuests = 0 nhưng còn giữ thẻ chưa thu."
-    ],
-    "expected": [
-      "Cột Trạng thái hiển thị huy hiệu viền vàng: \"Chờ thu thẻ\".",
-      "Nút \"Checkout\" vẫn hiển thị để nhân viên thu hồi thẻ khi khách gửi trả."
-    ],
-    "precondition": "Đoàn khách đã checkout hết người nhưng còn nợ thẻ an ninh chưa trả.",
-    "testData": "Quan sát cột Trạng thái của dòng lượt khách trên Dashboard Trực ban."
-  },
-  {
-    "id": "TC-COUT-015",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Tự động đóng hoàn toàn lượt khách khi quân số inside = 0, tất cả xe và thẻ đã xong",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Thu hồi chiếc thẻ cuối cùng hoặc cho chiếc xe cuối cùng ra về."
-    ],
-    "expected": [
-      "Hệ thống tự động chuyển trạng thái lượt khách thành \"Đã ra\" (Status = 2).",
-      "Không còn hiển thị nút Thêm / Checkout trên dòng này."
-    ],
-    "precondition": "Toàn bộ quân số, xe và thẻ của lượt khách đã được thu hồi và checkout đầy đủ.",
-    "testData": "Thu hồi chiếc thẻ cuối cùng hoặc checkout chiếc xe cuối cùng."
-  },
-  {
-    "id": "TC-COUT-016",
-    "module": "M04",
-    "priority": "P2",
-    "name": "Cập nhật Thông tin Lượt khách Đang Thăm (UpdateVisitModal)",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "UpdateVisitModal: Đổi mã thẻ, cập nhật biển số xe, tích chọn isMultiDayVisit -> Lưu cập nhật.",
-    "steps": [
-      "1. Tại danh sách khách đang ở trong (Inside), nhấp nút Cập nhật (hoặc icon Edit) để mở UpdateVisitModal.",
-      "2. Chỉnh sửa mã thẻ khách đại diện hoặc điều chỉnh số thẻ cấp chung.",
-      "3. Cập nhật mã thẻ của từng Người đi cùng trong danh sách.",
-      "4. Đổi thông tin phương tiện (Biển số xe, Loại phương tiện) hoặc bật/tắt cờ Lưu trú nhiều ngày (isMultiDayVisit).",
-      "5. Nhấn \"Lưu cập nhật\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API POST /api/station/visits/update với payload hợp lệ.",
-      "Dữ liệu thẻ, phương tiện và cờ lưu trú được cập nhật ngay lập tức trên giao diện Trực ban mà không cần check-out/check-in lại."
-    ],
-    "precondition": "Khách đang ở bên trong; Khách đổi xe, đổi thẻ hoặc xin lưu trú qua đêm sau khi đã check-in."
-  },
-  {
-    "id": "TC-COUT-017",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Check-out Báo Mất Thẻ Thường Cấp Chung cho Đoàn Vô Danh",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Đoàn khách vô danh gồm 5 người được cấp 5 thẻ thường (không số). Lúc ra cổng, đoàn chỉ trả 3 thẻ, làm mất 2 thẻ.",
-    "testData": "CheckOutModal đoàn vô danh: Tổng phát: 5 thẻ. Ô \"Thu hồi thẻ thường\": nhập 3. Ô \"Báo mất thẻ thường\": nhập 2.",
-    "steps": [
-      "1. Nhấn Checkout trên dòng đoàn khách vô danh đã phát 5 thẻ thường.",
-      "2. Tại CheckOutModal, ô số thẻ thường thu hồi nhập = 3.",
-      "3. Tại ô số thẻ thường báo mất, nhập = 2.",
-      "4. Nhấn nút \"Xác nhận Checkout\"."
-    ],
-    "expected": [
-      "Gọi API /station/visits/checkout thành công.",
-      "CSDL ghi nhận AnonymousCardReturnedCount = 3, AnonymousCardLostCount = 2, số thẻ nợ còn lại = 0 (5 - 3 - 2 = 0).",
-      "Tự động sinh 2 bản ghi VisitTransaction: 1 giao dịch ReturnCard (Qty=3) và 1 giao dịch LostCard (Qty=2, CardType='regular').",
-      "Đoàn khách hoàn tất Checkout mà không bị chặn do nợ thẻ."
-    ]
-  },
-  {
-    "id": "TC-COUT-018",
-    "module": "M04",
-    "priority": "P1",
-    "name": "Check-out Báo Mất Thẻ An Ninh Định Danh của Đoàn Vô Danh (Bảo toàn danh sách gốc)",
-    "platform": "Giao diện Web Trực ban",
-    "precondition": "Đoàn khách vô danh được cấp 3 thẻ định danh có số: '#801', '#802', '#803'. Đoàn trả 2 thẻ #801, #802 và làm mất thẻ #803.",
-    "testData": "CheckOutModal: Danh sách thẻ RFID: Tích chọn trả #801, #802; Tích chọn báo mất thẻ #803.",
-    "steps": [
-      "1. Mở CheckOutModal của đoàn khách vô danh.",
-      "2. Tại danh sách Thẻ an ninh có số của đoàn: tích chọn thu hồi cho thẻ #801 và #802.",
-      "3. Tích chọn trạng thái Báo mất cho thẻ #803.",
-      "4. Nhấn nút \"Xác nhận Checkout\"."
-    ],
-    "expected": [
-      "API xử lý thành công. Mảng gốc AnonymousIdentityCardNumbers vẫn giữ nguyên vẹn [\"801\", \"802\", \"803\"] (không bị xóa phần tử).",
-      "CSDL ghi nhận ReturnedAnonymousIdentityCardNumbers = [\"801\", \"802\"], LostAnonymousIdentityCardNumbers = [\"803\"].",
-      "Số thẻ nợ được tính chính xác bằng 0 (các thẻ đã phát đều đã được trả hoặc ghi nhận mất).",
-      "Sinh 2 bản ghi VisitTransaction: ReturnCard cho 801, 802 và LostCard cho 803."
-    ]
-  },
-  {
-    "id": "TC-DASH-001",
-    "module": "M05",
-    "priority": "P4",
-    "name": "Header Trực ban hiển thị Realtime Live Clock tiếng Việt",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Quan sát thanh Header trạm gác (/staff.html)."
-    ],
-    "expected": [
-      "Hiển thị chính xác Tên hệ thống, Tên trạm gác (MapPin), Thứ trong tuần, Ngày/tháng/năm và Giờ:phút:giây nhảy đều đặn từng giây.",
-      "Avatar nhân viên có chấm xanh lá biểu thị trạng thái đang trong ca trực."
-    ],
-    "precondition": "Giao diện Trực ban (/staff.html) đang mở trên trình duyệt.",
-    "testData": "Quan sát thanh Header phía trên cùng của màn hình."
-  },
-  {
-    "id": "TC-DASH-002",
-    "module": "M05",
-    "priority": "P1",
-    "name": "Live Search đa đối tượng thông minh: Lọc tức thì danh sách khách",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Ô Live Search: Gõ từ khóa \"30A\", \"Trần Văn An\", \"001099\", hoặc \"CARD\".",
-    "steps": [
-      "1. Nhấp vào ô tìm kiếm nhanh trên Dashboard trạm.",
-      "2. Gõ từ khóa tìm kiếm bất kỳ."
-    ],
-    "expected": [
-      "Bảng danh sách lập tức lọc theo thời gian thực (Live Filter).",
-      "Khớp với cả Tên khách, Số CCCD, Biển số xe, Mã thẻ an ninh, Cán bộ tiếp đón hoặc Mục đích làm việc."
-    ],
-    "precondition": "Bảng danh sách khách có nhiều bản ghi với các thông tin đa dạng."
-  },
-  {
-    "id": "TC-DASH-003",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Phím tắt toàn cục Ctrl + K focus nhanh ô tìm kiếm",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Đang ở bất kỳ vị trí nào trên Dashboard, nhấn tổ hợp phím Ctrl + K (hoặc Cmd + K trên macOS)."
-    ],
-    "expected": [
-      "Con trỏ chuột tự động focus vào ô tìm kiếm nhanh và bôi đen toàn bộ từ khóa hiện có để gõ mới ngay lập tức."
-    ],
-    "precondition": "Đang thao tác chuột ở bất kỳ vị trí nào trên Dashboard Trực ban.",
-    "testData": "Nhấn tổ hợp phím tắt Ctrl + K (hoặc Cmd + K)."
-  },
-  {
-    "id": "TC-DASH-004",
-    "module": "M05",
-    "priority": "P2",
-    "name": "Popover Lọc theo 5 nhóm đối tượng (Multi-Category Search Filter)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Nhập từ khóa vào ô tìm kiếm.",
-      "2. Nhấn nút \"Chọn đối tượng\" (hoặc nút bộ lọc hiện ra bên cạnh ô tìm kiếm)."
-    ],
-    "expected": [
-      "Popover hiển thị 5 nhóm đối tượng: Khách & Người đi cùng, Biển số & Phương tiện, Thẻ an ninh, Cán bộ & Phòng ban, Cơ quan & Mục đích.",
-      "Cho phép tích chọn lọc trên từng nhóm mong muốn."
-    ],
-    "precondition": "Đang nhập từ khóa tìm kiếm trên Dashboard.",
-    "testData": "Nhấp nút \"Chọn đối tượng\" để mở Popover lọc 5 nhóm."
-  },
-  {
-    "id": "TC-DASH-005",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Bộ đếm kết quả khớp thời gian thực (Match counter badges) trong Popover",
-    "platform": "Giao diện Web Trực ban",
-    "testData": "Mở Popover lọc đối tượng và quan sát các huy hiệu đếm kết quả.",
-    "steps": [
-      "1. Gõ từ khóa và mở Popover lọc đối tượng."
-    ],
-    "expected": [
-      "Mỗi nhóm đối tượng hiển thị huy hiệu đếm số lượng bản ghi khớp (vd: \"2 khớp\", \"5 khớp\").",
-      "Người dùng dễ dàng biết từ khóa xuất hiện ở nhóm đối tượng nào."
-    ],
-    "precondition": "Từ khóa tìm kiếm khớp với cả tên khách và biển số xe."
-  },
-  {
-    "id": "TC-DASH-006",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Nút Chọn tất cả / Bỏ chọn tất cả nhóm đối tượng tìm kiếm",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Trong Popover lọc đối tượng, nhấn nút \"Bỏ chọn tất cả\", sau đó nhấn \"Chọn tất cả\"."
-    ],
-    "expected": [
-      "Tất cả 5 nhóm đối tượng tự động đổi trạng thái checkbox tương ứng, danh sách kết quả cập nhật ngay lập tức."
-    ],
-    "precondition": "Popover lọc 5 nhóm đối tượng đang mở.",
-    "testData": "Nhấp nút \"Bỏ chọn tất cả\", sau đó nhấp \"Chọn tất cả\"."
-  },
-  {
-    "id": "TC-DASH-007",
-    "module": "M05",
-    "priority": "P1",
-    "name": "Cửa sổ Tra cứu Hồ sơ Lịch sử Độc lập (AdvancedSearchModal - Phím tắt Ctrl + Shift + K)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Nhấn tổ hợp phím Ctrl + Shift + K (hoặc mở từ menu Tiện ích -> Tra cứu hồ sơ nâng cao)."
-    ],
-    "expected": [
-      "Cửa sổ AdvancedSearchModal mở ra với giao diện tra cứu chuyên sâu độc lập, không phụ thuộc vào bộ lọc của Dashboard."
-    ],
-    "precondition": "Đang ở màn hình Trực ban (/staff.html).",
-    "testData": "Nhấn tổ hợp phím tắt Ctrl + Shift + K để mở AdvancedSearchModal."
-  },
-  {
-    "id": "TC-DASH-008",
-    "module": "M05",
-    "priority": "P2",
-    "name": "Tra cứu chuyên sâu đa tiêu chí trong AdvancedSearchModal",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Trong AdvancedSearchModal, nhập Họ tên, chọn trạng thái \"Nợ thẻ (debt_card)\", chọn khoảng ngày.",
-      "2. Nhấn nút \"Tìm kiếm\"."
-    ],
-    "expected": [
-      "Gọi API tra cứu và trả về danh sách hồ sơ khớp chính xác.",
-      "Có nút \"Chi tiết\" để mở xem hồ sơ trực tiếp từ kết quả tìm kiếm."
-    ],
-    "precondition": "Cửa sổ AdvancedSearchModal đang mở.",
-    "testData": "Nhập đồng thời: Tên khách \"An\", Trạng thái \"Đang bên trong\", Khoảng ngày \"7 ngày qua\"."
-  },
-  {
-    "id": "TC-DASH-009",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Chế độ hiển thị thống kê tổng quan (Stats View Mode: Ẩn / Tinh gọn / Chi tiết)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Trên khối thống kê Dashboard, chuyển đổi qua lại giữa 3 chế độ: \"Hiện chi tiết\", \"Hiện tinh gọn\", và \"Ẩn thống kê\".",
-      "2. Nhấn F5 tải lại trang."
-    ],
-    "expected": [
-      "Khối thống kê thay đổi kích thước hoặc ẩn đi để tối đa hóa không gian bảng danh sách khách.",
-      "Trạng thái được ghi nhớ vào localStorage (smartvms_stats_view_mode), không bị mất khi F5."
-    ],
-    "precondition": "Thanh công cụ Dashboard có nút chuyển chế độ thống kê (Stats View Mode).",
-    "testData": "Chuyển đổi lần lượt giữa: \"Ẩn\", \"Tinh gọn (Compact)\", \"Chi tiết (Detailed)\"."
-  },
-  {
-    "id": "TC-DASH-010",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Chế độ bảng danh sách khách (Table View Mode: Thu gọn Compact vs Chi tiết Detailed)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Mở menu Tiện ích, chuyển Chế độ xem bảng sang \"Thu gọn\".",
-      "2. Quan sát bảng danh sách khách."
-    ],
-    "expected": [
-      "Bảng ẩn avatar ảnh, giảm padding dòng, tăng số lượng lượt khách hiển thị trên màn hình.",
-      "Chuyển về \"Chi tiết\" hiển thị lại ảnh avatar và các thông tin mở rộng."
-    ],
-    "precondition": "Thanh công cụ Dashboard có nút chuyển chế độ bảng (Table Mode).",
-    "testData": "Chuyển đổi giữa: \"Thu gọn (Compact)\" và \"Chi tiết (Detailed)\"."
-  },
-  {
-    "id": "TC-DASH-011",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Tùy biến Màu sắc và Độ trong suốt hàng (DisplaySettingsModal)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Mở menu Tiện ích -> \"Cài đặt màu sắc\".",
-      "2. Chọn màu hàng đang active, chỉnh thanh trượt độ mờ (Opacity), chọn màu hàng đã ra.",
-      "3. Nhấn \"Lưu cấu hình\"."
-    ],
-    "expected": [
-      "Bảng danh sách khách đổi màu nền và vạch viền chỉ thị đúng theo bảng màu vừa cấu hình."
-    ],
-    "precondition": "Nhấp menu Tiện ích -> chọn \"Cài đặt giao diện (DisplaySettingsModal)\".",
-    "testData": "Chọn màu nền hàng khách đang ở trong (#1e56e3) và điều chỉnh độ trong suốt (0.15)."
-  },
-  {
-    "id": "TC-DASH-012",
-    "module": "M05",
-    "priority": "P2",
-    "name": "Bộ lọc nguồn dữ liệu (Source Filter: Tất cả / Trực ban cổng / Sổ sách ngoại lệ)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Nhấp dropdown bộ lọc Nguồn dữ liệu trên toolbar.",
-      "2. Chọn \"Sổ sách ngoại lệ (dataentry)\"."
-    ],
-    "expected": [
-      "Bảng chỉ hiển thị các lượt khách do nhân viên DataEntry tạo ra (có huy hiệu tím \"Sổ sách ngoại lệ\").",
-      "Chọn \"Trực ban cổng (staff)\" chỉ hiển thị khách vào qua cổng trực tiếp."
-    ],
-    "precondition": "Hệ thống có cả dữ liệu từ trạm gác và dữ liệu từ sổ sách DataEntry.",
-    "testData": "Dropdown Nguồn: Chọn lọc \"Chỉ Trực ban cổng\" hoặc \"Chỉ Sổ sách ngoại lệ\"."
-  },
-  {
-    "id": "TC-DASH-013",
-    "module": "M05",
-    "priority": "P3",
-    "name": "Bộ lọc thời gian: Lọc nhanh và Khoảng ngày chặn tương lai",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Chọn mốc thời gian nhanh: \"Hôm nay\", \"7 ngày qua\", \"Tuần này\", \"Tháng này\".",
-      "2. Chọn khoảng ngày tùy chọn, thử chọn ngày mai (tương lai)."
-    ],
-    "expected": [
-      "Hàm clampDateInputToToday tự động chặn không cho chọn ngày vượt quá hôm nay.",
-      "Bảng dữ liệu làm mới chính xác theo khoảng ngày đã chọn."
-    ],
-    "precondition": "Bộ lọc thời gian trên Dashboard Trực ban.",
-    "testData": "Thử nhập ngày đến ở tương lai (vượt quá ngày hôm nay)."
-  },
-  {
-    "id": "TC-DASH-014",
-    "module": "M05",
-    "priority": "P4",
-    "name": "Menu gom nhóm Tiện ích & Tùy chọn (SlidersHorizontal dropdown)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Nhấp nút \"Tiện ích\" trên toolbar bên cạnh nút Check-in."
-    ],
-    "expected": [
-      "Menu dropdown mở ra chứa gọn gàng 4 mục: Tra cứu hồ sơ nâng cao, Chế độ xem bảng, Cài đặt màu sắc, Thu hồi thẻ mất."
-    ],
-    "precondition": "Thanh công cụ Dashboard Trực ban.",
-    "testData": "Nhấp icon SlidersHorizontal để mở menu gom nhóm Tiện ích."
-  },
-  {
-    "id": "TC-VDET-001",
-    "module": "M06",
-    "priority": "P1",
-    "name": "Mở xem Chi tiết lượt khách (VisitDetailsModal)",
-    "platform": "Giao diện Web Trực ban, Admin & DataEntry",
-    "steps": [
-      "1. Nhấn nút \"Chi tiết\" (biểu tượng con mắt) trên bất kỳ dòng lượt khách nào."
-    ],
-    "expected": [
-      "Modal VisitDetailsModal mở ra với 3 tab: TỔNG QUAN (Overview), DÒNG THỜI GIAN (Timeline), THÀNH VIÊN (Members)."
-    ],
-    "precondition": "Danh sách khách có ít nhất 1 bản ghi lượt thăm.",
-    "testData": "Nhấp nút \"Chi tiết\" (Eye icon) trên dòng lượt khách."
-  },
-  {
-    "id": "TC-VDET-002",
-    "module": "M06",
-    "priority": "P2",
-    "name": "Tab Tổng quan (Overview): Thẻ KPI tóm tắt đầy đủ chỉ số",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Quan sát Tab Tổng quan của VisitDetailsModal."
-    ],
-    "expected": [
-      "Hiển thị thông tin Khách đại diện, Cán bộ tiếp đón, Mục đích, Cơ quan.",
-      "5 Thẻ KPI: Quân số hiện tại, Thẻ định danh đang giữ, Thẻ thường đang giữ, Phương tiện, Thẻ mất."
-    ],
-    "precondition": "VisitDetailsModal đang mở.",
-    "testData": "Quan sát tab Tổng quan (Overview): Thẻ KPI quân số, xe, thẻ, người đón."
-  },
-  {
-    "id": "TC-VDET-003",
-    "module": "M06",
-    "priority": "P4",
-    "name": "Cửa sổ con xem nhanh Quân số chi tiết từ Tab Tổng quan",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Tại Tab Tổng quan, nhấp vào Thẻ KPI Quân số (hoặc nút xem chi tiết quân số)."
-    ],
-    "expected": [
-      "Cửa sổ con mở ra liệt kê danh sách từng người, giờ vào, giờ ra và trạng thái cụ thể."
-    ],
-    "precondition": "Đoàn khách có cả Người đi cùng và khách vô danh.",
-    "testData": "Tại tab Overview, nhấp vào thẻ Quân số để mở popover chi tiết."
-  },
-  {
-    "id": "TC-VDET-004",
-    "module": "M06",
-    "priority": "P2",
-    "name": "Tra cứu & Đối soát Thẻ An ninh Toàn đoàn qua Modal Chuyên dụng (Sổ đối soát thẻ)",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "precondition": "Lượt khách (hoặc đoàn khách) có cấp phát cả thẻ định danh, thẻ người đi cùng và thẻ thường của đoàn vô danh.",
-    "testData": "Modal Chi tiết lượt khách (VisitDetailsModal) -> Khối \"Thẻ an ninh\" -> Nút \"Xem sổ đối soát thẻ ↗\".",
-    "steps": [
-      "1. Mở modal Chi tiết lượt khách (VisitDetailsModal) của một đoàn khách.",
-      "2. Tại Khối Thẻ an ninh, quan sát các thẻ KPI tóm tắt (Tổng phát, Đã thu hồi, Còn nợ, Đang báo mất).",
-      "3. Nhấn nút \"Xem sổ đối soát thẻ ↗\".",
-      "4. Cửa sổ con độc lập \"Sổ Theo Dõi & Đối Soát Thẻ An Ninh Toàn Đoàn\" mở ra.",
-      "5. Kiểm tra bảng danh sách chi tiết: STT, Mã thẻ, Loại thẻ, Đối tượng được giao, Tiến độ, Tình trạng thu hồi và Cột thao tác nghiệp vụ."
-    ],
-    "expected": [
-      "1. Modal Sổ đối soát thẻ hiển thị đầy đủ, rõ ràng toàn bộ danh mục thẻ an ninh đã cấp cho đoàn khách.",
-      "2. Phân loại chuẩn xác từng dòng: Thẻ Trưởng đoàn, Thẻ người đi cùng, Thẻ định danh đoàn vô danh, Thẻ thường đoàn vô danh.",
-      "3. Banner cảnh báo phía trên hiển thị chính xác số thẻ còn nợ hoặc thông báo màu xanh \"✓ Đã thu hồi đủ\" nếu không còn nợ thẻ.",
-      "4. Cột Thao tác cung cấp nút \"Báo mất thẻ\" cho các thẻ còn đang giữ, hỗ trợ xử lý sự cố trực tiếp mà không cần chờ đến lúc check-out."
-    ]
-  },
-  {
-    "id": "TC-VDET-005",
-    "module": "M06",
-    "priority": "P2",
-    "name": "Cửa sổ con xem nhanh Phương tiện & Checkout từng xe trực tiếp",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Nhấp vào Thẻ KPI Phương tiện.",
-      "2. Trong danh sách xe, chọn 1 xe đang ở bên trong và nhấn nút \"Checkout xe này\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API /visits/vehicle-checkout, cập nhật giờ ra riêng cho xe đó ngay lập tức mà không ảnh hưởng tới người."
-    ],
-    "precondition": "Đoàn khách có từ 2 phương tiện trở lên.",
-    "testData": "Tại tab Overview, nhấp vào thẻ Phương tiện -> Nhấp Checkout 1 xe cụ thể."
-  },
-  {
-    "id": "TC-VDET-006",
-    "module": "M06",
-    "priority": "P1",
-    "name": "Tab Dòng thời gian (Timeline): Hiển thị chuỗi sự kiện CHECK_IN, ADD, CHECK_OUT, RECOVER_CARD",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Chuyển sang Tab \"DÒNG THỜI GIAN (Timeline)\"."
-    ],
-    "expected": [
-      "Hiển thị chuỗi các mốc sự kiện theo chiều thời gian.",
-      "Mỗi sự kiện có badge phân loại, thời gian thực hiện, cổng trạm và cán bộ thực thi."
-    ],
-    "precondition": "Lượt khách đã trải qua nhiều sự kiện: Check-in, Bổ sung người, Checkout xe.",
-    "testData": "Chuyển sang tab Dòng thời gian (Timeline)."
-  },
-  {
-    "id": "TC-VDET-007",
-    "module": "M06",
-    "priority": "P3",
-    "name": "Đổi chiều sắp xếp Timeline: Mới nhất trước vs Cũ nhất trước",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Tại Tab Timeline, nhấn nút chuyển đổi thứ tự sắp xếp."
-    ],
-    "expected": [
-      "Danh sách sự kiện đảo chiều sắp xếp Newest First <-> Oldest First tức thì."
-    ],
-    "precondition": "Tab Timeline đang hiển thị chuỗi sự kiện.",
-    "testData": "Nhấp nút đổi chiều sắp xếp (Mới nhất trước <-> Cũ nhất trước)."
-  },
-  {
-    "id": "TC-VDET-008",
-    "module": "M06",
-    "priority": "P3",
-    "name": "Thu gọn / Mở rộng chi tiết từng đợt sự kiện Timeline",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Nhấp vào tiêu đề của một đợt sự kiện để đóng/mở chi tiết."
-    ],
-    "expected": [
-      "Mở rộng xem chi tiết danh sách người vào/ra, xe vào/ra và thẻ thu hồi trong đợt đó."
-    ],
-    "precondition": "Tab Timeline có các đợt sự kiện chi tiết.",
-    "testData": "Nhấp nút Thu gọn / Mở rộng chi tiết từng đợt sự kiện."
-  },
-  {
-    "id": "TC-VDET-009",
-    "module": "M06",
-    "priority": "P2",
-    "name": "Tab Thành viên (Members): Danh sách toàn diện thành viên trong đoàn",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Chuyển sang Tab \"THÀNH VIÊN (Members)\"."
-    ],
-    "expected": [
-      "Liệt kê đầy đủ Trưởng đoàn, Người đi cùng có danh tính và Khách vô danh.",
-      "Hiển thị rõ ảnh chân dung, CCCD, mã thẻ đang giữ và trạng thái Vào/Ra."
-    ],
-    "precondition": "Lượt khách là đoàn đông người.",
-    "testData": "Chuyển sang tab Thành viên (Members)."
-  },
-  {
-    "id": "TC-VDET-010",
-    "module": "M06",
-    "priority": "P3",
-    "name": "Thư viện Đa Ảnh Lượt thăm (VisitPhotoGalleryModal + ZoomableImage)",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Nhấn nút \"Thư viện ảnh\" trong modal Chi tiết.",
-      "2. Nhấp vào một ảnh để xem ở chế độ phóng to."
-    ],
-    "expected": [
-      "VisitPhotoGalleryModal mở ra hiển thị lưới tất cả ảnh (Chân dung, Giấy tờ, Xe cộ, Checkout).",
-      "ZoomableImage cho phép phóng to, thu nhỏ và di chuyển xem chi tiết nét ảnh."
-    ],
-    "precondition": "Lượt khách có nhiều ảnh chụp: chân dung, giấy tờ, xe, checkout.",
-    "testData": "Trong VisitDetailsModal, nhấp nút \"Thư viện ảnh (VisitPhotoGalleryModal)\"."
-  },
-  {
-    "id": "TC-VDET-011",
-    "module": "M06",
-    "priority": "P2",
-    "name": "Nút hành động nhanh liên thông từ modal Chi tiết",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Trong modal Chi tiết, nhấn nút \"Bổ sung người\", \"Checkout\", hoặc \"Thu hồi thẻ mất\"."
-    ],
-    "expected": [
-      "Mở modal thao tác tương ứng với lượt khách đã được chọn sẵn, không cần tìm lại trên bảng."
-    ],
-    "precondition": "VisitDetailsModal đang mở cho lượt khách đang ở trong.",
-    "testData": "Nhấp các nút hành động nhanh: \"Bổ sung người\", \"Checkout\", hoặc \"Thu hồi thẻ\"."
-  },
-  {
-    "id": "TC-VDET-012",
-    "module": "M06",
-    "priority": "P4",
-    "name": "Đóng modal Chi tiết bằng phím Escape hoặc nút đóng ✕",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Nhấn phím Escape trên bàn phím hoặc nhấp nút ✕."
-    ],
-    "expected": [
-      "Modal đóng mượt mà, phục hồi lại vị trí scroll của bảng dữ liệu phía dưới."
-    ],
-    "precondition": "VisitDetailsModal đang mở.",
-    "testData": "Nhấn phím Escape trên bàn phím hoặc nhấp nút ✕."
-  },
-  {
-    "id": "TC-UIUX-013",
-    "module": "M06",
-    "priority": "P3",
-    "name": "Xem Hồ sơ Cá nhân Cán bộ Trực ban Đang trực (StaffSettingsModal)",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Nhấp vào tên hoặc avatar cán bộ trực ban trên thanh Header trạm gác.",
-      "2. Quan sát thông tin trong StaffSettingsModal."
-    ],
-    "expected": [
-      "StaffSettingsModal mở ra hiển thị đầy đủ: Ảnh thẻ đại diện, Mã nhân viên, Họ tên, Ngày sinh, Số CCCD, Điện thoại, Bộ phận và Chức vụ.",
-      "Đóng modal an toàn bằng nút đóng hoặc nhấp ra ngoài."
-    ],
-    "precondition": "Cán bộ đang trong ca trực hợp lệ; Header trạm gác hiển thị tên cán bộ.",
-    "testData": "Nhấp vào avatar hoặc tên cán bộ trên Header trạm gác."
-  },
-  {
-    "id": "TC-UIUX-014",
-    "module": "M06",
-    "priority": "P4",
-    "name": "Phóng to, Thu nhỏ và Soi chi tiết Ảnh bằng công cụ ZoomableImage",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "steps": [
-      "1. Mở Thư viện ảnh của một lượt khách bất kỳ (VisitPhotoGalleryModal).",
-      "2. Nhấp vào bất kỳ ảnh nào (Ảnh thẻ CCCD, ảnh biển số xe, ảnh chân dung).",
-      "3. Sử dụng con lăn chuột hoặc nút công cụ để phóng to (Zoom in), thu nhỏ (Zoom out), kéo rê (Pan) và xoay ảnh."
-    ],
-    "expected": [
-      "Công cụ ZoomableImage phản hồi mượt mà, cho phép cán bộ an ninh phóng to tối đa để soi rõ các ký tự trên giấy tờ tùy thân hoặc biển số xe."
-    ],
-    "precondition": "Thư viện ảnh VisitPhotoGalleryModal đang mở.",
-    "testData": "Nhấp vào 1 ảnh bất kỳ -> Dùng con lăn chuột phóng to (zoom), kéo rê (pan) để soi chi tiết."
-  },
-  {
-    "id": "TC-VDET-015",
-    "module": "M06",
-    "priority": "P1",
-    "name": "Báo mất Thẻ An Ninh Giữa Chừng trong Sổ Đối Soát Thẻ (VisitDetailsModal)",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "precondition": "Đoàn khách đang ở bên trong khuôn viên (chưa check-out). Khách làm rơi thẻ an ninh trong phòng họp và báo trực ban.",
-    "testData": "VisitDetailsModal của đoàn khách -> Khối Kiểm soát thẻ -> Bấm \"Xem sổ đối soát thẻ ↗\" -> Dòng thẻ đang nợ -> Bấm \"Báo mất\" -> Nhập lý do: \"Khách báo rơi thẻ tại tầng 3 phòng hội thảo\".",
-    "steps": [
-      "1. Trên Dashboard Trực ban, nhấp vào dòng lượt khách đang ở trong đơn vị để mở VisitDetailsModal.",
-      "2. Tại khối \"Kiểm soát & Đối soát thẻ an ninh\", nhấp nút \"Xem sổ đối soát thẻ ↗\".",
-      "3. Trong bảng đối soát chi tiết, tìm dòng thẻ đang nợ (có nhãn \"⚠️ Đang nợ thẻ\").",
-      "4. Nhấp nút \"Báo mất\" màu đỏ tại cột Thao tác.",
-      "5. Modal \"Xác nhận báo mất thẻ an ninh\" hiển thị: Kiểm tra thông tin mã thẻ, người giữ; Nhập lý do mất; Với thẻ thường chọn số lượng mất.",
-      "6. Nhấn \"Xác nhận báo mất\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API POST /station/visits/{id}/report-lost-card (hoặc /admin/visits/{id}/report-lost-card) thành công.",
-      "Dòng thẻ chuyển ngay sang nhãn \"❌ Đã báo mất\", cột Thao tác tự động chuyển sang nút \"Thu hồi\".",
-      "Khách và đoàn VẪN Ở TRẠNG THÁI \"Trong đơn vị\" (không bị cưỡng chế check-out).",
-      "Tab Dòng thời gian (Timeline) tự động thêm 1 sự kiện \"Báo mất thẻ an ninh\" kèm lý do và trạm tiếp nhận."
-    ]
-  },
-  {
-    "id": "TC-VDET-016",
-    "module": "M06",
-    "priority": "P1",
-    "name": "Thu hồi Thẻ Mất Nhanh Trực Tiếp từ Sổ Đối Soát Thẻ (VisitDetailsModal)",
-    "platform": "Giao diện Web Trực ban & Admin",
-    "precondition": "Lượt khách có thẻ đang ở trạng thái \"❌ Đã báo mất\".",
-    "testData": "Tại bảng Sổ theo dõi & Đối soát thẻ trong VisitDetailsModal: Nhấp nút \"Thu hồi\" màu xanh lá tại cột Thao tác của dòng thẻ báo mất.",
-    "steps": [
-      "1. Mở VisitDetailsModal của lượt khách có thẻ bị báo mất.",
-      "2. Nhấp nút \"Xem sổ đối soát thẻ ↗\" (hoặc nút \"Thu hồi thẻ mất\" tại khối Thống kê thẻ).",
-      "3. Tìm dòng thẻ có trạng thái \"❌ Đã báo mất\", nhấp nút \"Thu hồi\" màu xanh lá.",
-      "4. Modal RecoverLostCardModal tự động bật lên với thông tin lượt thăm đã được chọn sẵn.",
-      "5. Nhập ghi chú và nhấn \"Thu hồi thẻ này\" (hoặc \"Xác nhận thu hồi thẻ\")."
-    ],
-    "expected": [
-      "Modal RecoverLostCardModal mở ra ngay lập tức với đúng ngữ cảnh của lượt khách.",
-      "Thực hiện thu hồi thành công, thẻ đổi trạng thái thành \"✓ Đã thu hồi\".",
-      "Bộ đếm thẻ mất giảm xuống, bộ đếm đã thu hồi tăng lên, sổ đối soát cập nhật tức thì."
-    ]
-  },
-  {
-    "id": "TC-DENT-001",
-    "module": "M07",
-    "priority": "P1",
-    "name": "Đăng nhập Phân hệ Sổ sách Ngoại lệ (/dataentry.html)",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "testData": "Truy cập /dataentry.html, đăng nhập: \"nhaplieu\" / \"123456\".",
-    "steps": [
-      "1. Đăng nhập tài khoản nhaplieu tại form đăng nhập.",
-      "2. Hệ thống tự động chuyển hướng sang trang /dataentry.html."
-    ],
-    "expected": [
-      "Giao diện chuyên biệt của Phân hệ Nhập liệu Sổ sách Ngoại lệ hiển thị.",
-      "Header hiển thị rõ tên nhân viên nhập liệu, địa điểm và các nút phím tắt F1, F3."
-    ],
-    "precondition": "Tài khoản \"nhaplieu\" tồn tại trong CSDL với vai trò DataEntry."
-  },
-  {
-    "id": "TC-DENT-002",
-    "module": "M07",
-    "priority": "P3",
-    "name": "Thao tác Phím tắt toàn cục trong DataEntry: F1, F3, Escape",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Nhấn phím F1 -> Modal \"DataEntryModal\" mở ra.",
-      "2. Nhấn Escape -> Modal đóng lại.",
-      "3. Nhấn phím F3 -> Modal Hướng dẫn quy trình mở ra."
-    ],
-    "expected": [
-      "Các phím tắt hoạt động nhạy bén, ngăn chặn hành vi mặc định của trình duyệt (F1 help, F3 find)."
-    ],
-    "precondition": "Đang ở giao diện Dashboard DataEntry.",
-    "testData": "Nhấn phím F1 (mở form nhập), Escape (đóng), F3 (mở hướng dẫn)."
-  },
-  {
-    "id": "TC-DENT-003",
-    "module": "M07",
-    "priority": "P1",
-    "name": "Form Nhập sổ sách ngoại lệ (DataEntryModal): Nhập hồi tố ngày giờ quá khứ",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "testData": "Giờ vào: 08:30 ngày 01/10/2026, Họ tên: \"Phạm Văn Đoàn\", CCCD: \"001099000555\".",
-    "steps": [
-      "1. Mở DataEntryModal (F1).",
-      "2. Chọn ngày giờ vào trong quá khứ (Backdate).",
-      "3. Chọn Trạm tiếp đón và Cán bộ trực tiếp nhận từ sổ ghi chép."
-    ],
-    "expected": [
-      "Hệ thống cho phép lưu ngày giờ quá khứ hợp lệ, gán đúng trạm và cán bộ trực của thời điểm đó."
-    ],
-    "precondition": "DataEntryModal (F1) đang mở; Cần nhập hồ sơ khách từ sổ giấy tuần trước."
-  },
-  {
-    "id": "TC-DENT-004",
-    "module": "M07",
-    "priority": "P1",
-    "name": "Nhập đồng thời cả Check-in và Check-out (Khách đã vào và ra trong quá khứ)",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "testData": "Tích chọn \"Đã check-out\", nhập Giờ ra: 11:30 ngày 01/10/2026.",
-    "steps": [
-      "1. Bật tùy chọn \"Đã hoàn tất Check-out (Khách đã ra về)\".",
-      "2. Nhập giờ ra, chọn trạm ra và trạng thái thẻ (Đã trả / Nợ thẻ / Mất thẻ).",
-      "3. Nhấn nút \"Lưu hồ sơ sổ sách\"."
-    ],
-    "expected": [
-      "Lưu lượt khách với Status = 2 (Đã ra), CheckInTime và CheckOutTime đầy đủ.",
-      "Không làm tăng quân số inside hiện tại của cơ quan."
-    ],
-    "precondition": "Khách trong sổ giấy đã vào và đã ra về trong quá khứ."
-  },
-  {
-    "id": "TC-DENT-005",
-    "module": "M07",
-    "priority": "P1",
-    "name": "Nhập chỉ Check-in (Khách vào qua đường ngoại lệ đang ở bên trong)",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Tắt tùy chọn \"Đã hoàn tất Check-out\".",
-      "2. Nhập giờ vào thực tế của khách.",
-      "3. Nhấn Lưu hồ sơ."
-    ],
-    "expected": [
-      "Lượt khách được tạo với Status = 1 (Trong đơn vị).",
-      "Quân số Inside toàn hệ thống cập nhật tăng lên, trạm gác và admin đều nhìn thấy."
-    ],
-    "precondition": "Khách vào cơ quan qua đường ngoại lệ hiện vẫn đang ở bên trong.",
-    "testData": "Bỏ tích \"Đã check-out\", chỉ nhập giờ vào."
-  },
-  {
-    "id": "TC-DENT-006",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Nhập đoàn đông người, người đi cùng và nhiều phương tiện từ sổ trực",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Trong DataEntryModal, thêm 3 người đi cùng, 10 khách vô danh và 2 xe ô tô.",
-      "2. Lưu hồ sơ."
-    ],
-    "expected": [
-      "Tạo đầy đủ cấu trúc đoàn, thành viên và phương tiện trong CSDL SQLite."
-    ],
-    "precondition": "Sổ trực ghi nhận đoàn công tác 5 người và 2 ô tô.",
-    "testData": "DataEntryModal: Nhập trưởng đoàn, thêm Người đi cùng và 2 xe cơ giới."
-  },
-  {
-    "id": "TC-DENT-007",
-    "module": "M07",
-    "priority": "P1",
-    "name": "Đóng dấu kiểm toán tự động (Audit Trail: createdByType = 1)",
-    "platform": "Phân hệ Sổ sách DataEntry & Backend API",
-    "steps": [
-      "1. Tạo 1 hồ sơ từ trang /dataentry.html.",
-      "2. Kiểm tra bản ghi trong CSDL hoặc qua API /admin/visits?createdByType=1."
-    ],
-    "expected": [
-      "Bản ghi có CreatedByType = 1 (DataEntry), CreatedByName = \"nhaplieu\", CreatedLocation = phòng nhập, CreatedIpAddress = IP máy trạm."
-    ],
-    "precondition": "Tài khoản nhaplieu vừa tạo thành công một bản ghi sổ sách ngoại lệ.",
-    "testData": "Kiểm tra bản ghi trong bảng VisitTransactions và Visits trong CSDL."
-  },
-  {
-    "id": "TC-DENT-008",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Nhập dữ liệu hồi tố Lượt khách có Thẻ mất: Kiểm toán Transaction toàn vẹn",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "precondition": "Truy cập phân hệ /dataentry.html.",
-    "testData": "Nhập 1 lượt khách từ sổ giấy có thẻ chính báo mất và đoàn vô danh có 2 thẻ thường báo mất.",
-    "steps": [
-      "1. Mở trang Nhập ngoại lệ /dataentry.html.",
-      "2. Nhập thông tin đoàn khách (Khách chính, người đi cùng, đoàn vô danh), chọn giờ vào và bật tùy chọn \"Đã check-out\", chọn giờ ra.",
-      "3. Đánh dấu trạng thái thẻ: Thẻ chính chọn \"Mất thẻ\", Đoàn vô danh: phát 5 thẻ thường, thu hồi 3 thẻ, báo mất 2 thẻ.",
-      "4. Nhấn nút \"Lưu hồ sơ sổ sách\"."
-    ],
-    "expected": [
-      "Lưu thành công vào SQLite qua ManualEntryController.",
-      "Hệ thống sinh đầy đủ các bản ghi VisitTransaction (IssueCard, ReturnCard, LostCard) cho cả thẻ định danh và thẻ thường của đoàn vô danh.",
-      "Báo cáo Thẻ mất (LostCardsReportModal) và Sổ đối soát hiển thị đầy đủ bản ghi này kèm dấu kiểm toán IP, địa điểm và người nhập."
-    ]
-  },
-  {
-    "id": "TC-DENT-009",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Bổ sung người đi cùng sổ sách qua DataEntrySupplementalModal",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Trên hồ sơ sổ sách đang inside, nhấn nút \"Thêm\".",
-      "2. Thêm người đi cùng và phương tiện bổ sung."
-    ],
-    "expected": [
-      "Cập nhật bổ sung thành công, gắn nhãn do tài khoản DataEntry thực hiện."
-    ],
-    "precondition": "Hồ sơ sổ sách đang ở trạng thái Inside; Cần bổ sung thành viên.",
-    "testData": "Nhấp nút \"Bổ sung\" -> DataEntrySupplementalModal."
-  },
-  {
-    "id": "TC-DENT-010",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Checkout sổ sách qua DataEntryCheckOutModal",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Trên hồ sơ sổ sách đang inside, nhấn nút \"Checkout\".",
-      "2. Xác nhận thời gian ra và tình trạng thẻ."
-    ],
-    "expected": [
-      "Hồ sơ chuyển trạng thái CheckedOut thành công từ giao diện DataEntry."
-    ],
-    "precondition": "Hồ sơ sổ sách đang ở trạng thái Inside; Khách làm thủ tục rời khỏi đơn vị.",
-    "testData": "Nhấp nút \"Checkout\" -> DataEntryCheckOutModal."
-  },
-  {
-    "id": "TC-DENT-011",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Thu hồi thẻ mất từ giao diện DataEntry",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Mở RecoverLostCardModal từ giao diện DataEntry.",
-      "2. Tra cứu và hoàn tất thu hồi thẻ mất phát sinh từ hồ sơ sổ sách."
-    ],
-    "expected": [
-      "Thẻ mất được thu hồi thành công, cập nhật kho thẻ dùng chung của đơn vị."
-    ],
-    "precondition": "Hồ sơ sổ sách có nợ thẻ an ninh.",
-    "testData": "Nhấp nút \"Thu hồi thẻ mất\" trên thanh công cụ DataEntry."
-  },
-  {
-    "id": "TC-DENT-012",
-    "module": "M07",
-    "priority": "P3",
-    "name": "Xuất báo cáo Excel danh sách hồ sơ sổ sách đã nhập để đối soát",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Nhấn nút \"Xuất Excel\" trên Dashboard DataEntry."
-    ],
-    "expected": [
-      "Tải về file Excel chứa toàn bộ danh sách hồ sơ sổ sách kèm người nhập, thời gian và địa điểm."
-    ],
-    "precondition": "Dashboard DataEntry đang hiển thị danh sách hồ sơ.",
-    "testData": "Nhấp nút \"Xuất Excel\" trên Dashboard DataEntry."
-  },
-  {
-    "id": "TC-DENT-013",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Xem chi tiết lượt khách sổ sách qua modal VisitDetailsModal",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Nhấn nút \"Chi tiết\" trên một dòng hồ sơ DataEntry."
-    ],
-    "expected": [
-      "Mở VisitDetailsModal hiển thị đầy đủ thông tin, timeline và thành viên đồng bộ như trạm gác."
-    ],
-    "precondition": "Dashboard DataEntry đang hiển thị danh sách hồ sơ.",
-    "testData": "Nhấp nút \"Chi tiết\" trên 1 dòng hồ sơ DataEntry."
-  },
-  {
-    "id": "TC-DENT-014",
-    "module": "M07",
-    "priority": "P4",
-    "name": "Kiểm tra ping phiên làm việc DataEntry định kỳ",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Đăng nhập tài khoản nhaplieu trên máy 1.",
-      "2. Đăng nhập tài khoản nhaplieu trên máy 2 để chiếm phiên.",
-      "3. Quan sát máy 1 sau 10 giây."
-    ],
-    "expected": [
-      "Máy 1 ping API /admin/auth/status trả về 401 Unauthorized.",
-      "Hệ thống bật thông báo phiên hết hạn và tự động chuyển về trang đăng nhập."
-    ],
-    "precondition": "Đang mở phiên làm việc DataEntry trên máy 1.",
-    "testData": "Đăng nhập cùng tài khoản nhaplieu trên máy 2 để chiếm phiên; Quan sát máy 1."
-  },
-  {
-    "id": "TC-DENT-015",
-    "module": "M07",
-    "priority": "P3",
-    "name": "Sổ tay Quy trình & Hướng dẫn Nghiệp vụ Nhập liệu Ngoại lệ (DataEntryGuideTab)",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Tại giao diện DataEntry, nhấp vào tab \"Hướng dẫn\" (hoặc nhấn phím tắt F3).",
-      "2. Đọc các mục quy trình: Quy định nhập sổ hồi tố, xử lý khách nợ thẻ, đối soát sổ sách cuối ngày."
-    ],
-    "expected": [
-      "DataEntryGuideTab hiển thị nội dung trực quan, có các ví dụ thực tế và quy chuẩn nhập liệu được định dạng rõ ràng."
-    ],
-    "precondition": "Giao diện DataEntry đang mở.",
-    "testData": "Nhấp tab \"Hướng dẫn\" (hoặc nhấn phím F3) để mở DataEntryGuideTab."
-  },
-  {
-    "id": "TC-DENT-016",
-    "module": "M07",
-    "priority": "P2",
-    "name": "Bộ lọc Gộp Nguồn và Người tạo cuộc viếng thăm (originFilter)",
-    "platform": "Phân hệ Sổ sách DataEntry",
-    "steps": [
-      "1. Tại Dashboard DataEntry, chọn dropdown \"Nguồn & Người tạo\" (originFilter).",
-      "2. Chọn lọc \"Tất cả\", \"Chỉ trạm gác trực tiếp\", hoặc \"Tài khoản nhập liệu cụ thể (nhaplieu)\".",
-      "3. Quan sát danh sách lượt khách hiển thị."
-    ],
-    "expected": [
-      "Bảng danh sách lọc chính xác theo trường createdByType và createdBy, hiển thị đúng các hồ sơ tương ứng."
-    ],
-    "precondition": "Dashboard DataEntry đang hiển thị danh sách lượt khách.",
-    "testData": "Dropdown originFilter: Chọn lọc \"Chỉ Trạm gác\" hoặc \"Chỉ tài khoản nhaplieu\"."
-  },
-  {
-    "id": "TC-ADMN-001",
-    "module": "M08",
-    "priority": "P4",
-    "name": "Giao diện Quản trị Admin mới: Sidebar thu gọn/mở rộng & Trạng thái Online",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Đăng nhập trang Admin (/index.html hoặc /admin.html).",
-      "2. Nhấn nút thu gọn Sidebar (ChevronLeft) rồi mở rộng lại (ChevronRight)."
-    ],
-    "expected": [
-      "Sidebar thu nhỏ mượt mà sang dạng icon (w-18) và mở rộng (w-64).",
-      "Footer hiển thị chỉ thị Online với hiệu ứng pulsing xanh lá và đồng hồ thời gian thực."
-    ],
-    "precondition": "Đăng nhập trang Quản trị Admin (/index.html hoặc /admin.html) thành công.",
-    "testData": "Nhấp nút thu gọn Sidebar (ChevronLeft) rồi mở rộng lại (ChevronRight)."
-  },
-  {
-    "id": "TC-ADMN-002",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Hub Giám sát - Lịch sử Lượt thăm (HistoryTab): Master-Detail tra cứu siêu tốc",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào tab Giám sát & Tra cứu -> chọn sub-tab \"Lịch sử lượt thăm\".",
-      "2. Tìm kiếm theo tên khách, lọc theo khoảng ngày, lọc trạng thái."
-    ],
-    "expected": [
-      "Bảng lịch sử Master-Detail tải nhanh chóng, phân trang mượt mà.",
-      "Nhấp xem chi tiết mở modal VisitDetailsModal đầy đủ dữ liệu."
-    ],
-    "precondition": "Hub Giám sát -> Tab \"Lịch sử Lượt thăm (HistoryTab)\" đang mở.",
-    "testData": "Nhập từ khóa tra cứu \"An\", chọn lọc ngày trong tuần."
-  },
-  {
-    "id": "TC-ADMN-003",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Hub Giám sát - Giám sát Ca trực (ShiftsTab): Xem ảnh webcam vào/ra ca",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào tab Giám sát & Tra cứu -> chọn sub-tab \"Giám sát ca trực\".",
-      "2. Quan sát danh sách các ca trực của các trạm gác.",
-      "3. Nhấp xem ảnh mở ca và ảnh kết thúc ca."
-    ],
-    "expected": [
-      "Hiển thị rõ ràng: Tên trạm, Cán bộ trực, Giờ bắt đầu, Giờ kết thúc, Thời lượng ca trực.",
-      "Ảnh chụp webcam lúc vào ca và ra ca hiển thị rõ nét, chứng minh cán bộ có mặt thực tế tại trạm."
-    ],
-    "precondition": "Cán bộ trực ban đã mở và đóng ca trực kèm ảnh webcam.",
-    "testData": "Hub Giám sát -> Tab \"Giám sát Ca trực (ShiftsTab)\": Xem ảnh vào/ra ca."
-  },
-  {
-    "id": "TC-ADMN-004",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Hub Giám sát - Đối soát Ngoại lệ (AuditEntryTab): Kiểm tra hồ sơ do DataEntry tạo",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào tab Giám sát & Tra cứu -> chọn sub-tab \"Đối soát ngoại lệ\".",
-      "2. Quan sát danh sách các bản ghi có CreatedByType = 1."
-    ],
-    "expected": [
-      "Bảng hiển thị chi tiết: Người nhập (nhaplieu), Thời gian tạo, Địa chỉ IP, Vị trí máy trạm, Thông tin khách.",
-      "Giúp cán bộ thanh tra phát hiện các sai lệch hoặc gian lận trong việc nhập khống hồ sơ sổ sách."
-    ],
-    "precondition": "Nhân viên nhập liệu đã tạo các bản ghi ngoại lệ qua DataEntry.",
-    "testData": "Hub Giám sát -> Tab \"Đối soát Ngoại lệ (AuditEntryTab)\": Kiểm tra dấu vết kiểm toán."
-  },
-  {
-    "id": "TC-ADMN-005",
-    "module": "M08",
-    "priority": "P2",
-    "name": "Xuất Báo cáo Đối soát Ngoại lệ ra file Excel và PDF",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tại AuditEntryTab, nhấn nút \"Xuất Excel\" và \"Xuất PDF\"."
-    ],
-    "expected": [
-      "Xuất thành công file báo cáo đối soát có tiêu đề \"Báo cáo Đối soát Hồ sơ Nhập liệu Sổ sách Ngoại lệ\" kèm metadata ngày giờ lọc."
-    ],
-    "precondition": "Tab AuditEntryTab đang hiển thị danh sách hồ sơ đối soát.",
-    "testData": "Nhấp nút \"Xuất Excel\" và \"Xuất PDF\"."
-  },
-  {
-    "id": "TC-ADMN-006",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Hub Danh mục - Quản lý Cán bộ Trực ban (StaffManagement): Thêm, sửa, đổi phòng ban",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào tab Quản lý tài khoản -> chọn \"Tài khoản Cán bộ Trực ban\".",
-      "2. Thêm mới nhân viên trạm: Nhập Họ tên, Mã nhân viên (Nv002), CCCD, Số điện thoại, Phòng ban.",
-      "3. Nhấn Lưu."
-    ],
-    "expected": [
-      "Nhân viên mới được thêm vào danh sách, có thể dùng tài khoản này để đăng nhập tại trạm gác."
-    ],
-    "precondition": "Hub Danh mục -> Tab \"Cán bộ Trực ban (StaffManagement)\" đang mở.",
-    "testData": "Thêm mới nhân viên: Mã \"NV004\", Họ tên \"Đỗ Minh Đức\", Tên đăng nhập \"Nv004a4\"."
-  },
-  {
-    "id": "TC-ADMN-007",
-    "module": "M08",
-    "priority": "P2",
-    "name": "Cấp quyền Dự phòng dùng CCCD mở ca (AllowCccdShiftAuth) cho cán bộ trạm",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Mở sửa thông tin nhân viên trong StaffManagement.",
-      "2. Bật cờ \"Cho phép dùng CCCD mở ca (AllowCccdShiftAuth)\".",
-      "3. Lưu thay đổi."
-    ],
-    "expected": [
-      "Nhân viên này khi đăng nhập tại trạm sẽ có quyền dùng CCCD mở ca thay cho webcam."
-    ],
-    "precondition": "Form hồ sơ nhân viên trong StaffManagement đang mở.",
-    "testData": "Tích chọn cờ \"Cho phép dùng CCCD mở ca dự phòng (AllowCccdShiftAuth)\"."
-  },
-  {
-    "id": "TC-ADMN-008",
-    "module": "M08",
-    "priority": "P3",
-    "name": "Tải lên Ảnh thẻ đại diện cho cán bộ trực ban (Upload Avatar Photo)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tại form nhân viên, nhấp tải ảnh chân dung từ máy tính lên.",
-      "2. Lưu hồ sơ."
-    ],
-    "expected": [
-      "Ảnh thẻ được tải lên thư mục /uploads/staff/..., hiển thị trên Header trạm gác khi nhân viên trực."
-    ],
-    "precondition": "Form hồ sơ nhân viên trong StaffManagement đang mở.",
-    "testData": "Tải lên file ảnh thẻ chân dung (avatar.jpg) từ máy tính cá nhân."
-  },
-  {
-    "id": "TC-ADMN-009",
-    "module": "M08",
-    "priority": "P4",
-    "name": "Nhập danh sách cán bộ hàng loạt từ file Excel (Import Staff Excel)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấn nút \"Import Excel\" trong StaffManagement.",
-      "2. Chọn file Excel danh sách nhân sự mẫu.",
-      "3. Xác nhận import."
-    ],
-    "expected": [
-      "Hệ thống đọc dữ liệu file Excel và thêm hàng loạt nhân viên vào hệ thống, hiển thị báo cáo số dòng thành công."
-    ],
-    "precondition": "Có file Excel danh sách cán bộ theo mẫu chuẩn.",
-    "testData": "Nhấp nút \"Import Excel\" trong StaffManagement -> Chọn file Excel -> Thực hiện."
-  },
-  {
-    "id": "TC-ADMN-010",
-    "module": "M08",
-    "priority": "P2",
-    "name": "Xóa hàng loạt nhân sự đã nghỉ việc (Bulk Delete Staff)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tích chọn nhiều nhân viên trong danh mục.",
-      "2. Nhấn nút \"Xóa đã chọn\", xác nhận trong hộp thoại bảo vệ."
-    ],
-    "expected": [
-      "Các tài khoản nhân viên được xóa hoặc chuyển trạng thái không hoạt động an toàn."
-    ],
-    "precondition": "Danh sách nhân viên có các nhân sự đã điều chuyển công tác.",
-    "testData": "Tích chọn nhiều nhân viên -> Nhấn nút \"Xóa đã chọn\" (Bulk Delete)."
-  },
-  {
-    "id": "TC-ADMN-011",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Hub Danh mục - Quản lý Tài khoản Quản trị & Nhập liệu (AccountsTab)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào tab Quản lý tài khoản -> chọn \"Tài khoản Quản trị & Nhập liệu\".",
-      "2. Thêm mới tài khoản: Tên đăng nhập, Mật khẩu, Vai trò (Admin hoặc DataEntry)."
-    ],
-    "expected": [
-      "Tạo tài khoản thành công với mật khẩu băm an toàn."
-    ],
-    "precondition": "Hub Danh mục -> Tab \"Tài khoản Quản trị & Nhập liệu (AccountsTab)\" đang mở.",
-    "testData": "Thêm mới user: Username \"nhaplieu2\", Role \"DataEntry\", Password \"123456\"."
-  },
-  {
-    "id": "TC-ADMN-012",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Đổi mật khẩu tài khoản Admin và Đổi mật khẩu / Reset mật khẩu cho user khác",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấn nút \"Đổi mật khẩu\" trên thanh topbar hoặc trong danh sách tài khoản.",
-      "2. Nhập mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu mới."
-    ],
-    "expected": [
-      "Đổi mật khẩu thành công, lần đăng nhập sau phải dùng mật khẩu mới."
-    ],
-    "precondition": "Đang đăng nhập tài khoản Admin.",
-    "testData": "Nhấp \"Đổi mật khẩu\" trên Topbar hoặc Reset mật khẩu cho user khác."
-  },
-  {
-    "id": "TC-ADMN-013",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Phân quyền vai trò DataEntry: Chặn truy cập cấu hình hệ thống và backup",
-    "platform": "Giao diện Quản trị Admin & API",
-    "testData": "Thử gọi API /admin/backup hoặc truy cập menu Cài đặt hệ thống.",
-    "steps": [
-      "1. Dùng token tài khoản DataEntry gọi API /admin/backup hoặc truy cập menu Cài đặt hệ thống."
-    ],
-    "expected": [
-      "Hệ thống ẩn menu cấu hình hoặc phản hồi 403 Forbidden: Tài khoản DataEntry chỉ có quyền xem và nhập liệu."
-    ],
-    "precondition": "Đăng nhập tài khoản vai trò DataEntry."
-  },
-  {
-    "id": "TC-ADMN-014",
-    "module": "M08",
-    "priority": "P2",
-    "name": "Khóa (Deactivate) tài khoản người dùng",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tắt công tắc kích hoạt (IsActive) của một tài khoản.",
-      "2. Thử dùng tài khoản đó đăng nhập."
-    ],
-    "expected": [
-      "Hệ thống từ chối đăng nhập với thông báo tài khoản bị khóa."
-    ],
-    "precondition": "Tab AccountsTab đang mở.",
-    "testData": "Tắt công tắc kích hoạt (IsActive = false) của một tài khoản."
-  },
-  {
-    "id": "TC-ADMN-015",
-    "module": "M08",
-    "priority": "P1",
-    "name": "Cưỡng bức Check-out từ Phân hệ Quản trị Admin (InsideTab - handleForceCheckout)",
-    "platform": "Giao diện Quản trị Admin",
-    "testData": "Admin InsideTab: Nhấp \"Cưỡng bức Check-out\" cho lượt khách -> Xác nhận.",
-    "steps": [
-      "1. Truy cập tab \"Khách trong đơn vị\" (InsideTab) trên Admin.",
-      "2. Tìm lượt khách cần đóng cưỡng bức, nhấp nút \"Cưỡng bức Check-out\".",
-      "3. Xác nhận trong hộp thoại bảo vệ: \"Admin cưỡng bức check-out từ trang Giám sát\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API POST /admin/visits/{id}/checkout ghi nhận checkOutTime hiện tại và ghi chú cưỡng bức của Admin.",
-      "Lượt khách được đóng trạng thái thành công, danh sách bên trong cập nhật thời gian thực."
-    ],
-    "precondition": "Khách đã rời khỏi đơn vị nhưng trạm gác quên checkout hoặc trường hợp khẩn cấp."
-  },
-  {
-    "id": "TC-ADMN-016",
-    "module": "M08",
-    "priority": "P2",
-    "name": "Quản lý Danh mục Cổng & Trạm Trực ban (StationsTab)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Truy cập tab \"Cổng & Trạm\" (StationsTab) thuộc Hub Danh mục.",
-      "2. Xem danh sách toàn bộ các cổng trạm trong đơn vị.",
-      "3. Nhấp \"Sửa\" một trạm: đổi tên trạm, đổi vị trí địa lý hoặc bật/tắt kích hoạt (isActive).",
-      "4. Nhấn \"Lưu thay đổi\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API PUT /admin/stations/{id} thành công.",
-      "Tên và thông tin trạm cập nhật tức thì trên toàn bộ hệ thống."
-    ],
-    "precondition": "Hub Danh mục -> Tab \"Cổng & Trạm Trực ban (StationsTab)\" đang mở.",
-    "testData": "Sửa tên trạm \"STATION_A\" thành \"Cổng số 1 - Trực ban\", cập nhật vị trí -> Lưu."
-  },
-  {
-    "id": "TC-ADMN-017",
-    "module": "M08",
-    "priority": "P3",
-    "name": "Giám sát Tình trạng Kết nối Phần cứng Ngoại vi Thời gian thực (Hardware Status)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tại Dashboard Admin, quan sát card Giám sát Phần cứng (Hardware Status).",
-      "2. Nhấp xem chi tiết modal Trạng thái Thiết bị (showHardwareModal)."
-    ],
-    "expected": [
-      "Hệ thống truy vấn API GET /admin/system/hardware-status, phản ánh chính xác trạng thái Online/Offline của: Đầu đọc chip CCCD, Đầu đọc thẻ RFID, Máy quét mã QR 2D và Camera."
-    ],
-    "precondition": "Admin DashboardTab đang mở.",
-    "testData": "Quan sát card \"Hardware Status\" và nhấp mở modal chi tiết trạng thái thiết bị."
-  },
-  {
-    "id": "TC-REPT-001",
-    "module": "M09",
-    "priority": "P1",
-    "name": "Trung tâm Báo cáo (ReportsTab): Chu kỳ hành chính chuẩn Việt Nam",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào tab Báo cáo & Phân tích.",
-      "2. Lần lượt chọn các chu kỳ: \"Hôm nay\", \"Hôm qua\", \"Tuần này\", \"Tháng này\", \"Quý này\", \"Cả năm\"."
-    ],
-    "expected": [
-      "Hệ thống tự động tính toán chính xác ngày bắt đầu và ngày kết thúc tương ứng chu kỳ hành chính Việt Nam.",
-      "Dữ liệu báo cáo cập nhật đồng bộ."
-    ],
-    "precondition": "Admin -> Tab Trung tâm Báo cáo (ReportsTab) đang mở.",
-    "testData": "Dropdown chu kỳ: Chọn lần lượt \"Hôm nay\", \"Hôm qua\", \"Tuần này\", \"Tháng này\", \"Quý này\", \"Năm nay\"."
-  },
-  {
-    "id": "TC-REPT-002",
-    "module": "M09",
-    "priority": "P2",
-    "name": "Lọc theo Khoảng ngày tùy chọn và Lọc theo Nhiều ngày rời rạc (discrete_dates)",
-    "platform": "Giao diện Quản trị Admin",
-    "testData": "Chọn chế độ \"Nhiều ngày rời rạc (discrete_dates)\": Chọn ngày 02/09 và ngày 30/04.",
-    "steps": [
-      "1. Chuyển chế độ lọc ngày sang \"Chọn nhiều ngày rời rạc (discrete_dates)\".",
-      "2. Thêm từng ngày vào danh sách lọc.",
-      "3. Áp dụng."
-    ],
-    "expected": [
-      "Báo cáo lọc chính xác các lượt khách ra/vào đúng trong 3 ngày đã chọn, bỏ qua các ngày xen giữa."
-    ],
-    "precondition": "ReportsTab đang mở; Cần báo cáo cho các ngày lễ hội rời rạc."
-  },
-  {
-    "id": "TC-REPT-003",
-    "module": "M09",
-    "priority": "P2",
-    "name": "Lọc đa chiều: Cán bộ trực ban, Nguồn (Trực ban vs Sổ sách), Trạng thái thẻ, Phương tiện",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Kết hợp lọc theo Cán bộ trực ban cụ thể.",
-      "2. Lọc nguồn: Chỉ xem lượt khách từ \"Trực ban cổng\" hoặc \"Sổ sách ngoại lệ\".",
-      "3. Lọc trạng thái thẻ: \"Thẻ đã trả\", \"Thẻ đang nợ\", \"Thẻ báo mất\"."
-    ],
-    "expected": [
-      "Bộ lọc đa chiều kết hợp chuẩn xác, đáp ứng yêu cầu thanh tra kiểm tra chuyên sâu."
-    ],
-    "precondition": "ReportsTab đang mở.",
-    "testData": "Lọc kết hợp: Nguồn \"Sổ sách\", Trạng thái thẻ \"Nợ thẻ\", Phương tiện \"Có xe\"."
-  },
-  {
-    "id": "TC-REPT-004",
-    "module": "M09",
-    "priority": "P1",
-    "name": "Báo cáo Chuyên đề Thẻ Mất & Thất lạc Toàn diện (LostCardsReportModal)",
-    "platform": "Giao diện Quản trị Admin",
-    "precondition": "Trong đơn vị có phát sinh các trường hợp báo mất thẻ an ninh (từ Check-out cổng, từ Sổ đối soát thẻ hoặc từ DataEntry).",
-    "testData": "ReportsTab -> Nhấp nút \"Báo cáo Thẻ mất\" -> Lọc theo khoảng ngày hoặc từ khóa.",
-    "steps": [
-      "1. Tại ReportsTab của Quản trị Admin (/admin.html), nhấn nút \"Báo cáo Thẻ mất\".",
-      "2. Modal LostCardsReportModal mở ra.",
-      "3. Quan sát danh sách tổng hợp các thẻ an ninh thất lạc trên toàn hệ thống.",
-      "4. Thử tìm kiếm theo Mã thẻ, Tên khách hoặc Lọc theo trạng thái \"Chưa thu hồi\" / \"Đã thu hồi\"."
-    ],
-    "expected": [
-      "Liệt kê chính xác toàn bộ thẻ định danh và thẻ thường đang bị báo mất trên toàn hệ thống.",
-      "Hiển thị chi tiết: Mã thẻ, Loại thẻ, Họ tên khách, Số CCCD, SĐT, Cơ quan, Trạm gác tiếp nhận, Cán bộ ghi nhận, Thời gian báo mất, Trạng thái (Chưa thu hồi / Đã thu hồi).",
-      "Cho phép xuất báo cáo chuyên đề thẻ mất ra Excel hoặc PDF chuẩn tiếng Việt có dấu."
-    ]
-  },
-  {
-    "id": "TC-REPT-005",
-    "module": "M09",
-    "priority": "P1",
-    "name": "Xuất Báo cáo Lịch sử ra file Excel chuyên nghiệp (ExcelJS)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấn nút \"Xuất Excel\" trong ReportsTab."
-    ],
-    "expected": [
-      "File Excel (.xlsx) được tạo với thư viện ExcelJS.",
-      "Bảng tính có tiêu đề cơ quan, ngày lập báo cáo, khung viền bảng, định dạng căn giữa ngày giờ, tự động co giãn cột."
-    ],
-    "precondition": "Bảng báo cáo đang hiển thị kết quả lọc.",
-    "testData": "Nhấp nút \"Xuất Excel\" (sử dụng thư viện ExcelJS định dạng bảng biểu chuyên nghiệp)."
-  },
-  {
-    "id": "TC-REPT-006",
-    "module": "M09",
-    "priority": "P1",
-    "name": "Xuất Báo cáo Lịch sử ra file PDF in ấn chuẩn tiếng Việt có dấu (jsPDF + fontBase64)",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấn nút \"Xuất PDF\" trong ReportsTab."
-    ],
-    "expected": [
-      "Tạo file PDF in ấn trực tiếp bằng jsPDF + autoTable.",
-      "Nhúng font chữ tiếng Việt fontBase64, hiển thị hoàn toàn chuẩn xác không bị lỗi font chữ có dấu."
-    ],
-    "precondition": "Bảng báo cáo đang hiển thị kết quả lọc.",
-    "testData": "Nhấp nút \"Xuất PDF\" (sử dụng jsPDF + fontBase64 tiếng Việt có dấu)."
-  },
-  {
-    "id": "TC-REPT-007",
-    "module": "M09",
-    "priority": "P2",
-    "name": "Xuất Báo cáo Thẻ mất ra Excel phục vụ công tác thanh tra tài sản",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Trong modal Báo cáo Thẻ mất, nhấn nút \"Xuất Excel\"."
-    ],
-    "expected": [
-      "Tải về file Excel danh sách chi tiết các thẻ an ninh thất lạc để bàn giao cho bộ phận quản trị cơ sở vật chất."
-    ],
-    "precondition": "Modal LostCardsReportModal đang mở.",
-    "testData": "Nhấp nút \"Xuất Excel\" trong modal Báo cáo thẻ mất."
-  },
-  {
-    "id": "TC-REPT-008",
-    "module": "M09",
-    "priority": "P3",
-    "name": "Dashboard Admin đồ thị thống kê lưu lượng khách",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Xem Bảng điều khiển (DashboardTab) trên trang Admin."
-    ],
-    "expected": [
-      "Hiển thị đồ thị trực quan: Phân bố lưu lượng khách theo khung giờ trong ngày, tỷ lệ phương tiện xe ô tô/xe máy, tỷ lệ hoàn trả thẻ."
-    ],
-    "precondition": "Admin DashboardTab đang mở.",
-    "testData": "Quan sát đồ thị Bar chart lưu lượng khách theo giờ và Doughnut chart cơ cấu xe."
-  },
-  {
-    "id": "TC-REPT-009",
-    "module": "M09",
-    "priority": "P4",
-    "name": "Xuất báo cáo danh sách ca trực ra Excel phục vụ chấm công",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tại ShiftsTab, nhấn nút xuất file danh sách ca trực."
-    ],
-    "expected": [
-      "File Excel xuất ra chứa chi tiết thời lượng từng ca trực, cán bộ trực để phòng tổ chức cán bộ đối soát chấm công."
-    ],
-    "precondition": "Hub Giám sát -> Tab ShiftsTab đang mở.",
-    "testData": "Nhấp nút \"Xuất Excel\" danh sách ca trực."
-  },
-  {
-    "id": "TC-REPT-010",
-    "module": "M09",
-    "priority": "P3",
-    "name": "Khả năng lọc tìm kiếm từ khóa kết hợp trong Trung tâm Báo cáo",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhập từ khóa kết hợp trong ô tìm kiếm của ReportsTab."
-    ],
-    "expected": [
-      "Dữ liệu báo cáo lọc tức thì theo từ khóa nhập vào."
-    ],
-    "precondition": "ReportsTab đang mở.",
-    "testData": "Ô tìm kiếm từ khóa báo cáo: Gõ \"Bộ Công An\", \"30A-999\"."
-  },
-  {
-    "id": "TC-REPT-011",
-    "module": "M09",
-    "priority": "P2",
-    "name": "Mở xem chi tiết bất kỳ lượt khách nào trực tiếp từ bảng Báo cáo",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấp nút xem chi tiết trên một dòng trong bảng Báo cáo."
-    ],
-    "expected": [
-      "Mở VisitDetailsModal của lượt khách đó với đầy đủ 3 tab Tổng quan, Timeline và Thành viên."
-    ],
-    "precondition": "ReportsTab đang hiển thị danh sách kết quả.",
-    "testData": "Nhấp nút \"Chi tiết\" trên một dòng báo cáo bất kỳ."
-  },
-  {
-    "id": "TC-REPT-012",
-    "module": "M09",
-    "priority": "P4",
-    "name": "Kiểm tra định dạng chuẩn tên file xuất báo cáo",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Xuất file và kiểm tra tên file được tải về máy tính."
-    ],
-    "expected": [
-      "Tên file tuân thủ quy tắc chuẩn: \"SmartVMS_BaoCao_LichSu_[NgayLapp].xlsx\" hoặc \"SmartVMS_TheMat_[Ngay].xlsx\"."
-    ],
-    "precondition": "Thực hiện xuất báo cáo ra file Excel hoặc PDF.",
-    "testData": "Quan sát tên file tải về trong thư mục Downloads của trình duyệt."
-  },
-  {
-    "id": "TC-REPT-013",
-    "module": "M09",
-    "priority": "P3",
-    "name": "Đóng/mở khối bộ lọc báo cáo (Filter Collapse toggle) để tăng không gian xem bảng",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấn nút thu gọn bộ lọc trên đầu trang ReportsTab."
-    ],
-    "expected": [
-      "Khối bộ lọc thu gọn lại, bảng dữ liệu mở rộng tối đa màn hình."
-    ],
-    "precondition": "ReportsTab đang mở với khối bộ lọc chiếm nhiều diện tích.",
-    "testData": "Nhấp nút \"Thu gọn bộ lọc\" (Filter Collapse toggle)."
-  },
-  {
-    "id": "TC-SETT-001",
-    "module": "M10",
-    "priority": "P3",
-    "name": "Cấu hình Vận hành (SettingsOperationPanel): Tên hệ thống & Cổng trực mặc định",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào Trung tâm Cài đặt -> Cấu hình Vận hành & Thiết bị.",
-      "2. Đổi tên hệ thống thành \"CỔNG KIỂM SOÁT AN NINH ĐƠN VỊ X\".",
-      "3. Lưu cấu hình."
-    ],
-    "expected": [
-      "Lưu thành công. Tiêu đề trên Header của trạm gác và admin tự động cập nhật tên mới."
-    ],
-    "precondition": "Trung tâm Cài đặt -> Tab \"Vận hành & Nghiệp vụ (SettingsOperationPanel)\" đang mở.",
-    "testData": "Đổi tên hệ thống hiển thị: \"Hệ thống Quản lý Khách Ra Vào Cổng An Ninh\", Mã trạm: \"STATION_A\"."
-  },
-  {
-    "id": "TC-SETT-002",
-    "module": "M10",
-    "priority": "P3",
-    "name": "Cấu hình Giới hạn Thời gian lưu trú cảnh báo",
-    "platform": "Giao diện Quản trị Admin",
-    "testData": "Cấu hình thời gian lưu trú tối đa cảnh báo = 12 giờ.",
-    "steps": [
-      "1. Thiết lập thời gian lưu trú cảnh báo = 8 giờ.",
-      "2. Lưu cài đặt."
-    ],
-    "expected": [
-      "Khi khách ở trong cơ quan quá 8 giờ, hệ thống đánh dấu cảnh báo màu cam trên Dashboard."
-    ],
-    "precondition": "SettingsOperationPanel đang mở."
-  },
-  {
-    "id": "TC-SETT-003",
-    "module": "M10",
-    "priority": "P3",
-    "name": "Cấu hình Chính sách Thẻ an ninh",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Thiết lập quy định thẻ an ninh (bắt buộc cấp thẻ hoặc tùy chọn)."
-    ],
-    "expected": [
-      "Giao diện Check-in tuân thủ chính sách thẻ đã được thiết lập."
-    ],
-    "precondition": "SettingsOperationPanel đang mở.",
-    "testData": "Bật CHECKOUT_DEFAULT_SELECT_ALL = true, ALLOW_LATE_CARD_RETURN_NAMED = true."
-  },
-  {
-    "id": "TC-SETT-004",
-    "module": "M10",
-    "priority": "P1",
-    "name": "Trung tâm Sao lưu CSDL (BackupTab): Thực hiện Sao lưu thủ công",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Vào Trung tâm Cài đặt -> chọn tab \"Dữ liệu & Sao lưu CSDL\".",
-      "2. Nhấn nút \"Tạo bản sao lưu ngay\"."
-    ],
-    "expected": [
-      "Gọi API /admin/backup, hệ thống C# sao chép CSDL SQLite sang file sao lưu .bak có gắn mốc thời gian.",
-      "File sao lưu xuất hiện ngay trên bảng danh sách lịch sử sao lưu."
-    ],
-    "precondition": "Trung tâm Cài đặt -> Tab \"Dữ liệu & Sao lưu CSDL (BackupTab)\" đang mở.",
-    "testData": "Nhấp nút \"Tạo bản sao lưu ngay\"."
-  },
-  {
-    "id": "TC-SETT-005",
-    "module": "M10",
-    "priority": "P2",
-    "name": "Tải file sao lưu (Download Backup) về máy tính cá nhân",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Tại danh sách các bản backup, nhấn biểu tượng Tải về cạnh bản sao lưu vừa tạo."
-    ],
-    "expected": [
-      "Trình duyệt tải file CSDL .bak về máy tính của quản trị viên an toàn."
-    ],
-    "precondition": "Danh sách lịch sử sao lưu có ít nhất 1 file .bak.",
-    "testData": "Nhấp biểu tượng Tải về (Download) cạnh bản sao lưu."
-  },
-  {
-    "id": "TC-SETT-006",
-    "module": "M10",
-    "priority": "P1",
-    "name": "Khôi phục Dữ liệu (Restore Database) từ bản sao lưu",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Chọn 1 bản sao lưu trong danh sách.",
-      "2. Nhấn nút \"Khôi phục dữ liệu\", xác nhận cảnh báo an toàn."
-    ],
-    "expected": [
-      "Hệ thống C# tự động tạo 1 bản backup dự phòng trước khi khôi phục, sau đó nạp lại CSDL.",
-      "Toàn bộ dữ liệu được hoàn nguyên về đúng thời điểm của bản sao lưu."
-    ],
-    "precondition": "Quản trị viên có file sao lưu hợp lệ cần phục hồi CSDL.",
-    "testData": "Nhấp nút \"Khôi phục dữ liệu\" -> Chọn file backup -> Xác nhận cảnh báo."
-  },
-  {
-    "id": "TC-SETT-007",
-    "module": "M10",
-    "priority": "P2",
-    "name": "Cấu hình Lịch Tự động Sao lưu (Auto Backup định kỳ)",
-    "platform": "Giao diện Quản trị Admin",
-    "testData": "Bật công tắc Tự động sao lưu, đặt chu kỳ = 24 giờ, số bản lưu tối đa = 30 bản.",
-    "steps": [
-      "1. Bật công tắc Auto Backup, đặt giờ sao lưu tự động và số bản tối đa.",
-      "2. Lưu cài đặt."
-    ],
-    "expected": [
-      "Hệ thống lưu cấu hình vào CSDL. Background Service tự động chạy theo lịch đã đặt."
-    ],
-    "precondition": "Tab BackupTab đang mở."
-  },
-  {
-    "id": "TC-SETT-008",
-    "module": "M10",
-    "priority": "P3",
-    "name": "Quản lý Bản sao lưu cũ: Xem dung lượng và Xóa bản backup",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Kiểm tra dung lượng từng bản sao lưu trong danh sách.",
-      "2. Nhấn biểu tượng Thùng rác để xóa bản sao lưu cũ không còn dùng."
-    ],
-    "expected": [
-      "File backup bị xóa khỏi ổ cứng máy chủ, danh sách cập nhật ngay lập tức."
-    ],
-    "precondition": "Danh sách backup có các bản sao lưu cũ không còn nhu cầu sử dụng.",
-    "testData": "Nhấp biểu tượng Thùng rác (Xóa) cạnh bản sao lưu cũ -> Xác nhận."
-  },
-  {
-    "id": "TC-SETT-009",
-    "module": "M10",
-    "priority": "P4",
-    "name": "Kiểm tra và cấu hình đường dẫn thư mục lưu trữ sao lưu",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Kiểm tra cấu hình đường dẫn thư mục lưu trữ backup trên máy chủ qua API /admin/browse-folder."
-    ],
-    "expected": [
-      "Đường dẫn hợp lệ và có quyền ghi trên ổ đĩa máy chủ Windows."
-    ],
-    "precondition": "Tab BackupTab đang mở.",
-    "testData": "Cấu hình đường dẫn thư mục lưu trữ: \"C:\\SmartVMSLocalData\\backups\"."
-  },
-  {
-    "id": "TC-SETT-010",
-    "module": "M10",
-    "priority": "P1",
-    "name": "Hộp thoại cảnh báo xác nhận an toàn trước khi khôi phục CSDL",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Nhấn nút Khôi phục dữ liệu."
-    ],
-    "expected": [
-      "Hộp thoại cảnh báo hiển thị rõ ràng rủi ro ghi đè dữ liệu, yêu cầu quản trị viên xác nhận rõ ràng mới thực thi."
-    ],
-    "precondition": "Nhấp nút \"Khôi phục dữ liệu\" trên giao diện Backup.",
-    "testData": "Quan sát hộp thoại cảnh báo rủi ro ghi đè dữ liệu."
-  },
-  {
-    "id": "TC-SETT-011",
-    "module": "M10",
-    "priority": "P2",
-    "name": "Tự động tạo bản backup dự phòng trước khi thực hiện restore",
-    "platform": "API / Backend C#",
-    "steps": [
-      "1. Thực hiện lệnh restore qua API /admin/restore."
-    ],
-    "expected": [
-      "Backend C# tự động tạo một file \"pre_restore_backup_...\" trước khi ghi đè CSDL, đảm bảo có thể rollback nếu cần."
-    ],
-    "precondition": "Thực hiện lệnh khôi phục CSDL qua API /admin/restore.",
-    "testData": "Kiểm tra thư mục backups xem có file \"pre_restore_backup_...\" được tự động sinh ra không."
-  },
-  {
-    "id": "TC-SETT-012",
-    "module": "M10",
-    "priority": "P4",
-    "name": "Kiểm tra dung lượng CSDL và trạng thái kết nối SQLite",
-    "platform": "Giao diện Quản trị Admin",
-    "steps": [
-      "1. Quan sát card thông tin dung lượng file SQLite trong BackupTab."
-    ],
-    "expected": [
-      "Hiển thị chính xác kích thước file CSDL (vd: 15.4 MB) và trạng thái kết nối SQLite bình thường."
-    ],
-    "precondition": "Tab BackupTab đang mở.",
-    "testData": "Quan sát card thông tin dung lượng file SQLite và trạng thái kết nối."
-  },
-  {
-    "id": "TC-SETT-013",
-    "module": "M10",
-    "priority": "P2",
-    "name": "Cấu hình Hồ sơ Thiết bị Đọc thẻ (Device Profiles: W3, EA09N, EA09/W4 LAN)",
-    "platform": "Giao diện Quản trị Admin (SettingsDevicePanel)",
-    "steps": [
-      "1. Truy cập Trung tâm Cài đặt -> tab \"Thiết bị ngoại vi\".",
-      "2. Chọn 1 trong 3 mẫu hồ sơ thiết bị: W3 (USB HID), EA09N (Serial COM), hoặc EA09_W4_SOCKETIO (LAN Socket.io).",
-      "3. Cấu hình Socket.IO URL và LAN Domain Name (mặc định: smartvms).",
-      "4. Nhấn \"Lưu cấu hình\"."
-    ],
-    "expected": [
-      "Hệ thống gọi API PUT /admin/device-profile lưu cấu hình thành công.",
-      "Thông số thiết bị được đồng bộ tới trạm gác và DeviceService."
-    ],
-    "precondition": "Trung tâm Cài đặt -> Tab \"Thiết bị ngoại vi (SettingsDevicePanel)\" đang mở.",
-    "testData": "Chọn hồ sơ: W3 (USB HID), EA09N (Serial COM), hoặc EA09_W4_SOCKETIO (LAN Socket.io); Cấu hình Socket.IO URL."
-  },
-  {
-    "id": "TC-SETT-014",
-    "module": "M10",
-    "priority": "P3",
-    "name": "Duyệt Thư mục Lưu trữ Máy chủ & Giám sát Dung lượng Ổ đĩa (Browse Folder & Disk Space)",
-    "platform": "Giao diện Quản trị Admin (SettingsBackupPanel)",
-    "steps": [
-      "1. Tại tab Sao lưu, nhấp nút \"Duyệt thư mục\" (FolderOpen) tại ô Thư mục sao lưu hoặc Thư mục ảnh ca trực.",
-      "2. Quan sát thanh dung lượng ổ cứng (Drive Total GB, Used GB, Free percent)."
-    ],
-    "expected": [
-      "Hệ thống truy vấn API GET /admin/browse-folder trả về danh sách thư mục hợp lệ trên hệ thống tập tin máy chủ Windows.",
-      "Dung lượng ổ cứng cập nhật chính xác theo thực tế phần cứng."
-    ],
-    "precondition": "Tab BackupTab đang mở.",
-    "testData": "Nhấp nút \"Duyệt thư mục\" (FolderOpen) -> Quan sát thanh % dung lượng ổ đĩa máy chủ."
-  },
-  {
-    "id": "TC-SETT-015",
-    "module": "M10",
-    "priority": "P2",
-    "name": "Cập nhật Tên miền Đơn vị và Tự động cấp mới Chứng chỉ SSL (SystemAdmin UpdateDomain)",
-    "platform": "API / Quản trị Hệ thống",
-    "testData": "Gửi request POST /api/SystemAdmin/update-domain với payload {\"domain\": \"smartvms.lan\"}.",
-    "steps": [
-      "1. Gửi request POST /api/SystemAdmin/update-domain với payload {\"domain\": \"smartvms.local\"}.",
-      "2. Quan sát log hệ thống và trạng thái dịch vụ."
-    ],
-    "expected": [
-      "Hệ thống ghi nhận tên miền mới vào appsettings.json, tự động chạy lệnh tái tạo chứng chỉ SSL cục bộ và restart Kestrel an toàn."
-    ],
-    "precondition": "Đơn vị thay đổi tên miền nội bộ hoặc IP máy chủ."
-  },
-  {
-    "id": "TC-DEVC-001",
-    "module": "M11",
-    "priority": "P1",
-    "name": "Kết nối DeviceService qua WebSocket (ws://localhost:6025/ws)",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Khởi động SmartVMS.Local.DeviceService.",
-      "2. Mở trang Web trạm gác /staff.html."
-    ],
-    "expected": [
-      "Trình duyệt thiết lập kết nối WebSocket tới ws://localhost:6025/ws.",
-      "Trạng thái thiết bị hiển thị Online, không có banner lỗi cảnh báo."
-    ],
-    "precondition": "Dịch vụ SmartVMS.Local.DeviceService đang chạy trên máy trạm.",
-    "testData": "Kết nối WebSocket từ web app tới ws://localhost:6025/ws."
-  },
-  {
-    "id": "TC-DEVC-002",
-    "module": "M11",
-    "priority": "P1",
-    "name": "Đọc thẻ CCCD gắn chip qua đầu đọc PCSC / NFC",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Đặt thẻ CCCD gắn chip lên đầu đọc thẻ.",
-      "2. DeviceService phát hiện thẻ và đọc dữ liệu qua chuẩn vnMRTD."
-    ],
-    "expected": [
-      "Dữ liệu thẻ được đẩy qua WebSocket trong vòng dưới 2 giây.",
-      "Giao diện web tự động hiển thị thông tin công dân và ảnh chụp trên chip."
-    ],
-    "precondition": "Đầu đọc thẻ CCCD PCSC/NFC đã cắm vào máy tính.",
-    "testData": "Đặt thẻ CCCD gắn chip lên đầu đọc."
-  },
-  {
-    "id": "TC-DEVC-003",
-    "module": "M11",
-    "priority": "P2",
-    "name": "Quét mã QR thẻ CCCD qua máy quét 2D kết nối USB",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Quét mã QR trên thẻ CCCD."
-    ],
-    "expected": [
-      "Máy quét đọc mã thành công, ứng dụng web tự động phân giải chuỗi ký tự thành các trường thông tin tương ứng."
-    ],
-    "precondition": "Máy quét mã QR 2D đã kết nối cổng USB.",
-    "testData": "Đưa mã QR trên thẻ CCCD vào vùng quét của máy quét 2D."
-  },
-  {
-    "id": "TC-DEVC-004",
-    "module": "M11",
-    "priority": "P1",
-    "name": "Đọc Thẻ An Ninh qua đầu đọc RFID (NFC/Mifare)",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Quẹt thẻ an ninh qua đầu đọc RFID khi đang ở ô nhập mã thẻ."
-    ],
-    "expected": [
-      "Mã thẻ RFID (UID) tự động điền vào ô mã thẻ trên form Check-in / Checkout / Thu hồi."
-    ],
-    "precondition": "Đầu đọc thẻ RFID Mifare/NFC 13.56MHz đã kết nối.",
-    "testData": "Quẹt thẻ an ninh RFID lên đầu đọc."
-  },
-  {
-    "id": "TC-DEVC-005",
-    "module": "M11",
-    "priority": "P2",
-    "name": "Điều khiển Đóng/Mở Barie / Cổng Barrier tự động qua Rơ-le",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Thực hiện Check-in hoặc Checkout thành công cho lượt khách có phương tiện."
-    ],
-    "expected": [
-      "DeviceService gửi tín hiệu điều khiển qua cổng COM/Relay kích mở barie cho xe qua cổng.",
-      "Sau khoảng trễ quy định, tín hiệu đóng barie được gửi an toàn."
-    ],
-    "precondition": "Bộ điều khiển rơ-le cổng Barie kết nối qua cổng COM/Relay.",
-    "testData": "Kích hoạt lệnh mở Barie khi Check-in xe hợp lệ."
-  },
-  {
-    "id": "TC-DEVC-006",
-    "module": "M11",
-    "priority": "P1",
-    "name": "Xử lý Ngắt kết nối DeviceService: Chuyển Offline & Không làm tắc cổng",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Tắt tiến trình DeviceService.",
-      "2. Quan sát giao diện trạm gác."
-    ],
-    "expected": [
-      "Hiển thị thông báo trạng thái Thiết bị Offline.",
-      "Phần mềm VẪN CHO PHÉP nhân viên nhập thủ công bình thường, không làm gián đoạn hay tắc nghẽn cổng gác."
-    ],
-    "precondition": "DeviceService bị tắt hoặc rút cáp phần cứng trong khi trạm gác đang làm việc.",
-    "testData": "Chuyển sang chế độ nhập liệu thủ công (Manual Fallback)."
-  },
-  {
-    "id": "TC-DEVC-007",
-    "module": "M11",
-    "priority": "P2",
-    "name": "Tự động Tái kết nối WebSocket (Auto-reconnect)",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Sau khi DeviceService bị ngắt, bật lại tiến trình DeviceService."
-    ],
-    "expected": [
-      "Trình duyệt tự động thăm dò và tái kết nối lại WebSocket thành công trong vòng 5 giây mà không cần nhân viên nhấn F5."
-    ],
-    "precondition": "DeviceService bị gián đoạn kết nối tạm thời rồi khởi động lại.",
-    "testData": "Quan sát cơ chế tự động tái kết nối WebSocket của Web UI sau 3 giây."
-  },
-  {
-    "id": "TC-DEVC-008",
-    "module": "M11",
-    "priority": "P4",
-    "name": "Cấu hình thiết bị trong DeviceService (Cổng COM, Baudrate, IP)",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Kiểm tra cấu hình trong file appsettings.json của DeviceService."
-    ],
-    "expected": [
-      "Cấu hình thông số cổng COM, tốc độ truyền Baudrate và địa chỉ reader linh hoạt, dễ dàng thay đổi theo phần cứng thực tế."
-    ],
-    "precondition": "Mở file cấu hình appsettings.json của DeviceService.",
-    "testData": "Cấu hình cổng COM, tốc độ Baudrate = 115200, Timeout đọc chip = 2000ms."
-  },
-  {
-    "id": "TC-DEVC-009",
-    "module": "M11",
-    "priority": "P3",
-    "name": "Kiểm tra thời gian đọc thẻ CCCD gắn chip dưới 2 giây",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Đặt thẻ CCCD và đo thời gian từ khi chạm thẻ đến khi dữ liệu hiển thị trên web."
-    ],
-    "expected": [
-      "Thời gian phản hồi đạt dưới 2.0 giây, bảo đảm tốc độ lưu thông nhanh tại cổng trực ban."
-    ],
-    "precondition": "Đầu đọc chip CCCD PCSC đang hoạt động tốt.",
-    "testData": "Bấm giờ từ thời điểm chạm thẻ CCCD đến khi form hiển thị đủ dữ liệu (dưới 2 giây)."
-  },
-  {
-    "id": "TC-DEVC-010",
-    "module": "M11",
-    "priority": "P4",
-    "name": "Báo lỗi đọc thẻ khi thẻ đặt lệch hoặc rút ra quá sớm",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Đặt thẻ CCCD và lập tức rút ra trong khi đầu đọc đang truyền dữ liệu."
-    ],
-    "expected": [
-      "DeviceService bắt ngoại lệ CardCommunicationException, gửi thông báo \"Thẻ bị ngắt quãng, vui lòng giữ nguyên thẻ trên đầu đọc\", không crash service."
-    ],
-    "precondition": "Đang đặt thẻ CCCD lên đầu đọc.",
-    "testData": "Rút thẻ ra đột ngột trong khi đầu đọc đang truyền dữ liệu."
-  },
-  {
-    "id": "TC-DEVC-011",
-    "module": "M11",
-    "priority": "P4",
-    "name": "Cấu hình thiết bị Webcam trong Device Settings của trạm",
-    "platform": "Thiết bị & Cổng gác",
-    "steps": [
-      "1. Vào cài đặt thiết bị của trạm gác, chọn camera mặc định cho mở ca và chụp ảnh khách."
-    ],
-    "expected": [
-      "Cấu hình được lưu và áp dụng đúng webcam đã chọn."
-    ],
-    "precondition": "Trạm gác có webcam USB.",
-    "testData": "Cài đặt thiết bị Webcam mặc định trong cấu hình trạm gác."
-  },
-  {
-    "id": "TC-DEVC-012",
-    "module": "M11",
-    "priority": "P3",
-    "name": "Cảnh báo sự cố thiết bị ngoại vi qua banner DeviceErrorBanner",
-    "platform": "Giao diện Web Trực ban",
-    "steps": [
-      "1. Rút cáp USB đầu đọc thẻ khi đang làm việc."
-    ],
-    "expected": [
-      "Hiển thị dải cảnh báo DeviceErrorBanner màu vàng cam thông báo cụ thể thiết bị mất kết nối."
-    ],
-    "precondition": "Trực ban đang mở giao diện /staff.html; Rút cáp USB đầu đọc thẻ.",
-    "testData": "Quan sát dải banner DeviceErrorBanner trên đầu trang."
-  },
-  {
-    "id": "TC-DEVC-013",
-    "module": "M11",
-    "priority": "P1",
-    "name": "Giải mã Chuyên sâu Dữ liệu Chip CCCD DG13 (vnMRTD Decoder Engine)",
-    "platform": "Dịch vụ Thiết bị DeviceService (vnMRTD)",
-    "testData": "Thư viện vnMRTD (DecodeDG13.cs): Giải mã nhóm dữ liệu ASN.1 DG13.",
-    "steps": [
-      "1. Đặt thẻ CCCD lên đầu đọc chip tiếp xúc hoặc contactless.",
-      "2. Quan sát log DeviceService và gói tin giải mã nhóm dữ liệu DG13 (DecodeDG13.cs)."
-    ],
-    "expected": [
-      "Thư viện vnMRTD giải mã chính xác ASN.1 DG13: Họ tên tiếng Việt có dấu đầy đủ, Ngày sinh, Giới tính, Quê quán, Nơi thường trú, Dân tộc, Tôn giáo, Đặc điểm nhận dạng, Ngày cấp và Số CMND cũ 9 số.",
-      "Gói tin JSON trả về client đầy đủ không bị lỗi font hay mất ký tự."
-    ],
-    "precondition": "Thẻ CCCD gắn chip vật lý chuẩn Bộ Công An đặt trên đầu đọc."
-  },
-  {
-    "id": "TC-BKGD-001",
-    "module": "M12",
-    "priority": "P1",
-    "name": "Dịch vụ Tự động Đóng Lượt thăm quá hạn (Auto Checkout Service)",
-    "platform": "Dịch vụ Ngầm C# Backend",
-    "steps": [
-      "1. Tạo lượt khách không có cờ isMultiDayVisit.",
-      "2. Chạy Auto Checkout Service (hoặc đổi thời gian quá hạn)."
-    ],
-    "expected": [
-      "Background Worker tự động quét và checkout lượt khách tồn đọng, cập nhật ghi chú tự động đóng, không để dồn khách ảo sang ngày hôm sau."
-    ],
-    "precondition": "Có lượt khách chưa checkout và không có cờ isMultiDayVisit tồn đọng qua đêm.",
-    "testData": "Dịch vụ AutoCheckoutBackgroundService chạy định kỳ quét lượt khách quá hạn."
-  },
-  {
-    "id": "TC-BKGD-002",
-    "module": "M12",
-    "priority": "P1",
-    "name": "Cơ chế Chống Trùng lặp Lệnh qua ClientCommandId (Idempotency)",
-    "platform": "Dịch vụ Ngầm C# Backend & Web",
-    "steps": [
-      "1. Giả lập mạng chập chờn, nhấn nút Check-in liên tiếp nhiều lần với cùng 1 ClientCommandId."
-    ],
-    "expected": [
-      "Hệ thống backend kiểm tra ClientCommandId đã xử lý, trả về kết quả thành công của lệnh đầu tiên, KHÔNG TẠO 2 lượt khách trùng lặp trong CSDL."
-    ],
-    "precondition": "Mạng chập chờn; Người dùng nhấp liên tục 3 lần nút Check-in.",
-    "testData": "Cả 3 request gửi đi đều mang cùng 1 mã ClientCommandId (GUID)."
-  },
-  {
-    "id": "TC-BKGD-003",
-    "module": "M12",
-    "priority": "P1",
-    "name": "Hệ thống Bản quyền Phần mềm (License System): Machine Fingerprint",
-    "platform": "Hệ thống Standalone",
-    "steps": [
-      "1. Kiểm tra xác thực license dựa trên Hardware Fingerprint (CPU ID, Motherboard UUID, MAC Address)."
-    ],
-    "expected": [
-      "Hệ thống chạy bình thường khi có khóa bản quyền hợp lệ khớp với phần cứng máy tính.",
-      "Nếu sao chép sang máy khác mà không có license, phần mềm thông báo yêu cầu kích hoạt bản quyền."
-    ],
-    "precondition": "Hệ thống bản quyền phần mềm SmartVMS.",
-    "testData": "Thuật toán Machine Fingerprint tạo mã định danh máy chủ từ CPU ID và Mainboard UUID."
-  },
-  {
-    "id": "TC-BKGD-004",
-    "module": "M12",
-    "priority": "P1",
-    "name": "Hoạt động Độc lập Ngoại tuyến 100% (Offline Standalone)",
-    "platform": "Hệ thống Standalone",
-    "steps": [
-      "1. Rút hoàn toàn dây mạng Internet WAN (chỉ để mạng LAN nội bộ hoặc localhost).",
-      "2. Thực hiện toàn bộ quy trình: Đăng nhập, Mở ca, Check-in, Bổ sung, Checkout, Xuất báo cáo, Backup."
-    ],
-    "expected": [
-      "Toàn bộ các tính năng hoạt động mượt mà 100%, không phát sinh bất kỳ lỗi kết nối mạng nào."
-    ],
-    "precondition": "Ngắt hoàn toàn kết nối Internet (rút dây mạng WAN hoặc tắt Wi-Fi).",
-    "testData": "Thực hiện đầy đủ quy trình: Đăng nhập trạm, Check-in, Cấp thẻ, Checkout, Xuất báo cáo."
-  },
-  {
-    "id": "TC-BKGD-005",
-    "module": "M12",
-    "priority": "P1",
-    "name": "Khả năng Chịu lỗi Mất điện đột ngột: CSDL SQLite WAL bảo toàn dữ liệu",
-    "platform": "Hệ thống Standalone",
-    "steps": [
-      "1. Thực hiện Check-in liên tục đồng thời tắt nóng tiến trình hoặc mất điện đột ngột.",
-      "2. Mở lại ứng dụng."
-    ],
-    "expected": [
-      "CSDL SQLite với chế độ Write-Ahead Logging (WAL) tự động phục hồi tính nhất quán, không bị lỗi corrupt database."
-    ],
-    "precondition": "CSDL SQLite hoạt động ở chế độ Write-Ahead Logging (WAL mode).",
-    "testData": "Mô phỏng mất điện đột ngột trong khi hệ thống đang ghi dữ liệu vào CSDL."
-  },
-  {
-    "id": "TC-BKGD-006",
-    "module": "M12",
-    "priority": "P3",
-    "name": "Hiệu năng Tìm kiếm và Xử lý dưới tải (5,000+ lượt khách)",
-    "platform": "Giao diện Web UI & API",
-    "steps": [
-      "1. CSDL chứa 5,000 bản ghi lượt khách.",
-      "2. Thực hiện tìm kiếm và lọc dữ liệu trên Dashboard và Báo cáo."
-    ],
-    "expected": [
-      "Thời gian phản hồi hiển thị kết quả đạt dưới 100ms, không có hiện tượng giật lag giao diện."
-    ],
-    "precondition": "CSDL có trên 5,000 lượt khách đã lưu.",
-    "testData": "Thực hiện tìm kiếm Live Search, xuất báo cáo Excel toàn bộ dữ liệu."
-  },
-  {
-    "id": "TC-BKGD-007",
-    "module": "M12",
-    "priority": "P1",
-    "name": "Bảo mật phân quyền API: Endpoint /admin/* chặn truy cập khi thiếu token",
-    "platform": "API Backend",
-    "steps": [
-      "1. Dùng Postman hoặc curl gọi các API /admin/users, /admin/backup mà không gửi kèm token."
-    ],
-    "expected": [
-      "Backend phản hồi ngay lập tức 401 Unauthorized, không để lộ dữ liệu quản trị."
-    ],
-    "precondition": "Client không có header X-Admin-Token hợp lệ.",
-    "testData": "Gửi request GET /admin/users hoặc POST /admin/backup."
-  },
-  {
-    "id": "TC-BKGD-008",
-    "module": "M12",
-    "priority": "P2",
-    "name": "Phòng chống XSS và SQL Injection trên các trường nhập liệu",
-    "platform": "Giao diện Web UI & API",
-    "testData": "Nhập chuỗi độc hại: `<script>alert(1)</script>` hoặc `' OR 1=1 --`.",
-    "steps": [
-      "1. Nhập các chuỗi tấn công vào trường Họ tên, Mục đích, Biển số xe."
-    ],
-    "expected": [
-      "Entity Framework Core tham số hóa câu lệnh an toàn (Parametrized Queries), React tự động escape ký tự HTML, không bị thực thi mã độc."
-    ],
-    "precondition": "Các trường nhập liệu trên form Check-in, Tìm kiếm, Đăng nhập."
-  },
-  {
-    "id": "TC-BKGD-009",
-    "module": "M12",
-    "priority": "P4",
-    "name": "Cơ chế tự động dọn dẹp file tạm và ảnh rác định kỳ",
-    "platform": "Dịch vụ Ngầm C# Backend",
-    "steps": [
-      "1. Kiểm tra thư mục tạm /temp và /uploads."
-    ],
-    "expected": [
-      "Hệ thống tự động xóa các file tạm sinh ra trong quá trình xuất báo cáo sau khi hoàn tất."
-    ],
-    "precondition": "Thư mục /temp chứa các file ảnh tạm sinh ra trong quá trình xuất báo cáo.",
-    "testData": "Dịch vụ ngầm tự động dọn dẹp file tạm theo định kỳ."
-  },
-  {
-    "id": "TC-BKGD-010",
-    "module": "M12",
-    "priority": "P2",
-    "name": "Cơ chế khóa CSDL SQLite (DB Lock) và tự động thử lại khi có xung đột ghi",
-    "platform": "Dịch vụ Ngầm C# Backend",
-    "steps": [
-      "1. Giả lập nhiều tiến trình cùng ghi vào CSDL SQLite đồng thời."
-    ],
-    "expected": [
-      "EF Core có cơ chế RetryOnFailure tự động chờ và thử lại, không ném lỗi SQLite busy/locked ra màn hình người dùng."
-    ],
-    "precondition": "Nhiều tiến trình ghi CSDL đồng thời (Trực ban + DataEntry + AutoCheckout).",
-    "testData": "EF Core cơ chế RetryOnFailure tự động thử lại khi gặp xung đột khóa file SQLite."
-  },
-  {
-    "id": "TC-BKGD-011",
-    "module": "M12",
-    "priority": "P4",
-    "name": "Kiểm tra rò rỉ bộ nhớ (Memory Leak) khi ứng dụng chạy liên tục nhiều ngày",
-    "platform": "Giao diện Web UI & DeviceService",
-    "steps": [
-      "1. Giữ ứng dụng trạm gác mở liên tục trên trình duyệt trong môi trường thử nghiệm tải."
-    ],
-    "expected": [
-      "Mức tiêu thụ RAM của tab Chrome/Edge duy trì ổn định dưới 500MB, không tăng vọt không kiểm soát."
-    ],
-    "precondition": "Tab Web UI trạm gác mở liên tục nhiều ngày trong môi trường kiểm thử tải.",
-    "testData": "Đo mức tiêu thụ RAM qua Task Manager của Windows sau 48 giờ chạy liên tục."
-  },
-  {
-    "id": "TC-BKGD-012",
-    "module": "M12",
-    "priority": "P4",
-    "name": "Ghi nhật ký lỗi hệ thống (Error Logging): File log hàng ngày",
-    "platform": "Dịch vụ Ngầm C# Backend",
-    "steps": [
-      "1. Kiểm tra thư mục Logs của ứng dụng Backend C#."
-    ],
-    "expected": [
-      "Mỗi ngày tự động sinh file log (vd: log-20261006.txt) ghi nhận đầy đủ stack trace các ngoại lệ nếu có để phục vụ bảo trì."
-    ],
-    "precondition": "Hệ thống Backend C# .NET đang chạy.",
-    "testData": "Kiểm tra thư mục /Logs trên ổ đĩa máy chủ."
-  },
-  {
-    "id": "TC-BKGD-013",
-    "module": "M12",
-    "priority": "P2",
-    "name": "Khởi chạy & Giám sát Dịch vụ qua Bảng điều khiển Desktop WPF (SmartVMS ControlPanel)",
-    "platform": "Ứng dụng Desktop Windows WPF (ControlPanel)",
-    "steps": [
-      "1. Khởi chạy ứng dụng SmartVMS.Local.ControlPanel.exe.",
-      "2. Quan sát cửa sổ StartupSplashWindow và MainWindow.",
-      "3. Kiểm tra trạng thái các dịch vụ: Backend API, DeviceService, Web UI.",
-      "4. Thu nhỏ ứng dụng xuống khay hệ thống (System Tray), nhấp đúp để mở lại.",
-      "5. Nhấp nút \"Mở giao diện Trạm gác\" hoặc \"Mở giao diện Admin\"."
-    ],
-    "expected": [
-      "ControlPanel hiển thị trực quan trạng thái xanh (Running) của toàn bộ các tiến trình con.",
-      "Thu nhỏ xuống System Tray hoạt động ổn định, mở đúng URL cục bộ trên trình duyệt mặc định."
-    ],
-    "precondition": "Môi trường Windows Desktop.",
-    "testData": "Khởi chạy SmartVMS.Local.ControlPanel.exe -> Kiểm tra System Tray và khởi động dịch vụ."
-  }
-];
+// ALL_TCS được nạp linh hoạt từ tệp catalog hoặc do người dùng import vào
+let ALL_TCS = JSON.parse(JSON.stringify(_catalog.testCases || []));
 
 const USERS = [
   { username: 'admin', password: '123', role: 'admin', name: 'Quản trị viên (QA Lead)' },
@@ -3115,6 +54,10 @@ const USERS = [
 // STATE
 // ================================================================
 let state = {
+  projects: [],
+  currentProjectId: 'PRJ-SMARTVMS',
+  currentProjectVersion: 'v2.0',
+
   modules: [],       // Configurable modules: [ { id, name, short } ]
   customTcs: [],     // User-added test cases: [ { id, module, priority, name, precondition, steps, expected, notes, isCustom: true, createdAt } ]
   overrides: {},     // Hiệu đính Test Cases chuẩn: { [tcId]: { name, priority, platform, testData, precondition, steps, expected, notes, updatedAt } }
@@ -3144,7 +87,20 @@ let state = {
 // ================================================================
 // LOCALSTORAGE
 // ================================================================
-const STORAGE_KEY = 'smartvms_test_manager_v1';
+const STORAGE_KEY = 'openqas_enterprise_v4_state';
+
+try {
+  if (localStorage.getItem('smartvms_fresh_clean_init_2026') !== 'true') {
+    localStorage.removeItem('openqas_projects_list');
+    localStorage.removeItem('openqas_assignments_list');
+    localStorage.removeItem('openqas_active_project_id');
+    localStorage.removeItem('smartvms_test_state');
+    localStorage.removeItem('smartvms_imported_catalog');
+    localStorage.removeItem('openqas_enterprise_v4_state');
+    localStorage.setItem('smartvms_fresh_clean_init_2026', 'true');
+  }
+} catch(e) {}
+
 
 function saveState() {
   if (!state.runResults) state.runResults = {};
@@ -3190,8 +146,22 @@ function loadState() {
       state.session = s.session || null;
       state.customTcs = Array.isArray(s.customTcs) ? s.customTcs : [];
       state.overrides = (s.overrides && typeof s.overrides === 'object') ? s.overrides : {};
-      const isOutdated = !Array.isArray(s.modules) || s.modules.length === 0 || s.modules.length !== DEFAULT_MODULES.length || DEFAULT_MODULES.some(dm => !s.modules.some(m => m.id === dm.id));
+      const isOutdated = !Array.isArray(s.modules) || s.modules.length === 0 || s.modules.length !== DEFAULT_MODULES.length || DEFAULT_MODULES.some(dm => !s.modules.some(m => m.id === dm.id && m.name === dm.name && m.short === dm.short));
       state.modules = isOutdated ? JSON.parse(JSON.stringify(DEFAULT_MODULES)) : s.modules;
+      // Khôi phục danh mục đã nhập nếu có
+      const savedCatalog = localStorage.getItem('smartvms_imported_catalog');
+      if (savedCatalog) {
+        try {
+          const c = JSON.parse(savedCatalog);
+          if (Array.isArray(c.testCases) && c.testCases.length > 0) {
+            ALL_TCS = c.testCases;
+            if (Array.isArray(c.modules) && c.modules.length > 0) {
+              state.modules = c.modules;
+            }
+          }
+        } catch(e) {}
+      }
+
       state.currentUser = s.currentUser || null;
     } else {
       state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
@@ -3210,7 +180,14 @@ function handleLogin(e) {
   const u = document.getElementById('login-username').value.trim();
   const p = document.getElementById('login-password').value.trim();
   
-  const user = USERS.find(x => x.username === u && x.password === p);
+  initUsersList();
+  const allUsers = [...(state.usersList || []), ...USERS];
+  const user = allUsers.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+  if (user && user.status === 'LOCKED') {
+    alert('Tài khoản này đang bị tạm khóa. Vui lòng liên hệ Quản trị viên!');
+    return;
+  }
+
   if (!user) {
     alert('Sai tên đăng nhập hoặc mật khẩu!');
     return;
@@ -3219,6 +196,14 @@ function handleLogin(e) {
   state.currentUser = { username: user.username, role: user.role, name: user.name };
   saveState();
   applyAuth();
+  updateMyTasksBadge();
+  if (user.role === 'tester') {
+    navigate('mytasks');
+  } else if (user.role === 'developer') {
+    navigate('dev-bugs');
+  } else {
+    navigate('dashboard');
+  }
 }
 
 function handleLogout() {
@@ -3236,38 +221,66 @@ function applyAuth() {
     appContainer.style.display = 'none';
     document.getElementById('login-username').value = '';
     document.getElementById('login-password').value = '';
-  } else {
-    loginScreen.style.display = 'none';
-    appContainer.style.display = 'flex';
-    
-    // Set user info
-    document.getElementById('current-user-name').textContent = state.currentUser.name;
-    const roleEl = document.getElementById('current-user-role');
-    if (state.currentUser.role === 'admin') {
-      roleEl.textContent = 'QA Lead (Admin)';
-      roleEl.style.background = 'rgba(239, 68, 68, 0.1)';
-      roleEl.style.color = '#ef4444';
-      roleEl.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-      document.body.classList.remove('role-tester', 'role-developer');
-    } else if (state.currentUser.role === 'developer') {
-      roleEl.textContent = 'Developer';
-      roleEl.style.background = 'rgba(249, 115, 22, 0.1)';
-      roleEl.style.color = '#ea580c';
-      roleEl.style.borderColor = 'rgba(249, 115, 22, 0.2)';
-      document.body.classList.add('role-developer');
-      document.body.classList.remove('role-tester');
-    } else {
-      roleEl.textContent = 'Tester';
-      roleEl.style.background = 'rgba(59, 130, 246, 0.1)';
-      roleEl.style.color = '#3b82f6';
-      roleEl.style.borderColor = 'rgba(59, 130, 246, 0.2)';
-      document.body.classList.add('role-tester');
-      document.body.classList.remove('role-developer');
+    return;
+  }
+  
+  loginScreen.style.display = 'none';
+  appContainer.style.display = 'flex';
+  
+  // Set user info trên header
+  const nameEl = document.getElementById('current-user-name');
+  if (nameEl) nameEl.textContent = state.currentUser.name;
+  const roleEl = document.getElementById('current-user-role');
+  
+  // Cập nhật class body cho RBAC
+  document.body.classList.remove('role-admin', 'role-tester', 'role-developer');
+  
+  const avatarEl = document.getElementById('current-user-avatar');
+  if (avatarEl) {
+    const letter = (state.currentUser.name || state.currentUser.username || 'A').charAt(0).toUpperCase();
+    avatarEl.textContent = letter;
+  }
+
+  if (state.currentUser.role === 'admin') {
+    if (roleEl) {
+      roleEl.textContent = 'QA Lead';
+      roleEl.className = 'vms-user-role role-admin';
     }
-    
-    // Redirect if non-admin is trying to access settings
+    document.body.classList.add('role-admin');
+  } else if (state.currentUser.role === 'developer') {
+    if (roleEl) {
+      roleEl.textContent = 'Dev';
+      roleEl.className = 'vms-user-role role-developer';
+    }
+    document.body.classList.add('role-developer');
+  } else {
+    if (roleEl) {
+      roleEl.textContent = 'Tester';
+      roleEl.className = 'vms-user-role role-tester';
+    }
+    document.body.classList.add('role-tester');
+  }
+  
+  // Điều hướng RBAC thông minh: Phân quyền thống kê chi tiết về các giao diện chuyên biệt
+  // - Tester: chuyên tâm vào "Việc của tôi" (mytasks)
+  // - Dev: chuyên tâm vào "Kịch bản lỗi" (report) hoặc "Thực thi"
+  // - Admin: vào Dashboard tổng quan hoặc trang quản trị
+  if (state.currentUser.role === 'tester') {
+    const adminPages = ['page-dashboard', 'page-projects', 'page-users', 'page-assignments', 'page-settings', 'page-evaluation', 'page-dev-bugs'];
     const activePage = document.querySelector('.page.active');
-    if (state.currentUser.role !== 'admin' && activePage && activePage.id === 'page-settings') {
+    if (!activePage || adminPages.includes(activePage.id)) {
+      navigate('mytasks');
+    }
+  } else if (state.currentUser.role === 'developer') {
+    const nonDevPages = ['page-dashboard', 'page-projects', 'page-users', 'page-assignments', 'page-settings', 'page-evaluation', 'page-mytasks'];
+    const activePage = document.querySelector('.page.active');
+    if (!activePage || nonDevPages.includes(activePage.id)) {
+      navigate('dev-bugs');
+    }
+  } else {
+    // Admin (QA Lead)
+    const activePage = document.querySelector('.page.active');
+    if (!activePage || activePage.id === 'page-mytasks' || activePage.id === 'page-dev-bugs') {
       navigate('dashboard');
     }
   }
@@ -3315,23 +328,55 @@ function resetBuiltinTc(tcId) {
 // NAVIGATION
 // ================================================================
 function navigate(page) {
-  if (page === 'settings' && state.currentUser && state.currentUser.role !== 'admin') {
-    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền truy cập Cài đặt hệ thống!', 'error');
+  const role = state.currentUser ? state.currentUser.role : 'guest';
+  const adminOnlyPages = ['projects', 'users', 'assignments', 'settings', 'evaluation', 'dashboard'];
+  
+  if (role === 'tester' && adminOnlyPages.includes(page)) {
+    showToast('⚠️ Quyền hạn Tester: Bạn không có quyền truy cập trang quản trị này!', 'error');
+    navigate('mytasks');
     return;
   }
+  
+  if (role === 'developer' && ['projects', 'users', 'assignments', 'settings', 'evaluation', 'dashboard'].includes(page)) {
+    showToast('⚠️ Quyền hạn Developer: Vui lòng tập trung tại Trung tâm Xử lý Lỗi!', 'info');
+    navigate('dev-bugs');
+    return;
+  }
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const targetPage = document.getElementById(`page-${page}`);
   if (targetPage) targetPage.classList.add('active');
   const targetNav = document.querySelector(`[data-page="${page}"]`);
   if (targetNav) targetNav.classList.add('active');
-  const titles = { dashboard:'Dashboard', testcases:'Test Cases', execute:'Thực thi Test', report:'Báo cáo', settings:'Cài đặt' };
-  document.getElementById('breadcrumb').textContent = titles[page] || page;
+
+  const titles = { 
+    dashboard:'Dashboard', 
+    testcases:'Test Cases', 
+    execute:'Thực thi Test', 
+    report:'Báo cáo', 
+    settings:'Cài đặt',
+    projects: 'Danh sách Dự án',
+    evaluation: 'Đánh giá ISO 25010',
+    users: 'Quản lý Nhân sự',
+    assignments: 'Giao việc & Hạn chót',
+    mytasks: 'Việc của tôi',
+    'dev-bugs': 'Trung tâm Xử lý Lỗi'
+  };
+  const bEl = document.getElementById('breadcrumb');
+  if (bEl) bEl.textContent = titles[page] || page;
+
   if (page === 'dashboard') renderDashboard();
   else if (page === 'testcases') renderTestCases();
   else if (page === 'execute') renderExecutePage();
-  else if (page === 'report') renderReport();
+  else if (page === 'report') { renderReport(); renderAnalyticsPage(); }
   else if (page === 'settings') renderSettings();
+  else if (page === 'projects') renderProjectsPage();
+  else if (page === 'evaluation') renderEvaluationPage();
+  else if (page === 'users') renderUsersPage();
+  else if (page === 'assignments') renderAssignmentsPage();
+  else if (page === 'mytasks') renderMyTasksPage();
+  else if (page === 'dev-bugs') renderDevBugsPage();
 }
 
 function toggleSidebar() {
@@ -3441,64 +486,165 @@ function getModuleShort(id) {
 // DASHBOARD
 // ================================================================
 function renderDashboard() {
+  initAssignments();
+  initUsersList();
   const s = getStats();
-  document.getElementById('stat-total').textContent = s.total;
-  document.getElementById('stat-pass').textContent = s.pass;
-  document.getElementById('stat-fail').textContent = s.fail;
-  document.getElementById('stat-skip').textContent = s.skip;
-  document.getElementById('stat-pending').textContent = s.pending + s.wip;
-  document.getElementById('stat-progress').textContent = s.passRate + '%';
-  document.getElementById('badge-total').textContent = s.total;
-  document.getElementById('main-progress-bar').style.width = s.completeRate + '%';
-  document.getElementById('overall-pct').textContent = s.completeRate + '% hoàn thành';
+  const curProj = getActiveProject();
 
-  // Module Summary Table
+  // 1. Thống kê cấp Doanh nghiệp
+  const allProjs = state.projects || [];
+  const activeProjs = allProjs.filter(p => p.versions && p.versions.some(v => v.status === 'IN_QA'));
+  const totalStaff = (state.usersList || []).length;
+  let totalCompanyTcs = 0;
+  let totalCompanyMods = 0;
+  allProjs.forEach(p => {
+    totalCompanyTcs += (p.testCases || []).length;
+    totalCompanyMods += (p.modules || []).length;
+  });
+
+  const entProjEl = document.getElementById('ent-stat-projects');
+  if (entProjEl) entProjEl.textContent = allProjs.length;
+  const entActProjEl = document.getElementById('ent-stat-active-proj');
+  if (entActProjEl) entActProjEl.textContent = (activeProjs.length || allProjs.length) + ' đang test';
+  const entStaffEl = document.getElementById('ent-stat-staff');
+  if (entStaffEl) entStaffEl.textContent = totalStaff + ' người';
+  const entTcsEl = document.getElementById('ent-stat-tcs');
+  if (entTcsEl) entTcsEl.textContent = totalCompanyTcs + ' kịch bản';
+  const entModsEl = document.getElementById('ent-stat-mods');
+  if (entModsEl) entModsEl.textContent = totalCompanyMods + ' phân hệ';
+
+  // 2. Bốn chỉ số cốt lõi của Dự án đang chọn
+  const statTotal = document.getElementById('stat-total');
+  if (statTotal) statTotal.textContent = s.total;
+  const statPass = document.getElementById('stat-pass');
+  if (statPass) statPass.textContent = s.pass;
+  const statFail = document.getElementById('stat-fail');
+  if (statFail) statFail.textContent = s.fail;
+
+  // Tính số bài quá hạn của dự án này
+  const tasks = (state.assignments || []).filter(t => t.projectId === state.currentProjectId);
+  let overdueCount = 0;
+  tasks.forEach(t => {
+    const ds = getTaskDeadlineStatus(t);
+    if (t.status !== 'DONE' && t.status !== 'PASSED' && ds.isOverdue) overdueCount++;
+  });
+  const statOverdueDash = document.getElementById('stat-overdue-dash');
+  if (statOverdueDash) statOverdueDash.textContent = overdueCount + ' bài';
+
+  const projNameEl = document.getElementById('dash-active-proj-name');
+  if (projNameEl) projNameEl.textContent = curProj ? curProj.name : 'Dự án hiện hành';
+
+  const badgeTotal = document.getElementById('badge-total');
+  if (badgeTotal) badgeTotal.textContent = s.total;
+  const mainBar = document.getElementById('main-progress-bar');
+  if (mainBar) mainBar.style.width = s.completeRate + '%';
+  const overallPct = document.getElementById('overall-pct');
+  if (overallPct) overallPct.textContent = s.completeRate + '% hoàn thành';
+
+  // 3. Bảng tiến độ theo Phân hệ (100% Bề Ngang)
   const mStats = getModuleStats();
   const tbody = document.getElementById('module-summary-body');
-  tbody.innerHTML = mStats.map(m => `
-    <tr>
-      <td><strong>${m.name}</strong></td>
-      <td><strong>${m.total}</strong></td>
-      <td style="color:#4ade80">${m.pass}</td>
-      <td style="color:#f87171">${m.fail}</td>
-      <td style="color:#fbbf24">${m.skip}</td>
-      <td style="color:#64748b">${m.pending}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="mini-progress" style="flex:1">
-            <div class="mini-progress-bar" style="width:${m.passRate}%"></div>
-          </div>
-          <span style="font-size:11px;color:var(--text-secondary);white-space:nowrap">${m.passRate}%</span>
-        </div>
-      </td>
-    </tr>`).join('');
+  if (tbody) {
+    if (mStats.length === 0 || (!state.projects || state.projects.length === 0)) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding: 48px 16px; color:var(--text-muted)">
+            <div style="font-size:36px; margin-bottom:8px">🏢</div>
+            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px">
+              Hệ thống chưa có kịch bản hoặc dự án nào
+            </div>
+            <div style="font-size:13px; margin-bottom:16px">
+              Hệ thống đang ở trạng thái Trắng (Fresh Clean State). Bạn có thể tự import file danh mục kịch bản (JSON/Excel) hoặc tạo dự án mới để bắt đầu.
+            </div>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="openImportModal()">📥 Nhập Kịch Bản (JSON / Excel)</button>
+              <button class="btn btn-outline" onclick="openCreateProjectModal()">🏢 Thêm Dự Án Mới</button>
+              <button class="btn btn-outline" onclick="loadSampleDemoProjects()" style="border-color:var(--accent); color:var(--accent)">⚡ Nạp Mẫu SmartVMS (204 Demo)</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    } else {
+      tbody.innerHTML = mStats.map(m => {
+      let statusTag = '<span class="badge badge-nr">Chưa test</span>';
+      if (m.fail > 0) {
+        statusTag = '<span class="badge badge-fail">⚠️ ' + m.fail + ' lỗi</span>';
+      } else if (m.passRate === 100) {
+        statusTag = '<span class="badge badge-pass">✓ Đạt 100%</span>';
+      } else if (m.pass > 0) {
+        statusTag = '<span class="badge badge-p1">Đang test</span>';
+      }
 
-  // Recent executions
-  // Recent executions
-  const recentEl = document.getElementById('recent-executions');
-  const recent = Object.entries(state.results)
-    .filter(([,r]) => r.runAt)
-    .sort((a,b) => new Date(b[1].runAt) - new Date(a[1].runAt))
-    .slice(0, 8);
-  if (recent.length === 0) {
-    recentEl.innerHTML = '<div class="empty-state">Chưa có kết quả test nào. Hãy bắt đầu thực thi test!</div>';
-  } else {
-    recentEl.innerHTML = recent.map(([id, r]) => {
-      const tc = getAllTcs().find(t => t.id === id);
-      return `<div class="recent-item">
-        ${statusBadge(r.status)}
-        <div class="recent-meta">
-          <div class="recent-name"><span style="color:var(--accent-light);font-family:monospace">${id}</span> — ${tc?.name || ''}</div>
-          <div class="recent-time">${r.tester ? 'Người test: ' + r.tester + ' · ' : ''}${r.runAt ? new Date(r.runAt).toLocaleString('vi-VN') : ''}</div>
-        </div>
-        <span class="module-tag">${getModuleShort(tc?.module)}</span>
-      </div>`;
-    }).join('');
+      return `
+        <tr class="table-row-hover" onclick="drillDownToTestCases(undefined, '${m.id}')" title="Bấm xem ${m.total} kịch bản của phân hệ ${m.name}" style="cursor:pointer">
+          <td><strong style="color:var(--accent)">${m.id}</strong></td>
+          <td><strong>${m.name}</strong></td>
+          <td style="text-align:center"><strong>${m.total}</strong></td>
+          <td style="text-align:center; color:#16a34a; font-weight:700">${m.pass}</td>
+          <td style="text-align:center; color:#dc2626; font-weight:700">${m.fail > 0 ? m.fail : '0'}</td>
+          <td style="text-align:center; color:var(--text-muted)">${m.pending}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px">
+              <div class="mini-progress" style="flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden">
+                <div class="mini-progress-bar" style="width:${m.passRate}%; height:100%; background:${m.passRate >= 80 ? '#16a34a' : '#2563eb'}"></div>
+              </div>
+              <span style="font-size:11px; font-weight:600; width:30px; text-align:right">${m.passRate}%</span>
+            </div>
+          </td>
+          <td style="text-align:center">${statusTag}</td>
+        </tr>
+      `;
+      }).join('');
+    }
   }
 
-  // Charts
-  renderModuleChart(mStats);
-  renderPriorityChart(s);
+  // 4. Bảng Sự vụ chân trang - Nửa trái: Lỗi mới nhất
+  const bugsEl = document.getElementById('dash-recent-bugs');
+  if (bugsEl) {
+    const failedTcs = getAllTcs().filter(tc => state.results[tc.id]?.status === 'Fail').slice(0, 5);
+    if (failedTcs.length === 0) {
+      bugsEl.innerHTML = '<div style="color:#16a34a; font-size:12.5px; padding:12px; text-align:center">🎉 Hiện tại không có bài test nào bị Lỗi!</div>';
+    } else {
+      bugsEl.innerHTML = failedTcs.map(tc => {
+        const r = state.results[tc.id] || {};
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; border-bottom:1px solid var(--border); font-size:12px">
+            <div>
+              <strong class="clickable-badge" onclick="jumpToExecuteCase('${tc.id}')" style="color:#dc2626" title="Bấm sang màn hình sửa lỗi">${tc.id} ↗</strong>
+              <span style="margin-left:6px; color:var(--text-primary)">${tc.name}</span>
+            </div>
+            <span style="font-size:11px; color:var(--text-muted)">${r.tester || 'Tester'}</span>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 5. Bảng Sự vụ chân trang - Nửa phải: Tiến độ các Tester
+  const testersEl = document.getElementById('dash-testers-progress');
+  if (testersEl) {
+    const testers = (state.usersList || []).filter(u => u.role === 'tester');
+    const allTasks = state.assignments || [];
+    testersEl.innerHTML = testers.map(u => {
+      const myTasks = allTasks.filter(t => t.assigneeUsername === u.username);
+      const done = myTasks.filter(t => t.status === 'DONE' || t.status === 'PASSED').length;
+      const pct = myTasks.length > 0 ? Math.round((done / myTasks.length) * 100) : 0;
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; border-bottom:1px solid var(--border); font-size:12px">
+          <div>
+            <strong class="clickable-badge" onclick="jumpToUserAssignments('${u.username}')" title="Bấm xem việc được giao">${u.name}</strong>
+            <span style="font-size:11px; color:var(--text-muted); margin-left:4px">(${done}/${myTasks.length} bài)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="width:70px; height:5px; background:var(--border); border-radius:3px; overflow:hidden">
+              <div style="width:${pct}%; height:100%; background:#16a34a"></div>
+            </div>
+            <span style="font-size:11px; font-weight:600">${pct}%</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 }
 
 function getThemeChartColors() {
@@ -3608,6 +754,29 @@ function applyFilters() {
   const sub = document.getElementById('tc-page-subtitle');
   if (sub) sub.textContent = `Quản lý toàn bộ ${all.length} test cases (${ALL_TCS.length} chuẩn mực + ${customCount} tùy chỉnh)`;
   const tbody = document.getElementById('tc-table-body');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center; padding: 48px 16px; color:var(--text-muted)">
+          <div style="font-size:36px; margin-bottom:8px">📋</div>
+          <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px">
+            ${all.length === 0 ? 'Chưa có Kịch bản Kiểm thử nào trong Hệ thống' : 'Không tìm thấy kịch bản phù hợp với bộ lọc'}
+          </div>
+          <div style="font-size:13px; margin-bottom:16px">
+            ${all.length === 0 ? 'Hệ thống đang ở trạng thái Trắng (Fresh Clean State). Bạn có thể import danh mục từ file JSON/Excel hoặc tạo kịch bản mới.' : 'Vui lòng kiểm tra lại từ khóa tìm kiếm hoặc bỏ chọn các điều kiện lọc.'}
+          </div>
+          ${all.length === 0 ? `
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="openImportModal()">📥 Nhập Kịch Bản (JSON / Excel)</button>
+              <button class="btn btn-outline" onclick="openAddTcModal()">➕ Thêm Kịch Bản Mới</button>
+              <button class="btn btn-outline" onclick="loadSampleDemoProjects()" style="border-color:var(--accent); color:var(--accent)">⚡ Nạp Mẫu SmartVMS (204 Demo)</button>
+            </div>
+          ` : ''}
+        </td>
+      </tr>
+    `;
+    return;
+  }
   tbody.innerHTML = filtered.map(tc => {
     const r = state.results[tc.id];
     const s = r ? r.status : 'Not Run';
@@ -3637,11 +806,18 @@ function applyFilters() {
         ${isOverridden ? `<button class="action-btn reset admin-only" onclick="resetBuiltinTc('${tc.id}')" title="Khôi phục nguyên bản gốc" style="color:#d97706">🔄</button>` : ''}
         <button class="action-btn clone admin-only" onclick="openCloneTcModal('${tc.id}')" title="Nhân bản test case này">📋</button>
       </div>`;
+    const expText = Array.isArray(tc.expected) ? tc.expected.join('; ') : (tc.expected || '');
+    const descTooltip = escapeHtml((tc.description || tc.name || '') + (expText ? ' | Kết quả kỳ vọng: ' + expText : ''));
     return `<tr>
-      <td class="tc-code">${tc.id}</td>
+      <td class="tc-code">
+        <strong class="clickable-badge" onclick="openTcDetail('${tc.id}')" title="Bấm xem chi tiết kịch bản">${tc.id}</strong>
+      </td>
       <td>${priorityBadge(tc.priority)}</td>
-      <td><span class="module-tag">${getModuleShort(tc.module)}</span></td>
-      <td class="tc-name">${tc.name}</td>
+      <td><span class="module-tag" onclick="drillDownToTestCases(undefined, '${tc.module}')" style="cursor:pointer" title="Lọc theo phân hệ này">${getModuleShort(tc.module)}</span></td>
+      <td class="tc-name">
+        <span onclick="openTcDetail('${tc.id}')" style="cursor:pointer">${tc.name}</span>
+        <span class="info-hint" title="${descTooltip}">ⓘ</span>
+      </td>
       <td>${typeBadge}</td>
       <td>${statusBadge(s)}</td>
       <td style="font-size:12px;color:var(--text-secondary)">${r?.tester || '—'}</td>
@@ -4042,7 +1218,7 @@ function renderExecDetail(tcId) {
             <span style="font-size:12px;color:var(--accent-light);font-weight:bold">${evidences.length} ảnh đính kèm</span>
           </div>
 
-          <!-- BỘ CÔNG CỤ CHỤP MÀN HÌNH CHUYÊN NGHIỆP -->
+          <!-- CÔNG CỤ CHỤP MÀN HÌNH -->
           <div class="evidence-btn-group">
             <button type="button" class="btn btn-primary btn-sm" onclick="startScreenSnip('${tcId}')" title="Khoanh vùng một phần màn hình máy tính để chụp ảnh lỗi">
               ✂️ Chụp một phần màn hình (Snip Tool)
@@ -4270,7 +1446,7 @@ function renderReport() {
   const statsHtml = `
     <div class="stat-card stat-total"><div class="stat-icon">📋</div><div class="stat-body"><div class="stat-value">${s.total}</div><div class="stat-label">Tổng TC</div></div></div>
     <div class="stat-card stat-pass"><div class="stat-icon">✅</div><div class="stat-body"><div class="stat-value" style="color:#4ade80">${s.pass}</div><div class="stat-label">Passed</div></div></div>
-    <div class="stat-card stat-fail"><div class="stat-icon">❌</div><div class="stat-body"><div class="stat-value" style="color:#f87171">${s.fail}</div><div class="stat-label">Failed</div></div></div>
+    <div class="stat-card stat-fail clickable-stat" onclick="jumpToOverdueAssignments()" title="Bấm để lọc các bài ĐANG QUÁ HẠN"><div class="stat-icon">❌</div><div class="stat-body"><div class="stat-value" style="color:#f87171">${s.fail}</div><div class="stat-label">Failed</div></div></div>
     <div class="stat-card stat-skip"><div class="stat-icon">⏭️</div><div class="stat-body"><div class="stat-value" style="color:#fbbf24">${s.skip}</div><div class="stat-label">Skipped</div></div></div>
     <div class="stat-card stat-pending"><div class="stat-icon">⏳</div><div class="stat-body"><div class="stat-value" style="color:#64748b">${s.pending}</div><div class="stat-label">Chưa chạy</div></div></div>
     <div class="stat-card stat-progress"><div class="stat-icon">🎯</div><div class="stat-body"><div class="stat-value" style="color:#60a5fa">${s.passRate}%</div><div class="stat-label">Pass Rate</div></div></div>`;
@@ -4365,6 +1541,11 @@ function renderReportBarChart() {
 // SETTINGS PAGE
 // ================================================================
 function renderSettings() {
+  const statTcs = document.getElementById('catalog-stat-tcs');
+  if (statTcs) statTcs.textContent = getAllTcs().length;
+  const statMods = document.getElementById('catalog-stat-mods');
+  if (statMods) statMods.textContent = getModules().length;
+
   // Điền cấu hình Supabase
   loadSupabaseConfig();
   const sbUrlEl = document.getElementById('sb-url');
@@ -5295,19 +2476,12 @@ function showToast(msg, type='info') {
 // ================================================================
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('smartvms_theme', theme);
+  localStorage.setItem('smartvms_theme_v2', theme);
   const btn = document.getElementById('theme-toggle-btn');
   if (btn) {
     btn.innerHTML = theme === 'dark' ? '🌙 Tối' : '☀️ Sáng';
     btn.setAttribute('title', theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối');
   }
-  // Re-render charts with updated theme palette if active
-  const s = getStats();
-  const mStats = getModuleStats();
-  if (state.charts.module && document.getElementById('chartModule')) renderModuleChart(mStats);
-  if (state.charts.priority && document.getElementById('chartPriority')) renderPriorityChart(s);
-  if (state.charts.pie && document.getElementById('chartReportPie')) renderReportPieChart(s);
-  if (state.charts.bar && document.getElementById('chartReportBar')) renderReportBarChart();
 }
 
 function toggleTheme() {
@@ -5318,7 +2492,8 @@ function toggleTheme() {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('smartvms_theme') || 'light';
+  // Mặc định giao diện Sáng Clean Enterprise dịu mắt theo chuẩn doanh nghiệp
+  const saved = localStorage.getItem('smartvms_theme_v2') || 'light';
   setTheme(saved);
 }
 
@@ -5489,16 +2664,44 @@ function resetModulesToDefault() {
 }
 
 // ================================================================
+// REAL-TIME SYSTEM CLOCK (HEADER TIME DISPLAY)
+// ================================================================
+function initRealtimeClock() {
+  function updateClock() {
+    const now = new Date();
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const dayName = days[now.getDay()];
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+
+    const dateEl = document.getElementById('clock-date');
+    const timeEl = document.getElementById('clock-time');
+    if (dateEl) dateEl.textContent = `${dayName}, ${dd}/${mm}/${yyyy}`;
+    if (timeEl) timeEl.textContent = `${hh}:${min}:${ss}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+}
+
+// ================================================================
 // INIT
 // ================================================================
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
-  loadState();
-  initSupabase(true);
+  initRealtimeClock();      // Đồng hồ thời gian thực chuẩn xác từng giây trên Header
+  initEnterpriseProjects(); // Khởi tạo CSDL Đa Dự án từ Manifest / CSDL lưu trữ
+  initUsersList();          // Khởi tạo Danh sách Nhân sự từ CSDL lưu trữ
+  initAssignments();        // Khởi tạo Phân bổ Công việc từ CSDL lưu trữ
+  loadState();              // Khởi tạo Kết quả & Đợt test từ CSDL lưu trữ
+  initSupabase(true);       // Kết nối đồng bộ Cloud Supabase
   populateModuleSelects();
   updateRunSelectorUI();
   updateSessionDisplay();
-  applyAuth(); // Apply login state
+  applyAuth();              // Phân quyền RBAC
   navigate('dashboard');
   const all = getAllTcs();
   console.log(`✅ SmartVMS Test Manager v3.0 loaded | ${all.length} Test Cases | Đợt hiện tại: ${state.currentRunId}`);
@@ -6176,4 +3379,3253 @@ async function captureFullScreen(tcId) {
       showToast(`❌ Không thể chụp: ${err.message}`, 'error');
     }
   }
+}
+
+
+// ================================================================
+// CATALOG IMPORT / EXPORT LOGIC (CHUẨN ISO 29119-3 & ISO 9001)
+// Tách biệt hoàn toàn Dữ liệu Kịch bản (Testware) khỏi Mã nguồn
+// ================================================================
+let pendingImportData = null;
+
+function triggerImportCatalog() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền nhập tệp kịch bản kiểm thử!', 'error');
+    return;
+  }
+  const fileInput = document.getElementById('catalog-file-input');
+  if (fileInput) {
+    fileInput.value = '';
+    fileInput.click();
+  }
+}
+
+function handleCatalogFileSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  
+  if (!file.name.toLowerCase().endsWith('.json')) {
+    showToast('⚠️ Vui lòng chọn tệp định dạng .json!', 'error');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      processImportedCatalog(data, file.name);
+    } catch(err) {
+      showToast('❌ Lỗi cú pháp JSON trong tệp: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function processImportedCatalog(data, fileName) {
+  // Support both schema formats: { testCases: [...] } or { tcs: [...] } or direct array [...]
+  const tcs = Array.isArray(data) ? data : (data.testCases || data.tcs || []);
+  const modules = Array.isArray(data.modules) ? data.modules : [];
+  
+  if (!Array.isArray(tcs) || tcs.length === 0) {
+    showToast('⚠️ Tệp JSON không chứa danh sách kịch bản kiểm thử hợp lệ (không tìm thấy mảng testCases hoặc tcs)!', 'error');
+    return;
+  }
+  
+  // Validate schema of first item
+  const sample = tcs[0];
+  if (!sample.id || !sample.name || !sample.module) {
+    showToast('⚠️ Cấu trúc Test Case không chuẩn: Cần có tối thiểu các trường id, name, module!', 'error');
+    return;
+  }
+  
+  pendingImportData = {
+    fileName,
+    version: data.version || 'Tùy chỉnh',
+    modules,
+    tcs,
+    compliance: data.standardCompliance || ['ISO/IEC/IEEE 29119-3:2021']
+  };
+  
+  // Update Preview Modal UI
+  const nameEl = document.getElementById('import-file-name');
+  if (nameEl) nameEl.textContent = fileName;
+  const tcEl = document.getElementById('import-tc-count');
+  if (tcEl) tcEl.textContent = tcs.length;
+  const modEl = document.getElementById('import-mod-count');
+  if (modEl) modEl.textContent = modules.length || 'Tự động trích xuất';
+  const verEl = document.getElementById('import-version');
+  if (verEl) verEl.textContent = pendingImportData.version;
+  
+  // Count priorities
+  const p1 = tcs.filter(t => t.priority === 'P1').length;
+  const p2 = tcs.filter(t => t.priority === 'P2').length;
+  const p3 = tcs.filter(t => t.priority === 'P3').length;
+  const p4 = tcs.filter(t => t.priority === 'P4').length;
+  const priEl = document.getElementById('import-priority-breakdown');
+  if (priEl) priEl.textContent = `P1 (Critical): ${p1} · P2: ${p2} · P3: ${p3} · P4: ${p4}`;
+  
+  openModal('modal-import-preview');
+}
+
+function confirmImportCatalog() {
+  if (!pendingImportData) return;
+  const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'merge';
+  
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền nhập kịch bản!', 'error');
+    return;
+  }
+  
+  if (pendingImportData.modules && pendingImportData.modules.length > 0) {
+    state.modules = JSON.parse(JSON.stringify(pendingImportData.modules));
+    populateModuleSelects();
+  }
+  
+  if (mode === 'replace') {
+    ALL_TCS = JSON.parse(JSON.stringify(pendingImportData.tcs));
+    state.customTcs = [];
+    state.overrides = {};
+    showToast(`✅ Đã thay thế sạch: Nạp ${ALL_TCS.length} kịch bản từ tệp "${pendingImportData.fileName}"`, 'success');
+  } else {
+    // Merge: update ALL_TCS or append new ones
+    const existingMap = new Map(ALL_TCS.map(t => [t.id, t]));
+    let updatedCount = 0;
+    let addedCount = 0;
+    pendingImportData.tcs.forEach(newTc => {
+      if (existingMap.has(newTc.id)) {
+        Object.assign(existingMap.get(newTc.id), newTc);
+        updatedCount++;
+      } else {
+        ALL_TCS.push(newTc);
+        existingMap.set(newTc.id, newTc);
+        addedCount++;
+      }
+    });
+    showToast(`✅ Hợp nhất kịch bản thành công: Cập nhật ${updatedCount} ca · Thêm mới ${addedCount} ca!`, 'success');
+  }
+  
+  closeModal('modal-import-preview');
+  saveState();
+  applyFilters();
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-testcases')?.classList.contains('active')) renderTestCases();
+  if (document.getElementById('page-execute')?.classList.contains('active')) filterExecList();
+  if (document.getElementById('page-report')?.classList.contains('active')) renderReport();
+  if (document.getElementById('page-settings')?.classList.contains('active')) renderSettings();
+  
+  // Lưu vào localStorage để duy trì sau khi tải lại trang
+  localStorage.setItem('smartvms_imported_catalog', JSON.stringify({
+    version: pendingImportData.version,
+    updatedAt: new Date().toISOString(),
+    modules: state.modules,
+    testCases: ALL_TCS
+  }));
+}
+
+function exportCatalogJson() {
+  const allTcs = getAllTcs();
+  const catalog = {
+    schema: 'https://smartvms.local/schemas/test-catalog-v4.json',
+    title: 'SmartVMS Local SingleSite 2026 — Danh mục Kịch bản Kiểm thử Chuẩn hóa',
+    standardCompliance: [
+      'ISO 9001:2015 Clause 7.5 (Documented Information) & 8.5.2 (Traceability)',
+      'ISO/IEC/IEEE 29119-3:2021 (Test Documentation)',
+      'ISO/IEC 25010:2023 (Systems and Software Quality)'
+    ],
+    version: '3.4.0',
+    exportedAt: new Date().toISOString(),
+    exportedBy: state.currentUser ? state.currentUser.name : 'QA Team',
+    totalTestCases: allTcs.length,
+    totalModules: getModules().length,
+    modules: getModules(),
+    testCases: allTcs
+  };
+  
+  const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `smartvms_test_catalog_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`📤 Đã xuất thành công tệp danh mục: ${a.download}`, 'success');
+}
+
+function resetToFactoryCatalog() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead (Admin) mới có quyền khôi phục tệp catalog gốc!', 'error');
+    return;
+  }
+  if (!confirm('⚠️ Bạn có chắc chắn muốn khôi phục danh mục kịch bản về nguyên bản tệp data/smartvms_test_catalog.json (204 ca chuẩn gốc)?')) return;
+  
+  localStorage.removeItem('smartvms_imported_catalog');
+  const cat = (typeof window !== 'undefined' && window.SMARTVMS_DEFAULT_CATALOG) || { modules: [], testCases: [] };
+  ALL_TCS = JSON.parse(JSON.stringify(cat.testCases || []));
+  state.modules = JSON.parse(JSON.stringify(cat.modules || []));
+  state.overrides = {};
+  state.customTcs = [];
+  saveState();
+  populateModuleSelects();
+  applyFilters();
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-testcases')?.classList.contains('active')) renderTestCases();
+  if (document.getElementById('page-settings')?.classList.contains('active')) renderSettings();
+  showToast('🔄 Đã khôi phục thành công danh mục kịch bản từ tệp chuẩn gốc!', 'success');
+}
+
+// Drag & drop listener
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('catalog-drop-zone');
+  if (!dropZone) return;
+  
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.style.borderColor = 'var(--accent-light)';
+      dropZone.style.background = 'rgba(59, 130, 246, 0.08)';
+    });
+  });
+  
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.style.borderColor = 'var(--border-color)';
+      dropZone.style.background = 'rgba(59, 130, 246, 0.03)';
+    });
+  });
+  
+  dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleCatalogFileSelect({ target: { files } });
+    }
+  });
+});
+
+
+// ================================================================
+// ENTERPRISE MULTI-PROJECT & MULTI-VERSION ARCHITECTURE (ISO 29119-2)
+// Quản lý Danh mục Dự án Phần mềm Doanh nghiệp & Chuẩn SQuaRE ISO 25010
+// ================================================================
+const ENTERPRISE_MANIFEST = (typeof window !== 'undefined' && window.OPENQAS_ENTERPRISE_MANIFEST) || {
+  activeProjectId: 'PRJ-SMARTVMS',
+  projects: []
+};
+
+function initEnterpriseProjects() {
+  const savedProjects = localStorage.getItem('openqas_projects_list');
+  if (savedProjects) {
+    try {
+      state.projects = JSON.parse(savedProjects);
+    } catch(e) {}
+  }
+  
+  // Default to empty array for manual import / creation if no stored projects
+  if (!state.projects) {
+    state.projects = [];
+  }
+  
+  if (false && (!state.projects || state.projects.length === 0)) {
+    // Khởi tạo 3 dự án tiêu biểu mặc định
+    const vmsCatalog = (typeof window !== 'undefined' && window.SMARTVMS_DEFAULT_CATALOG) || { modules: [], testCases: [] };
+    const parkCatalog = (ENTERPRISE_MANIFEST.catalogs && ENTERPRISE_MANIFEST.catalogs['PRJ-SMARTPARK']) || { modules: [], testCases: [] };
+    const accessCatalog = (ENTERPRISE_MANIFEST.catalogs && ENTERPRISE_MANIFEST.catalogs['PRJ-SMARTACCESS']) || { modules: [], testCases: [] };
+
+    state.projects = [
+      {
+        id: 'PRJ-SMARTVMS',
+        code: 'SMARTVMS',
+        name: 'SmartVMS — Quản lý Khách & Ra vào',
+        domain: 'An ninh Trụ sở & Cơ quan Hành chính',
+        lead: 'Nguyễn Văn Huy (Project Manager)',
+        standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010:2023'],
+        activeVersion: 'v2.0',
+        versions: [
+          { version: 'v2.0', label: 'v2.0-SingleSite 2026', status: 'IN_QA', targetDate: '2026-10-30', changelog: 'Phiên bản Offline Standalone cho trụ sở đơn lẻ (204 TCs, 12 Modules)' },
+          { version: 'v2.1', label: 'v2.1-MultiSite Cloud Sync', status: 'IN_DEV', targetDate: '2026-12-15', changelog: 'Đồng bộ tập trung đa trạm gác qua Cloud API' },
+          { version: 'v1.5', label: 'v1.5-Legacy Standalone', status: 'RELEASED', targetDate: '2025-11-20', changelog: 'Phiên bản bàn giao đợt 1' }
+        ],
+        modules: vmsCatalog.modules || [],
+        testCases: vmsCatalog.testCases || [],
+        runs: [
+          { id: 'run_001', name: 'Đợt 1 — Khảo sát Kiểm thử Toàn diện', targetVersion: 'v2.0', scopeType: 'ALL', status: 'ACTIVE', createdBy: 'QA Lead', createdAt: '2026-10-06T00:00:00.000Z' }
+        ],
+        runResults: {}
+      },
+      {
+        id: 'PRJ-SMARTPARK',
+        code: 'SMARTPARK',
+        name: 'SmartParking — Quản lý Bãi xe & Nhận diện Biển số ANPR',
+        domain: 'Giao thông Thông minh (ITS & Smart Parking)',
+        lead: 'Trần Quốc Tuấn (Technical Lead)',
+        standards: ['ISO 9001:2015', 'TCVN 13607:2023', 'ISO/IEC 25010'],
+        activeVersion: 'v1.2.0',
+        versions: [
+          { version: 'v1.2.0', label: 'v1.2.0-ANPR AutoBarrier', status: 'IN_QA', targetDate: '2026-11-10', changelog: 'Tích hợp nhận diện biển số tự động LPR và barie tốc độ cao' },
+          { version: 'v1.0.0', label: 'v1.0.0-Base RFID', status: 'RELEASED', targetDate: '2026-03-15', changelog: 'Phiên bản quẹt thẻ RFID thông thường' }
+        ],
+        modules: parkCatalog.modules || [],
+        testCases: parkCatalog.testCases || [],
+        runs: [
+          { id: 'run_park_01', name: 'Đợt 1 — Thử nghiệm Làn vào & Barie', targetVersion: 'v1.2.0', scopeType: 'ALL', status: 'ACTIVE', createdBy: 'Trần Quốc Tuấn', createdAt: '2026-10-10T00:00:00.000Z' }
+        ],
+        runResults: {}
+      },
+      {
+        id: 'PRJ-SMARTACCESS',
+        code: 'SMARTACCESS',
+        name: 'SmartAccess — Kiểm soát Cửa Phân tầng & Thang máy',
+        domain: 'Tự động hóa Tòa nhà (BMS & Access Control)',
+        lead: 'Lê Hoàng Minh (Lead QA)',
+        standards: ['ISO 9001:2015', 'ISO/IEC 25010'],
+        activeVersion: 'v1.0.0',
+        versions: [
+          { version: 'v1.0.0', label: 'v1.0.0-Access & Elevator', status: 'IN_QA', targetDate: '2026-11-25', changelog: 'Tích hợp FaceID và điều khiển phân tầng thang máy' }
+        ],
+        modules: accessCatalog.modules || [],
+        testCases: accessCatalog.testCases || [],
+        runs: [
+          { id: 'run_acc_01', name: 'Đợt 1 — Kiểm tra Nhận diện FaceID & PCCC', targetVersion: 'v1.0.0', scopeType: 'ALL', status: 'ACTIVE', createdBy: 'Lê Hoàng Minh', createdAt: '2026-10-12T00:00:00.000Z' }
+        ],
+        runResults: {}
+      }
+    ];
+    saveEnterpriseProjects();
+  }
+
+  // Khôi phục dự án hiện hành
+  const savedActiveProj = localStorage.getItem('openqas_active_project_id');
+  if (savedActiveProj && state.projects.some(p => p.id === savedActiveProj)) {
+    state.currentProjectId = savedActiveProj;
+  } else {
+    state.currentProjectId = 'PRJ-SMARTVMS';
+  }
+
+  // Luôn đảm bảo nạp đầy đủ danh mục kịch bản từ tệp CSDL chuẩn vào từng dự án nếu đang rỗng
+  const vmsCatalogData = (typeof window !== 'undefined' && window.SMARTVMS_DEFAULT_CATALOG) || { modules: [], testCases: [] };
+  (state.projects || []).forEach(p => {
+    if (p.id === 'PRJ-SMARTVMS') {
+      if (!p.testCases || p.testCases.length === 0) {
+        p.modules = vmsCatalogData.modules || [];
+        p.testCases = vmsCatalogData.testCases || [];
+      }
+    } else if (typeof ENTERPRISE_MANIFEST !== 'undefined' && ENTERPRISE_MANIFEST.catalogs && ENTERPRISE_MANIFEST.catalogs[p.id]) {
+      const cat = ENTERPRISE_MANIFEST.catalogs[p.id];
+      if (!p.testCases || p.testCases.length === 0) {
+        p.modules = cat.modules || [];
+        p.testCases = cat.testCases || [];
+      }
+    }
+  });
+  saveEnterpriseProjects();
+
+  syncActiveProjectContext();
+}
+
+function saveEnterpriseProjects() {
+  localStorage.setItem('openqas_projects_list', JSON.stringify(state.projects));
+  localStorage.setItem('openqas_active_project_id', state.currentProjectId);
+}
+
+function getActiveProject() {
+  if (!state.projects || state.projects.length === 0) return null;
+  return state.projects.find(p => p.id === state.currentProjectId) || state.projects[0] || null;
+}
+
+function syncActiveProjectContext() {
+  const p = getActiveProject();
+  if (!p) {
+    state.currentProjectId = null;
+    state.currentProjectVersion = '';
+    state.modules = [];
+    ALL_TCS = [];
+    state.runs = [];
+    state.runResults = {};
+    state.results = {};
+    populateProjectSelectors();
+    populateModuleSelects();
+    updateRunSelectorUI();
+    return;
+  }
+
+  state.currentProjectVersion = p.activeVersion || (p.versions[0] ? p.versions[0].version : 'v1.0');
+  state.modules = p.modules || [];
+  ALL_TCS = p.testCases || [];
+  state.runs = p.runs || [
+    { id: 'run_001', name: 'Đợt 1 — Khảo sát Kiểm thử', targetVersion: state.currentProjectVersion, scopeType: 'ALL', status: 'ACTIVE', createdBy: 'QA Lead', createdAt: new Date().toISOString() }
+  ];
+  state.runResults = p.runResults || {};
+  state.currentRunId = state.runs[0] ? state.runs[0].id : 'run_001';
+  if (!state.runResults[state.currentRunId]) state.runResults[state.currentRunId] = {};
+  state.results = state.runResults[state.currentRunId];
+
+  populateProjectSelectors();
+  populateModuleSelects();
+  updateRunSelectorUI();
+}
+
+function populateProjectSelectors() {
+  const projSel = document.getElementById('header-project-select');
+  const topbarProjSel = document.getElementById('topbar-project-select');
+  const opts = (!state.projects || state.projects.length === 0) 
+    ? '<option value="">(Chưa có dự án)</option>' 
+    : state.projects.map(p =>
+        `<option value="${p.id}" ${p.id === state.currentProjectId ? 'selected' : ''}>${p.name}</option>`
+      ).join('');
+
+  if (projSel) projSel.innerHTML = opts;
+  if (topbarProjSel) topbarProjSel.innerHTML = opts;
+
+  const verSel = document.getElementById('header-version-select');
+  const p = getActiveProject();
+  if (verSel && p) {
+    verSel.innerHTML = (p.versions || []).map(v =>
+      `<option value="${v.version}" ${v.version === state.currentProjectVersion ? 'selected' : ''}>${v.label || v.version} (${v.status})</option>`
+    ).join('');
+  }
+}
+
+function switchProject(projectId) {
+  if (!state.projects.some(p => p.id === projectId)) return;
+  state.currentProjectId = projectId;
+  syncActiveProjectContext();
+  saveEnterpriseProjects();
+  saveState();
+
+  const p = getActiveProject();
+  showToast(`👉 Đã chuyển sang dự án: ${p.name}`, 'info');
+
+  applyFilters();
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-testcases')?.classList.contains('active')) renderTestCases();
+  if (document.getElementById('page-execute')?.classList.contains('active')) filterExecList();
+  if (document.getElementById('page-report')?.classList.contains('active')) renderReport();
+  if (document.getElementById('page-projects')?.classList.contains('active')) renderProjectsPage();
+  if (document.getElementById('page-evaluation')?.classList.contains('active')) renderEvaluationPage();
+}
+
+function switchProjectVersion(version) {
+  const p = getActiveProject();
+  if (!p) return;
+  p.activeVersion = version;
+  state.currentProjectVersion = version;
+  saveEnterpriseProjects();
+  populateProjectSelectors();
+  showToast(`📦 Đã chuyển sang bản: ${version}`, 'info');
+
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-projects')?.classList.contains('active')) renderProjectsPage();
+  if (document.getElementById('page-evaluation')?.classList.contains('active')) renderEvaluationPage();
+}
+
+function renderProjectsPage() {
+  const grid = document.getElementById('projects-card-grid');
+  if (!grid) return;
+
+  if (!state.projects || state.projects.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state card" style="grid-column: 1 / -1; text-align: center; padding: 48px 24px; border: 2px dashed var(--border);">
+        <div style="font-size: 48px; margin-bottom: 12px;">🏢</div>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Chưa có Dự án nào trong Hệ thống</h3>
+        <p style="color: var(--text-muted); font-size: 14px; max-width: 520px; margin: 0 auto 20px; line-height:1.6">
+          Hệ thống đang ở trạng thái Trắng (Fresh Clean State). Bạn có thể bấm tạo dự án mới hoặc nhập file danh mục kịch bản kiểm thử (JSON/Excel).
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="openCreateProjectModal()">➕ Thêm Dự án Mới</button>
+          <button class="btn btn-outline" onclick="openImportModal()">📥 Nhập Kịch Bản (JSON / Excel)</button>
+          <button class="btn btn-outline" onclick="loadSampleDemoProjects()" style="border-color:var(--accent); color:var(--accent)">⚡ Nạp Mẫu SmartVMS (204 TCs Demo)</button>
+        </div>
+      </div>
+    `;
+    const tbody = document.getElementById('project-versions-table-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted)">Chưa có dữ liệu dự án</td></tr>';
+    return;
+  }
+
+  grid.innerHTML = state.projects.map(p => {
+    const isCurrent = p.id === state.currentProjectId;
+    const tcCount = (p.testCases || []).length;
+    const modCount = (p.modules || []).length;
+    const verCount = (p.versions || []).length;
+    
+    // Calculate pass rate
+    const pResults = (p.runResults && p.runs && p.runs[0] && p.runResults[p.runs[0].id]) || {};
+    let passed = 0;
+    Object.values(pResults).forEach(r => { if (r.status === 'Pass') passed++; });
+    const pct = tcCount > 0 ? Math.round((passed / tcCount) * 100) : 0;
+
+    return `
+      <div class="card" style="border: 2px solid ${isCurrent ? 'var(--accent-light)' : 'var(--border-color)'}; box-shadow: ${isCurrent ? '0 8px 24px rgba(37,99,235,0.15)' : 'none'}; position:relative; overflow:hidden">
+        ${isCurrent ? '<div style="position:absolute; top:0; right:0; background:var(--accent); color:white; font-size:10px; font-weight:700; padding:3px 12px; border-bottom-left-radius:8px">ĐANG CHỌN</div>' : ''}
+        <div style="font-size:12px; font-weight:700; color:var(--accent-light); margin-bottom:4px">${p.code}</div>
+        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px">${p.name}</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px; min-height:36px">${p.domain}</p>
+        
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; background:rgba(0,0,0,0.03); border-radius:8px; padding:10px; margin-bottom:14px; text-align:center">
+          <div><div style="font-weight:700; font-size:15px">${tcCount}</div><div style="font-size:11px; color:var(--text-muted)">Kịch bản</div></div>
+          <div><div style="font-weight:700; font-size:15px">${modCount}</div><div style="font-size:11px; color:var(--text-muted)">Phân hệ</div></div>
+          <div><div style="font-weight:700; font-size:15px">${verCount}</div><div style="font-size:11px; color:var(--text-muted)">Phiên bản</div></div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px">
+            <span>Tiến độ kiểm thử (${p.activeVersion}):</span>
+            <strong>${pct}%</strong>
+          </div>
+          <div class="progress-bar-wrapper" style="height:6px"><div class="progress-bar" style="width:${pct}%; background:${pct >= 80 ? '#10b981' : '#3b82f6'}"></div></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; pt-10">
+          <div style="font-size:11px; color:var(--text-muted)">PM: ${p.lead.split('(')[0]}</div>
+          ${isCurrent ? 
+            '<button class="btn btn-sm btn-outline" disabled style="color:#10b981; border-color:#10b981">✓ Dự án hiện tại</button>' : 
+            `<button class="btn btn-sm btn-primary" onclick="switchProject('${p.id}')">👉 Chọn Dự Án Này</button>`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Render versions table
+  const p = getActiveProject();
+  if (p) {
+    const titleEl = document.getElementById('active-proj-versions-title');
+    if (titleEl) titleEl.textContent = `📦 Quản lý Phiên bản Phần mềm: ${p.name}`;
+    const descEl = document.getElementById('active-proj-standards-desc');
+    if (descEl) descEl.textContent = `Lĩnh vực: ${p.domain} · Tiêu chuẩn: ${(p.standards || []).join(' · ')}`;
+
+    const tbody = document.getElementById('project-versions-table-body');
+    if (tbody) {
+      tbody.innerHTML = (p.versions || []).map(v => {
+        const isVerActive = v.version === state.currentProjectVersion;
+        return `
+          <tr style="${isVerActive ? 'background:rgba(59,130,246,0.05); font-weight:600' : ''}">
+            <td><code style="font-size:13px">${v.version}</code></td>
+            <td>${v.label || v.version}</td>
+            <td><span class="badge ${v.status === 'RELEASED' ? 'badge-pass' : v.status === 'IN_QA' ? 'badge-p1' : 'badge-nr'}">${v.status}</span></td>
+            <td>${v.targetDate || 'Chưa định'}</td>
+            <td style="font-size:13px; color:var(--text-muted)">${v.changelog || 'Không có ghi chú'}</td>
+            <td>
+              ${isVerActive ? 
+                '<span style="color:#10b981; font-size:12px">● Đang kiểm thử</span>' : 
+                `<button class="btn btn-sm btn-outline" onclick="switchProjectVersion('${v.version}')">Kích hoạt</button>`
+              }
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function openCreateProjectModal() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead / Admin mới có quyền tạo Dự Án mới!', 'error');
+    return;
+  }
+  document.getElementById('new-proj-code').value = '';
+  document.getElementById('new-proj-name').value = '';
+  document.getElementById('new-proj-domain').value = '';
+  document.getElementById('new-proj-lead').value = state.currentUser ? state.currentUser.name : 'QA Lead';
+  document.getElementById('new-proj-init-ver').value = 'v1.0.0';
+  openModal('modal-project-create');
+}
+
+function confirmCreateProject() {
+  const code = document.getElementById('new-proj-code').value.trim().toUpperCase();
+  const name = document.getElementById('new-proj-name').value.trim();
+  const domain = document.getElementById('new-proj-domain').value.trim() || 'Hệ thống Phần mềm Ứng dụng';
+  const lead = document.getElementById('new-proj-lead').value.trim() || 'QA Lead';
+  const initVer = document.getElementById('new-proj-init-ver').value.trim() || 'v1.0.0';
+  const standards = document.getElementById('new-proj-standards').value.split(',').map(s => s.trim());
+
+  if (!code || !name) {
+    showToast('⚠️ Vui lòng nhập đầy đủ Mã Dự án và Tên Dự án!', 'error');
+    return;
+  }
+
+  const projId = 'PRJ-' + code;
+  if (state.projects.some(p => p.id === projId)) {
+    showToast('⚠️ Mã Dự án đã tồn tại trong danh mục!', 'error');
+    return;
+  }
+
+  const newProject = {
+    id: projId,
+    code,
+    name,
+    domain,
+    lead,
+    standards,
+    activeVersion: initVer,
+    versions: [
+      { version: initVer, label: `${initVer} — Khởi tạo Dự án`, status: 'IN_QA', targetDate: new Date(Date.now() + 30*86400000).toISOString().slice(0,10), changelog: 'Phiên bản đầu tiên được tạo lập trên hệ thống OpenQAS' }
+    ],
+    modules: [
+      { id: code.slice(0,2) + '01', name: 'Phân hệ Nghiệp vụ Cốt lõi', short: 'Cốt lõi' }
+    ],
+    testCases: [
+      {
+        id: `TC-${code.slice(0,4)}-001`,
+        module: code.slice(0,2) + '01',
+        priority: 'P1',
+        name: `Kiểm tra khởi động và xác thực hệ thống ${name}`,
+        platform: 'Nền tảng ứng dụng',
+        testData: 'Tài khoản quản trị viên',
+        precondition: 'Dịch vụ hệ thống đang kích hoạt',
+        steps: ['1. Truy cập vào ứng dụng.', '2. Đăng nhập hệ thống.'],
+        expected: ['Đăng nhập thành công, tải màn hình chính.']
+      }
+    ],
+    runs: [
+      { id: 'run_init_' + Date.now(), name: 'Đợt 1 — Kiểm thử Khởi tạo', targetVersion: initVer, scopeType: 'ALL', status: 'ACTIVE', createdBy: lead, createdAt: new Date().toISOString() }
+    ],
+    runResults: {}
+  };
+
+  state.projects.push(newProject);
+  saveEnterpriseProjects();
+  closeModal('modal-project-create');
+  switchProject(projId);
+  showToast(`✅ Đã thêm dự án mới: ${name}!`, 'success');
+}
+
+function openCreateVersionModal() {
+  if (state.currentUser && state.currentUser.role !== 'admin') {
+    showToast('⚠️ Quyền hạn bị từ chối: Chỉ QA Lead / Admin mới có quyền thêm phiên bản phần mềm!', 'error');
+    return;
+  }
+  document.getElementById('new-ver-tag').value = '';
+  document.getElementById('new-ver-label').value = '';
+  document.getElementById('new-ver-date').value = new Date(Date.now() + 15*86400000).toISOString().slice(0,10);
+  document.getElementById('new-ver-changelog').value = '';
+  openModal('modal-version-create');
+}
+
+function confirmCreateVersion() {
+  const tag = document.getElementById('new-ver-tag').value.trim();
+  const label = document.getElementById('new-ver-label').value.trim() || tag;
+  const status = document.getElementById('new-ver-status').value;
+  const date = document.getElementById('new-ver-date').value;
+  const changelog = document.getElementById('new-ver-changelog').value.trim();
+
+  if (!tag) {
+    showToast('⚠️ Vui lòng nhập Mã phiên bản (Tag)!', 'error');
+    return;
+  }
+
+  const p = getActiveProject();
+  if (!p) return;
+  if (!p.versions) p.versions = [];
+
+  if (p.versions.some(v => v.version === tag)) {
+    showToast(`⚠️ Phiên bản "${tag}" đã tồn tại trong dự án này!`, 'error');
+    return;
+  }
+
+  p.versions.push({
+    version: tag,
+    label,
+    status,
+    targetDate: date,
+    changelog
+  });
+
+  saveEnterpriseProjects();
+  closeModal('modal-version-create');
+  switchProjectVersion(tag);
+  showToast(`✅ Đã thêm bản: ${label}`, 'success');
+}
+
+function renderEvaluationPage() {
+  const p = getActiveProject();
+  if (!p) return;
+
+  const badgeEl = document.getElementById('eval-proj-badge');
+  if (badgeEl) badgeEl.textContent = `Dự án: ${p.code}`;
+  const nameEl = document.getElementById('eval-proj-name');
+  if (nameEl) nameEl.textContent = `${p.name} (${state.currentProjectVersion})`;
+  const metaEl = document.getElementById('eval-proj-meta');
+  if (metaEl) metaEl.textContent = `Trưởng dự án: ${p.lead} · Lĩnh vực: ${p.domain} · Tiêu chuẩn: ${(p.standards || []).join(' · ')}`;
+
+  // Calculate scores
+  const allTcs = getAllTcs();
+  let passed = 0;
+  let failed = 0;
+  let p1Passed = 0;
+  let p1Total = 0;
+
+  allTcs.forEach(tc => {
+    if (tc.priority === 'P1') p1Total++;
+    const r = state.results[tc.id];
+    if (r && r.status === 'Pass') {
+      passed++;
+      if (tc.priority === 'P1') p1Passed++;
+    } else if (r && r.status === 'Fail') {
+      failed++;
+    }
+  });
+
+  const total = allTcs.length;
+  const passRate = total > 0 ? (passed / total) * 100 : 0;
+  const p1Rate = p1Total > 0 ? (p1Passed / p1Total) * 100 : 100;
+  
+  // Readiness score formula (ISO 25010 weighted)
+  // 60% functional pass rate + 40% P1 critical clearance
+  const readiness = Math.round((passRate * 0.6) + (p1Rate * 0.4));
+
+  const scoreEl = document.getElementById('eval-readiness-score');
+  if (scoreEl) scoreEl.textContent = readiness + '%';
+
+  const statusEl = document.getElementById('eval-readiness-status');
+  if (statusEl) {
+    if (readiness >= 90 && failed === 0) {
+      statusEl.textContent = '🟢 ĐỦ ĐIỀU KIỆN NGHIỆM THU PHÁT HÀNH';
+      statusEl.style.color = '#10b981';
+    } else if (readiness >= 75) {
+      statusEl.textContent = '🟡 CẦN KHẮC PHỤC CÁC LỖI TỒN ĐỌNG TRƯỚC PHÁT HÀNH';
+      statusEl.style.color = '#f59e0b';
+    } else {
+      statusEl.textContent = '🔴 CHƯA ĐỦ ĐIỀU KIỆN NGHIỆM THU';
+      statusEl.style.color = '#ef4444';
+    }
+  }
+
+  // Update bars
+  const funcBar = document.getElementById('eval-bar-func');
+  if (funcBar) funcBar.style.width = Math.min(100, Math.round(passRate)) + '%';
+  const funcPct = document.getElementById('eval-pct-func');
+  if (funcPct) funcPct.textContent = Math.round(passRate) + '%';
+}
+
+function exportEvaluationCertificate() {
+  const p = getActiveProject();
+  if (!p) return;
+  const dateStr = new Date().toLocaleDateString('vi-VN');
+  const allTcs = getAllTcs();
+  let passed = 0;
+  allTcs.forEach(t => { if (state.results[t.id]?.status === 'Pass') passed++; });
+  const pct = allTcs.length > 0 ? Math.round((passed / allTcs.length) * 100) : 0;
+
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+      <meta charset="UTF-8">
+      <title>Phiếu Đánh Giá Chất Lượng Phần Mềm — ${p.code}</title>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+        .cert-border { border: 4px double #3b82f6; padding: 30px; border-radius: 12px; }
+        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 25px; }
+        .logo { font-size: 28px; font-weight: 800; color: #2563eb; }
+        h1 { font-size: 22px; text-transform: uppercase; margin: 10px 0; color: #0f172a; }
+        .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .meta-table td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+        .meta-table td.label { font-weight: 600; background: #f8fafc; width: 30%; }
+        .score-box { background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0; }
+        .score-val { font-size: 32px; font-weight: 800; color: #10b981; }
+        .signatures { display: flex; justify-content: space-between; margin-top: 50px; text-align: center; }
+        .sig-block { width: 40%; }
+        .sig-space { height: 70px; }
+      </style>
+    </head>
+    <body>
+      <div class="cert-border">
+        <div class="header">
+          <div class="logo">Hệ thống Quản lý Kiểm thử & Đánh giá Chất lượng Phần mềm</div>
+          <div style="font-size:14px; color:#475569">BỘ PHẬN ĐẢM BẢO CHẤT LƯỢNG PHẦN MỀM</div>
+          <div style="font-size:12px; color:#64748b; margin-top:4px">Tuân thủ tiêu chuẩn: ISO 9001:2015 · ISO/IEC/IEEE 29119-2 · ISO/IEC 25010:2023</div>
+          <h1>PHIẾU ĐÁNH GIÁ CHẤT LƯỢNG PHẦN MỀM</h1>
+          <div>Số hiệu: CERT-${p.code}-${new Date().getFullYear()}-01 · Ngày lập: ${dateStr}</div>
+        </div>
+
+        <table class="meta-table">
+          <tr><td class="label">Hệ thống Phần mềm:</td><td><strong>${p.name}</strong></td></tr>
+          <tr><td class="label">Mã Dự án:</td><td>${p.code}</td></tr>
+          <tr><td class="label">Phiên bản Thử nghiệm:</td><td><strong>${state.currentProjectVersion}</strong></td></tr>
+          <tr><td class="label">Lĩnh vực / Miền nghiệp vụ:</td><td>${p.domain}</td></tr>
+          <tr><td class="label">Trưởng Dự án (PM / QA Lead):</td><td>${p.lead}</td></tr>
+          <tr><td class="label">Quy mô Kịch bản Thử nghiệm:</td><td>${allTcs.length} Test Cases (Phân bổ trên ${getModules().length} Phân hệ)</td></tr>
+          <tr><td class="label">Tiêu chí Đóng Kiểm thử (Exit Criteria):</td><td>Đạt 100% kịch bản P1 (Critical), Không tồn đọng Blocker Bug</td></tr>
+        </table>
+
+        <div class="score-box">
+          <div style="font-weight:600; font-size:13px; color:#166534">Mức độ hoàn thành để bàn giao</div>
+          <div class="score-val">${pct}%</div>
+          <div style="font-size:13px; font-weight:600; color:#166534">KẾT LUẬN: ĐẠT YÊU CẦU KIỂM TRA ĐỂ BÀN GIAO</div>
+        </div>
+
+        <div class="signatures">
+          <div class="sig-block">
+            <strong>ĐẠI DIỆN ĐỘI NGŨ KIỂM THỬ (QA LEAD)</strong>
+            <div class="sig-space"></div>
+            <div><strong>${state.currentUser ? state.currentUser.name : 'QA Team'}</strong></div>
+          </div>
+          <div class="sig-block">
+            <strong>TRƯỞNG DỰ ÁN PHẦN MỀM (PROJECT MANAGER)</strong>
+            <div class="sig-space"></div>
+            <div><strong>${p.lead.split('(')[0]}</strong></div>
+          </div>
+        </div>
+      </div>
+      <script>window.print();</script>
+    </body>
+    </html>
+  `);
+  w.document.close();
+}
+
+
+// ================================================================
+// PHÂN HỆ QUẢN TRỊ NHÂN SỰ & PHÂN CÔNG THEO DỰ ÁN (USER MANAGEMENT)
+// ================================================================
+const DEFAULT_USERS_DATA = [
+  {
+    id: 'usr_001',
+    username: 'admin',
+    password: '123',
+    name: 'Nguyễn Văn Huy (Quản lý dự án)',
+    role: 'admin',
+    roleTitle: 'Quản lý Hệ thống & Dự án (Admin/PM)',
+    email: 'huy.nv@smartvms.local',
+    assignedProjects: ['PRJ-SMARTVMS', 'PRJ-SMARTPARK', 'PRJ-SMARTACCESS'],
+    status: 'ACTIVE',
+    createdAt: '2026-10-01'
+  },
+  {
+    id: 'usr_002',
+    username: 'tester',
+    password: '123',
+    name: 'Nguyễn Văn Nam (Người kiểm tra 1)',
+    role: 'tester',
+    roleTitle: 'Người kiểm tra (Tester)',
+    email: 'nam.nv@smartvms.local',
+    assignedProjects: ['PRJ-SMARTVMS', 'PRJ-SMARTPARK'],
+    status: 'ACTIVE',
+    createdAt: '2026-10-01'
+  },
+  {
+    id: 'usr_003',
+    username: 'tester2',
+    password: '123',
+    name: 'Trần Thị Lan (Người kiểm tra 2)',
+    role: 'tester',
+    roleTitle: 'Người kiểm tra (Tester)',
+    email: 'lan.tt@smartvms.local',
+    assignedProjects: ['PRJ-SMARTVMS'],
+    status: 'ACTIVE',
+    createdAt: '2026-10-05'
+  },
+  {
+    id: 'usr_004',
+    username: 'tester3',
+    password: '123',
+    name: 'Lê Hoàng Minh (Người kiểm tra 3)',
+    role: 'tester',
+    roleTitle: 'Người kiểm tra (Tester)',
+    email: 'minh.lh@smartvms.local',
+    assignedProjects: ['PRJ-SMARTACCESS'],
+    status: 'ACTIVE',
+    createdAt: '2026-10-08'
+  },
+  {
+    id: 'usr_005',
+    username: 'dev',
+    password: '123',
+    name: 'Trần Quốc Tuấn (Lập trình viên)',
+    role: 'developer',
+    roleTitle: 'Lập trình viên (Developer)',
+    email: 'tuan.tq@smartvms.local',
+    assignedProjects: ['PRJ-SMARTVMS', 'PRJ-SMARTPARK', 'PRJ-SMARTACCESS'],
+    status: 'ACTIVE',
+    createdAt: '2026-10-01'
+  }
+];
+
+function initUsersList() {
+  const saved = localStorage.getItem('openqas_users_list');
+  if (saved) {
+    try {
+      state.usersList = JSON.parse(saved);
+    } catch(e) {}
+  }
+  if (!state.usersList || state.usersList.length === 0) {
+    state.usersList = JSON.parse(JSON.stringify(DEFAULT_USERS_DATA));
+    saveUsersList();
+  }
+}
+
+function saveUsersList() {
+  localStorage.setItem('openqas_users_list', JSON.stringify(state.usersList));
+}
+
+let selectedUserRoleFilter = '';
+
+function filterUsersByRole(role) {
+  selectedUserRoleFilter = role;
+  renderUsersPage();
+}
+
+function renderUsersPage() {
+  initUsersList();
+  initAssignments();
+  const allUsers = state.usersList || [];
+
+  // Update Stats
+  const statTotal = document.getElementById('usr-stat-total');
+  if (statTotal) statTotal.textContent = allUsers.length;
+  const statAdmin = document.getElementById('usr-stat-admin');
+  if (statAdmin) statAdmin.textContent = allUsers.filter(u => u.role === 'admin').length;
+  const statTester = document.getElementById('usr-stat-tester');
+  if (statTester) statTester.textContent = allUsers.filter(u => u.role === 'tester').length;
+  const statDev = document.getElementById('usr-stat-dev');
+  if (statDev) statDev.textContent = allUsers.filter(u => u.role === 'developer').length;
+
+  const tbody = document.getElementById('users-table-body');
+  if (!tbody) return;
+
+  const users = selectedUserRoleFilter ? allUsers.filter(u => u.role === selectedUserRoleFilter) : allUsers;
+  const projMap = new Map((state.projects || []).map(p => [p.id, p.code]));
+  const tasks = state.assignments || [];
+
+  tbody.innerHTML = users.map(u => {
+    const isLocked = u.status === 'LOCKED';
+    const roleBadge = u.role === 'admin' ? 
+      '<span class="badge badge-p1">👑 Quản lý (Admin/PM)</span>' : 
+      u.role === 'tester' ? 
+      '<span class="badge badge-pass">🧪 Người kiểm tra (Tester)</span>' : 
+      '<span class="badge badge-nr">💻 Lập trình viên (Dev)</span>';
+
+    const projBadges = (u.assignedProjects || []).map(pid => 
+      `<span class="module-tag" style="margin-right:4px; font-size:11px">${projMap.get(pid) || pid}</span>`
+    ).join('') || '<span style="color:var(--text-muted); font-size:12px">Chưa gán</span>';
+
+    const userTasks = tasks.filter(t => t.assigneeUsername === u.username);
+    const activeTasks = userTasks.filter(t => t.status !== 'DONE' && t.status !== 'PASSED');
+    const taskCol = u.role === 'tester' ? 
+      `<strong class="clickable-badge" onclick="jumpToUserAssignments('${u.username}')" title="Bấm xem các bài giao cho nhân sự này">${activeTasks.length} bài đang làm</strong> (${userTasks.length} tổng)` : 
+      `<span style="color:var(--text-muted); font-size:12px">—</span>`;
+
+    return `
+      <tr style="${isLocked ? 'opacity:0.6; background:rgba(0,0,0,0.02)' : ''}">
+        <td>
+          <strong>${u.name}</strong>
+          <div style="font-size:11.5px; color:var(--text-muted)">${u.email || ''}</div>
+        </td>
+        <td><code>${u.username}</code></td>
+        <td>${roleBadge}</td>
+        <td>${projBadges}</td>
+        <td>${taskCol}</td>
+        <td>
+          ${isLocked ? 
+            '<span class="badge badge-fail">🔒 Tạm khóa</span>' : 
+            '<span class="badge badge-pass">● Hoạt động</span>'}
+        </td>
+        <td>
+          <div style="display:flex; gap:4px">
+            <button class="btn btn-sm btn-outline admin-only" onclick="openEditUserModal('${u.id}')">✏️ Sửa</button>
+            ${u.role === 'tester' ? `<button class="btn btn-sm btn-outline admin-only" onclick="jumpToUserAssignments('${u.username}')" title="Xem việc đã giao">📋 Việc</button>` : ''}
+            ${u.username !== 'admin' ? `
+              <button class="btn btn-sm ${isLocked ? 'btn-primary' : 'btn-danger'} admin-only" onclick="toggleLockUser('${u.id}')">
+                ${isLocked ? '🔓' : '🔒'}
+              </button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openCreateUserModal() {
+  document.getElementById('user-modal-title').textContent = '👥 Thêm Nhân viên Mới';
+  document.getElementById('uf-user-id').value = '';
+  document.getElementById('uf-name').value = '';
+  document.getElementById('uf-username').value = '';
+  document.getElementById('uf-username').removeAttribute('readonly');
+  document.getElementById('uf-password').value = '123';
+  document.getElementById('uf-role').value = 'tester';
+  document.getElementById('uf-email').value = '';
+
+  renderUserProjectCheckboxes([]);
+  openModal('modal-user-form');
+}
+
+function openEditUserModal(userId) {
+  initUsersList();
+  const u = state.usersList.find(x => x.id === userId);
+  if (!u) return;
+
+  document.getElementById('user-modal-title').textContent = '✏️ Chỉnh sửa Thông tin Nhân sự';
+  document.getElementById('uf-user-id').value = u.id;
+  document.getElementById('uf-name').value = u.name;
+  document.getElementById('uf-username').value = u.username;
+  document.getElementById('uf-username').setAttribute('readonly', 'true');
+  document.getElementById('uf-password').value = u.password;
+  document.getElementById('uf-role').value = u.role;
+  document.getElementById('uf-email').value = u.email || '';
+
+  renderUserProjectCheckboxes(u.assignedProjects || []);
+  openModal('modal-user-form');
+}
+
+function renderUserProjectCheckboxes(selectedProjectIds) {
+  const container = document.getElementById('uf-projects-checkboxes');
+  if (!container) return;
+
+  container.innerHTML = (state.projects || []).map(p => {
+    const isChecked = selectedProjectIds.includes(p.id);
+    return `
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px">
+        <input type="checkbox" name="uf-proj" value="${p.id}" ${isChecked ? 'checked' : ''} />
+        <span><strong>${p.code}</strong> — ${p.name}</span>
+      </label>
+    `;
+  }).join('');
+}
+
+function confirmSaveUser() {
+  const id = document.getElementById('uf-user-id').value;
+  const name = document.getElementById('uf-name').value.trim();
+  const username = document.getElementById('uf-username').value.trim();
+  const password = document.getElementById('uf-password').value.trim();
+  const role = document.getElementById('uf-role').value;
+  const email = document.getElementById('uf-email').value.trim();
+
+  if (!name || !username || !password) {
+    showToast('⚠️ Vui lòng nhập đầy đủ Họ tên, Tên đăng nhập và Mật khẩu!', 'error');
+    return;
+  }
+
+  const selectedProjects = Array.from(document.querySelectorAll('input[name="uf-proj"]:checked')).map(cb => cb.value);
+
+  initUsersList();
+
+  if (id) {
+    // Edit
+    const u = state.usersList.find(x => x.id === id);
+    if (u) {
+      u.name = name;
+      u.password = password;
+      u.role = role;
+      u.email = email;
+      u.assignedProjects = selectedProjects;
+    }
+    showToast(`✅ Đã cập nhật nhân sự: ${name}`, 'success');
+  } else {
+    // Add new
+    if (state.usersList.some(x => x.username.toLowerCase() === username.toLowerCase())) {
+      showToast('⚠️ Tên đăng nhập đã tồn tại trong hệ thống!', 'error');
+      return;
+    }
+    state.usersList.push({
+      id: 'usr_' + Date.now(),
+      username,
+      password,
+      name,
+      role,
+      roleTitle: role === 'admin' ? 'Quản lý (Admin/PM)' : role === 'tester' ? 'Người kiểm tra' : 'Lập trình viên',
+      email,
+      assignedProjects: selectedProjects,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString().slice(0, 10)
+    });
+    showToast(`🎉 Đã thêm thành công nhân sự mới: ${name}`, 'success');
+  }
+
+  saveUsersList();
+  closeModal('modal-user-form');
+  renderUsersPage();
+}
+
+function toggleLockUser(userId) {
+  initUsersList();
+  const u = state.usersList.find(x => x.id === userId);
+  if (!u) return;
+
+  u.status = u.status === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
+  saveUsersList();
+  showToast(`${u.status === 'LOCKED' ? '🔒 Đã khóa tài khoản' : '🔓 Đã mở khóa tài khoản'} ${u.username}`, 'info');
+  renderUsersPage();
+}
+
+// ================================================================
+// PHÂN HỆ GIAO VIỆC & HẠN CHÓT (TASK ASSIGNMENT & SCHEDULING)
+// ================================================================
+const DEFAULT_ASSIGNMENTS_DATA = [];
+
+function initAssignments() {
+  const saved = localStorage.getItem('openqas_assignments_list');
+  if (saved) {
+    try {
+      state.assignments = JSON.parse(saved);
+    } catch(e) {}
+  }
+  if (!state.assignments) {
+    state.assignments = [];
+  }
+}
+
+function saveAssignments() {
+  localStorage.setItem('openqas_assignments_list', JSON.stringify(state.assignments));
+}
+
+function getTaskDeadlineStatus(task) {
+  if (task.status === 'DONE' || task.status === 'PASSED') {
+    return { label: '✅ Đã Đạt', badgeClass: 'badge-pass', isOverdue: false };
+  }
+  if (task.status === 'FAILED') {
+    return { label: '❌ Bị Lỗi', badgeClass: 'badge-fail', isOverdue: false };
+  }
+  
+  if (!task.dueDate) {
+    return { label: '⏳ Chưa có hạn', badgeClass: 'badge-nr', isOverdue: false };
+  }
+
+  const now = new Date();
+  const due = new Date(task.dueDate + 'T23:59:59');
+  const diffTime = due.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return { label: `⚠️ Quá hạn ${Math.abs(diffDays)} ngày`, badgeClass: 'badge-fail', isOverdue: true, diffDays };
+  } else if (diffDays === 0) {
+    return { label: '⏰ Đến hạn hôm nay', badgeClass: 'badge-p1', isOverdue: false, diffDays };
+  } else {
+    return { label: `⏳ Còn ${diffDays} ngày`, badgeClass: 'badge-nr', isOverdue: false, diffDays };
+  }
+}
+
+// ================================================================
+// UNIFIED ENTERPRISE ASSIGNMENT & DISPATCH COMMAND CENTER
+// ================================================================
+
+const ARCH_LAYERS = [
+  {
+    id: 'LAYER_CORE',
+    name: 'Tầng Xác Thực, Bảo Mật & Quản Trị Hệ Thống',
+    badge: 'Core & Security',
+    badgeColor: '#2563eb',
+    desc: 'Quản trị phân quyền, phiên trực ban, cấu hình trạm gác và an ninh nền tảng',
+    moduleIds: ['M01', 'M08', 'M10']
+  },
+  {
+    id: 'LAYER_BIZ',
+    name: 'Tầng Nghiệp Vụ Khách & Vận Hành Trạm Gác',
+    badge: 'Operations & Kiosk',
+    badgeColor: '#059669',
+    desc: 'Luồng check-in khách đơn, đoàn khách, thẻ xe, thu hồi thẻ và giao diện trạm',
+    moduleIds: ['M02', 'M03', 'M04', 'M05']
+  },
+  {
+    id: 'LAYER_DATA',
+    name: 'Tầng Dữ Liệu Lịch Sử, Ngoại Lệ & Báo Cáo',
+    badge: 'Analytics & Audit',
+    badgeColor: '#d97706',
+    desc: 'Dòng thời gian timeline, sổ sách ngoại lệ DataEntry, báo cáo thống kê & ISO',
+    moduleIds: ['M06', 'M07', 'M09']
+  },
+  {
+    id: 'LAYER_HARDWARE',
+    name: 'Tầng Thiết Bị Ngoại Vi & Nền Tảng Chịu Lỗi',
+    badge: 'Hardware & NFR',
+    badgeColor: '#7c3aed',
+    desc: 'Đầu đọc CCCD chip, thẻ RFID, máy quét QR, DeviceService và khả năng chạy offline',
+    moduleIds: ['M11', 'M12']
+  }
+];
+
+let treeSelectedTcIds = new Set();
+
+function switchAsgMainTab(tabName) {
+  state.asgCurrentTab = tabName;
+
+  const btnOverview = document.getElementById('asg-tab-btn-overview');
+  const btnDetail = document.getElementById('asg-tab-btn-detail');
+  const paneOverview = document.getElementById('asg-tab-content-overview');
+  const paneDetail = document.getElementById('asg-tab-content-detail');
+
+  if (btnOverview) btnOverview.classList.toggle('active', tabName === 'overview');
+  if (btnDetail) btnDetail.classList.toggle('active', tabName === 'detail');
+
+  if (paneOverview) paneOverview.style.display = tabName === 'overview' ? 'block' : 'none';
+  if (paneDetail) paneDetail.style.display = tabName === 'detail' ? 'block' : 'none';
+
+  if (tabName === 'overview') {
+    renderAsgOverviewTab();
+  } else if (tabName === 'detail') {
+    renderAsgDetailTab();
+  }
+}
+
+function handleAsgProjectChange(projectId) {
+  state.currentProjectId = projectId;
+  syncActiveProjectContext();
+  treeSelectedTcIds.clear();
+  renderAssignmentsPage();
+}
+
+function renderAssignmentsPage() {
+  initAssignments();
+  initUsersList();
+
+  const p = getActiveProject();
+  if (!p) return;
+
+  // Populate Project Selector
+  const projSel = document.getElementById('asg-project-selector');
+  if (projSel) {
+    projSel.innerHTML = (state.projects || []).map(prj =>
+      `<option value="${prj.id}" ${prj.id === p.id ? 'selected' : ''}>📂 ${prj.name} (${(prj.testCases || []).length} bài)</option>`
+    ).join('');
+  }
+
+  if (!state.asgCurrentTab) {
+    state.asgCurrentTab = 'overview';
+  }
+
+  switchAsgMainTab(state.asgCurrentTab);
+}
+
+// ================================================================
+// TAB 1: THỐNG KÊ TỔNG QUAN PHÂN BỔ (MA TRẬN NHÂN SỰ)
+// ================================================================
+function renderAsgOverviewTab() {
+  const p = getActiveProject();
+  if (!p) return;
+
+  const allTcs = p.testCases || [];
+  const projectModules = p.modules || [];
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
+
+  // Map assignments by tcId
+  const asgMap = new Map();
+  assignments.forEach(a => asgMap.set(a.tcId, a));
+
+  let doneCount = 0;
+  let pendingCount = 0;
+  let overdueCount = 0;
+  let assignedCount = 0;
+
+  allTcs.forEach(tc => {
+    const asg = asgMap.get(tc.id);
+    if (asg) {
+      assignedCount++;
+      const ds = getTaskDeadlineStatus(asg);
+      if (asg.status === 'DONE' || asg.status === 'PASSED') {
+        doneCount++;
+      } else {
+        pendingCount++;
+        if (ds.isOverdue) overdueCount++;
+      }
+    }
+  });
+
+  const unassignedCount = Math.max(0, allTcs.length - assignedCount);
+  const assignedPct = allTcs.length > 0 ? Math.round((assignedCount / allTcs.length) * 100) : 0;
+
+  // Update Top Metric Cards
+  const statTotal = document.getElementById('asg-stat-total');
+  if (statTotal) statTotal.textContent = allTcs.length;
+  const statTotalDesc = document.getElementById('asg-stat-total-desc');
+  if (statTotalDesc) statTotalDesc.textContent = `${projectModules.length} Phân hệ nghiệp vụ`;
+
+  const statAssigned = document.getElementById('asg-stat-assigned');
+  if (statAssigned) statAssigned.textContent = assignedCount;
+  const statAssignedDesc = document.getElementById('asg-stat-assigned-desc');
+  if (statAssignedDesc) statAssignedDesc.textContent = `${assignedPct}% khối lượng dự án`;
+
+  const statUnassigned = document.getElementById('asg-stat-unassigned');
+  if (statUnassigned) statUnassigned.textContent = unassignedCount;
+
+  const statPending = document.getElementById('asg-stat-pending');
+  if (statPending) statPending.textContent = pendingCount;
+
+  const statOverdue = document.getElementById('asg-stat-overdue');
+  if (statOverdue) statOverdue.textContent = overdueCount;
+
+  // Render Workload Matrix
+  const tbody = document.getElementById('asg-workload-tbody');
+  if (!tbody) return;
+
+  const testers = (state.usersList || []).filter(u => u.role === 'tester');
+
+  if (testers.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted)">
+          Chưa có Tester nào trong hệ thống. Vui lòng thêm Tester tại mục <strong>Quản lý Nhân sự</strong>.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = testers.map(u => {
+    const userAssignments = assignments.filter(a => a.assigneeUsername === u.username);
+    const userTcCount = userAssignments.length;
+    const userPct = allTcs.length > 0 ? ((userTcCount / allTcs.length) * 100).toFixed(1) : '0.0';
+
+    const modBreakdown = [];
+    projectModules.forEach(m => {
+      const modTotal = allTcs.filter(tc => tc.module === m.id).length;
+      if (modTotal === 0) return;
+      const userModCount = userAssignments.filter(a => {
+        if (a.module === m.id) return true;
+        const tc = allTcs.find(t => t.id === a.tcId);
+        return tc && tc.module === m.id;
+      }).length;
+
+      if (userModCount > 0) {
+        const modPct = Math.round((userModCount / modTotal) * 100);
+        modBreakdown.push({
+          id: m.id,
+          name: m.name,
+          count: userModCount,
+          total: modTotal,
+          pct: modPct
+        });
+      }
+    });
+
+    const modCount = modBreakdown.length;
+
+    let chipsHtml = '';
+    if (modBreakdown.length === 0) {
+      chipsHtml = `<span style="font-size:12px; color:var(--text-muted); font-style:italic">Chưa được phân công phân hệ nào</span>`;
+    } else {
+      chipsHtml = modBreakdown.map(b => {
+        let chipBg = 'rgba(37, 99, 235, 0.08)';
+        let chipColor = '#2563eb';
+        let chipBorder = 'rgba(37, 99, 235, 0.25)';
+        if (b.pct === 100) {
+          chipBg = 'rgba(16, 185, 129, 0.1)';
+          chipColor = '#059669';
+          chipBorder = 'rgba(16, 185, 129, 0.3)';
+        } else if (b.pct >= 50) {
+          chipBg = 'rgba(59, 130, 246, 0.1)';
+          chipColor = '#1d4ed8';
+          chipBorder = 'rgba(59, 130, 246, 0.3)';
+        }
+        return `
+          <span class="asg-mod-chip" style="background:${chipBg}; color:${chipColor}; border-color:${chipBorder}" title="${b.name}: ${b.count}/${b.total} kịch bản (${b.pct}%)">
+            <strong>${b.id}:</strong> ${b.count}/${b.total} <span style="font-weight:700">(${b.pct}%)</span>
+          </span>
+        `;
+      }).join('');
+    }
+
+    let statusBadge = '';
+    if (userTcCount === 0) {
+      statusBadge = `<span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:700">🟢 Đang rảnh (0 việc)</span>`;
+    } else if (userTcCount > 40) {
+      statusBadge = `<span class="badge badge-fail" style="font-weight:800; animation:pulse 2s infinite">🔴 Quá tải (${userTcCount} bài)</span>`;
+    } else if (userTcCount >= 20) {
+      statusBadge = `<span class="badge badge-p2" style="font-weight:700">🟠 Tải cao (${userTcCount} bài)</span>`;
+    } else {
+      statusBadge = `<span class="badge badge-pass" style="font-weight:700">🟢 Cân bằng (${userTcCount} bài)</span>`;
+    }
+
+    const barWidth = Math.min(100, Math.round(Number(userPct)));
+    const barColor = userTcCount > 40 ? '#ef4444' : userTcCount >= 20 ? '#f59e0b' : '#10b981';
+
+    return `
+      <tr>
+        <td>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px">
+              ${u.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:800; font-size:13px; color:var(--text-primary)">${u.name}</div>
+              <div style="font-size:11px; color:var(--text-muted)">@${u.username}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-weight:800; font-size:13.5px; color:#2563eb">
+          ${userTcCount} <span style="font-size:11px; font-weight:500; color:var(--text-muted)">/ ${allTcs.length}</span>
+        </td>
+        <td>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div class="progress-bar-wrapper" style="flex:1; height:7px; background:var(--border)">
+              <div class="progress-bar" style="width:${barWidth}%; background:${barColor}"></div>
+            </div>
+            <strong style="font-size:12px; width:45px; text-align:right">${userPct}%</strong>
+          </div>
+        </td>
+        <td style="font-weight:700; font-size:12.5px; text-align:center">
+          ${modCount} <span style="font-size:11px; font-weight:500; color:var(--text-muted)">/ ${projectModules.length}</span>
+        </td>
+        <td>
+          ${modCount === 0 ? `<span style="color:var(--text-muted); font-size:12px">Chưa nhận phân hệ nào</span>` : `
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="font-size:12px; font-weight:700; color:#2563eb">${modCount}/${projectModules.length} Phân hệ</span>
+              <button type="button" class="btn btn-xs btn-outline" onclick="openTesterWorkloadModal('${u.username}')" style="font-size:11px; padding:2px 8px; font-weight:700" title="Mở chi tiết các phân hệ đã giao">
+                📊 Xem chi tiết (${modCount})
+              </button>
+            </div>
+          `}
+        </td>
+        <td>${statusBadge}</td>
+        <td>
+          <div style="display:flex; gap:4px">
+            <button type="button" class="btn btn-xs btn-primary" onclick="jumpToDetailForTester('${u.username}')" title="Chuyển sang Tab 2 để điều phối kịch bản cho Tester này" style="font-weight:700; white-space:nowrap">
+              👉 Điều phối
+            </button>
+            ${userTcCount > 0 ? `
+              <button type="button" class="btn btn-xs btn-outline admin-only" onclick="revokeAllTesterAssignments('${u.username}')" title="Thu hồi toàn bộ kịch bản đã giao cho Tester này" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3)">
+                🗑️ Thu hồi
+              </button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function jumpToDetailForTester(username) {
+  state.asgTargetAssignee = username;
+  switchAsgMainTab('detail');
+  const sel = document.getElementById('detail-assignee');
+  if (sel) {
+    sel.value = username;
+    onDetailAssigneeChange(username);
+  }
+}
+
+// ================================================================
+// TAB 2: CẤU HÌNH GIAO VIỆC CHI TIẾT (TỐI GIẢN & MASTER-DETAIL 1 HÀNG)
+// ================================================================
+function renderAsgDetailTab() {
+  const p = getActiveProject();
+  if (!p) return;
+
+  const testers = (state.usersList || []).filter(u => u.role === 'tester');
+  const assigneeSel = document.getElementById('detail-assignee');
+
+  if (assigneeSel) {
+    if (testers.length === 0) {
+      assigneeSel.innerHTML = `<option value="">-- Chưa có Tester nào --</option>`;
+    } else {
+      const prevVal = state.asgTargetAssignee || assigneeSel.value;
+      assigneeSel.innerHTML = testers.map(u => {
+        const myTasksCount = (state.assignments || []).filter(a => a.projectId === p.id && a.assigneeUsername === u.username && a.status !== 'DONE' && a.status !== 'PASSED').length;
+        return `<option value="${u.username}" ${prevVal === u.username ? 'selected' : ''}>👤 ${u.name} (${myTasksCount} việc đang làm)</option>`;
+      }).join('');
+      if (prevVal && testers.some(u => u.username === prevVal)) {
+        assigneeSel.value = prevVal;
+      }
+    }
+  }
+
+  // Set default dates if empty
+  const today = new Date().toISOString().slice(0, 10);
+  const due = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
+  const startDateEl = document.getElementById('detail-start-date');
+  const dueDateEl = document.getElementById('detail-due-date');
+  if (startDateEl && !startDateEl.value) startDateEl.value = today;
+  if (dueDateEl && !dueDateEl.value) dueDateEl.value = due;
+
+  const currentTesterUsername = assigneeSel ? assigneeSel.value : '';
+  renderTesterCurrentWorkload(currentTesterUsername);
+
+  // Set default active module
+  const projectModules = p.modules || [];
+  if (!state.asgActiveModuleId || !projectModules.some(m => m.id === state.asgActiveModuleId)) {
+    state.asgActiveModuleId = projectModules.length > 0 ? projectModules[0].id : '';
+  }
+
+  renderAsgModuleList();
+  renderAsgTcTable();
+  updateDetailDockSummary();
+}
+
+function onDetailAssigneeChange(username) {
+  state.asgTargetAssignee = username;
+  renderTesterCurrentWorkload(username);
+  updateDetailDockSummary();
+}
+
+function renderTesterCurrentWorkload(username) {
+  const p = getActiveProject();
+  const statusContainer = document.getElementById('detail-user-inline-status');
+  const btnViewWorkload = document.getElementById('detail-btn-view-workload');
+  const btnRevokeUser = document.getElementById('detail-btn-revoke-user');
+  if (!p) return;
+
+  const allTcs = p.testCases || [];
+  const projectModules = p.modules || [];
+  const user = (state.usersList || []).find(u => u.username === username);
+
+  if (!user) {
+    if (statusContainer) statusContainer.innerHTML = '';
+    if (btnViewWorkload) btnViewWorkload.style.display = 'none';
+    if (btnRevokeUser) btnRevokeUser.style.display = 'none';
+    return;
+  }
+
+  const userAssignments = (state.assignments || []).filter(a => a.projectId === p.id && a.assigneeUsername === username);
+  const userTcCount = userAssignments.length;
+  const userPct = allTcs.length > 0 ? ((userTcCount / allTcs.length) * 100).toFixed(1) : '0.0';
+
+  const modBreakdown = [];
+  projectModules.forEach(m => {
+    const modTotal = allTcs.filter(tc => tc.module === m.id).length;
+    if (modTotal === 0) return;
+    const count = userAssignments.filter(a => {
+      if (a.module === m.id) return true;
+      const tc = allTcs.find(t => t.id === a.tcId);
+      return tc && tc.module === m.id;
+    }).length;
+
+    if (count > 0) {
+      modBreakdown.push({
+        id: m.id,
+        name: m.name,
+        count,
+        total: modTotal,
+        pct: Math.round((count / modTotal) * 100)
+      });
+    }
+  });
+
+  if (statusContainer) {
+    if (userTcCount === 0) {
+      statusContainer.innerHTML = `<span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:700">🟢 Đang rảnh (0 việc)</span>`;
+    } else if (userTcCount > 40) {
+      statusContainer.innerHTML = `<span class="badge badge-fail" style="font-weight:800">🔴 Quá tải: <strong>${userTcCount}</strong>/${allTcs.length} bài (${userPct}%)</span>`;
+    } else if (userTcCount >= 20) {
+      statusContainer.innerHTML = `<span class="badge badge-p2" style="font-weight:700">🟠 Tải cao: <strong>${userTcCount}</strong>/${allTcs.length} bài (${userPct}%)</span>`;
+    } else {
+      statusContainer.innerHTML = `<span class="badge badge-pass" style="font-weight:700">🟢 Cân bằng: <strong>${userTcCount}</strong>/${allTcs.length} bài (${userPct}%)</span>`;
+    }
+  }
+
+  if (btnViewWorkload) {
+    btnViewWorkload.style.display = 'inline-flex';
+    btnViewWorkload.innerHTML = `📊 Chi tiết (${modBreakdown.length} phân hệ)`;
+    btnViewWorkload.title = `Xem chi tiết phân bổ ${modBreakdown.length} phân hệ của ${user.name}`;
+  }
+
+  if (btnRevokeUser) {
+    btnRevokeUser.style.display = userTcCount > 0 ? 'inline-flex' : 'none';
+    btnRevokeUser.title = `Thu hồi toàn bộ ${userTcCount} kịch bản của ${user.name}`;
+  }
+}
+
+function openTesterWorkloadModal(targetUsername) {
+  const p = getActiveProject();
+  if (!p) return;
+
+  const username = targetUsername || state.asgTargetAssignee || document.getElementById('detail-assignee')?.value;
+  const user = (state.usersList || []).find(u => u.username === username);
+  if (!user) {
+    showToast('⚠️ Vui lòng chọn Kiểm thử viên!', 'error');
+    return;
+  }
+
+  const allTcs = p.testCases || [];
+  const projectModules = p.modules || [];
+  const userAssignments = (state.assignments || []).filter(a => a.projectId === p.id && a.assigneeUsername === username);
+  const userTcCount = userAssignments.length;
+  const userPct = allTcs.length > 0 ? ((userTcCount / allTcs.length) * 100).toFixed(1) : '0.0';
+
+  const modBreakdown = [];
+  projectModules.forEach(m => {
+    const modTotal = allTcs.filter(tc => tc.module === m.id).length;
+    if (modTotal === 0) return;
+    const count = userAssignments.filter(a => {
+      if (a.module === m.id) return true;
+      const tc = allTcs.find(t => t.id === a.tcId);
+      return tc && tc.module === m.id;
+    }).length;
+
+    if (count > 0) {
+      modBreakdown.push({
+        id: m.id,
+        name: m.name,
+        count,
+        total: modTotal,
+        pct: Math.round((count / modTotal) * 100)
+      });
+    }
+  });
+
+  const titleEl = document.getElementById('modal-tester-workload-title');
+  if (titleEl) {
+    titleEl.innerHTML = `📊 Phân Bổ Công Việc: <span style="color:#2563eb">${user.name}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal">(@${user.username})</span>`;
+  }
+
+  const bodyEl = document.getElementById('modal-tester-workload-body');
+  if (bodyEl) {
+    let statusText = '🟢 Tải cân bằng';
+    if (userTcCount === 0) statusText = '🟢 Đang rảnh (0 việc)';
+    else if (userTcCount > 40) statusText = '🔴 Quá tải (khối lượng lớn)';
+    else if (userTcCount >= 20) statusText = '🟠 Tải cao';
+
+    bodyEl.innerHTML = `
+      <div style="background:var(--bg-surface); border:1.5px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
+        <div>
+          <span style="font-size:13px; font-weight:700">Tổng kịch bản nhận:</span>
+          <strong style="color:#2563eb; font-size:15px; margin-left:4px">${userTcCount} / ${allTcs.length}</strong>
+          <span style="font-size:12px; color:var(--text-muted)">(${userPct}%)</span>
+        </div>
+        <div>
+          <span style="font-size:13px; font-weight:700">Tham gia:</span>
+          <strong style="margin-left:4px">${modBreakdown.length} / ${projectModules.length}</strong>
+          <span style="font-size:12px; color:var(--text-muted)">Phân hệ</span>
+        </div>
+        <div>
+          <span class="badge ${userTcCount>40?'badge-fail':userTcCount>=20?'badge-p2':'badge-pass'}" style="font-size:12px; font-weight:800">${statusText}</span>
+        </div>
+      </div>
+
+      <h4 style="font-size:13px; font-weight:800; margin:0 0 8px 0; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px">
+        Chi Tiết ${modBreakdown.length} Phân Hệ Đang Phụ Trách
+      </h4>
+
+      ${modBreakdown.length === 0 ? `
+        <div style="text-align:center; padding:32px; color:var(--text-muted); font-size:13px">
+          🟢 Kiểm thử viên hiện đang rảnh rỗi (chưa được giao kịch bản nào).
+        </div>
+      ` : `
+        <div class="table-responsive" style="max-height:360px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; margin:0">
+          <table class="data-table" style="margin:0; font-size:12px">
+            <thead>
+              <tr style="background:rgba(0,0,0,0.02)">
+                <th style="width:75px">Mã PH</th>
+                <th>Tên Phân Hệ Nghiệp Vụ</th>
+                <th style="width:105px; text-align:center">Số bài nhận</th>
+                <th style="width:90px; text-align:center">Tỷ lệ (%)</th>
+                <th style="width:120px">Tiến độ phân bổ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${modBreakdown.map(b => `
+                <tr>
+                  <td><span class="badge badge-outline" style="font-family:monospace; font-weight:800; color:#2563eb">[${b.id}]</span></td>
+                  <td style="font-weight:700">${b.name}</td>
+                  <td style="text-align:center; font-weight:800">${b.count} / ${b.total}</td>
+                  <td style="text-align:center">
+                    <span class="badge ${b.pct===100?'badge-pass':'badge-nr'}" style="font-size:10.5px">${b.pct}%</span>
+                  </td>
+                  <td>
+                    <div class="progress-bar-wrapper" style="height:5px; background:var(--border)">
+                      <div class="progress-bar" style="width:${b.pct}%; background:${b.pct===100?'#10b981':b.pct<40?'#f59e0b':'#2563eb'}"></div>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    `;
+  }
+
+  const footerLeftEl = document.getElementById('modal-tester-workload-footer-left');
+  if (footerLeftEl) {
+    if (userTcCount > 0) {
+      footerLeftEl.innerHTML = `
+        <button type="button" class="btn btn-outline admin-only" onclick="revokeAllTesterAssignments('${user.username}'); closeModal('modal-tester-workload');" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.4); font-size:12px">
+          🗑️ Thu hồi toàn bộ ${userTcCount} kịch bản của ${user.name.split('(')[0].trim()}
+        </button>
+      `;
+    } else {
+      footerLeftEl.innerHTML = '';
+    }
+  }
+
+  openModal('modal-tester-workload');
+}
+
+function revokeCurrentSelectedTester() {
+  const username = document.getElementById('detail-assignee')?.value;
+  if (!username) return;
+  revokeAllTesterAssignments(username);
+}
+
+function renderAsgModuleList() {
+  const p = getActiveProject();
+  const listEl = document.getElementById('detail-modules-list');
+  if (!p || !listEl) return;
+
+  const allTcs = p.testCases || [];
+  const projectModules = p.modules || [];
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
+  const asgMap = new Map();
+  assignments.forEach(a => asgMap.set(a.tcId, a));
+
+  const totalModBadge = document.getElementById('detail-mod-total-badge');
+  if (totalModBadge) totalModBadge.textContent = `${projectModules.length} Phân hệ`;
+
+  listEl.innerHTML = projectModules.map(m => {
+    const modTcs = allTcs.filter(tc => tc.module === m.id);
+    const modTotal = modTcs.length;
+    const modAssigned = modTcs.filter(tc => asgMap.has(tc.id)).length;
+    const selectedInMod = modTcs.filter(tc => treeSelectedTcIds.has(tc.id)).length;
+    const isAllSelected = modTotal > 0 && selectedInMod === modTotal;
+    const isActive = m.id === state.asgActiveModuleId;
+    const pct = modTotal > 0 ? Math.round((modAssigned / modTotal) * 100) : 0;
+
+    return `
+      <li class="asg-mod-item ${isActive ? 'active' : ''}" onclick="selectModuleInDetail('${m.id}')" title="[${m.id}] ${m.name}: ${modAssigned}/${modTotal} bài (${pct}%)">
+        <input type="checkbox"
+          id="mod-chk-${m.id}"
+          ${isAllSelected ? 'checked' : ''}
+          onchange="toggleModuleSelection('${m.id}', this.checked)"
+          onclick="event.stopPropagation()"
+          style="width:15px; height:15px; cursor:pointer; flex-shrink:0"
+          title="Chọn / Bỏ chọn toàn bộ ${modTotal} bài của phân hệ [${m.id}]"
+        />
+        <div class="asg-mod-content-row">
+          <span class="asg-mod-title-text">
+            <strong style="color:#2563eb">[${m.id}]</strong> ${m.name}
+          </span>
+          <span class="asg-mod-count-badge">${modTotal}</span>
+          <div class="asg-mod-mini-progress" title="Đã giao: ${modAssigned}/${modTotal} (${pct}%)">
+            <div class="asg-mod-mini-progress-fill" style="width:${pct}%; background:${pct===100?'#10b981':pct<40?'#f59e0b':'#2563eb'}"></div>
+          </div>
+        </div>
+      </li>
+    `;
+  }).join('');
+
+  // Set indeterminate state on checkboxes
+  projectModules.forEach(m => {
+    const modTcs = allTcs.filter(tc => tc.module === m.id);
+    const selectedCount = modTcs.filter(tc => treeSelectedTcIds.has(tc.id)).length;
+    const chk = document.getElementById(`mod-chk-${m.id}`);
+    if (chk) {
+      chk.indeterminate = (selectedCount > 0 && selectedCount < modTcs.length);
+    }
+  });
+}
+
+function selectModuleInDetail(moduleId) {
+  state.asgActiveModuleId = moduleId;
+  renderAsgModuleList();
+  renderAsgTcTable();
+}
+
+function renderAsgTcTable() {
+  const p = getActiveProject();
+  const panelHead = document.getElementById('detail-panel-head');
+  const tbody = document.getElementById('detail-tc-tbody');
+  if (!p || !tbody) return;
+
+  const projectModules = p.modules || [];
+  if (projectModules.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px">Chưa có phân hệ nào.</td></tr>`;
+    return;
+  }
+
+  const currMod = projectModules.find(m => m.id === state.asgActiveModuleId) || projectModules[0];
+  const allTcs = p.testCases || [];
+  const modAllTcs = allTcs.filter(tc => tc.module === currMod.id);
+
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
+  const asgMap = new Map();
+  assignments.forEach(a => asgMap.set(a.tcId, a));
+
+  const modAssigned = modAllTcs.filter(tc => asgMap.has(tc.id)).length;
+  const modUnassigned = modAllTcs.length - modAssigned;
+
+  // Filter test cases
+  const prioFilter = document.getElementById('detail-filter-prio')?.value || '';
+  const statusFilter = document.getElementById('detail-filter-status')?.value || '';
+  const searchFilter = (document.getElementById('detail-filter-search')?.value || '').toLowerCase().trim();
+
+  const visibleTcs = modAllTcs.filter(tc => {
+    if (prioFilter && tc.priority !== prioFilter) return false;
+    const isAssigned = asgMap.has(tc.id);
+    if (statusFilter === 'UNASSIGNED' && isAssigned) return false;
+    if (statusFilter === 'ASSIGNED' && !isAssigned) return false;
+    if (searchFilter) {
+      const matchId = (tc.id || '').toLowerCase().includes(searchFilter);
+      const matchName = (tc.name || '').toLowerCase().includes(searchFilter);
+      const matchDesc = (tc.description || '').toLowerCase().includes(searchFilter);
+      if (!matchId && !matchName && !matchDesc) return false;
+    }
+    return true;
+  });
+
+  const selectedInVisible = visibleTcs.filter(tc => treeSelectedTcIds.has(tc.id)).length;
+  const isAllVisibleSelected = visibleTcs.length > 0 && selectedInVisible === visibleTcs.length;
+  const isIndeterminate = selectedInVisible > 0 && selectedInVisible < visibleTcs.length;
+
+  if (panelHead) {
+    panelHead.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px">
+        <span class="badge badge-outline" style="font-family:monospace; font-weight:800; font-size:12.5px; color:#2563eb">[${currMod.id}]</span>
+        <h3 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">${currMod.name}</h3>
+        <span class="badge badge-nr" style="font-size:11px">${modAllTcs.length} bài (${modAssigned} đã giao / ${modUnassigned} chưa giao)</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:6px">
+        <button type="button" class="btn btn-xs btn-outline" onclick="batchSelectInActiveModule('ALL')" style="font-weight:700">
+          ☑️ Chọn tất cả (${visibleTcs.length})
+        </button>
+        <button type="button" class="btn btn-xs btn-outline" onclick="batchSelectInActiveModule('NONE')" style="font-weight:700">
+          ⬜ Bỏ chọn
+        </button>
+      </div>
+    `;
+  }
+
+  // Update check all header in the table
+  const checkAllActive = document.getElementById('detail-check-all-active');
+  if (checkAllActive) {
+    checkAllActive.checked = isAllVisibleSelected;
+    checkAllActive.indeterminate = isIndeterminate;
+  }
+
+  if (visibleTcs.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center; padding:36px; color:var(--text-muted)">
+          🔍 Không có kịch bản nào phù hợp với bộ lọc trong phân hệ [${currMod.id}].
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = visibleTcs.map(tc => {
+    const isChecked = treeSelectedTcIds.has(tc.id);
+    const asg = asgMap.get(tc.id);
+
+    let prioBadge = `<span class="badge badge-nr" style="font-size:10.5px; padding:2px 5px">${tc.priority || 'P3'}</span>`;
+    if (tc.priority === 'P1') prioBadge = `<span class="badge badge-p1" style="font-weight:800; font-size:10.5px; padding:2px 5px">🔴 P1</span>`;
+    else if (tc.priority === 'P2') prioBadge = `<span class="badge badge-p2" style="font-size:10.5px; padding:2px 5px">🟠 P2</span>`;
+    else if (tc.priority === 'P3') prioBadge = `<span class="badge badge-p3" style="font-size:10.5px; padding:2px 5px">🟡 P3</span>`;
+    else if (tc.priority === 'P4') prioBadge = `<span class="badge badge-p4" style="font-size:10.5px; padding:2px 5px">🟢 P4</span>`;
+
+    let assigneeHtml = '';
+    let statusHtml = '';
+    let dateHtml = '<span style="color:var(--text-muted); font-size:11px">--</span>';
+    let actionHtml = '';
+
+    if (!asg) {
+      assigneeHtml = `<span class="badge" style="background:rgba(245, 158, 11, 0.1); color:#b45309; font-size:11px; padding:2px 8px">⚪ Chưa giao</span>`;
+      statusHtml = `<span class="badge badge-nr" style="font-size:11px; color:var(--text-muted); padding:2px 8px">⚪ Chưa giao</span>`;
+      actionHtml = `<button type="button" class="btn-tc-action btn-tc-assign admin-only" onclick="quickAssignSingleTcToCurrent('${tc.id}')" title="Gán ngay kịch bản này cho Tester đang chọn">+ Giao</button>`;
+    } else {
+      const ds = getTaskDeadlineStatus(asg);
+      const shortName = asg.assigneeName.split('(')[0].trim();
+      assigneeHtml = `
+        <span class="tc-assignee-tag" title="Phân công: ${asg.assigneeName} (${asg.assigneeUsername || ''})">
+          👤 <strong>${shortName}</strong>
+        </span>
+      `;
+
+      if (asg.status === 'PASSED') {
+        statusHtml = `<span class="badge badge-pass" style="font-weight:700; font-size:11px; padding:2px 8px">✅ Đã Đạt</span>`;
+      } else if (asg.status === 'FAILED') {
+        statusHtml = `<span class="badge badge-fail" style="font-weight:700; font-size:11px; padding:2px 8px">❌ Bị Lỗi</span>`;
+      } else if (asg.status === 'BLOCKED') {
+        statusHtml = `<span class="badge badge-p2" style="font-weight:700; font-size:11px; padding:2px 8px">🚫 Bị nghẽn</span>`;
+      } else {
+        statusHtml = `<span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700; font-size:11px; padding:2px 8px">⏳ Đang làm</span>`;
+      }
+
+      const sDate = asg.startDate || '2026-10-14';
+      const dDate = asg.dueDate || '--';
+      dateHtml = `
+        <span style="font-size:11px; font-weight:600; color:var(--text-primary); font-family:monospace" title="Bắt đầu: ${sDate} — Kết thúc: ${dDate} (${ds.label})">
+          ${sDate} ➔ ${dDate}
+        </span>
+      `;
+      actionHtml = `<button type="button" class="btn-tc-action btn-tc-cancel admin-only" onclick="cancelAssignmentForTc('${tc.id}')" title="Hủy phân công kịch bản này">✕ Hủy</button>`;
+    }
+
+    return `
+      <tr class="${isChecked ? 'selected-row' : ''}">
+        <td style="text-align:center">
+          <input type="checkbox"
+            data-tcid="${tc.id}"
+            data-modid="${currMod.id}"
+            ${isChecked ? 'checked' : ''}
+            onchange="toggleTcSelection('${tc.id}', '${currMod.id}', this.checked)"
+            style="width:15px; height:15px; cursor:pointer"
+          />
+        </td>
+        <td style="text-align:center; overflow:visible">
+          <span class="tc-code-link" onclick="openAsgTcDetail('${tc.id}')" title="Nhấp để xem bản mô tả chi tiết kịch bản">[${tc.id}]</span>
+        </td>
+        <td style="text-align:center">${prioBadge}</td>
+        <td>
+          <div class="tc-name-link" onclick="openAsgTcDetail('${tc.id}')" title="[${tc.id}] ${tc.name} — Nhấp để xem mô tả chi tiết">${tc.name}</div>
+        </td>
+        <td>${assigneeHtml}</td>
+        <td style="text-align:center">${statusHtml}</td>
+        <td style="text-align:center">${dateHtml}</td>
+        <td style="text-align:center">
+          <div style="display:flex; align-items:center; justify-content:center; gap:4px">
+            <button type="button" class="btn-tc-action btn-tc-inspect" onclick="openAsgTcDetail('${tc.id}')" title="Xem bản mô tả chi tiết kịch bản">👁️</button>
+            ${actionHtml}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAsgTcDetail(tcId) {
+  const p = getActiveProject();
+  if (!p) return;
+  const tc = (p.testCases || []).find(t => t.id === tcId);
+  if (!tc) return;
+
+  const projectModules = p.modules || [];
+  const mod = projectModules.find(m => m.id === tc.module);
+  const modName = mod ? `[${mod.id}] ${mod.name}` : (tc.module || 'M01');
+
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
+  const asg = assignments.find(a => a.tcId === tcId);
+
+  const titleEl = document.getElementById('modal-asg-tc-title');
+  const subEl = document.getElementById('modal-asg-tc-subtitle');
+  const bodyEl = document.getElementById('modal-asg-tc-body');
+  const footerLeftEl = document.getElementById('modal-asg-tc-footer-left');
+
+  if (titleEl) {
+    titleEl.innerHTML = `<span style="color:#2563eb; font-family:monospace">[${tc.id}]</span> ${tc.name}`;
+  }
+  if (subEl) {
+    subEl.textContent = `Phân hệ: ${modName} • Mức ưu tiên: ${tc.priority || 'P3'} • Tiêu chuẩn ISO/IEC/IEEE 29119`;
+  }
+
+  let prioBadgeHtml = `<span class="badge badge-nr">${tc.priority || 'P3'}</span>`;
+  if (tc.priority === 'P1') prioBadgeHtml = `<span class="badge badge-p1" style="font-weight:800">🔴 P1 Critical</span>`;
+  else if (tc.priority === 'P2') prioBadgeHtml = `<span class="badge badge-p2">🟠 P2 Important</span>`;
+  else if (tc.priority === 'P3') prioBadgeHtml = `<span class="badge badge-p3">🟡 P3 Medium</span>`;
+  else if (tc.priority === 'P4') prioBadgeHtml = `<span class="badge badge-p4">🟢 P4 Low</span>`;
+
+  let asgSectionHtml = '';
+  if (asg) {
+    const ds = getTaskDeadlineStatus(asg);
+    asgSectionHtml = `
+      <div class="asg-tc-detail-box" style="border-left:4px solid #2563eb; background:rgba(37, 99, 235, 0.04)">
+        <div class="asg-tc-detail-box-title" style="color:#2563eb">
+          <span>👥 Tình Trạng Điều Phối & Phân Công Nhân Sự</span>
+          <span class="badge ${asg.status==='PASSED'?'badge-pass':asg.status==='FAILED'?'badge-fail':'badge-nr'}">
+            ${asg.status==='PASSED'?'Đã Đạt':asg.status==='FAILED'?'Bị Lỗi':'Đang tiến hành'}
+          </span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:12.5px; margin-top:8px">
+          <div>
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700">Người thực hiện:</span><br/>
+            <strong style="color:#2563eb; font-size:13.5px">👤 ${asg.assigneeName}</strong> <span style="font-size:11px; color:var(--text-muted)">(@${asg.assigneeUsername})</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700">Thời hạn kiểm thử:</span><br/>
+            <strong>${asg.startDate || 'Hôm nay'} ➔ ${asg.dueDate}</strong> <span class="badge ${ds.badgeClass}" style="margin-left:4px">${ds.label}</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700">Người giao việc:</span><br/>
+            <span>${asg.assignedBy || 'Admin QA'} (${asg.assignedAt ? asg.assignedAt.slice(0,10) : 'vừa xong'})</span>
+          </div>
+        </div>
+        ${asg.notes ? `
+          <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); font-size:12px; color:var(--text-primary)">
+            <strong>📝 Ghi chú chỉ đạo:</strong> ${asg.notes}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    asgSectionHtml = `
+      <div class="asg-tc-detail-box" style="border-left:4px solid #f59e0b; background:rgba(245, 158, 11, 0.04)">
+        <div class="asg-tc-detail-box-title" style="color:#d97706">
+          <span>⚪ Tình Trạng Phân Công: Chưa Giao Việc</span>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-muted)">
+          Kịch bản kiểm thử này chưa được phân bổ cho Tester nào. Bạn có thể bấm nút "Giao ngay cho Tester đang chọn" ở góc dưới để phân công trực tiếp.
+        </div>
+      </div>
+    `;
+  }
+
+  const expFormatted = Array.isArray(tc.expected) ? tc.expected.join('<br/>') : (tc.expected || 'Chưa định nghĩa kết quả kỳ vọng.');
+  const stepsList = tc.steps && Array.isArray(tc.steps) && tc.steps.length > 0
+    ? tc.steps.map((s, idx) => `<div style="padding:4px 0; border-bottom:1px dashed var(--border-light)"><strong>Bước ${idx+1}:</strong> ${s}</div>`).join('')
+    : (tc.description ? `<div>${tc.description}</div>` : `<div style="color:var(--text-muted)">Thực hiện theo quy trình chuẩn của phân hệ ${modName}.</div>`);
+
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <!-- Status Pill Row -->
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px">
+        <span class="badge badge-outline" style="font-family:monospace; font-weight:800; font-size:12px; color:#2563eb">[${tc.id}]</span>
+        ${prioBadgeHtml}
+        <span class="badge badge-nr">${modName}</span>
+        ${tc.platform ? `<span class="badge" style="background:#e0e7ff; color:#3730a3">💻 ${tc.platform}</span>` : ''}
+      </div>
+
+      <!-- Assignment Status Box -->
+      ${asgSectionHtml}
+
+      <!-- Objective & Description Box -->
+      <div class="asg-tc-detail-box">
+        <div class="asg-tc-detail-box-title">
+          <span>🎯 Mục Tiêu & Nhiệm Vụ Kiểm Thử</span>
+        </div>
+        <div style="font-size:13px; line-height:1.5; color:var(--text-primary); font-weight:600">
+          ${tc.name}
+        </div>
+        ${tc.description && tc.description !== tc.name ? `
+          <div style="font-size:12.5px; line-height:1.5; color:var(--text-muted); margin-top:6px">
+            ${tc.description}
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Precondition & Test Data Row -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+        <div class="asg-tc-detail-box">
+          <div class="asg-tc-detail-box-title">
+            <span>⚙️ Điều Kiện Tiên Quyết (Preconditions)</span>
+          </div>
+          <div style="font-size:12px; line-height:1.4; color:var(--text-primary)">
+            ${tc.precondition || 'Môi trường hệ thống sẵn sàng, cơ sở dữ liệu đã đồng bộ, cán bộ đã đăng nhập ca trực hợp lệ.'}
+          </div>
+        </div>
+
+        <div class="asg-tc-detail-box">
+          <div class="asg-tc-detail-box-title">
+            <span>📊 Dữ Liệu Thử Nghiệm (Test Data)</span>
+          </div>
+          <div style="font-size:12px; line-height:1.4; color:var(--text-primary); font-family:monospace">
+            ${tc.testData || 'Sử dụng dữ liệu khách mẫu, số thẻ RFID chuẩn, CCCD gắn chip hợp lệ.'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Steps -->
+      <div class="asg-tc-detail-box">
+        <div class="asg-tc-detail-box-title">
+          <span>📝 Các Bước Thực Hiện Kiểm Thử</span>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:var(--text-primary)">
+          ${stepsList}
+        </div>
+      </div>
+
+      <!-- Expected Outcome Box -->
+      <div class="asg-tc-detail-box" style="border:1.5px solid #86efac; background:rgba(34, 197, 94, 0.05)">
+        <div class="asg-tc-detail-box-title" style="color:#15803d">
+          <span>✅ Kết Quả Kỳ Vọng Của Hệ Thống (Expected Results)</span>
+        </div>
+        <div style="font-size:12.5px; line-height:1.5; color:#166534; font-weight:600">
+          ${expFormatted}
+        </div>
+      </div>
+    `;
+  }
+
+  if (footerLeftEl) {
+    if (asg) {
+      footerLeftEl.innerHTML = `
+        <button type="button" class="btn btn-outline admin-only" onclick="cancelAssignmentForTc('${tc.id}'); closeModal('modal-asg-tc-detail');" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.4); font-size:12px; font-weight:700">
+          🗑️ Hủy phân công kịch bản này
+        </button>
+      `;
+    } else {
+      const targetSel = document.getElementById('detail-assignee');
+      const targetUser = targetSel ? targetSel.options[targetSel.selectedIndex]?.text : 'Tester';
+      footerLeftEl.innerHTML = `
+        <button type="button" class="btn btn-primary" onclick="quickAssignSingleTcToCurrent('${tc.id}'); closeModal('modal-asg-tc-detail');" style="font-weight:700; font-size:12px">
+          🚀 Giao ngay cho ${targetUser.split('(')[0].trim()}
+        </button>
+      `;
+    }
+  }
+
+  openModal('modal-asg-tc-detail');
+}
+
+function quickAssignSingleTcToCurrent(tcId) {
+  const p = getActiveProject();
+  if (!p) return;
+  const username = document.getElementById('detail-assignee')?.value;
+  const dueDate = document.getElementById('detail-due-date')?.value;
+  if (!username || !dueDate) {
+    showToast('⚠️ Vui lòng chọn Tester và Hạn chót trước khi giao việc!', 'error');
+    return;
+  }
+  treeSelectedTcIds.clear();
+  treeSelectedTcIds.add(tcId);
+  confirmDetailedDispatch();
+}
+
+function toggleModuleSelection(moduleId, isChecked) {
+  const p = getActiveProject();
+  if (!p) return;
+  const modTcs = (p.testCases || []).filter(tc => tc.module === moduleId);
+  modTcs.forEach(tc => {
+    if (isChecked) treeSelectedTcIds.add(tc.id);
+    else treeSelectedTcIds.delete(tc.id);
+  });
+  renderAsgModuleList();
+  if (state.asgActiveModuleId === moduleId) {
+    renderAsgTcTable();
+  }
+  updateDetailDockSummary();
+}
+
+function toggleSelectAllActiveModule(isChecked) {
+  if (state.asgActiveModuleId) {
+    toggleModuleSelection(state.asgActiveModuleId, isChecked);
+  }
+}
+
+function toggleTcSelection(tcId, moduleId, isChecked) {
+  if (isChecked) treeSelectedTcIds.add(tcId);
+  else treeSelectedTcIds.delete(tcId);
+  renderAsgModuleList();
+  renderAsgTcTable();
+  updateDetailDockSummary();
+}
+
+function batchSelectInActiveModule(type) {
+  const p = getActiveProject();
+  if (!p) return;
+  const allTcs = p.testCases || [];
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
+  const asgMap = new Map();
+  assignments.forEach(a => asgMap.set(a.tcId, a));
+
+  const currModTcs = allTcs.filter(tc => tc.module === state.asgActiveModuleId);
+
+  if (type === 'NONE') {
+    treeSelectedTcIds.clear();
+  } else if (type === 'ALL') {
+    currModTcs.forEach(tc => treeSelectedTcIds.add(tc.id));
+  } else if (type === 'P1') {
+    currModTcs.forEach(tc => {
+      if (tc.priority === 'P1') treeSelectedTcIds.add(tc.id);
+    });
+  } else if (type === 'UNASSIGNED') {
+    currModTcs.forEach(tc => {
+      if (!asgMap.has(tc.id)) treeSelectedTcIds.add(tc.id);
+    });
+  } else if (type === 'ALL_PROJECT') {
+    allTcs.forEach(tc => treeSelectedTcIds.add(tc.id));
+  }
+
+  renderAsgModuleList();
+  renderAsgTcTable();
+  updateDetailDockSummary();
+}
+
+function updateDetailDockSummary() {
+  const p = getActiveProject();
+  const count = treeSelectedTcIds.size;
+  const badge = document.getElementById('detail-selection-badge');
+  const btn = document.getElementById('detail-submit-btn');
+
+  if (!p) return;
+
+  let wholeModCount = 0;
+  let partialModCount = 0;
+
+  (p.modules || []).forEach(m => {
+    const modTcs = (p.testCases || []).filter(tc => tc.module === m.id);
+    if (modTcs.length === 0) return;
+    const selectedCount = modTcs.filter(tc => treeSelectedTcIds.has(tc.id)).length;
+    if (selectedCount === modTcs.length) {
+      wholeModCount++;
+    } else if (selectedCount > 0) {
+      partialModCount += selectedCount;
+    }
+  });
+
+  if (badge) {
+    if (count === 0) {
+      badge.textContent = `0 kịch bản đã chọn`;
+      badge.className = 'badge badge-outline';
+    } else {
+      let desc = '';
+      if (wholeModCount > 0 && partialModCount > 0) {
+        desc = `Đã chọn: ${wholeModCount} Phân hệ trọn vẹn + ${partialModCount} kịch bản lẻ (Tổng ${count} bài)`;
+      } else if (wholeModCount > 0) {
+        desc = `Đã chọn: ${wholeModCount} Phân hệ trọn vẹn (Tổng ${count} bài)`;
+      } else {
+        desc = `Đã chọn: ${count} kịch bản lẻ`;
+      }
+      badge.textContent = desc;
+      badge.className = 'badge badge-pass';
+    }
+  }
+
+  if (btn) {
+    const assigneeVal = document.getElementById('detail-assignee')?.value;
+    const user = (state.usersList || []).find(u => u.username === assigneeVal);
+    const shortName = user ? user.name.split('(')[0].trim() : 'Tester';
+
+    if (count > 0) {
+      btn.innerHTML = `🚀 Giao (${count}) Kịch Bản Cho [${shortName}]`;
+      btn.removeAttribute('disabled');
+      btn.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.4)';
+    } else {
+      btn.innerHTML = `🚀 Giao Kịch Bản Đang Chọn`;
+      btn.setAttribute('disabled', 'true');
+      btn.style.boxShadow = 'none';
+    }
+  }
+}
+
+function confirmDetailedDispatch() {
+  const p = getActiveProject();
+  if (!p) return;
+
+  const username = document.getElementById('detail-assignee')?.value;
+  const startDate = document.getElementById('detail-start-date')?.value;
+  const dueDate = document.getElementById('detail-due-date')?.value;
+  const notes = document.getElementById('detail-notes')?.value.trim();
+
+  if (!username || !dueDate) {
+    showToast('⚠️ Vui lòng chọn Tester và Hạn chót hoàn thành!', 'error');
+    return;
+  }
+
+  if (treeSelectedTcIds.size === 0) {
+    showToast('⚠️ Vui lòng tích chọn ít nhất 1 kịch bản hoặc phân hệ để giao việc!', 'error');
+    return;
+  }
+
+  const user = (state.usersList || []).find(u => u.username === username);
+  const userName = user ? user.name : username;
+
+  initAssignments();
+
+  let count = 0;
+  treeSelectedTcIds.forEach(tcId => {
+    const tc = (p.testCases || []).find(t => t.id === tcId);
+    const existingIndex = state.assignments.findIndex(a => a.projectId === p.id && a.tcId === tcId);
+    if (existingIndex >= 0) {
+      state.assignments[existingIndex].assigneeUsername = username;
+      state.assignments[existingIndex].assigneeName = userName;
+      state.assignments[existingIndex].dueDate = dueDate;
+      if (startDate) state.assignments[existingIndex].startDate = startDate;
+      if (notes) state.assignments[existingIndex].notes = notes;
+      state.assignments[existingIndex].status = 'PENDING';
+    } else {
+      state.assignments.unshift({
+        id: 'asg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        projectId: p.id,
+        version: p.activeVersion || 'v1.0',
+        tcId,
+        assigneeUsername: username,
+        assigneeName: userName,
+        startDate: startDate || new Date().toISOString().slice(0, 10),
+        dueDate,
+        status: 'PENDING',
+        notes: notes || (tc ? `Kiểm thử kịch bản ${tc.id}: ${tc.name}` : ''),
+        priority: tc ? tc.priority : 'P2',
+        module: tc ? tc.module : (state.asgActiveModuleId || 'M01'),
+        assignedBy: state.currentUser ? state.currentUser.name : 'Admin',
+        assignedAt: new Date().toISOString()
+      });
+    }
+    count++;
+  });
+
+  saveAssignments();
+  treeSelectedTcIds.clear();
+  renderAsgDetailTab();
+  updateMyTasksBadge();
+  showToast(`🎉 Đã giao thành công ${count} kịch bản cho ${userName}!`, 'success');
+}
+
+function quickAssignSingleTc(tcId, testerUsername) {
+  if (!testerUsername) return;
+  const p = getActiveProject();
+  if (!p) return;
+
+  const user = (state.usersList || []).find(u => u.username === testerUsername);
+  const tc = (p.testCases || []).find(t => t.id === tcId);
+  const today = new Date().toISOString().slice(0, 10);
+  const dueDate = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
+
+  initAssignments();
+  const existingIndex = state.assignments.findIndex(a => a.projectId === p.id && a.tcId === tcId);
+  if (existingIndex >= 0) {
+    state.assignments[existingIndex].assigneeUsername = testerUsername;
+    state.assignments[existingIndex].assigneeName = user ? user.name : testerUsername;
+    state.assignments[existingIndex].status = 'PENDING';
+  } else {
+    state.assignments.unshift({
+      id: 'asg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      projectId: p.id,
+      version: p.activeVersion || 'v1.0',
+      tcId,
+      assigneeUsername: testerUsername,
+      assigneeName: user ? user.name : testerUsername,
+      startDate: today,
+      dueDate,
+      status: 'PENDING',
+      notes: tc ? `Kiểm thử kịch bản ${tc.id}: ${tc.name}` : '',
+      priority: tc ? tc.priority : 'P2',
+      module: tc ? tc.module : 'M01',
+      assignedBy: state.currentUser ? state.currentUser.name : 'Admin',
+      assignedAt: new Date().toISOString()
+    });
+  }
+
+  saveAssignments();
+  if (state.asgCurrentTab === 'detail') {
+    renderAsgDetailTab();
+  } else {
+    renderAsgOverviewTab();
+  }
+  updateMyTasksBadge();
+  showToast(`✅ Đã gán bài test [${tcId}] cho ${user ? user.name : testerUsername}!`, 'success');
+}
+
+function cancelAssignmentForTc(tcId) {
+  const p = getActiveProject();
+  if (!p) return;
+  if (!confirm(`Bạn có chắc chắn muốn hủy phân công kịch bản ${tcId}?`)) return;
+
+  initAssignments();
+  state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId));
+  saveAssignments();
+  treeSelectedTcIds.delete(tcId);
+  if (state.asgCurrentTab === 'detail') {
+    renderAsgDetailTab();
+  } else {
+    renderAsgOverviewTab();
+  }
+  updateMyTasksBadge();
+  showToast(`🗑️ Đã hủy phân công kịch bản [${tcId}]!`, 'info');
+}
+
+function revokeAllTesterAssignments(username) {
+  const p = getActiveProject();
+  if (!p) return;
+  const user = (state.usersList || []).find(u => u.username === username);
+  const name = user ? user.name : username;
+  if (!confirm(`Bạn có chắc chắn muốn THU HỒI TOÀN BỘ kịch bản đã giao cho [${name}] trong dự án này?`)) return;
+
+  initAssignments();
+  state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.assigneeUsername === username));
+  saveAssignments();
+  if (state.asgCurrentTab === 'detail') {
+    renderAsgDetailTab();
+  } else {
+    renderAsgOverviewTab();
+  }
+  updateMyTasksBadge();
+  showToast(`🗑️ Đã thu hồi toàn bộ kịch bản của ${name}!`, 'info');
+}
+
+function filterAssignmentsStatus(status) {
+  switchAsgMainTab('overview');
+}
+
+function deleteAssignment(taskId) {
+  if (!confirm('Bạn có chắc chắn muốn hủy giao việc này?')) return;
+  initAssignments();
+  state.assignments = state.assignments.filter(a => a.id !== taskId);
+  saveAssignments();
+  if (state.asgCurrentTab === 'detail') {
+    renderAsgDetailTab();
+  } else {
+    renderAsgOverviewTab();
+  }
+  updateMyTasksBadge();
+  showToast('🗑️ Đã hủy giao việc thành công!', 'info');
+}
+
+function openAssignTaskModal(preSelectedModuleId = '') {
+  navigate('assignments');
+  switchAsgMainTab('detail');
+  if (preSelectedModuleId) {
+    selectModuleInDetail(preSelectedModuleId);
+  }
+}
+
+function openBulkAssignModal(preSelectedModuleId = '') {
+  navigate('assignments');
+  switchAsgMainTab('detail');
+  if (preSelectedModuleId) {
+    toggleModuleSelection(preSelectedModuleId, true);
+    selectModuleInDetail(preSelectedModuleId);
+  }
+}
+
+// ================================================================
+// GÓC NHÌN "VIỆC CỦA TÔI" (MY TASKS FOR TESTERS)
+// ================================================================
+function updateMyTasksBadge() {
+  const badge = document.getElementById('badge-mytasks');
+  if (!badge) return;
+  // QA Lead (Admin) and Dev never do testing tasks, so hide badge
+  if (!state.currentUser || state.currentUser.role !== 'tester') {
+    badge.textContent = '0';
+    badge.style.display = 'none';
+    return;
+  }
+  const username = state.currentUser.username;
+  initAssignments();
+  const myPending = (state.assignments || []).filter(a => 
+    a.assigneeUsername === username && 
+    a.status !== 'DONE' && a.status !== 'PASSED'
+  );
+  badge.textContent = myPending.length;
+  badge.style.display = myPending.length > 0 ? 'inline-block' : 'none';
+}
+
+function renderMyTasksPage() {
+  initAssignments();
+  const username = state.currentUser ? state.currentUser.username : '';
+  const isSuper = state.currentUser && state.currentUser.role === 'admin';
+
+  if (isSuper) {
+    // Admin is QA Lead: show clear guidance that Admin oversees instead of executing individual test cases
+    const container = document.getElementById('mytasks-card-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="card" style="text-align:center; padding: 48px 24px; border: 2px dashed var(--border);">
+          <div style="font-size:48px; margin-bottom:12px;">👑</div>
+          <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Không gian của Kiểm thử viên (Tester Workspace)</h3>
+          <p style="color:var(--text-muted); font-size:14px; max-width:560px; margin:0 auto 20px; line-height:1.6">
+            Bạn đang đăng nhập với vai trò <strong>Quản lý QA (QA Lead / Admin)</strong>. Tài khoản Quản lý không trực tiếp thực thi kịch bản kiểm thử lẻ mà có nhiệm vụ giám sát tổng quan, phân công và nghiệm thu kịch bản của các Tester.
+          </p>
+          <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="navigate('assignments')">📌 Đến mục Giao việc & Hạn chót</button>
+            <button class="btn btn-outline" onclick="navigate('dashboard')">📊 Về Dashboard Doanh nghiệp</button>
+          </div>
+        </div>
+      `;
+    }
+    const statPending = document.getElementById('mytask-stat-pending');
+    if (statPending) statPending.textContent = '0';
+    const statDone = document.getElementById('mytask-stat-done');
+    if (statDone) statDone.textContent = '0';
+    const statOverdue = document.getElementById('mytask-stat-overdue');
+    if (statOverdue) statOverdue.textContent = '0';
+    return;
+  }
+
+  const subEl = document.getElementById('mytasks-user-subtitle');
+  if (subEl) subEl.textContent = `Đang đăng nhập: ${state.currentUser ? state.currentUser.name : 'Tester'} (${username})`;
+
+  // Filter My Tasks
+  const filterProj = document.getElementById('mytask-filter-project')?.value || '';
+  const filterDl = document.getElementById('mytask-filter-deadline')?.value || '';
+
+  // Populate projects filter for my tasks
+  const projSel = document.getElementById('mytask-filter-project');
+  if (projSel && projSel.options.length <= 1) {
+    (state.projects || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      projSel.appendChild(opt);
+    });
+  }
+
+  const allMyTasks = (state.assignments || []).filter(a => a.assigneeUsername === username);
+
+  // Update Stats
+  let doneCount = 0;
+  let remainCount = 0;
+  let overdueCount = 0;
+
+  allMyTasks.forEach(t => {
+    const ds = getTaskDeadlineStatus(t);
+    if (t.status === 'DONE' || t.status === 'PASSED' || t.status === 'FAILED') {
+      doneCount++;
+    } else {
+      remainCount++;
+      if (ds.isOverdue) overdueCount++;
+    }
+  });
+
+  const statTotal = document.getElementById('mytask-stat-total');
+  if (statTotal) statTotal.textContent = allMyTasks.length;
+  const statDone = document.getElementById('mytask-stat-done');
+  if (statDone) statDone.textContent = doneCount;
+  const statRemain = document.getElementById('mytask-stat-remain');
+  if (statRemain) statRemain.textContent = remainCount;
+  const statOverdue = document.getElementById('mytask-stat-overdue');
+  if (statOverdue) statOverdue.textContent = overdueCount;
+
+  const displayTasks = allMyTasks.filter(t => {
+    if (filterProj && t.projectId !== filterProj) return false;
+    const ds = getTaskDeadlineStatus(t);
+    if (filterDl === 'OVERDUE' && !ds.isOverdue) return false;
+    if (filterDl === 'PENDING' && (t.status === 'DONE' || t.status === 'PASSED')) return false;
+    if (filterDl === 'DONE' && t.status !== 'DONE' && t.status !== 'PASSED') return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('mytasks-table-body');
+  if (!tbody) return;
+
+  const projMap = new Map((state.projects || []).map(p => [p.id, p]));
+
+  if (displayTasks.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted)">🎉 Bạn không có bài kiểm tra nào cần làm trong mục này!</td></tr>';
+    return;
+  }
+
+  currentTaskQueue = displayTasks;
+  tbody.innerHTML = displayTasks.map((t, idx) => {
+    const p = projMap.get(t.projectId);
+    const ds = getTaskDeadlineStatus(t);
+    const allTcs = (p && p.testCases) || getAllTcs();
+    const tc = allTcs.find(x => x.id === t.tcId);
+    const tcTitle = tc ? tc.name : t.tcId;
+    const priority = tc ? tc.priority : 'P2';
+    const isDone = t.status === 'DONE' || t.status === 'PASSED';
+
+    return `
+      <tr style="${ds.isOverdue && !isDone ? 'background:rgba(239, 68, 68, 0.05)' : ''}">
+        <td><strong class="clickable-badge" onclick="jumpToTestCase('${t.tcId}', '${t.projectId}')" title="Bấm để xem kịch bản">${t.tcId} 🔗</strong></td>
+        <td><span class="module-tag" style="font-size:11px">${p ? p.code : t.projectId}</span></td>
+        <td>
+          <div style="font-weight:600; font-size:13px">${tcTitle}</div>
+          <div style="font-size:11px; color:var(--text-muted)">📝 ${t.notes || 'Không có ghi chú'}</div>
+        </td>
+        <td><span class="badge badge-${priority.toLowerCase()}">${priority}</span></td>
+        <td>
+          <div><strong>${t.dueDate || 'Chưa định'}</strong></div>
+          <span class="badge ${ds.badgeClass}" style="font-size:10px">${ds.label}</span>
+        </td>
+        <td>
+          <span class="badge ${t.status === 'PASSED' ? 'badge-pass' : t.status === 'FAILED' ? 'badge-fail' : 'badge-nr'}">
+            ${t.status === 'PASSED' ? '✅ Đã Đạt' : t.status === 'FAILED' ? '❌ Bị Lỗi' : '⏳ Chưa kiểm tra'}
+          </span>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-primary" onclick="currentTaskIndex = ${idx}; openQuickTestModal('${t.tcId}', '${t.id}', '${t.projectId}')">
+            ${isDone ? '🔄 Kiểm tra lại' : '▶️ Kiểm tra ngay'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openQuickTestModal(tcId, taskId, projectId) {
+  const p = (state.projects || []).find(x => x.id === projectId) || getActiveProject();
+  const allTcs = (p && p.testCases) || getAllTcs();
+  const tc = allTcs.find(x => x.id === tcId);
+
+  document.getElementById('qe-tc-id').value = tcId;
+  document.getElementById('qe-task-id').value = taskId;
+  document.getElementById('qe-title').textContent = `Kiểm tra: [${tcId}] ${tc ? tc.name : ''}`;
+
+  const infoBox = document.getElementById('qe-info-box');
+  if (infoBox && tc) {
+    infoBox.innerHTML = `
+      <div style="margin-bottom:6px"><strong>Mục đích:</strong> ${tc.name}</div>
+      <div style="margin-bottom:6px"><strong>Điều kiện cần:</strong> ${tc.precondition || 'Không có'}</div>
+      <div style="margin-bottom:6px"><strong>Các bước làm:</strong></div>
+      <ol style="margin:0; padding-left:18px; line-height:1.5">
+        ${(tc.steps || []).map(s => `<li>${s}</li>`).join('')}
+      </ol>
+      <div style="margin-top:6px; color:#10b981"><strong>Kết quả mong đợi:</strong> ${Array.isArray(tc.expected) ? tc.expected.join('; ') : tc.expected}</div>
+    `;
+  }
+
+  // Current result if any
+  const r = state.results[tcId];
+  if (r) {
+    const radio = document.querySelector(`input[name="qe-status"][value="${r.status}"]`);
+    if (radio) radio.checked = true;
+    document.getElementById('qe-notes').value = r.notes || '';
+  } else {
+    document.querySelector('input[name="qe-status"][value="Pass"]').checked = true;
+    document.getElementById('qe-notes').value = '';
+  }
+
+  openModal('modal-quick-exec');
+}
+
+function confirmQuickExecution() {
+  const tcId = document.getElementById('qe-tc-id').value;
+  const taskId = document.getElementById('qe-task-id').value;
+  const status = document.querySelector('input[name="qe-status"]:checked')?.value || 'Pass';
+  const notes = document.getElementById('qe-notes').value.trim();
+
+  if (!tcId) return;
+
+  // 1. Update Project results
+  if (!state.results[tcId]) state.results[tcId] = {};
+  state.results[tcId].status = status;
+  state.results[tcId].tester = state.currentUser ? state.currentUser.name : 'Tester';
+  state.results[tcId].notes = notes;
+  state.results[tcId].runAt = new Date().toISOString();
+
+  // 2. Update Assignment Task status
+  initAssignments();
+  const task = state.assignments.find(a => a.id === taskId || (a.tcId === tcId && a.assigneeUsername === state.currentUser?.username));
+  if (task) {
+    task.status = status === 'Pass' ? 'PASSED' : status === 'Fail' ? 'FAILED' : 'SKIPPED';
+    saveAssignments();
+  }
+
+  saveState();
+  closeModal('modal-quick-exec');
+  renderMyTasksPage();
+  updateMyTasksBadge();
+  showToast(`✅ Đã lưu kết quả bài test ${tcId}: ${status.toUpperCase()}!`, 'success');
+  // Auto advance to next task if in queue
+  if (currentTaskQueue && currentTaskIndex >= 0 && currentTaskIndex < currentTaskQueue.length - 1) {
+    openNextQuickTask();
+  }
+}
+
+// ================================================================
+// HỆ THỐNG THỐNG KÊ & BÁO CÁO 4 CHIỀU (ANALYTICS & REPORTING)
+// ================================================================
+function switchReportTab(subtab) {
+  document.querySelectorAll('#page-report .settings-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-subtab') === subtab);
+  });
+  document.querySelectorAll('#page-report .settings-tab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === `tab-pane-${subtab}`);
+  });
+}
+
+function renderAnalyticsPage() {
+  initAssignments();
+  initUsersList();
+
+  // 1. Pane 1: Theo Dự án
+  const rptProjBody = document.getElementById('rpt-projects-summary-body');
+  if (rptProjBody) {
+    rptProjBody.innerHTML = (state.projects || []).map(p => {
+      const allTcs = p.testCases || [];
+      const pResults = (p.runResults && p.runs && p.runs[0] && p.runResults[p.runs[0].id]) || (p.id === state.currentProjectId ? state.results : {});
+      let passed = 0;
+      let failed = 0;
+      allTcs.forEach(tc => {
+        const r = pResults[tc.id];
+        if (r && r.status === 'Pass') passed++;
+        else if (r && r.status === 'Fail') failed++;
+      });
+      const untested = allTcs.length - passed - failed;
+      const pct = allTcs.length > 0 ? Math.round((passed / allTcs.length) * 100) : 0;
+
+      return `
+        <tr>
+          <td><strong>${p.name}</strong> <span class="module-tag">${p.code}</span></td>
+          <td><code>${p.activeVersion}</code></td>
+          <td><strong>${allTcs.length}</strong></td>
+          <td style="color:#10b981; font-weight:700">${passed}</td>
+          <td style="color:#ef4444; font-weight:700">${failed}</td>
+          <td style="color:var(--text-muted)">${untested}</td>
+          <td style="width:160px">
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px"><span>${pct}%</span></div>
+            <div class="progress-bar-wrapper" style="height:6px"><div class="progress-bar" style="width:${pct}%; background:${pct >= 80 ? '#10b981' : '#3b82f6'}"></div></div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 2. Pane 2: Theo Tester
+  const rptTesterBody = document.getElementById('rpt-testers-summary-body');
+  if (rptTesterBody) {
+    const testers = (state.usersList || []).filter(u => u.role === 'tester');
+    const tasks = state.assignments || [];
+
+    rptTesterBody.innerHTML = testers.map(u => {
+      const myTasks = tasks.filter(t => t.assigneeUsername === u.username);
+      let done = 0;
+      let overdue = 0;
+      let bugs = 0;
+
+      myTasks.forEach(t => {
+        const ds = getTaskDeadlineStatus(t);
+        if (t.status === 'DONE' || t.status === 'PASSED') done++;
+        else if (t.status === 'FAILED') { done++; bugs++; }
+        else if (ds.isOverdue) overdue++;
+      });
+
+      const remain = myTasks.length - done;
+      const pct = myTasks.length > 0 ? Math.round((done / myTasks.length) * 100) : 0;
+
+      return `
+        <tr>
+          <td>
+            <strong>${u.name}</strong>
+            <div style="font-size:12px; color:var(--text-muted)">@${u.username}</div>
+          </td>
+          <td><strong>${myTasks.length}</strong> bài</td>
+          <td style="color:#10b981; font-weight:700">${done}</td>
+          <td style="color:var(--text-muted)">${remain}</td>
+          <td style="color:${overdue > 0 ? '#ef4444' : 'var(--text-muted)'}; font-weight:${overdue > 0 ? '700' : 'normal'}">
+            ${overdue > 0 ? `<span class="clickable-badge" onclick="jumpToOverdueAssignments('${u.username}')" title="Bấm xem các bài trễ hạn">⚠️ ${overdue}</span>` : '0'}
+          </td>
+          <td style="color:#ef4444; font-weight:700">${bugs}</td>
+          <td style="width:160px">
+            <div style="font-size:12px; margin-bottom:4px">${pct}%</div>
+            <div class="progress-bar-wrapper" style="height:6px"><div class="progress-bar" style="width:${pct}%; background:#10b981"></div></div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 3. Pane 3: Theo Kịch bản bị lỗi
+  const rptFailedBody = document.getElementById('rpt-failed-tcs-body');
+  if (rptFailedBody) {
+    const failedList = [];
+    (state.projects || []).forEach(p => {
+      const pResults = (p.id === state.currentProjectId ? state.results : (p.runResults && p.runs && p.runs[0] && p.runResults[p.runs[0].id])) || {};
+      (p.testCases || []).forEach(tc => {
+        const r = pResults[tc.id];
+        if (r && r.status === 'Fail') {
+          failedList.push({
+            project: p.code,
+            tcId: tc.id,
+            name: tc.name,
+            reason: r.notes || r.failReason || 'Chưa ghi chú cụ thể',
+            tester: r.tester || 'Tester',
+            runAt: r.runAt ? new Date(r.runAt).toLocaleDateString('vi-VN') : 'Mới đây'
+          });
+        }
+      });
+    });
+
+    if (failedList.length === 0) {
+      rptFailedBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#10b981">🎉 Hiện tại không có bài test nào bị LỖI (Fail)!</td></tr>';
+    } else {
+      rptFailedBody.innerHTML = failedList.map(f => `
+        <tr>
+          <td><strong class="clickable-badge" style="color:#ef4444" onclick="jumpToExecuteCase('${f.tcId}', '${f.project}')" title="Bấm để mở kiểm tra/sửa lỗi">${f.tcId} ↗</strong></td>
+          <td><span class="module-tag">${f.project}</span></td>
+          <td><strong>${f.name}</strong></td>
+          <td style="color:#ef4444">${f.reason}</td>
+          <td>${f.tester}</td>
+          <td>${f.runAt}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // 4. Pane 4: Theo Tiến độ & Hạn chót
+  const rptDeadlinesBody = document.getElementById('rpt-deadlines-body');
+  if (rptDeadlinesBody) {
+    const sortedTasks = [...(state.assignments || [])].sort((a, b) => new Date(a.dueDate || 0) - new Date(b.dueDate || 0));
+    rptDeadlinesBody.innerHTML = sortedTasks.map(t => {
+      const ds = getTaskDeadlineStatus(t);
+      const isDone = t.status === 'DONE' || t.status === 'PASSED';
+      return `
+        <tr style="${ds.isOverdue && !isDone ? 'background:rgba(239, 68, 68, 0.05)' : ''}">
+          <td><strong>${t.tcId}</strong></td>
+          <td><span class="module-tag">${t.projectId}</span></td>
+          <td>${t.assigneeName.split('(')[0]}</td>
+          <td><strong>${t.dueDate || 'Chưa định'}</strong></td>
+          <td><span class="badge ${ds.badgeClass}">${ds.label}</span></td>
+          <td>
+            <span class="badge ${isDone ? 'badge-pass' : ds.isOverdue ? 'badge-fail' : 'badge-nr'}">
+              ${isDone ? 'Đã xong' : ds.isOverdue ? 'TRỄ HẠN' : 'Đang làm'}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+}
+
+
+// ================================================================
+// TƯƠNG TÁC LIỀN MẠCH GIỮA CÁC MODULE (SEAMLESS WORKFLOWS)
+// ================================================================
+
+// 1. Drill-down từ Dashboard sang Test Cases
+function drillDownToTestCases(statusFilter, moduleFilter) {
+  navigate('testcases');
+  const statusSel = document.getElementById('filter-status');
+  if (statusSel && statusFilter !== undefined) {
+    statusSel.value = statusFilter;
+  }
+  const modSel = document.getElementById('filter-module');
+  if (modSel && moduleFilter !== undefined) {
+    modSel.value = moduleFilter;
+  }
+  applyFilters();
+}
+
+// 2. Chuyển sang xem kịch bản cụ thể bên tab Test Cases
+function jumpToTestCase(tcId, projectId) {
+  if (projectId && projectId !== state.currentProjectId) {
+    switchProject(projectId);
+  }
+  navigate('testcases');
+  const searchInput = document.getElementById('filter-search');
+  if (searchInput) {
+    searchInput.value = tcId;
+    applyFilters();
+  }
+}
+
+// 3. Chuyển sang thực thi trực tiếp bài test bên tab Execute
+function jumpToExecuteCase(tcId, projectId) {
+  if (projectId && projectId !== state.currentProjectId) {
+    switchProject(projectId);
+  }
+  navigate('execute');
+  selectTcForExec(tcId);
+}
+
+// 4. Lọc việc của nhân viên bên tab Giao việc
+function jumpToUserAssignments(username, projectId) {
+  navigate('assignments');
+  const testerSel = document.getElementById('asg-filter-tester');
+  if (testerSel) testerSel.value = username;
+  const projSel = document.getElementById('asg-filter-project');
+  if (projSel && projectId) projSel.value = projectId;
+  renderAssignmentsPage();
+}
+
+// 5. Lọc các bài quá hạn bên tab Giao việc
+function jumpToOverdueAssignments(username) {
+  navigate('assignments');
+  const statusSel = document.getElementById('asg-filter-status');
+  if (statusSel) statusSel.value = 'OVERDUE';
+  if (username) {
+    const testerSel = document.getElementById('asg-filter-tester');
+    if (testerSel) testerSel.value = username;
+  }
+  renderAssignmentsPage();
+}
+
+// 6. Làm tiếp bài tiếp theo ngay trong popup Kiểm tra nhanh
+let currentTaskQueue = [];
+let currentTaskIndex = -1;
+
+function openNextQuickTask() {
+  if (!currentTaskQueue || currentTaskQueue.length === 0) {
+    closeModal('modal-quick-exec');
+    return;
+  }
+  currentTaskIndex++;
+  if (currentTaskIndex >= currentTaskQueue.length) {
+    closeModal('modal-quick-exec');
+    showToast('🎉 Bạn đã kiểm tra hết danh sách bài được giao!', 'success');
+    renderMyTasksPage();
+    return;
+  }
+  const nextTask = currentTaskQueue[currentTaskIndex];
+  openQuickTestModal(nextTask.tcId, nextTask.id, nextTask.projectId);
+}
+
+
+function filterAssignmentsStatus(status) {
+  const statusSel = document.getElementById('asg-filter-status');
+  if (statusSel) {
+    statusSel.value = status;
+    renderAssignmentsPage();
+  }
+}
+
+function filterMyTasksDeadline(status) {
+  const deadSel = document.getElementById('mytask-filter-deadline');
+  if (deadSel) {
+    deadSel.value = status;
+    renderMyTasksPage();
+  }
+}
+
+
+// ================================================================
+// SYSTEM DATA MANAGEMENT: FRESH START & DEMO DATA
+// ================================================================
+function loadSampleDemoProjects() {
+  const vmsCatalog = (typeof window !== 'undefined' && window.SMARTVMS_DEFAULT_CATALOG) || { modules: [], testCases: [] };
+  const parkCatalog = (typeof ENTERPRISE_MANIFEST !== 'undefined' && ENTERPRISE_MANIFEST.catalogs && ENTERPRISE_MANIFEST.catalogs['PRJ-SMARTPARK']) || { modules: [], testCases: [] };
+
+  state.projects = [
+    {
+      id: 'PRJ-SMARTVMS',
+      code: 'SMARTVMS',
+      name: 'SmartVMS — Quản lý Khách & Ra vào',
+      domain: 'An ninh Trụ sở & Cơ quan Hành chính',
+      lead: 'Nguyễn Văn Huy (Project Manager)',
+      standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010:2023'],
+      activeVersion: 'v2.0',
+      versions: [
+        { version: 'v2.0', label: 'v2.0-SingleSite 2026', status: 'IN_QA', targetDate: '2026-10-30', changelog: 'Phiên bản Offline Standalone cho trụ sở đơn lẻ (204 TCs, 12 Modules)' },
+        { version: 'v2.1', label: 'v2.1-MultiSite Cloud Sync', status: 'IN_DEV', targetDate: '2026-12-15', changelog: 'Đồng bộ tập trung đa trạm gác qua Cloud API' }
+      ],
+      modules: vmsCatalog.modules || [],
+      testCases: vmsCatalog.testCases || [],
+      runs: [
+        { id: 'run_001', name: 'Đợt 1 — Khảo sát Kiểm thử Toàn diện', targetVersion: 'v2.0', scopeType: 'ALL', status: 'ACTIVE', createdBy: 'QA Lead', createdAt: new Date().toISOString() }
+      ],
+      runResults: {}
+    },
+    {
+      id: 'PRJ-SMARTPARK',
+      code: 'SMARTPARK',
+      name: 'SmartParking — Quản lý Bãi xe & ANPR',
+      domain: 'Giao thông Thông minh (ITS & Smart Parking)',
+      lead: 'Trần Quốc Tuấn (Technical Lead)',
+      standards: ['ISO 9001:2015', 'TCVN 13607:2023', 'ISO/IEC 25010'],
+      activeVersion: 'v1.2.0',
+      versions: [
+        { version: 'v1.2.0', label: 'v1.2.0-ANPR AutoBarrier', status: 'IN_QA', targetDate: '2026-11-10', changelog: 'Tích hợp nhận diện biển số tự động LPR' }
+      ],
+      modules: parkCatalog.modules || [],
+      testCases: parkCatalog.testCases || [],
+      runs: [
+        { id: 'run_park_01', name: 'Đợt 1 — Thử nghiệm Làn vào & Barie', targetVersion: 'v1.2.0', scopeType: 'ALL', status: 'ACTIVE', createdBy: 'Trần Quốc Tuấn', createdAt: new Date().toISOString() }
+      ],
+      runResults: {}
+    }
+  ];
+  state.currentProjectId = 'PRJ-SMARTVMS';
+  saveEnterpriseProjects();
+  syncActiveProjectContext();
+
+  // Tạo phân công kiểm thử mẫu cho các Tester và Lead theo dõi đôn đốc
+  const now = new Date();
+  const dOverdue = new Date(now.getTime() - 2 * 24 * 3600 * 1000).toISOString().split('T')[0];
+  const dSoon = new Date(now.getTime() + 2 * 24 * 3600 * 1000).toISOString().split('T')[0];
+  const dLater = new Date(now.getTime() + 7 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+  state.assignments = [
+    { id: 'asg-01', projectId: 'PRJ-SMARTVMS', tcId: 'TC-AUTH-001', assigneeUsername: 'tester', assigneeName: 'Nguyễn Văn Huy (Tester)', assignedBy: 'Admin', startDate: now.toISOString().slice(0, 10), dueDate: dSoon, status: 'PASSED', priority: 'P1', module: 'M01', notes: 'Kiểm tra đăng nhập hợp lệ', createdAt: now.toISOString() },
+    { id: 'asg-02', projectId: 'PRJ-SMARTVMS', tcId: 'TC-AUTH-002', assigneeUsername: 'tester', assigneeName: 'Nguyễn Văn Huy (Tester)', assignedBy: 'Admin', startDate: now.toISOString().slice(0, 10), dueDate: dSoon, status: 'PENDING', priority: 'P1', module: 'M01', notes: 'Kiểm tra phân biệt hoa thường', createdAt: now.toISOString() },
+    { id: 'asg-03', projectId: 'PRJ-SMARTVMS', tcId: 'TC-CCCD-001', assigneeUsername: 'tester', assigneeName: 'Nguyễn Văn Huy (Tester)', assignedBy: 'Admin', startDate: dOverdue, dueDate: dOverdue, status: 'FAILED', priority: 'P1', module: 'M02', notes: 'Kiểm tra quét CCCD gắn chip liên tục', createdAt: now.toISOString() },
+    { id: 'asg-04', projectId: 'PRJ-SMARTVMS', tcId: 'TC-CCCD-002', assigneeUsername: 'tester', assigneeName: 'Nguyễn Văn Huy (Tester)', assignedBy: 'Admin', startDate: now.toISOString().slice(0, 10), dueDate: dLater, status: 'PENDING', priority: 'P2', module: 'M02', notes: 'Check-in thủ công khi mất CCCD', createdAt: now.toISOString() },
+    { id: 'asg-05', projectId: 'PRJ-SMARTVMS', tcId: 'TC-GRP-001', assigneeUsername: 'tester_nam', assigneeName: 'Nguyễn Văn Nam (Tester)', assignedBy: 'Admin', startDate: now.toISOString().slice(0, 10), dueDate: dLater, status: 'PENDING', priority: 'P2', module: 'M03', notes: 'Check-in đoàn khách 5 người', createdAt: now.toISOString() },
+    { id: 'asg-06', projectId: 'PRJ-SMARTVMS', tcId: 'TC-STATION-001', assigneeUsername: 'tester_lan', assigneeName: 'Trần Thị Lan (Tester)', assignedBy: 'Admin', startDate: now.toISOString().slice(0, 10), dueDate: dLater, status: 'PENDING', priority: 'P1', module: 'M04', notes: 'Kiểm tra thu hồi thẻ khi check-out', createdAt: now.toISOString() }
+  ];
+  saveAssignments();
+
+  // Kết quả kiểm tra mẫu cho Đợt 1
+  state.results = {
+    'TC-AUTH-001': { status: 'Pass', tester: 'tester', runAt: now.toISOString(), note: 'Đăng nhập phân quyền admin và trạm gác thành công, token hợp lệ.' },
+    'TC-CCCD-001': {
+      status: 'Fail',
+      tester: 'tester',
+      testedAt: now.toISOString(),
+      notes: 'Lỗi thiết bị: Quét CCCD chip lần 2 liên tiếp khi chưa rút thẻ cũ làm DeviceService bị treo 10 giây.',
+      bugStatus: 'OPEN',
+      evidences: [
+        { name: 'loi_doc_cccd.png', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="180"><rect width="300" height="180" fill="%23fee2e2"/><text x="20" y="90" fill="%23dc2626" font-size="14" font-family="sans-serif">Lỗi Đọc CCCD Chip Timeout</text></svg>' }
+      ]
+    }
+  };
+  saveState();
+
+  showToast('⚡ Đã nạp thành công 204 kịch bản kiểm thử mẫu của SmartVMS!', 'success');
+  navigate(state.currentUser?.role === 'tester' ? 'mytasks' : (state.currentUser?.role === 'developer' ? 'dev-bugs' : 'dashboard'));
+}
+
+function resetToFreshState(confirmFirst = true) {
+  if (confirmFirst && !confirm('⚠️ Bạn có chắc chắn muốn XÓA TOÀN BỘ dữ liệu để đưa hệ thống về trạng thái TRẮNG (Fresh Clean State)?')) {
+    return;
+  }
+  localStorage.removeItem('openqas_projects_list');
+  localStorage.removeItem('openqas_assignments_list');
+  localStorage.removeItem('openqas_active_project_id');
+  localStorage.removeItem('smartvms_test_state');
+  localStorage.removeItem('smartvms_imported_catalog');
+  localStorage.removeItem('openqas_users_list');
+
+  state.projects = [];
+  state.currentProjectId = null;
+  state.currentProjectVersion = '';
+  state.modules = [];
+  ALL_TCS = [];
+  state.customTcs = [];
+  state.overrides = {};
+  state.runs = [];
+  state.runResults = {};
+  state.results = {};
+  state.assignments = [];
+
+  saveEnterpriseProjects();
+  saveAssignments();
+  saveState();
+
+  showToast('✨ Hệ thống đã được đưa về trạng thái Trắng hoàn toàn!', 'success');
+  setTimeout(() => {
+    window.location.reload();
+  }, 400);
+}
+
+// ================================================================
+// DEVELOPER BUG HUB LOGIC
+// ================================================================
+function renderDevBugsPage() {
+  const allTcs = getAllTcs();
+  const filterStatus = document.getElementById('dev-bug-filter-status')?.value || '';
+  const filterPriority = document.getElementById('dev-bug-filter-priority')?.value || '';
+  const filterModule = document.getElementById('dev-bug-filter-module')?.value || '';
+  const searchQuery = (document.getElementById('dev-bug-search-input')?.value || '').trim().toLowerCase();
+
+  // Populate module select if needed
+  const modSel = document.getElementById('dev-bug-filter-module');
+  if (modSel && modSel.options.length <= 1) {
+    const mods = getModules();
+    mods.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.id} - ${m.name}`;
+      modSel.appendChild(opt);
+    });
+  }
+
+  // Failing test cases
+  const failingTcs = allTcs.filter(tc => {
+    const r = state.results[tc.id];
+    return r && r.status === 'Fail';
+  });
+
+  // Calculate Bug KPIs
+  let totalBugs = failingTcs.length;
+  let p1Bugs = 0;
+  let inDevBugs = 0;
+  let resolvedBugs = 0;
+
+  failingTcs.forEach(tc => {
+    const r = state.results[tc.id] || {};
+    const bStatus = r.bugStatus || 'OPEN';
+    if (tc.priority === 'P1') p1Bugs++;
+    if (bStatus === 'IN_DEV') inDevBugs++;
+    else if (bStatus === 'RESOLVED') resolvedBugs++;
+  });
+
+  const statTotal = document.getElementById('dev-stat-total-bugs');
+  if (statTotal) statTotal.textContent = totalBugs;
+  const statP1 = document.getElementById('dev-stat-p1-bugs');
+  if (statP1) statP1.textContent = p1Bugs;
+  const statInDev = document.getElementById('dev-stat-in-dev');
+  if (statInDev) statInDev.textContent = inDevBugs;
+  const statResolved = document.getElementById('dev-stat-resolved');
+  if (statResolved) statResolved.textContent = resolvedBugs;
+
+  // Update dev badge
+  const pendingFixCount = totalBugs - resolvedBugs;
+  const badgeDev = document.getElementById('badge-dev-bugs');
+  if (badgeDev) {
+    badgeDev.textContent = pendingFixCount;
+    badgeDev.style.display = pendingFixCount > 0 ? 'inline-block' : 'none';
+  }
+
+  // Filter list
+  const filtered = failingTcs.filter(tc => {
+    const r = state.results[tc.id] || {};
+    const bStatus = r.bugStatus || 'OPEN';
+    if (filterStatus && bStatus !== filterStatus) return false;
+    if (filterPriority && tc.priority !== filterPriority) return false;
+    if (filterModule && tc.module !== filterModule) return false;
+    if (searchQuery) {
+      const matchId = tc.id.toLowerCase().includes(searchQuery);
+      const matchName = (tc.name || '').toLowerCase().includes(searchQuery);
+      const matchNotes = (r.notes || '').toLowerCase().includes(searchQuery);
+      if (!matchId && !matchName && !matchNotes) return false;
+    }
+    return true;
+  });
+
+  const tbody = document.getElementById('dev-bugs-table-body');
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; padding: 48px 16px; color:var(--text-muted)">
+          <div style="font-size:36px; margin-bottom:8px">🎉</div>
+          <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px">
+            ${totalBugs === 0 ? 'Không có kịch bản nào bị lỗi!' : 'Không có kịch bản nào phù hợp với bộ lọc hiện tại'}
+          </div>
+          <div style="font-size:13px">
+            ${totalBugs === 0 ? 'Toàn bộ các bài test đang Đạt (Pass) hoặc Chưa chạy (Not Run).' : 'Thử xóa các bộ lọc để xem lại toàn bộ danh sách.'}
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(tc => {
+    const r = state.results[tc.id] || {};
+    const bStatus = r.bugStatus || 'OPEN';
+    
+    // Status Badge
+    let statusBadge = '<span class="badge badge-fail" style="font-size:11px">🔴 Cần xử lý</span>';
+    if (bStatus === 'IN_DEV') {
+      statusBadge = '<span class="badge badge-p1" style="font-size:11px">🛠️ Đang sửa</span>';
+    } else if (bStatus === 'RESOLVED') {
+      statusBadge = '<span class="badge badge-pass" style="font-size:11px">✅ Đã sửa xong</span>';
+    }
+
+    // Evidence thumbnails
+    let evidenceHtml = '<span style="color:var(--text-muted); font-size:12px">Không có ảnh</span>';
+    if (r.evidences && r.evidences.length > 0) {
+      evidenceHtml = `
+        <div style="display:flex; gap:6px; flex-wrap:wrap">
+          ${r.evidences.slice(0, 2).map((ev, idx) => `
+            <img src="${escapeHtml(ev.url)}" alt="${escapeHtml(ev.name || 'Bằng chứng')}" 
+                 onclick="openLightbox(this.src, '${tc.id}')"
+                 title="Bấm để xem ảnh lớn"
+                 style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid var(--border); cursor:pointer; transition:transform 0.15s"
+                 onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" />
+          `).join('')}
+          ${r.evidences.length > 2 ? `<span style="font-size:11px; align-self:center; color:var(--accent); font-weight:700">+${r.evidences.length - 2}</span>` : ''}
+        </div>
+      `;
+    }
+
+    // Fix Notes Display (if resolved)
+    let fixDetailHtml = '';
+    if (bStatus === 'RESOLVED' && (r.fixVersion || r.fixNotes)) {
+      fixDetailHtml = `
+        <div style="margin-top:6px; padding:6px 10px; background:var(--success-bg); border-left:3px solid var(--success); border-radius:4px; font-size:12px; color:var(--text-secondary)">
+          <strong>Fix bản ${r.fixVersion || ''}</strong> ${r.fixCommit ? `<code>(${r.fixCommit})</code>` : ''}: 
+          <span>${r.fixNotes || 'Đã sửa'}</span>
+        </div>
+      `;
+    }
+
+    return `
+      <tr>
+        <td>
+          <strong style="color:var(--accent); font-family:var(--font-mono); font-size:13px">${tc.id}</strong>
+        </td>
+        <td>
+          <span class="module-tag" style="margin-bottom:4px; display:inline-block">${tc.module}</span>
+          <div><span class="badge badge-${tc.priority ? tc.priority.toLowerCase() : 'p3'}">${tc.priority}</span></div>
+        </td>
+        <td>
+          <div style="font-weight:600; color:var(--text-primary); margin-bottom:4px">${tc.name}</div>
+          <div style="font-size:12.5px; color:var(--danger); background:var(--danger-bg); padding:6px 8px; border-radius:4px; border-left:3px solid var(--danger); line-height:1.4">
+            <strong>Lỗi thực tế:</strong> ${r.notes || 'Tester không để lại ghi chú chi tiết'}
+          </div>
+          ${fixDetailHtml}
+        </td>
+        <td>${evidenceHtml}</td>
+        <td>
+          <div style="font-weight:600; font-size:12.5px">${r.tester || 'Tester'}</div>
+          <div style="font-size:11px; color:var(--text-muted)">${r.testedAt ? new Date(r.testedAt).toLocaleDateString('vi-VN') : ''}</div>
+        </td>
+        <td>${statusBadge}</td>
+        <td style="text-align:right">
+          <div style="display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="reproduceBug('${tc.id}')" title="Chuyển đến màn hình Thực thi để xem các bước tái hiện và thử nghiệm">
+              ▶️ Tái hiện
+            </button>
+            ${bStatus !== 'IN_DEV' && bStatus !== 'RESOLVED' ? `
+              <button class="btn btn-sm btn-outline" onclick="markBugInProgress('${tc.id}')" style="color:var(--warning); border-color:var(--warning)" title="Tiếp nhận sửa lỗi này">
+                🛠️ Nhận sửa
+              </button>
+            ` : ''}
+            ${bStatus !== 'RESOLVED' ? `
+              <button class="btn btn-sm btn-primary" onclick="openDevResolveBugModal('${tc.id}')" title="Khai báo phiên bản và mã commit đã khắc phục xong">
+                ✅ Báo đã sửa
+              </button>
+            ` : `
+              <button class="btn btn-sm btn-outline" onclick="openDevResolveBugModal('${tc.id}')" title="Cập nhật lại thông tin bản vá">
+                ✏️ Sửa ghi chú
+              </button>
+            `}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function markBugInProgress(tcId) {
+  if (!state.results[tcId]) {
+    state.results[tcId] = { status: 'Fail' };
+  }
+  state.results[tcId].bugStatus = 'IN_DEV';
+  saveState();
+  renderDevBugsPage();
+  showToast(`🛠️ Đã chuyển ${tcId} sang trạng thái Đang xử lý`, 'info');
+}
+
+function reproduceBug(tcId) {
+  state.selectedTcId = tcId;
+  navigate('execute');
+  renderExecDetail(tcId);
+  showToast(`▶️ Đang mở kịch bản ${tcId} để tái hiện thử nghiệm`, 'info');
+}
+
+function openDevResolveBugModal(tcId) {
+  const tc = getAllTcs().find(t => t.id === tcId);
+  if (!tc) return;
+  const r = state.results[tcId] || {};
+  
+  document.getElementById('dev-res-tc-id').value = tcId;
+  const infoEl = document.getElementById('dev-res-tc-info');
+  if (infoEl) {
+    infoEl.innerHTML = `
+      <strong>${tc.id}</strong>: ${tc.name}
+      <div style="color:var(--danger); margin-top:4px; font-size:12px"><strong>Lỗi:</strong> ${r.notes || 'Không có mô tả'}</div>
+    `;
+  }
+  document.getElementById('dev-res-version').value = r.fixVersion || (state.currentProjectVersion ? state.currentProjectVersion + '-patch' : 'v2.0.1-patch');
+  document.getElementById('dev-res-commit').value = r.fixCommit || '';
+  document.getElementById('dev-res-notes').value = r.fixNotes || '';
+  
+  openModal('modal-dev-resolve-bug');
+}
+
+function confirmDevResolveBug() {
+  const tcId = document.getElementById('dev-res-tc-id').value;
+  const version = document.getElementById('dev-res-version').value.trim();
+  const commit = document.getElementById('dev-res-commit').value.trim();
+  const notes = document.getElementById('dev-res-notes').value.trim();
+  
+  if (!version) {
+    alert('Vui lòng nhập Phiên bản khắc phục lỗi!');
+    return;
+  }
+  if (!notes) {
+    alert('Vui lòng nhập Ghi chú giải pháp sửa lỗi!');
+    return;
+  }
+  
+  if (!state.results[tcId]) {
+    state.results[tcId] = { status: 'Fail' };
+  }
+  
+  state.results[tcId].bugStatus = 'RESOLVED';
+  state.results[tcId].fixVersion = version;
+  state.results[tcId].fixCommit = commit;
+  state.results[tcId].fixNotes = notes;
+  state.results[tcId].fixedBy = state.currentUser ? state.currentUser.name : 'Developer';
+  state.results[tcId].fixedAt = new Date().toISOString();
+  
+  saveState();
+  closeModal('modal-dev-resolve-bug');
+  renderDevBugsPage();
+  showToast(`🎉 Đã đánh dấu sửa xong kịch bản ${tcId}! Đã thông báo cho Tester.`, 'success');
+}
+
+function openLightbox(imgUrl, title) {
+  const modal = document.getElementById('lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  const titleEl = document.getElementById('lightbox-title');
+  if (modal && img) {
+    img.src = imgUrl;
+    if (titleEl) titleEl.textContent = title || 'Ảnh chụp bằng chứng lỗi';
+    modal.classList.add('active');
+  }
+}
+
+function closeLightbox(e) {
+  if (e && e.target && e.target.id === 'lightbox-img') return;
+  const modal = document.getElementById('lightbox-modal');
+  if (modal) modal.classList.remove('active');
 }
