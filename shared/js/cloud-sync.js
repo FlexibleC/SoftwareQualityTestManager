@@ -176,6 +176,9 @@
     if (eventType === 'INSERT' || eventType === 'UPDATE') {
       if (!newRec || !newRec.tc_id) return;
 
+      const validTcIds = new Set((window.state?.projects?.[0]?.testCases || []).map(t => t.id));
+      if (validTcIds.size > 0 && !validTcIds.has(newRec.tc_id)) return;
+
       const tcId = newRec.tc_id;
       const cur = window.state?.results ? window.state.results[tcId] : null;
 
@@ -296,8 +299,10 @@
 
       let syncedCount = 0;
       if (Array.isArray(records)) {
+        const validTcIds = new Set((window.state?.projects?.[0]?.testCases || []).map(t => t.id));
         records.forEach((rec) => {
           if (!rec.tc_id) return;
+          if (validTcIds.size > 0 && !validTcIds.has(rec.tc_id)) return;
           const mapped = mapCloudRecordToLocal(rec);
           window.state.results[rec.tc_id] = mapped;
           window.state.cycleResults[curCycleId][rec.tc_id] = JSON.parse(JSON.stringify(mapped));
@@ -429,11 +434,20 @@
     }
   }
 
-  // 7. Đồng bộ tức thời 1 kết quả bài test lên Cloud (Được gọi khi Tester chấm Pass/Fail)
+  // 7. Đồng bộ tức thời 1 kết quả bài test lên Cloud & LAN Server (Được gọi khi Tester chấm Pass/Fail)
   async function syncResultToCloud(tcId) {
     if (!tcId || !window.state?.results?.[tcId]) return;
     const r = window.state.results[tcId];
     const payload = mapLocalRecordToCloud(tcId, r);
+
+    // Đồng bộ tức thì tới máy chủ LAN nếu đang chạy web server nội bộ
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tcId, record: r })
+      }).catch(() => {});
+    }
 
     // Nếu chưa có client, thêm vào offline queue và thử kết nối
     if (!cloudState.client) {
@@ -779,24 +793,33 @@
     if (m) m.style.display = 'none';
   }
 
-  // Refresh UI các trang khi có dữ liệu mới
+  // Refresh UI tất cả các trang khi có dữ liệu mới đồng bộ
   function triggerUiRefresh(tcId, record) {
     try {
-      // 1. Dashboard KPI Admin
-      const dashPass = document.getElementById('dash-pass');
-      const dashFail = document.getElementById('dash-fail');
-      const dashTotal = document.getElementById('dash-total');
-      if (dashPass && dashFail && window.state?.results) {
-        let pass = 0, fail = 0;
-        Object.values(window.state.results).forEach(r => {
-          if (r.status === 'Pass' || r.status === 'PASSED') pass++;
-          else if (r.status === 'Fail' || r.status === 'FAILED') fail++;
-        });
-        dashPass.textContent = pass;
-        dashFail.textContent = fail;
+      // 1. Tester Workspace (Việc của tôi)
+      if (typeof window.renderMyTasks === 'function') {
+        window.renderMyTasks();
+      }
+      if (typeof window.renderSummaryMatrix === 'function') {
+        window.renderSummaryMatrix();
       }
 
-      // 2. Execution Page Tester / Dev
+      // 2. Reports (Báo cáo tiến độ cá nhân & Quản trị)
+      if (typeof window.initReportsModule === 'function') {
+        window.initReportsModule();
+      }
+
+      // 3. Admin Assignments (Giao việc)
+      if (typeof window.renderAssignmentsTable === 'function') {
+        window.renderAssignmentsTable();
+      }
+
+      // 4. Admin Testcases (Danh mục kịch bản)
+      if (typeof window.renderTestcasesTable === 'function') {
+        window.renderTestcasesTable();
+      }
+
+      // 5. Execution Studio (Phòng thi hành test)
       if (typeof window.filterExecList === 'function') {
         window.filterExecList();
       }
@@ -804,12 +827,30 @@
         window.selectExecTc(tcId);
       }
 
-      // 3. Matrix Summary Tester
-      if (typeof window.renderTesterTaskMatrix === 'function') {
-        window.renderTesterTaskMatrix();
+      // 6. Developer Defect Tracker
+      if (typeof window.renderDefectList === 'function') {
+        window.renderDefectList();
       }
 
-      // 4. Dispatch custom event cho bất kỳ component nào lắng nghe
+      // 7. Dashboard KPI Admin
+      const dashPass = document.getElementById('dash-pass');
+      const dashFail = document.getElementById('dash-fail');
+      const dashBlocked = document.getElementById('dash-blocked');
+      const dashTotal = document.getElementById('dash-total');
+      if (dashPass && dashFail && window.state?.results) {
+        let pass = 0, fail = 0, blk = 0;
+        Object.values(window.state.results).forEach(r => {
+          const s = (r.status || '').toUpperCase();
+          if (s === 'PASS' || s === 'PASSED') pass++;
+          else if (s === 'FAIL' || s === 'FAILED') fail++;
+          else if (s === 'BLOCKED') blk++;
+        });
+        dashPass.textContent = pass;
+        dashFail.textContent = fail;
+        if (dashBlocked) dashBlocked.textContent = blk;
+      }
+
+      // 8. Dispatch custom event cho bất kỳ component nào lắng nghe
       window.dispatchEvent(new CustomEvent('smartvms:cloud-synced', {
         detail: { tcId, record }
       }));

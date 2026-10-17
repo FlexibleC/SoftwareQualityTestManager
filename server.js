@@ -55,6 +55,106 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API ENDPOINTS: Đồng bộ hóa nội bộ (LAN Mode) & Nạp Catalog động
+  if (req.url.startsWith('/api/catalog')) {
+    const catalogPath = path.join(ROOT_DIR, 'data', 'smartvms_test_catalog.json');
+    const catalogJsPath = path.join(ROOT_DIR, 'data', 'smartvms_test_catalog.js');
+    if (req.method === 'GET') {
+      fs.readFile(catalogPath, 'utf8', (err, data) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: err.message }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(data);
+        }
+      });
+      return;
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          const tcs = parsed.testCases || parsed;
+          const fullCatalog = {
+            schema: "https://smartvms.local/schemas/test-catalog-v4.json",
+            title: "SmartVMS Local SingleSite 2026 — Danh mục Kịch bản Kiểm thử Chuẩn hóa",
+            version: "3.5.0",
+            exportedAt: new Date().toISOString(),
+            totalTestCases: tcs.length,
+            modules: parsed.modules || [
+              { id: "M01", name: "Xác thực, Phân quyền & Quản lý Ca trực", short: "Auth & Ca trực" },
+              { id: "M02", name: "Check-in Khách Đơn & Cấp phát Thẻ", short: "Check-in Khách" },
+              { id: "M03", name: "Khách Đoàn, Người đi cùng & Lưu trú Qua đêm", short: "Đoàn & Đi cùng" },
+              { id: "M04", name: "Check-out, Quản lý Phương tiện & Thu hồi Thẻ mất", short: "Check-out & Thẻ" },
+              { id: "M05", name: "Giao diện Trực ban Cải tiến & Tra cứu Nâng cao", short: "Trực ban & Tra cứu" },
+              { id: "M06", name: "Chi tiết Lượt khách & Dòng thời gian Timeline", short: "Chi tiết & Timeline" },
+              { id: "M07", name: "Phân hệ Sổ sách Ngoại lệ - DataEntry", short: "Sổ sách DataEntry" },
+              { id: "M08", name: "Quản trị Admin & Giám sát Vận hành", short: "Admin & Giám sát" },
+              { id: "M09", name: "Trung tâm Báo cáo, Thống kê & Báo cáo Thẻ mất", short: "Báo cáo & Thống kê" },
+              { id: "M10", name: "Cấu hình Hệ thống, Bốt trực & Đổi mật khẩu", short: "Cấu hình & Đổi pass" },
+              { id: "M11", name: "Tích hợp Thiết bị Ngoại vi & Camera", short: "Thiết bị Ngoại vi" },
+              { id: "M12", name: "Độ tin cậy & Tự phục hồi Offline/LAN", short: "Tin cậy & Offline" }
+            ],
+            testCases: tcs
+          };
+
+          fs.writeFileSync(catalogPath, JSON.stringify(fullCatalog, null, 2), 'utf8');
+          fs.writeFileSync(catalogJsPath, 'window.SMARTVMS_DEFAULT_CATALOG = ' + JSON.stringify(fullCatalog, null, 2) + ';', 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, count: tcs.length }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // API ĐỒNG BỘ KẾT QUẢ TEST REALTIME TRONG MẠNG LAN
+  if (req.url.startsWith('/api/sync')) {
+    const syncPath = path.join(ROOT_DIR, 'data', 'lan_sync_state.json');
+    if (req.method === 'GET') {
+      if (fs.existsSync(syncPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        fs.createReadStream(syncPath).pipe(res);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ results: {}, updatedAt: new Date().toISOString() }));
+      }
+      return;
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body);
+          let current = { results: {}, updatedAt: new Date().toISOString() };
+          if (fs.existsSync(syncPath)) {
+            try { current = JSON.parse(fs.readFileSync(syncPath, 'utf8')); } catch(e){}
+          }
+          if (payload.tcId && payload.record) {
+            current.results[payload.tcId] = payload.record;
+            current.updatedAt = new Date().toISOString();
+          } else if (payload.results) {
+            current.results = { ...current.results, ...payload.results };
+            current.updatedAt = new Date().toISOString();
+          }
+          fs.writeFileSync(syncPath, JSON.stringify(current, null, 2), 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, count: Object.keys(current.results).length }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
   // Phân tích URL và xử lý query string
   let safePath = req.url.split('?')[0].split('#')[0];
   if (safePath === '/' || safePath === '') {

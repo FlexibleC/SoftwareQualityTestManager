@@ -322,6 +322,54 @@
     <div class="settings-tab-pane" id="settings-pane-storage">
       <div class="settings-grid">
         <div class="settings-card">
+          <div class="settings-card-title">📗 Quản Lý Danh Mục Kịch Bản (Excel & JSON)</div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Nạp danh mục từ Excel (.xlsx, .xls)</span>
+              <span class="action-desc">Nạp động toàn bộ kịch bản kiểm thử từ bảng tính Excel thay vì nạp cứng bằng code</span>
+            </div>
+            <label class="btn btn-outline btn-sm" style="cursor:pointer; background:rgba(34,197,94,0.12); border-color:#16a34a; color:#16a34a; font-weight:700">
+              📗 Nạp Excel
+              <input type="file" accept=".xlsx, .xls" style="display:none" onchange="importCatalogFromExcel(this)" />
+            </label>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Tải file mẫu Excel chuẩn ISO 29119-3</span>
+              <span class="action-desc">Mẫu bảng tính kịch bản kiểm thử có sẵn cấu trúc cột và dữ liệu mẫu</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="downloadExcelTemplate()">📑 Tải Mẫu Excel</button>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Xuất danh mục ra file Excel (.xlsx)</span>
+              <span class="action-desc">Xuất toàn bộ test cases kèm trạng thái kiểm thử mới nhất ra file Excel</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogToExcel()">📊 Xuất Excel</button>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title">Nạp / Xuất danh mục JSON (.json)</span>
+              <span class="action-desc">Quản lý tệp danh mục kịch bản định dạng JSON tiêu chuẩn</span>
+            </div>
+            <div style="display:flex; gap:6px">
+              <label class="btn btn-outline btn-sm" style="cursor:pointer">
+                📁 Nạp JSON
+                <input type="file" accept=".json" style="display:none" onchange="importCatalogFromJson(this)" />
+              </label>
+              <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogJson()">💾 Xuất JSON</button>
+            </div>
+          </div>
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-title" style="color:#dc2626">Xóa bỏ các kịch bản Bỏ qua (Skip)</span>
+              <span class="action-desc">Xóa vĩnh viễn 55 ca kịch bản không còn phù hợp khỏi CSDL và báo cáo</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626; font-weight:700" onclick="deleteSkippedTestCases()">🗑️ Xóa Bỏ 55 Ca Skip</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
           <div class="settings-card-title">📦 Sao Lưu & Phục Hồi CSDL</div>
           <div class="action-row">
             <div class="action-info">
@@ -858,7 +906,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
   <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
   <script src="../shared/js/settings.js"></script>
   <script>

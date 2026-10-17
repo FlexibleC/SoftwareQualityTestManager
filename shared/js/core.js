@@ -174,8 +174,8 @@ function initCoreState() {
     if (!actPrj.testCases || actPrj.testCases.length === 0) {
       const tcs = JSON.parse(JSON.stringify(catalog.testCases || []));
       actPrj.testCases = tcs;
-    } else if (catalog && catalog.testCases) {
-      // Sync fresh definitions from catalog to existing built-in test cases while preserving execution state
+    } else if (!state.isCustomCatalog && catalog && catalog.testCases) {
+      // Chỉ đồng bộ khi chưa nạp catalog tùy chỉnh (Excel / JSON)
       const catMap = new Map((catalog.testCases || []).map(t => [t.id, t]));
       actPrj.testCases = actPrj.testCases.map(t => {
         if (catMap.has(t.id) && !t.isCustom) {
@@ -234,13 +234,13 @@ function initCoreState() {
         label: 'v2.0-SingleSite 2026',
         status: 'IN_QA',
         targetDate: '2026-10-30',
-        changelog: 'Phiên bản Offline Standalone cho trụ sở đơn lẻ (204 TCs)'
+        changelog: 'Phiên bản Offline Standalone cho trụ sở đơn lẻ'
       }
     ];
   }
 
-  // Ensure single test cycle
-  if (!state.testCycles || state.testCycles.length === 0 || state.testCycles.some(c => c.projectId !== 'PRJ-SMARTVMS' || c.version !== 'v2.0' || c.id !== 'CYC-SMARTVMS-01') || !state.testCycles[0].testCaseIds || state.testCycles[0].testCaseIds.length < 200) {
+  // Ensure single test cycle (respect any number of test cases, no hardcoded < 200 restriction)
+  if (!state.testCycles || state.testCycles.length === 0 || !state.testCycles[0].testCaseIds || state.testCycles[0].testCaseIds.length === 0) {
     seedDefaultTestCycles();
   } else {
     state.activeCycleId = 'CYC-SMARTVMS-01';
@@ -251,8 +251,8 @@ function initCoreState() {
     seedDefaultCycleResults();
   }
 
-  // Ensure all testcases in single cycle are assigned to 1 tester (Nguyễn Văn Nam)
-  if (!state.assignments || state.assignments.length < 200 || state.assignments.some(a => a.cycleId !== 'CYC-SMARTVMS-01' || a.projectId !== 'PRJ-SMARTVMS')) {
+  // Ensure all testcases in single cycle are assigned (no hardcoded < 200 restriction)
+  if (!state.assignments || state.assignments.length === 0) {
     seedDefaultAssignments();
   }
 

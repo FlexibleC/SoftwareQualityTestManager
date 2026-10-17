@@ -54,12 +54,19 @@
         <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📋 Danh Mục Kịch Bản Kiểm Thử Chuẩn</h2>
         <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tra cứu, cập nhật và quản lý toàn diện các kịch bản kiểm thử của dự án</div>
       </div>
-      <div style="display:flex; align-items:center; gap:8px">
-        <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0">
-          ⬆️ Nạp JSON
-          <input type="file" accept=".json" style="display:none" onchange="importCatalogJson(this)" />
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+        <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0; background:rgba(34,197,94,0.12); border-color:#16a34a; color:#16a34a; font-weight:700" title="Nạp toàn bộ danh mục kịch bản từ file Excel (.xlsx, .xls)">
+          📗 Nhập Excel (.xlsx)
+          <input type="file" accept=".xlsx, .xls" style="display:none" onchange="importCatalogFromExcel(this)" />
         </label>
-        <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogJson()">⬇️ Xuất JSON</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="downloadExcelTemplate()" title="Tải file mẫu Excel chuẩn ISO 29119-3">📑 Tải Mẫu Excel</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogToExcel()" title="Xuất toàn bộ kịch bản và kết quả ra file Excel">📊 Xuất Excel (.xlsx)</button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0" title="Nạp danh mục kịch bản từ file JSON">
+          📁 Nạp JSON
+          <input type="file" accept=".json" style="display:none" onchange="importCatalogFromJson(this)" />
+        </label>
+        <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogJson()" title="Xuất danh mục kịch bản ra JSON">💾 Xuất JSON</button>
+        <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626" onclick="deleteSkippedTestCases()" title="Xóa bỏ vĩnh viễn các ca kịch bản đang Bỏ qua (Skip)">🗑️ Xóa ca Bỏ Qua (Skip)</button>
         <button type="button" class="btn btn-primary btn-sm" onclick="openAddTcModal()">➕ Thêm Test Case Mới</button>
       </div>
     </div>
@@ -279,7 +286,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
   <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
   <script src="../shared/js/adhoc-defect.js"></script>
   <script src="../shared/js/testcases.js"></script>
