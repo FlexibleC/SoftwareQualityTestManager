@@ -2,10 +2,7 @@
   "version": 2,
   "name": "smartvms-test-manager",
   "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
+  "trailingSlash": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -17,7 +14,7 @@
       ]
     },
     {
-      "source": "/(style.css|app.js)",
+      "source": "/(style.css|app.js|shared/(.*)|data/(.*))",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]

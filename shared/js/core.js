@@ -1279,6 +1279,17 @@ function getCurrentUser() {
   if (state.currentUser) {
     const matched = users.find(u => u.username === state.currentUser.username);
     if (matched) return matched;
+    return state.currentUser;
+  }
+  const isTesterPortal = typeof window !== 'undefined' && (window.location.pathname || '').toLowerCase().includes('/tester');
+  if (isTesterPortal) {
+    const tUser = users.find(u => u.role === 'tester' || u.username === 'tester') || {
+      username: 'tester',
+      name: 'Nguyễn Văn Huy (Tester)',
+      role: 'tester',
+      title: 'Kiểm Thử Viên'
+    };
+    return tUser;
   }
   return users[0] || { username: 'admin', name: 'Nguyễn Văn Huy', role: 'admin', title: 'QA Lead' };
 }

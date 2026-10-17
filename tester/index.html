@@ -10,11 +10,6 @@
   <link rel="stylesheet" href="../shared/css/base.css?v=20261015" />
   <link rel="stylesheet" href="../shared/css/testcases.css?v=20261015" />
   <link rel="stylesheet" href="../shared/css/adhoc.css?v=20261015" />
-  <script>
-    if (window.location.pathname === '/tester') {
-      window.location.replace('/tester/');
-    }
-  </script>
   <style>
     /* ==========================================================================
        SMARTVMS QA HUB - TESTER WORKSPACE (3-TIER CASCADE & MATRIX SUMMARY)
@@ -597,6 +592,20 @@
 
     function initTesterWorkspace() {
       initCoreState();
+
+      // Đảm bảo luôn có User Tester hợp lệ khi truy cập trực tiếp
+      if (!state.currentUser || (state.currentUser.role !== 'tester' && state.currentUser.role !== 'admin')) {
+        const users = typeof getUsers === 'function' ? getUsers() : [];
+        const defaultTester = users.find(u => u.username === 'tester') || {
+          username: 'tester',
+          name: 'Nguyễn Văn Huy (Tester)',
+          role: 'tester',
+          title: 'Kiểm Thử Viên'
+        };
+        state.currentUser = defaultTester;
+        saveCoreState();
+      }
+
       const p = getActiveProject();
       if (!p) return;
 
