@@ -273,9 +273,11 @@
   <div class="toast" id="toast"></div>
 
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../data/smartvms_test_catalog.js"></script>
   <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
@@ -455,6 +457,9 @@
       }
 
       saveCoreState();
+      if (typeof window.syncResultToCloud === 'function') {
+        window.syncResultToCloud(tcId);
+      }
 
       closeModal('modal-bug-status');
       renderDefectList();

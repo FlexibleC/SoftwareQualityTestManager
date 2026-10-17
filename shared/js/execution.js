@@ -830,6 +830,9 @@ function saveExecResult(tcId, andNext = false) {
   });
 
   saveCoreState();
+  if (typeof window.syncResultToCloud === 'function') {
+    window.syncResultToCloud(tcId);
+  }
   showToast(`✅ Đã lưu kết quả [${tcId}] vào ${curCycle?.name || 'Đợt kiểm thử'}: ${execDraftStatus}`, 'success');
 
   // Update left list
@@ -859,6 +862,9 @@ function updateDefectLifecycle(tcId, newDefectStatus) {
   }
   state.results[tcId].defectStatus = newDefectStatus;
   saveCoreState();
+  if (typeof window.syncResultToCloud === 'function') {
+    window.syncResultToCloud(tcId);
+  }
   showToast(`🐞 Cập nhật trạng thái lỗi: ${newDefectStatus}`, 'info');
   const tc = getAllTcs().find(t => t.id === tcId);
   if (tc) renderExecDetail(tc);
@@ -876,6 +882,9 @@ function handleEvidenceUpload(tcId, input) {
       uploadedAt: new Date().toISOString()
     });
     saveCoreState();
+    if (typeof window.syncResultToCloud === 'function') {
+      window.syncResultToCloud(tcId);
+    }
     showToast('📸 Đã đính kèm ảnh bằng chứng!', 'success');
     const tc = getAllTcs().find(t => t.id === tcId);
     if (tc) renderExecDetail(tc);
@@ -896,6 +905,9 @@ function handleQuickEvidenceUpload(event, tcId) {
       uploadedAt: new Date().toISOString()
     });
     saveCoreState();
+    if (typeof window.syncResultToCloud === 'function') {
+      window.syncResultToCloud(tcId);
+    }
     showToast('📸 Đã đính kèm ảnh bằng chứng!', 'success');
     renderQuickEvidencePreview(tcId);
   };
@@ -976,6 +988,9 @@ function deleteEvidence(tcId, index) {
   if (state.evidences[tcId]) {
     state.evidences[tcId].splice(index, 1);
     saveCoreState();
+    if (typeof window.syncResultToCloud === 'function') {
+      window.syncResultToCloud(tcId);
+    }
     showToast('🗑 Đã xóa ảnh bằng chứng!', 'info');
     const tc = getAllTcs().find(t => t.id === tcId);
     if (tc) renderExecDetail(tc);
@@ -996,7 +1011,11 @@ function sendExecComment(tcId) {
     text: input.value.trim()
   });
 
+  const commentText = input.value.trim();
   saveCoreState();
+  if (typeof window.syncCommentToCloud === 'function') {
+    window.syncCommentToCloud(tcId, commentText);
+  }
   input.value = '';
   showToast('💬 Đã gửi trao đổi kỹ thuật!', 'success');
   const tc = getAllTcs().find(t => t.id === tcId);

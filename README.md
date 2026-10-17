@@ -35,8 +35,39 @@
 11. **M11**: Thiết bị Ngoại vi, DeviceService & Tương tác Cổng (Peripherals & Barrier)
 12. **M12**: Dịch vụ Ngầm, Tính toàn vẹn, Bản quyền & Chịu lỗi (Background Services & NFR)
 
-## 🛠️ Hướng Dẫn Sử Dụng Nhanh
-- **Khởi động cục bộ tức thì**: Nhấp đúp vào file `Open-TestManager.bat` tại thư mục dự án để mở ngay trên trình duyệt Chrome/Edge.
-- **Tài khoản đăng nhập demo**:
-  - Quản trị viên: `admin` / `123` (hoặc `admin123`)
-  - Tester thực thi: `tester` / `123`
+## 🌐 Hướng Dẫn Truy Cập Hệ Thống Trên Môi Trường Mạng
+
+### 1. Truy cập Online Internet (Vercel HTTPS - Khuyên Dùng)
+- **Địa chỉ truy cập**: 👉 **`https://smartvms-test-manager.vercel.app`**
+- **Đặc điểm**:
+  - Truy cập được từ bất kỳ thiết bị nào (Laptop, Máy tính để bàn, Điện thoại di động, iPad) ở bất cứ đâu có Internet.
+  - Sử dụng kết nối bảo mật HTTPS miễn phí và ổn định 100%.
+  - Tự động đồng bộ kết quả kiểm thử tức thì giữa các thành viên qua **Supabase Cloud (PostgreSQL Singapore)** theo thời gian thực (Realtime WebSocket).
+
+### 2. Truy cập Mạng Nội Bộ (LAN Intranet Server)
+- **Khởi động**: Nhấp đúp vào file **`Start-LAN-Server.bat`** trên máy tính chủ.
+- **Địa chỉ truy cập trong mạng cơ quan**:
+  - Trên máy chủ: `http://localhost:8080`
+  - Trên các máy trạm / điện thoại cùng mạng WiFi/LAN: 👉 **`http://192.168.1.58:8080`** (hoặc địa chỉ IP máy chủ hiển thị trên màn hình console).
+
+### 3. Khởi động nhanh từ máy tính cá nhân
+- Nhấp đúp vào **`Open-TestManager.bat`** để chọn 1 trong 3 chế độ (Online Internet, LAN Server hoặc Cục bộ).
+
+---
+
+## 🔑 Tài Khoản Sử Dụng Mặc Định
+- **QA Lead / Quản trị viên (Admin)**: `admin` / `123`
+- **Kiểm thử viên (Tester 1)**: `tester` / `123`
+- **Kiểm thử viên (Tester 2)**: `tester2` / `123`
+- **Kỹ sư lập trình (Developer)**: `dev` / `123`
+
+---
+
+## ⚡ Cơ Chế Lưu Trữ Đám Mây Tập Trung (Cloud-First & Offline-First)
+- **Giải quyết triệt để vấn đề chỉ lưu trên trình duyệt của 1 máy**:
+  - Trước đây, kết quả kiểm thử chỉ lưu trong `localStorage` của trình duyệt đang mở.
+  - Hiện tại, hệ thống đã tích hợp **Supabase Cloud Realtime**:
+    + Mỗi khi tester bấm "Pass", "Fail", "Skip" hay cập nhật Defect, dữ liệu lập tức được đẩy lên CSDL Cloud tập trung.
+    + Khi người quản trị hay các tester khác mở hệ thống (dù ở máy tính hay điện thoại khác), toàn bộ kết quả kiểm thử, tỷ lệ đạt/lỗi KPI và bằng chứng ảnh đều được nạp đầy đủ và đồng bộ thời gian thực.
+    + Cơ chế **Offline-First**: Nếu mất kết nối mạng, kết quả vẫn lưu an toàn trên trình duyệt và tự động đồng bộ bù (flush queue) ngay khi có mạng trở lại.
+

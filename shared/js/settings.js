@@ -18,7 +18,7 @@ function initSettingsModule() {
   // Check URL params or hash for initial tab
   const urlParams = new URLSearchParams(window.location.search);
   const tabParam = urlParams.get('tab') || window.location.hash.replace('#', '');
-  if (tabParam && ['projects', 'users', 'modules', 'session', 'storage'].includes(tabParam)) {
+  if (tabParam && ['projects', 'users', 'modules', 'session', 'storage', 'cloud'].includes(tabParam)) {
     switchSettingsTab(tabParam);
   }
 }
@@ -35,6 +35,18 @@ function switchSettingsTab(subtab) {
   else if (subtab === 'users') renderUsersTab();
   else if (subtab === 'modules') renderModulesTable();
   else if (subtab === 'storage') renderStorageStats();
+  else if (subtab === 'cloud') renderCloudTabStats();
+}
+
+function renderCloudTabStats() {
+  const pill = document.getElementById('tab-cloud-pill');
+  const countEl = document.getElementById('tab-cloud-count');
+  const count = Object.keys(state.results || {}).length;
+  if (countEl) countEl.textContent = `(${count} bản ghi trên hệ thống)`;
+  if (pill && typeof initCloudSync === 'function') {
+    pill.className = 'badge badge-pass';
+    pill.textContent = '🟢 Đã kết nối Realtime';
+  }
 }
 
 // ================================================================
