@@ -3,219 +3,474 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Tổng Quan - Admin QA Hub</title>
+  <title>Cổng Quản Trị Cấp Cao Hệ Thống - Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../shared/css/base.css" />
-  <link rel="stylesheet" href="../shared/css/reports.css" />
+  <link rel="stylesheet" href="css/admin-console.css" />
 </head>
 <body>
-  <!-- Admin Executive Topbar -->
+
+  <!-- Top Executive Bar -->
   <header class="vms-topbar">
     <div class="vms-topbar-left">
-      <a href="../admin/index.html" class="vms-brand">
-        <div class="vms-brand-icon">👑</div>
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon" style="background:linear-gradient(135deg, #1d4ed8, #0ea5e9)">🛡️</div>
         <div class="vms-brand-text">
-          <span class="vms-title">SmartVMS QA Hub</span>
-          <span class="vms-subtitle">Phân Hệ Quản Trị & Điều Hành</span>
+          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm</span>
+          <span class="vms-subtitle">Cổng Quản Trị Cấp Cao Hệ Thống (Global Enterprise Console)</span>
         </div>
       </a>
-      <nav class="vms-nav-container">
-        <div class="vms-nav-pills">
-          <a href="../admin/index.html" class="nav-item active">📊 Tổng quan</a>
-          <a href="../admin/assignments.html" class="nav-item">📌 Giao việc</a>
-          <a href="../admin/testcases.html" class="nav-item">📋 Kịch bản</a>
-          <a href="../admin/reports.html" class="nav-item">📈 Báo cáo</a>
-          <a href="../admin/settings.html" class="nav-item">⚙️ Cài đặt</a>
-        </div>
-      </nav>
     </div>
 
     <div class="vms-topbar-right">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-      <div class="vms-user-profile">
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      <div class="vms-user-profile" title="Tài khoản Quản trị cấp cao">
         <div class="vms-user-avatar">A</div>
         <div class="vms-user-info">
-          <span class="vms-user-name">Nguyễn Văn Huy</span>
-          <span class="vms-user-role">QA Lead (Admin)</span>
+          <span class="vms-user-name" id="top-user-name">Nguyễn Văn Huy</span>
+          <span class="vms-user-role">Super Admin / QA Lead</span>
         </div>
       </div>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')">🧪 Sang Tester</button>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
-  <main class="main-wrapper">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+  <!-- Main Console Wrapper -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+    
+    <!-- Hero Banner -->
+    <div class="console-hero-banner">
       <div>
-        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📊 Trung Tâm Điều Hành & Giám Sát Chất Lượng Dự Án</h2>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tổng quan tiến độ thực thi kiểm thử và tải công việc của toàn bộ dự án</div>
+        <h1 class="console-hero-title">Trung Tâm Điều Hành & Quản Trị Đa Dự Án</h1>
+        <p class="console-hero-subtitle">
+          Quản lý độc lập không gian các dự án, điều phối hồ bơi nhân sự và giám sát chất lượng toàn diện.
+        </p>
       </div>
-      <div style="display:flex; align-items:center; gap:8px">
-        <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Dự án đang xem:</span>
-        <select id="dash-project-select" onchange="switchProject(this.value)" class="topbar-select" style="background:var(--bg-card); color:var(--text-primary); border-color:var(--border)">
-          <!-- Populated dynamically -->
-        </select>
+      <div style="display:flex; gap:10px">
+        <button type="button" class="btn btn-primary" onclick="AdminPortfolio.openCreateProjectModal()">
+          ➕ Khởi Tạo Dự Án Mới
+        </button>
+        <button type="button" class="btn btn-outline" onclick="AdminPersonnel.openAddModal()">
+          👤 Thêm Nhân Sự Hệ Thống
+        </button>
       </div>
     </div>
 
-    <!-- Empty Projects Banner -->
-    <div id="dash-empty-banner" style="display:none; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.25); border-radius:8px; padding:12px 18px; margin-bottom:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
-      <div style="font-size:13px; color:var(--text-secondary)">
-        🏢 <strong>Cơ sở dữ liệu đang ở trạng thái sạch (0 Dự án).</strong> Hãy tạo dự án mới để bắt đầu nhập kịch bản và phân công kiểm thử.
-      </div>
-      <a href="../admin/settings.html?tab=projects" class="btn btn-primary btn-xs" style="font-weight:700">➕ Thêm Dự Án Mới</a>
-    </div>
-
-    <!-- KPI Metric Cards -->
-    <div class="stats-grid">
+    <!-- Global KPI Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
       <div class="stat-card stat-total">
-        <div class="stat-icon">📦</div>
+        <div class="stat-icon">🏢</div>
         <div class="stat-body">
-          <div class="stat-value" id="dash-total">0</div>
-          <div class="stat-label">Tổng số kịch bản</div>
+          <div class="stat-value" id="stat-global-projects">0</div>
+          <div class="stat-label">Tổng số dự án</div>
         </div>
       </div>
       <div class="stat-card stat-pass">
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon">⚡</div>
         <div class="stat-body">
-          <div class="stat-value" id="dash-pass" style="color:#16a34a">0</div>
-          <div class="stat-label">Kiểm thử Đạt</div>
+          <div class="stat-value" id="stat-active-projects" style="color:var(--primary)">0</div>
+          <div class="stat-label">Dự án đang kiểm thử</div>
         </div>
       </div>
-      <div class="stat-card stat-fail">
-        <div class="stat-icon">❌</div>
+      <div class="stat-card stat-info">
+        <div class="stat-icon">👥</div>
         <div class="stat-body">
-          <div class="stat-value" id="dash-fail" style="color:#dc2626">0</div>
-          <div class="stat-label">Phát hiện Lỗi</div>
+          <div class="stat-value" id="stat-global-staff" style="color:#0284c7">0</div>
+          <div class="stat-label">Hồ bơi nhân sự hệ thống</div>
         </div>
       </div>
-      <div class="stat-card" style="border-left:4px solid #991b1b">
-        <div class="stat-icon">⛔</div>
+      <div class="stat-card" style="border-left:4px solid #8b5cf6">
+        <div class="stat-icon">📋</div>
         <div class="stat-body">
-          <div class="stat-value" id="dash-blocked" style="color:#991b1b">0</div>
-          <div class="stat-label">Bị chặn (Blocked)</div>
-        </div>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #2563eb">
-        <div class="stat-icon">📌</div>
-        <div class="stat-body">
-          <div class="stat-value" id="dash-asg" style="color:#2563eb">0</div>
-          <div class="stat-label">Đã phân công</div>
+          <div class="stat-value" id="stat-global-tcs" style="color:#8b5cf6">0</div>
+          <div class="stat-label">Tổng kịch bản kiểm thử</div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Navigation Cards Grid -->
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:20px">
-      <div class="card" style="cursor:pointer; transition:transform 0.15s, box-shadow 0.15s" onclick="window.location.href='../admin/assignments.html'">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
-          <div style="width:40px; height:40px; border-radius:8px; background:rgba(37,99,235,0.1); display:flex; align-items:center; justify-content:center; font-size:20px">📌</div>
-          <div>
-            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">Điều Phối & Giao Việc</h3>
-            <span style="font-size:11.5px; color:var(--text-muted)">Phân bổ test case & Ma trận nhân sự</span>
+    <!-- Console Nav Tabs -->
+    <nav class="console-nav-tabs" role="tablist">
+      <button type="button" class="console-nav-tab active" data-tab="portfolio" onclick="switchConsoleTab('portfolio')">
+        🏢 1. Danh Mục Các Dự Án Độc Lập
+      </button>
+      <button type="button" class="console-nav-tab" data-tab="personnel" onclick="switchConsoleTab('personnel')">
+        👥 2. Hồ Bơi Nhân Sự Toàn Hệ Thống
+      </button>
+      <button type="button" class="console-nav-tab" data-tab="staffing" onclick="switchConsoleTab('staffing')">
+        📌 3. Ma Trận Phân Bổ Nhân Sự Vào Dự Án
+      </button>
+    </nav>
+
+    <!-- TAB 1: PORTFOLIO GRID -->
+    <section class="console-tab-pane active" id="pane-portfolio">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+        <div>
+          <h2 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0">
+            Danh Sách Các Không Gian Dự Án Độc Lập
+          </h2>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Mỗi dự án là một thực thể khép kín với cấu hình, kịch bản, đợt test và nhân sự riêng biệt.
           </div>
         </div>
-        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5">
-          Quản lý tải tester toàn dự án, giao kịch bản theo phân hệ hoặc giao lẻ từng test case với 8 cột tường minh.
-        </div>
-        <div style="margin-top:12px; font-weight:700; color:var(--primary); font-size:12px">Truy cập phân hệ Giao việc ➔</div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="AdminPortfolio.openCreateProjectModal()">
+          ➕ Thêm Dự Án
+        </button>
       </div>
 
-      <div class="card" style="cursor:pointer; transition:transform 0.15s, box-shadow 0.15s" onclick="window.location.href='../admin/testcases.html'">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
-          <div style="width:40px; height:40px; border-radius:8px; background:rgba(22,163,74,0.1); display:flex; align-items:center; justify-content:center; font-size:20px">📋</div>
+      <div class="portfolio-grid" id="portfolio-grid-container">
+        <!-- Rendered by AdminPortfolio.js -->
+      </div>
+    </section>
+
+    <!-- TAB 2: GLOBAL PERSONNEL POOL -->
+    <section class="console-tab-pane" id="pane-personnel">
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap; gap:12px">
           <div>
-            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">Danh Mục Kịch Bản</h3>
-            <span style="font-size:11.5px; color:var(--text-muted)">Tra cứu & Đặc tả test case</span>
+            <h2 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0">
+              👥 Danh Bạ Hồ Bơi Nhân Sự Chung Toàn Hệ Thống
+            </h2>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Tài nguyên nhân lực kỹ thuật được phân quyền và điều phối vào các dự án độc lập.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="AdminPersonnel.openAddModal()">
+            ➕ Thêm Nhân Sự Mới
+          </button>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div style="padding:14px 20px; border-bottom:1px solid var(--border-light); background:var(--bg-surface); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+          <div style="display:flex; align-items:center; gap:8px">
+            <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Lọc vai trò:</span>
+            <button type="button" class="btn btn-outline btn-xs personnel-filter-btn active" data-role="ALL" onclick="AdminPersonnel.filterByRole('ALL')">Tất cả</button>
+            <button type="button" class="btn btn-outline btn-xs personnel-filter-btn" data-role="admin" onclick="AdminPersonnel.filterByRole('admin')">Quản lý (Admin)</button>
+            <button type="button" class="btn btn-outline btn-xs personnel-filter-btn" data-role="tester" onclick="AdminPersonnel.filterByRole('tester')">Kiểm thử viên</button>
+            <button type="button" class="btn btn-outline btn-xs personnel-filter-btn" data-role="developer" onclick="AdminPersonnel.filterByRole('developer')">Lập trình viên</button>
+          </div>
+          <div>
+            <input 
+              type="text" 
+              placeholder="🔍 Tìm nhân sự (tên, user, email)..." 
+              class="form-control" 
+              style="height:32px; font-size:12px; width:260px"
+              oninput="AdminPersonnel.search(this.value)"
+            />
           </div>
         </div>
-        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5">
-          Toàn bộ 12 phân hệ nghiệp vụ, dữ liệu đầu vào, điều kiện tiên quyết và kết quả kỳ vọng chuẩn ISO 29119.
+
+        <!-- Table -->
+        <table class="asg-tc-table" style="table-layout:auto">
+          <thead>
+            <tr>
+              <th style="width:50px; text-align:center">#</th>
+              <th style="width:240px">Họ Tên & Tài Khoản</th>
+              <th style="width:220px">Email Liên Hệ</th>
+              <th style="width:160px; text-align:center">Vai Trò Hệ Thống</th>
+              <th>Dự Án Đang Tham Gia</th>
+              <th style="width:140px; text-align:center">Trạng Thái</th>
+              <th style="width:140px; text-align:center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="personnel-table-tbody">
+            <!-- Rendered by AdminPersonnel.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: STAFFING MATRIX -->
+    <section class="console-tab-pane" id="pane-staffing">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px">
+        <div>
+          <h2 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0">
+            📌 Ma Trận Phân Bổ Nhân Sự Vào Từng Dự Án
+          </h2>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Gán quyền và chỉ định vai trò (Quản trị dự án, Tester, Developer) cho từng nhân sự trong không gian dự án.
+          </div>
         </div>
-        <div style="margin-top:12px; font-weight:700; color:var(--success); font-size:12px">Tra cứu danh mục kịch bản ➔</div>
+        <div style="display:flex; align-items:center; gap:8px">
+          <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Chọn dự án để phân bổ:</span>
+          <select id="staffing-project-select" class="form-control" style="height:36px; font-weight:700; font-size:13px; min-width:280px" onchange="AdminStaffing.onProjectChange(this.value)">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
       </div>
 
-      <div class="card" style="cursor:pointer; transition:transform 0.15s, box-shadow 0.15s" onclick="window.location.href='../admin/reports.html'">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
-          <div style="width:40px; height:40px; border-radius:8px; background:rgba(217,119,6,0.1); display:flex; align-items:center; justify-content:center; font-size:20px">📈</div>
-          <div>
-            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">Báo Cáo Chất Lượng</h3>
-            <span style="font-size:11.5px; color:var(--text-muted)">Thống kê đa chiều & Biểu đồ</span>
-          </div>
-        </div>
-        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5">
-          Biểu đồ Doughnut tỉ lệ đạt/lỗi, phân tích theo phân hệ, so sánh giữa các dự án và xuất file HTML.
-        </div>
-        <div style="margin-top:12px; font-weight:700; color:var(--warning); font-size:12px">Xem báo cáo chi tiết ➔</div>
+      <div id="staffing-matrix-container">
+        <!-- Rendered by AdminStaffing.js -->
       </div>
-    </div>
+    </section>
+
   </main>
 
-  <!-- Scripts -->
+  <!-- MODAL 1: CREATE PROJECT -->
+  <div class="modal" id="modal-create-project">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          🏢 Khởi Tạo Không Gian Dự Án Mới
+        </h3>
+        <button type="button" class="btn-close" onclick="AdminPortfolio.closeCreateProjectModal()">✕</button>
+      </div>
+      <form id="form-create-project" onsubmit="AdminPortfolio.handleCreateProjectSubmit(event)">
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:14px">
+          <div>
+            <label class="form-label" style="font-weight:700">Tên Dự Án Phần Mềm (*)</label>
+            <input type="text" id="new-prj-name" class="form-control" placeholder="Ví dụ: SmartVMS — Quản lý Khách & Ra vào" required />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Mã Dự Án Viết Tắt (*)</label>
+              <input type="text" id="new-prj-code" class="form-control" placeholder="Ví dụ: SMARTVMS, ERP, CRM" required />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Phiên Bản Ban Đầu</label>
+              <input type="text" id="new-prj-version" class="form-control" placeholder="Ví dụ: v1.0" value="v1.0" />
+            </div>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Mô Tả Mục Tiêu Thẩm Định Chất Lượng</label>
+            <textarea id="new-prj-desc" class="form-control" rows="3" placeholder="Mô tả phạm vi sản phẩm, mục tiêu kiểm thử..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="AdminPortfolio.closeCreateProjectModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary btn-sm">Tạo Dự Án Mới</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: EDIT PROJECT -->
+  <div class="modal" id="modal-edit-project">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ⚙️ Cấu Hình Thông Tin Dự Án
+        </h3>
+        <button type="button" class="btn-close" onclick="AdminPortfolio.closeEditProjectModal()">✕</button>
+      </div>
+      <form id="form-edit-project" onsubmit="AdminPortfolio.handleEditProjectSubmit(event)">
+        <input type="hidden" id="edit-prj-id" />
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:14px">
+          <div>
+            <label class="form-label" style="font-weight:700">Tên Dự Án</label>
+            <input type="text" id="edit-prj-name" class="form-control" required />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Mã Dự Án</label>
+              <input type="text" id="edit-prj-code" class="form-control" required />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Phiên Bản Hiện Hành</label>
+              <input type="text" id="edit-prj-version" class="form-control" />
+            </div>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng Thái Dự Án</label>
+            <select id="edit-prj-status" class="form-control">
+              <option value="ACTIVE">Đang kiểm thử (ACTIVE)</option>
+              <option value="ARCHIVED">Đã đóng / Lưu trữ (ARCHIVED)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Mô Tả Dự Án</label>
+            <textarea id="edit-prj-desc" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="AdminPortfolio.closeEditProjectModal()">Đóng</button>
+          <button type="submit" class="btn btn-primary btn-sm">Lưu Thay Đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ADD PERSONNEL -->
+  <div class="modal" id="modal-add-personnel">
+    <div class="modal-box" style="max-width:520px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          👤 Thêm Nhân Sự Vào Hồ Bơi Toàn Hệ Thống
+        </h3>
+        <button type="button" class="btn-close" onclick="AdminPersonnel.closeAddModal()">✕</button>
+      </div>
+      <form id="form-add-personnel" onsubmit="AdminPersonnel.handleAddSubmit(event)">
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:14px">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Tên Đăng Nhập (*)</label>
+              <input type="text" id="new-usr-username" class="form-control" placeholder="Ví dụ: tester4" required />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Mật Khẩu Mặc Định</label>
+              <input type="password" id="new-usr-password" class="form-control" placeholder="123" value="123" />
+            </div>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Họ và Tên Nhân Sự (*)</label>
+            <input type="text" id="new-usr-name" class="form-control" placeholder="Ví dụ: Phạm Minh Tuấn" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Email Liên Hệ</label>
+            <input type="email" id="new-usr-email" class="form-control" placeholder="tuan.pm@smartvms.local" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Vai Trò Chuyên Môn Chính</label>
+            <select id="new-usr-role" class="form-control">
+              <option value="tester">Kiểm thử viên (Tester)</option>
+              <option value="developer">Lập trình viên (Developer)</option>
+              <option value="admin">Quản lý / QA Lead (Admin)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="AdminPersonnel.closeAddModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary btn-sm">Lưu Nhân Sự</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: EDIT PERSONNEL -->
+  <div class="modal" id="modal-edit-personnel">
+    <div class="modal-box" style="max-width:520px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ✏️ Chỉnh Sửa Thông Tin Nhân Sự
+        </h3>
+        <button type="button" class="btn-close" onclick="AdminPersonnel.closeEditModal()">✕</button>
+      </div>
+      <form id="form-edit-personnel" onsubmit="AdminPersonnel.handleEditSubmit(event)">
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:14px">
+          <div>
+            <label class="form-label" style="font-weight:700">Tài Khoản (Không thể đổi)</label>
+            <input type="text" id="edit-usr-username" class="form-control" readonly style="opacity:0.7" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Họ và Tên Nhân Sự</label>
+            <input type="text" id="edit-usr-name" class="form-control" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Email Liên Hệ</label>
+            <input type="email" id="edit-usr-email" class="form-control" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Vai Trò Hệ Thống</label>
+              <select id="edit-usr-role" class="form-control">
+                <option value="tester">Kiểm thử viên (Tester)</option>
+                <option value="developer">Lập trình viên (Developer)</option>
+                <option value="admin">Quản lý / QA Lead (Admin)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Trạng Thái</label>
+              <select id="edit-usr-status" class="form-control">
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="LOCKED">Tạm khóa</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="AdminPersonnel.closeEditModal()">Đóng</button>
+          <button type="submit" class="btn btn-primary btn-sm">Lưu Thay Đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: ASSIGN STAFF TO PROJECT -->
+  <div class="modal" id="modal-assign-staff">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+            👥 Phân Bổ Nhân Sự Vào Dự Án
+          </h3>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px" id="modal-assign-project-name">
+            Dự án: --
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="AdminStaffing.closeQuickAssignModal()">✕</button>
+      </div>
+      <form id="form-assign-staff" onsubmit="AdminStaffing.handleAssignSubmit(event)">
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:14px">
+          <div>
+            <label class="form-label" style="font-weight:700">Chọn Nhân Sự Từ Hồ Bơi Chung (*)</label>
+            <select id="assign-staff-username" class="form-control" required>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Vai Trò Đảm Nhận Trong Dự Án Này (*)</label>
+            <select id="assign-staff-role" class="form-control" required>
+              <option value="tester">Kiểm thử viên (Tester) — Thực thi kịch bản & ghi nhận kết quả</option>
+              <option value="lead">Quản trị Dự án (Project Lead) — Điều phối đợt test & phân công</option>
+              <option value="dev">Kỹ sư Lập trình (Developer) — Tiếp nhận bug & tái hiện khắc phục</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Chức Danh / Phụ Trách Cụ Thể (Tùy chọn)</label>
+            <input type="text" id="assign-staff-title" class="form-control" placeholder="Ví dụ: Tester phụ trách phân hệ Quản lý Khách" />
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="AdminStaffing.closeQuickAssignModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary btn-sm">Xác Nhận Phân Bổ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Core Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../data/smartvms_test_catalog.js"></script>
-  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
   <script src="../shared/js/core.js"></script>
-  <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
+
+  <!-- Modular Admin Scripts -->
+  <script src="js/admin-portfolio.js"></script>
+  <script src="js/admin-personnel.js"></script>
+  <script src="js/admin-staffing.js"></script>
+
   <script>
-    function updateDashboardKPIs() {
-      const p = getActiveProject();
-      const allProjects = getAllProjects();
-      const banner = document.getElementById('dash-empty-banner');
-      const sel = document.getElementById('dash-project-select');
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
 
-      if (!p || allProjects.length === 0) {
-        document.getElementById('dash-total').textContent = '0';
-        document.getElementById('dash-pass').textContent = '0';
-        document.getElementById('dash-fail').textContent = '0';
-        if (document.getElementById('dash-blocked')) {
-          document.getElementById('dash-blocked').textContent = '0';
-        }
-        document.getElementById('dash-asg').textContent = '0';
-        if (sel) {
-          sel.innerHTML = '<option value="">(Chưa có dự án nào - 0 Dự án)</option>';
-        }
-        if (banner) banner.style.display = 'flex';
-        return;
-      }
+      // Hiển thị tên user hiện tại
+      const u = getCurrentUser();
+      const topName = document.getElementById('top-user-name');
+      if (topName && u) topName.textContent = u.name || u.username;
 
-      if (banner) banner.style.display = 'none';
-      const tcs = p.testCases || [];
-      const asgs = (state.assignments || []).filter(a => a.projectId === p.id);
-      let pass = 0, fail = 0, blocked = 0;
-      tcs.forEach(t => {
-        const r = state.results ? state.results[t.id] : null;
-        if (r) {
-          const s = (r.status || '').toUpperCase();
-          if (s === 'PASS' || s === 'PASSED') pass++;
-          else if (s === 'FAIL' || s === 'FAILED') fail++;
-          else if (s === 'BLOCKED') blocked++;
-        }
+      // Khởi tạo các module
+      AdminPortfolio.init();
+      AdminPersonnel.init();
+      AdminStaffing.init();
+    });
+
+    function switchConsoleTab(tabKey) {
+      document.querySelectorAll('.console-nav-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tabKey);
+      });
+      document.querySelectorAll('.console-tab-pane').forEach(p => {
+        p.classList.toggle('active', p.id === `pane-${tabKey}`);
       });
 
-      document.getElementById('dash-total').textContent = tcs.length;
-      document.getElementById('dash-pass').textContent = pass;
-      document.getElementById('dash-fail').textContent = fail;
-      if (document.getElementById('dash-blocked')) {
-        document.getElementById('dash-blocked').textContent = blocked;
-      }
-      document.getElementById('dash-asg').textContent = asgs.length;
-
-      if (sel) {
-        sel.innerHTML = allProjects.map(pr => `<option value="${pr.id}" ${pr.id === p.id ? 'selected' : ''}>${pr.name}</option>`).join('');
-      }
+      if (tabKey === 'portfolio') AdminPortfolio.init();
+      if (tabKey === 'personnel') AdminPersonnel.init();
+      if (tabKey === 'staffing') AdminStaffing.init();
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      updateDashboardKPIs();
-      window.addEventListener('smartvms:cloud-synced', updateDashboardKPIs);
-      window.addEventListener('smartvms:catalog-updated', updateDashboardKPIs);
-    });
   </script>
 </body>
 </html>

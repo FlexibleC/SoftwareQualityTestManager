@@ -191,15 +191,87 @@ function getAccessibleProjects(user) {
     }
   });
 
-  // Nếu đã có phân công nhiệm vụ, CHỈ trả về đúng các dự án có nhiệm vụ đó
-  let accessible = all.filter(p => assignedPrjIds.has(p.id));
+  // Bổ sung xét theo danh sách thành viên dự án (project.members)
+  const memberPrjIds = new Set();
+  all.forEach(p => {
+    if (p.members && Array.isArray(p.members)) {
+      if (p.members.some(m => m.username === u.username)) {
+        memberPrjIds.add(p.id);
+      }
+    }
+  });
 
-  // Fallback: nếu chưa có phân công nào, mới xét các dự án trong u.assignedProjects
-  if (accessible.length === 0 && u && u.assignedProjects && u.assignedProjects.length > 0) {
-    accessible = all.filter(p => (u.assignedProjects || []).includes(p.id));
+  if (memberPrjIds.size > 0) {
+    memberPrjIds.forEach(id => assignedPrjIds.add(id));
+    accessible = all.filter(p => assignedPrjIds.has(p.id));
   }
 
   return accessible.length > 0 ? accessible : (all.length > 0 ? [all[0]] : []);
+}
+
+/**
+ * Lấy danh sách thành viên được phân bổ vào dự án
+ */
+function getProjectMembers(projectId) {
+  const p = (state.projects || []).find(pr => pr.id === projectId);
+  if (!p) return [];
+  if (!p.members) p.members = [];
+  return p.members;
+}
+
+/**
+ * Phân bổ người dùng từ hồ bơi nhân sự vào một dự án cụ thể
+ */
+function assignUserToProject(projectId, username, projectRole, title) {
+  const p = (state.projects || []).find(pr => pr.id === projectId);
+  if (!p) return false;
+  if (!p.members) p.members = [];
+  
+  const existingIdx = p.members.findIndex(m => m.username === username);
+  const user = (state.users || DEFAULT_SYSTEM_USERS).find(u => u.username === username);
+  const memberObj = {
+    username,
+    name: user ? user.name : username,
+    projectRole: projectRole || 'tester',
+    title: title || (projectRole === 'lead' ? 'Quản trị Dự án' : (projectRole === 'dev' ? 'Kỹ sư Phần mềm' : 'Kiểm thử viên')),
+    assignedAt: new Date().toISOString()
+  };
+
+  if (existingIdx >= 0) {
+    p.members[existingIdx] = memberObj;
+  } else {
+    p.members.push(memberObj);
+  }
+  saveCoreState();
+  return true;
+}
+
+/**
+ * Rút người dùng khỏi dự án
+ */
+function removeUserFromProject(projectId, username) {
+  const p = (state.projects || []).find(pr => pr.id === projectId);
+  if (!p || !p.members) return false;
+  p.members = p.members.filter(m => m.username !== username);
+  saveCoreState();
+  return true;
+}
+
+/**
+ * Vào không gian làm việc chuyên biệt của Dự án
+ */
+function enterProjectWorkspace(projectId, targetUrl = 'testcases.html') {
+  state.activeProjectId = projectId;
+  localStorage.setItem('smartvms_active_project_id', projectId);
+  saveCoreState();
+  window.location.href = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'projectId=' + encodeURIComponent(projectId);
+}
+
+/**
+ * Rời không gian dự án, quay lại Cổng Quản Trị Cấp Cao Hệ Thống
+ */
+function exitProjectWorkspace(targetUrl = 'index.html') {
+  window.location.href = targetUrl;
 }
 
 function getAllTcs(version, projectId) {

@@ -9,25 +9,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../shared/css/base.css" />
   <link rel="stylesheet" href="../shared/css/assignment.css" />
+  <link rel="stylesheet" href="css/admin-console.css" />
 </head>
 <body>
   <!-- Admin Executive Topbar -->
   <header class="vms-topbar">
     <div class="vms-topbar-left">
-      <a href="../admin/index.html" class="vms-brand">
-        <div class="vms-brand-icon">👑</div>
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon">🛡️</div>
         <div class="vms-brand-text">
-          <span class="vms-title">SmartVMS QA Hub</span>
-          <span class="vms-subtitle">Phân Hệ Quản Trị & Điều Phối</span>
+          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</span>
+          <span class="vms-subtitle">Không Gian Nghiệp Vụ Dự Án</span>
         </div>
       </a>
       <nav class="vms-nav-container">
         <div class="vms-nav-pills">
-          <a href="../admin/index.html" class="nav-item">📊 Tổng quan</a>
-          <a href="../admin/assignments.html" class="nav-item active">📌 Giao việc</a>
-          <a href="../admin/testcases.html" class="nav-item">📋 Kịch bản</a>
-          <a href="../admin/reports.html" class="nav-item">📈 Báo cáo</a>
-          <a href="../admin/settings.html" class="nav-item">⚙️ Cài đặt</a>
+          <a href="index.html" class="nav-item">🏢 Cổng Hệ Thống</a>
+          <a href="testcases.html" class="nav-item">📋 Kịch bản Dự án</a>
+          <a href="assignments.html" class="nav-item active">📌 Giao việc</a>
+          <a href="reports.html" class="nav-item">📈 Báo cáo</a>
+          <a href="settings.html" class="nav-item">⚙️ Cài đặt Dự án</a>
         </div>
       </nav>
     </div>
@@ -283,8 +284,10 @@
   <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
   <script src="../shared/js/assignment.js"></script>
+  <script src="js/admin-project-context.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      AdminProjectContext.init();
       initAssignmentModule();
     });
   </script>
