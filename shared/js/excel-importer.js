@@ -114,44 +114,6 @@
     await exportCatalogToExcel({ isTemplateOnly: true });
   }
 
-  // 1b. NẠP NHANH 157 KỊCH BẢN CHUẨN HÓA E2E TỪ MÁY CHỦ (1-CLICK LOAD)
-  async function loadPrebuilt157Catalog() {
-    try {
-      const paths = [
-        '../data/SmartVMS_157_KichBan_ChuanHoa.json',
-        'data/SmartVMS_157_KichBan_ChuanHoa.json',
-        '../data/SmartVMS_157_KichBan_ChuaTest.json',
-        'data/SmartVMS_157_KichBan_ChuaTest.json'
-      ];
-      let json = null;
-      for (const p of paths) {
-        try {
-          const res = await fetch(p);
-          if (res.ok) {
-            json = await res.json();
-            break;
-          }
-        } catch (e) {}
-      }
-
-      if (!json || !Array.isArray(json.testCases) || json.testCases.length === 0) {
-        alert('⚠️ Không thể tải bộ 157 kịch bản chuẩn hóa từ máy chủ! Vui lòng sử dụng tính năng "Nhập Excel (.xlsx)" để chọn file từ máy.');
-        return;
-      }
-
-      const existingCount = window.state?.projects?.[0]?.testCases?.length || 0;
-      if (existingCount > 0 && typeof window.confirm === 'function') {
-        const confirmMsg = `📊 Tìm thấy ${json.testCases.length} kịch bản kiểm thử chuẩn hóa Frontend E2E (Vét cạn & Liên thông 12 phân hệ).\n\nBạn có muốn nạp vào hệ thống để thay thế danh mục kịch bản hiện tại?`;
-        if (!confirm(confirmMsg)) return;
-      }
-
-      applyImportedCatalog(json.testCases, 'SmartVMS Local SingleSite 2026');
-    } catch (err) {
-      console.error('Lỗi nạp 157 kịch bản:', err);
-      alert('❌ Lỗi nạp 157 kịch bản: ' + err.message);
-    }
-  }
-
   // 2. XUẤT TOÀN BỘ KỊCH BẢN HIỆN TẠI RA FILE EXCEL ĐẸP, CHUYÊN NGHIỆP (.xlsx)
   async function exportCatalogToExcel(opts = {}) {
     const isTpl = opts.isTemplateOnly === true;
@@ -879,7 +841,6 @@
 
   // Export toàn cục
   window.downloadExcelTemplate = downloadExcelTemplate;
-  window.loadPrebuilt157Catalog = loadPrebuilt157Catalog;
   window.exportCatalogToExcel = exportCatalogToExcel;
   window.importCatalogFromExcel = importCatalogFromExcel;
   window.importCatalogFromJson = importCatalogFromJson;
