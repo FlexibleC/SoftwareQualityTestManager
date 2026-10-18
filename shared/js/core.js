@@ -110,6 +110,26 @@ function initCoreState(force = false) {
 
   state.projects = [];
   state.activeProjectId = null;
+
+  // Khôi phục các dự án được tạo trong phiên làm việc hiện tại (sessionStorage - không lưu vĩnh viễn trên ổ cứng)
+  try {
+    const sessionProjectsRaw = sessionStorage.getItem('smartvms_session_projects');
+    if (sessionProjectsRaw) {
+      const parsedPrjs = JSON.parse(sessionProjectsRaw);
+      if (Array.isArray(parsedPrjs) && parsedPrjs.length > 0) {
+        state.projects = parsedPrjs;
+        const savedActiveId = sessionStorage.getItem('smartvms_active_project_id');
+        if (savedActiveId && state.projects.some(p => p.id === savedActiveId)) {
+          state.activeProjectId = savedActiveId;
+        } else {
+          state.activeProjectId = state.projects[0].id;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Could not parse session projects:', e);
+  }
+
   state.assignments = [];
   state.results = {};
   state.cycleResults = {};
@@ -118,7 +138,7 @@ function initCoreState(force = false) {
   state.executionLogs = [];
   state.adhocDefects = [];
   state.testCycles = [];
-  state.isCleanProjectState = true;
+  state.isCleanProjectState = state.projects.length === 0;
 
   // Cấu hình tài khoản người dùng hệ thống (RBAC)
   state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
@@ -146,9 +166,15 @@ function initCoreState(force = false) {
 }
 
 function saveCoreState() {
-  // Không lưu dữ liệu dự án vào localStorage theo quy chuẩn Database-First
+  // Không lưu dữ liệu dự án vĩnh viễn vào localStorage theo quy chuẩn Database-First
   try {
     localStorage.removeItem(STATE_STORAGE_KEY);
+    if (state.projects) {
+      sessionStorage.setItem('smartvms_session_projects', JSON.stringify(state.projects));
+    }
+    if (state.activeProjectId) {
+      sessionStorage.setItem('smartvms_active_project_id', state.activeProjectId);
+    }
   } catch (e) {}
 }
 

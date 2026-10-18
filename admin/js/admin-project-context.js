@@ -20,9 +20,9 @@ const AdminProjectContext = {
     
     if (paramPrjId) {
       state.activeProjectId = paramPrjId;
-      localStorage.setItem('smartvms_active_project_id', paramPrjId);
+      sessionStorage.setItem('smartvms_active_project_id', paramPrjId);
     } else {
-      const savedId = localStorage.getItem('smartvms_active_project_id');
+      const savedId = sessionStorage.getItem('smartvms_active_project_id') || localStorage.getItem('smartvms_active_project_id');
       if (savedId && (state.projects || []).some(p => p.id === savedId)) {
         state.activeProjectId = savedId;
       }
