@@ -178,6 +178,8 @@ function initCoreState() {
       state.results = {};
       state.cycleResults = {};
       state.assignments = [];
+      state.adhocDefects = [];
+      saveCoreState();
     } else if (state.isCleanProjectState) {
       if (!actPrj.testCases) actPrj.testCases = [];
     } else if (!actPrj.testCases || actPrj.testCases.length === 0) {
