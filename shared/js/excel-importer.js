@@ -564,6 +564,11 @@
     // Tự động đẩy lên server LAN nếu đang chạy Node server
     saveCatalogToLanServer(newTcs);
 
+    // Tự động lưu và đồng bộ toàn bộ kịch bản lên Supabase Cloud Database (Single Source of Truth)
+    if (window.pushCatalogToCloud && typeof window.pushCatalogToCloud === 'function') {
+      window.pushCatalogToCloud(newTcs);
+    }
+
     // Refresh UI mọi trang đang mở
     refreshAllActiveScreens();
 

@@ -119,6 +119,9 @@
         subscribeRealtimeChanges();
       }
 
+      // Tự động kéo danh mục kịch bản từ Database Cloud về (Database là Single Source of Truth)
+      await pullCloudCatalog({ silent: true });
+
       // Tự động kéo dữ liệu Cloud mới nhất về (Auto-Pull)
       if (cloudState.config.autoSync) {
         await pullCloudResults({ silent: true });
@@ -160,9 +163,12 @@
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'test_comments' }, (payload) => {
           handleRealtimeCommentChange(payload);
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'test_cases_custom' }, () => {
+          pullCloudCatalog({ silent: true });
+        })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_results & test_comments');
+            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_results, test_comments & test_cases_custom');
           }
         });
     } catch (err) {
@@ -368,6 +374,82 @@
       if (!opts.silent && window.showToast) {
         window.showToast(`❌ Lỗi đồng bộ: ${e.message}`, 'error');
       }
+      return false;
+    }
+  }
+
+  // 5b. Kéo toàn bộ danh mục kịch bản từ Cloud về (Database là Single Source of Truth)
+  async function pullCloudCatalog(opts = {}) {
+    if (!cloudState.client) return false;
+    try {
+      const { data: dbTcs, error } = await cloudState.client
+        .from('test_cases_custom')
+        .select('*')
+        .order('tc_id', { ascending: true });
+
+      if (error) {
+        console.warn('Lỗi query test_cases_custom từ Cloud:', error);
+        return false;
+      }
+
+      if (!window.state) window.state = {};
+      if (!window.state.projects || window.state.projects.length === 0) {
+        window.state.projects = [{ id: 'PRJ-SMARTVMS', name: 'SmartVMS — Quản lý Khách & Ra vào', code: 'SMARTVMS' }];
+      }
+
+      if (dbTcs && dbTcs.length > 0) {
+        const mapped = dbTcs.map(mapCloudTestCaseToLocal);
+        window.state.projects[0].testCases = mapped;
+        window.state.isCustomCatalog = true;
+        window.state.isCleanProjectState = false;
+        window.state.catalogSource = 'Supabase Cloud Database';
+        console.log(`⚡ [Database Sync] Đã đồng bộ ${mapped.length} kịch bản từ Cloud Database về trình duyệt.`);
+      } else {
+        // Database Cloud sạch sẽ (0 kịch bản): Đảm bảo trình duyệt cũng sạch sẽ 100%
+        window.state.projects[0].testCases = [];
+        window.state.isCustomCatalog = true;
+        window.state.isCleanProjectState = true;
+        window.state.results = {};
+        window.state.cycleResults = {};
+        window.state.assignments = [];
+        console.log('⚡ [Database Sync] Database Cloud đang ở trạng thái sạch (0 kịch bản). Trình duyệt đã đồng bộ về 0.');
+      }
+
+      if (typeof window.saveCoreState === 'function') {
+        window.saveCoreState();
+      }
+      triggerUiRefresh();
+      return true;
+    } catch (err) {
+      console.warn('Lỗi ngoại lệ pullCloudCatalog:', err);
+      return false;
+    }
+  }
+
+  // 5c. Đẩy toàn bộ danh mục kịch bản lên Cloud Database
+  async function pushCatalogToCloud(tcs) {
+    if (!cloudState.client || !Array.isArray(tcs)) return false;
+    try {
+      // 1. Xóa toàn bộ kịch bản cũ trên test_cases_custom
+      await cloudState.client.from('test_cases_custom').delete().neq('tc_id', '___NONE___');
+
+      // 2. Insert theo batch 50 kịch bản
+      if (tcs.length > 0) {
+        const records = tcs.map(mapLocalTestCaseToCloud);
+        const batchSize = 50;
+        for (let i = 0; i < records.length; i += batchSize) {
+          const chunk = records.slice(i, i + batchSize);
+          const { error } = await cloudState.client.from('test_cases_custom').insert(chunk);
+          if (error) {
+            console.error('Lỗi đẩy kịch bản lên Cloud:', error);
+            throw error;
+          }
+        }
+        console.log(`⚡ [Database Sync] Đã lưu thành công ${tcs.length} kịch bản vào Supabase Cloud.`);
+      }
+      return true;
+    } catch (err) {
+      console.error('Lỗi khi đẩy kịch bản lên Supabase Cloud:', err);
       return false;
     }
   }
@@ -587,6 +669,40 @@
       evidences: Array.isArray(rec.evidences) ? rec.evidences : [],
       cycleId: 'CYC-SMARTVMS-01',
       cycleName: 'Đợt 1 — Kiểm thử toàn diện SmartVMS v2.0'
+    };
+  }
+
+  function mapLocalTestCaseToCloud(tc) {
+    return {
+      tc_id: tc.id,
+      module: tc.module || 'M01',
+      priority: tc.priority || 'P2',
+      platform: tc.platform || 'Giao diện Web Trực ban',
+      name: tc.name || tc.title || tc.id,
+      test_data: tc.testData || '',
+      precondition: tc.precondition || '',
+      steps: Array.isArray(tc.steps) ? tc.steps : (tc.steps ? [tc.steps] : []),
+      expected: Array.isArray(tc.expected) ? tc.expected : (tc.expected ? [tc.expected] : []),
+      notes: tc.notes || '',
+      is_custom: true,
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  function mapCloudTestCaseToLocal(rec) {
+    return {
+      id: rec.tc_id,
+      module: rec.module,
+      priority: rec.priority || 'P2',
+      platform: rec.platform,
+      name: rec.name,
+      title: rec.name,
+      testData: rec.test_data || '',
+      precondition: rec.precondition || '',
+      steps: Array.isArray(rec.steps) ? rec.steps : [],
+      expected: Array.isArray(rec.expected) ? rec.expected : [],
+      notes: rec.notes || '',
+      isCustom: true
     };
   }
 
@@ -893,6 +1009,8 @@
   window.initCloudSync = initCloudSync;
   window.pullCloudResults = pullCloudResults;
   window.pushAllResultsToCloud = pushAllResultsToCloud;
+  window.pullCloudCatalog = pullCloudCatalog;
+  window.pushCatalogToCloud = pushCatalogToCloud;
   window.syncResultToCloud = syncResultToCloud;
   window.syncCommentToCloud = syncCommentToCloud;
   window.wipeCloudProjectData = wipeCloudProjectData;
