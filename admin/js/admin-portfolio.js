@@ -172,7 +172,8 @@ const AdminPortfolio = {
    * Điều hướng vào không gian làm việc khép kín của Dự án
    */
   enterWorkspace(projectId) {
-    enterProjectWorkspace(projectId, 'testcases.html');
+    sessionStorage.setItem('smartvms_active_project_id', projectId);
+    window.location.href = `../lead/index.html?projectId=${encodeURIComponent(projectId)}`;
   },
 
   /**

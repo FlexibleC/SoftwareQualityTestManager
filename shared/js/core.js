@@ -160,7 +160,11 @@ function initCoreState(force = false) {
   const allUsers = state.users || DEFAULT_SYSTEM_USERS;
   if (currentPath.includes('/tester/')) {
     if (!state.currentUser || state.currentUser.role !== 'tester') {
-      state.currentUser = allUsers.find(u => u.role === 'tester') || allUsers[1];
+      state.currentUser = allUsers.find(u => u.role === 'tester') || allUsers.find(u => u.username === 'tester');
+    }
+  } else if (currentPath.includes('/lead/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'project_lead' && state.currentUser.role !== 'admin')) {
+      state.currentUser = allUsers.find(u => u.role === 'project_lead') || allUsers.find(u => u.username === 'lead');
     }
   } else if (currentPath.includes('/admin/')) {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
@@ -168,7 +172,7 @@ function initCoreState(force = false) {
     }
   } else if (currentPath.includes('/dev/')) {
     if (!state.currentUser || state.currentUser.role !== 'developer') {
-      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers[4];
+      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers.find(u => u.username === 'dev');
     }
   }
 
@@ -219,7 +223,7 @@ function getAccessibleProjects(user) {
   const all = getAllProjects();
   const u = user || getCurrentUser();
   const isTesterPortal = (window.location.pathname || '').toLowerCase().includes('/tester/');
-  if (!isTesterPortal && (!u || u.role === 'admin')) return all;
+  if (!isTesterPortal && (!u || u.role === 'admin' || u.role === 'project_lead')) return all;
 
   // Đối với Tester: Chỉ lấy các dự án mà Tester THỰC SỰ có kịch bản/nhiệm vụ được phân công trong state.assignments
   const assignedPrjIds = new Set();
@@ -298,11 +302,21 @@ function removeUserFromProject(projectId, username) {
 /**
  * Vào không gian làm việc chuyên biệt của Dự án
  */
-function enterProjectWorkspace(projectId, targetUrl = 'testcases.html') {
+function enterProjectWorkspace(projectId, targetUrl = '') {
   state.activeProjectId = projectId;
-  localStorage.setItem('smartvms_active_project_id', projectId);
+  sessionStorage.setItem('smartvms_active_project_id', projectId);
   saveCoreState();
-  window.location.href = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'projectId=' + encodeURIComponent(projectId);
+  const currentPath = (window.location.pathname || '').toLowerCase();
+  let dest = targetUrl;
+  if (!dest) {
+    if (currentPath.includes('/admin/')) {
+      dest = '../lead/index.html';
+    } else {
+      dest = 'index.html';
+    }
+  }
+  const sep = dest.includes('?') ? '&' : '?';
+  window.location.href = dest + sep + 'projectId=' + encodeURIComponent(projectId);
 }
 
 /**
@@ -333,7 +347,7 @@ function getAllTcs(version, projectId) {
 
 /**
  * Lấy danh sách Kịch bản kiểm thử (Test Cases) của dự án mà User có quyền xem/thực thi.
- * - Admin: Toàn bộ kịch bản dự án
+ * - Admin, Project Lead: Toàn bộ kịch bản dự án
  * - Tester: Chỉ các kịch bản được phân công đích danh trong state.assignments
  */
 function getAccessibleTcsForUser(user, projectId, version) {
@@ -342,7 +356,7 @@ function getAccessibleTcsForUser(user, projectId, version) {
   const allTcs = getAllTcs(version, p.id);
   const u = user || getCurrentUser();
   const isTesterPortal = (window.location.pathname || '').toLowerCase().includes('/tester/');
-  if (!isTesterPortal && (!u || u.role === 'admin')) return allTcs;
+  if (!isTesterPortal && (!u || u.role === 'admin' || u.role === 'project_lead')) return allTcs;
 
   const myAssignedTcIds = new Set(
     (state.assignments || [])
@@ -377,7 +391,7 @@ function getTestCasesForModule(moduleId, version, projectId) {
 function getAccessibleModulesForUser(user, projectId) {
   const u = user || getCurrentUser();
   const isTesterPortal = (window.location.pathname || '').toLowerCase().includes('/tester/');
-  if (!isTesterPortal && (!u || u.role === 'admin')) return getModules();
+  if (!isTesterPortal && (!u || u.role === 'admin' || u.role === 'project_lead')) return getModules(undefined, projectId);
 
   const tcs = getAccessibleTcsForUser(u, projectId);
   const modIds = new Set(tcs.map(t => t.module));

@@ -2,254 +2,32 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Báo Cáo & Thống Kê Chất Lượng - Admin QA Hub</title>
+  <meta http-equiv="refresh" content="0; url=../lead/reports.html" />
+  <title>Chuyển hướng - Báo Cáo Chất Lượng Thuộc Không Gian Quản Trị Dự Án</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../shared/css/base.css" />
-  <link rel="stylesheet" href="../shared/css/reports.css" />
   <link rel="stylesheet" href="css/admin-console.css" />
 </head>
-<body>
-  <!-- Admin Executive Topbar -->
-  <header class="vms-topbar">
-    <div class="vms-topbar-left">
-      <a href="index.html" class="vms-brand">
-        <div class="vms-brand-icon">🛡️</div>
-        <div class="vms-brand-text">
-          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</span>
-          <span class="vms-subtitle">Không Gian Nghiệp Vụ Dự Án</span>
-        </div>
-      </a>
-      <nav class="vms-nav-container">
-        <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item">🏢 Cổng Hệ Thống</a>
-          <a href="testcases.html" class="nav-item">📋 Kịch bản Dự án</a>
-          <a href="assignments.html" class="nav-item">📌 Giao việc</a>
-          <a href="reports.html" class="nav-item active">📈 Báo cáo</a>
-          <a href="settings.html" class="nav-item">⚙️ Cài đặt Dự án</a>
-        </div>
-      </nav>
-    </div>
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-main); font-family:Inter,sans-serif; margin:0; padding:20px">
+  <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:36px; max-width:520px; text-align:center; box-shadow:var(--shadow-md)">
+    <div style="font-size:42px; margin-bottom:12px">📈</div>
+    <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0 0 8px 0">
+      Nghiệp Vụ Thuộc Không Gian Quản Trị Dự Án
+    </h2>
+    <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin:0 0 20px 0">
+      Báo cáo <strong>Tiến độ & Đo lường chất lượng kịch bản</strong> thuộc không gian phân quyền của Quản Trị Viên Dự Án (Project Lead).
+      Đang tự động chuyển hướng bạn sang Không Gian Dự Án...
+    </p>
+    <a href="../lead/reports.html" class="btn btn-primary btn-sm">
+      🚀 Vào Báo Cáo Chất Lượng Dự Án ➔
+    </a>
+  </div>
 
-    <div class="vms-topbar-right">
-      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-      <div class="vms-user-profile">
-        <div class="vms-user-avatar">A</div>
-        <div class="vms-user-info">
-          <span class="vms-user-name">Nguyễn Văn Huy</span>
-          <span class="vms-user-role">QA Lead (Admin)</span>
-        </div>
-      </div>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')">🧪 Sang Tester</button>
-      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
-    </div>
-  </header>
-
-  <main class="main-wrapper" id="reports-main-content">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
-      <div>
-        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📈 Trung Tâm Phân Tích & Báo Cáo Chất Lượng</h2>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Báo cáo kiểm thử đa chiều theo tiêu chuẩn ISO/IEC/IEEE 29119</div>
-      </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap">
-        <button type="button" class="btn btn-outline" style="background:rgba(220,38,38,0.1); border-color:#dc2626; color:#dc2626; font-weight:700" onclick="deleteSkippedTestCases()" title="Xóa bỏ vĩnh viễn 55 ca kiểm thử Bỏ qua (Skip) không còn phù hợp để tối ưu tỷ lệ Đạt (Pass Rate)">🗑️ Xóa Bỏ 55 Ca Bỏ Qua (Skip)</button>
-        <button type="button" class="btn btn-outline" onclick="exportCatalogToExcel()" title="Xuất toàn bộ kịch bản và kết quả kiểm thử sang Excel">📊 Xuất Excel (.xlsx)</button>
-        <button type="button" class="btn btn-outline" onclick="printReport()">🖨️ In Báo Cáo</button>
-        <button type="button" class="btn btn-primary" onclick="exportReportHtml()">⬇️ Xuất File Báo Cáo (HTML)</button>
-      </div>
-    </div>
-
-    <!-- 6 KPI Metric Cards -->
-    <div class="stats-grid">
-      <div class="stat-card stat-total">
-        <div class="stat-icon">📦</div>
-        <div class="stat-body">
-          <div class="stat-value" id="rpt-total">0</div>
-          <div class="stat-label">Tổng số bài test</div>
-        </div>
-      </div>
-      <div class="stat-card stat-pass">
-        <div class="stat-icon">✅</div>
-        <div class="stat-body">
-          <div class="stat-value" id="rpt-pass" style="color:#16a34a">0</div>
-          <div class="stat-label">Đã Đạt (Passed)</div>
-        </div>
-      </div>
-      <div class="stat-card stat-fail">
-        <div class="stat-icon">❌</div>
-        <div class="stat-body">
-          <div class="stat-value" id="rpt-fail" style="color:#dc2626">0</div>
-          <div class="stat-label">Bị Lỗi (Failed)</div>
-        </div>
-      </div>
-      <div class="stat-card stat-skip">
-        <div class="stat-icon">⏭</div>
-        <div class="stat-body">
-          <div class="stat-value" id="rpt-skip" style="color:#d97706">0</div>
-          <div class="stat-label">Bỏ qua (Skipped)</div>
-        </div>
-      </div>
-      <div class="stat-card stat-pending">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-body">
-          <div class="stat-value" id="rpt-pending" style="color:var(--text-muted)">0</div>
-          <div class="stat-label">Chưa thực hiện</div>
-        </div>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #2563eb">
-        <div class="stat-icon">🎯</div>
-        <div class="stat-body">
-          <div class="stat-value" id="rpt-passrate" style="color:#2563eb">0%</div>
-          <div class="stat-label">Tỷ lệ Pass Rate</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2 Charts Grid -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-card-header">📊 Tỷ Lệ Đánh Giá Kết Quả Kiểm Thử Toàn Diện</div>
-        <div class="chart-container">
-          <canvas id="chartReportPie"></canvas>
-        </div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-card-header">📦 Tiến Độ Pass / Fail Theo Từng Phân Hệ (Modules)</div>
-        <div class="chart-container">
-          <canvas id="chartReportBar"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Analytics Subtabs -->
-    <div class="rpt-tabs-nav">
-      <button type="button" class="rpt-tab-btn active" data-subtab="projects" onclick="switchReportTab('projects')">🏢 1. So Sánh Tiến Độ Giữa Các Dự Án</button>
-      <button type="button" class="rpt-tab-btn" data-subtab="testers" onclick="switchReportTab('testers')">👥 2. Hiệu Suất Từng Nhân Sự Kiểm Thử</button>
-      <button type="button" class="rpt-tab-btn" data-subtab="defects" onclick="switchReportTab('defects')">🐞 3. Danh Sách Lỗi Đang Mở (Defect Tracking)</button>
-      <button type="button" class="rpt-tab-btn" data-subtab="cycles" onclick="switchReportTab('cycles')">🎯 4. Ma Trận Đa Đợt Test (Multi-Cycle Matrix)</button>
-    </div>
-
-    <!-- PANE 1: PROJECTS COMPARISON -->
-    <div class="rpt-tab-pane active" id="rpt-pane-projects">
-      <div class="card">
-        <div class="card-header"><h3>🏢 Bảng Đối Soát & Tiến Độ Các Dự Án Phần Mềm</h3></div>
-        <table class="asg-tc-table" style="table-layout:auto">
-          <thead>
-            <tr>
-              <th style="width:300px">Dự án phần mềm</th>
-              <th style="width:100px; text-align:center">Phiên bản</th>
-              <th style="width:110px; text-align:center">Tổng số bài</th>
-              <th style="width:90px; text-align:center">Đã Đạt</th>
-              <th style="width:90px; text-align:center">Bị Lỗi</th>
-              <th style="width:100px; text-align:center">Chưa chạy</th>
-              <th style="width:160px; text-align:center">Tỷ lệ Hoàn Thành</th>
-            </tr>
-          </thead>
-          <tbody id="rpt-projects-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PANE 2: TESTER BREAKDOWN -->
-    <div class="rpt-tab-pane" id="rpt-pane-testers">
-      <div class="card">
-        <div class="card-header"><h3>👥 Thống Kê Khối Lượng & Hiệu Suất Của Từng Tester</h3></div>
-        <table class="asg-tc-table" style="table-layout:auto">
-          <thead>
-            <tr>
-              <th style="width:260px">Người kiểm tra (Tester)</th>
-              <th style="width:130px; text-align:center">Tổng bài nhận</th>
-              <th style="width:120px; text-align:center">Đã Test Đạt</th>
-              <th style="width:110px; text-align:center">Bị Lỗi</th>
-              <th style="width:130px; text-align:center">Đang tiến hành</th>
-              <th style="width:150px; text-align:center">Đánh giá Hiệu quả</th>
-            </tr>
-          </thead>
-          <tbody id="rpt-tester-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PANE 3: DEFECT TRACKING -->
-    <div class="rpt-tab-pane" id="rpt-pane-defects">
-      <div class="card">
-        <div class="card-header"><h3>🐞 Ma Trận Quản Lý & Theo Dõi Vòng Đời Lỗi (Bug Lifecycle)</h3></div>
-        <table class="asg-tc-table" style="table-layout:auto">
-          <thead>
-            <tr>
-              <th style="width:130px; text-align:center">Mã Kịch bản</th>
-              <th style="width:240px">Mục tiêu kịch bản</th>
-              <th>Mô tả chi tiết lỗi</th>
-              <th style="width:130px; text-align:center">Mức nghiêm trọng</th>
-              <th style="width:160px">Dev phụ trách</th>
-              <th style="width:130px; text-align:center">Trạng thái lỗi</th>
-            </tr>
-          </thead>
-          <tbody id="rpt-defects-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PANE 4: MULTI-CYCLE COMPARISON MATRIX -->
-    <div class="rpt-tab-pane" id="rpt-pane-cycles">
-      <!-- Breadcrumb Phân Cấp Dành Cho Quản Lý -->
-      <div class="hierarchy-breadcrumb-bar" style="margin-bottom:14px">
-        <div id="rpt-hierarchy-breadcrumb" style="flex:1"></div>
-        <div style="display:flex; align-items:center; gap:8px">
-          <span style="font-size:11.5px; font-weight:700; color:var(--text-muted)">Dự án đối soát:</span>
-          <select id="rpt-cycle-project-sel" class="cycle-select-pill" onchange="switchReportCycleProject(this.value)"></select>
-        </div>
-      </div>
-
-      <!-- Quick KPI Strip for Cycles -->
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:14px" id="rpt-cycle-summary-cards">
-        <!-- Populated dynamically -->
-      </div>
-
-      <div class="card">
-        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <div>
-            <h3 style="margin:0; font-size:14px">🎯 Bảng Ma Trận Đối Soát Kịch Bản Qua Các Đợt Kiểm Thử (Cross-Cycle Matrix - ISO 29119-3)</h3>
-            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">Đối soát trạng thái từng kịch bản kiểm thử qua các vòng test (Alpha, Retest/Regression, UAT) để đánh giá độ tin cậy và sự hội tụ lỗi</div>
-          </div>
-          <div style="display:flex; gap:6px">
-            <span class="badge badge-pass">🟢 Pass</span>
-            <span class="badge badge-fail">🔴 Fail</span>
-            <span class="badge badge-nr">⚪ Chưa chạy</span>
-          </div>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="cycle-matrix-table" id="rpt-cycle-matrix-table">
-            <thead id="rpt-cycle-matrix-thead"></thead>
-            <tbody id="rpt-cycle-matrix-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <div class="toast" id="toast"></div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../data/enterprise_projects_manifest.js?v=20261014_cat"></script>
-  <script src="../data/smartvms_test_catalog.js?v=20261014_cat"></script>
-  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
-  <script src="../shared/js/vendor/exceljs.min.js"></script>
-  <script src="../shared/js/core.js?v=20261014_cat"></script>
-  <script src="../shared/js/excel-importer.js"></script>
-  <script src="../shared/js/cloud-sync.js"></script>
-  <script src="../shared/js/reports.js?v=20261014_cat"></script>
-  <script src="js/admin-project-context.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      AdminProjectContext.init();
-      initReportsModule();
-    });
+    const search = window.location.search || '';
+    window.location.replace('../lead/reports.html' + search);
   </script>
 </body>
 </html>

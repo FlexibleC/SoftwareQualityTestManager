@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Điều Phối & Giao Việc Kiểm Thử - Không Gian Quản Trị Dự Án</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/assignment.css" />
+  <link rel="stylesheet" href="css/lead-theme.css" />
+</head>
+<body>
+
+  <!-- Lead Topbar -->
+  <header class="lead-topbar">
+    <div style="display:flex; align-items:center; gap:20px">
+      <a href="index.html" class="lead-brand-wrap">
+        <div class="lead-brand-badge">👑</div>
+        <div>
+          <h2 class="lead-brand-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</h2>
+          <span class="lead-brand-subtitle">Không Gian Quản Trị Viên Dự Án (Project Lead)</span>
+        </div>
+      </a>
+
+      <!-- Navigation Pills -->
+      <nav class="lead-nav-pills" role="navigation">
+        <a href="index.html" class="lead-nav-pill">📊 Tổng quan Dự án</a>
+        <a href="testcases.html" class="lead-nav-pill">📋 Kịch bản Kiểm thử</a>
+        <a href="assignments.html" class="lead-nav-pill active">📌 Điều phối & Giao việc</a>
+        <a href="reports.html" class="lead-nav-pill">📈 Báo cáo Chất lượng</a>
+        <a href="settings.html" class="lead-nav-pill">⚙️ Cài đặt Dự án</a>
+      </nav>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:14px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
+        <div class="vms-user-avatar" style="background:#d97706">L</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên Dự án</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+
+    <!-- Active Project Hero Banner -->
+    <div class="lead-project-hero" id="lead-project-hero">
+      <!-- Populated by lead-context.js -->
+    </div>
+
+    <!-- Tabs Switcher Bar with Dispatch Actions on Right -->
+    <div class="asg-tabs-nav" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:6px 14px; flex-wrap:wrap; gap:10px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px">
+      <div style="display:flex; align-items:center; gap:8px">
+        <button type="button" class="asg-tab-btn" id="asg-tab-btn-overview" onclick="switchAsgMainTab('overview')">
+          📊 1. Thống Kê Phân Bổ (Ma Trận Nhân Sự)
+        </button>
+        <button type="button" class="asg-tab-btn active" id="asg-tab-btn-detail" onclick="switchAsgMainTab('detail')">
+          ⚙️ 2. Bảng Cấu Hình Giao Việc Chi Tiết
+        </button>
+      </div>
+
+      <!-- Right: Dispatch Action Controls -->
+      <div id="asg-tab-dispatch-actions" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+        <div class="asg-bar-item">
+          <label class="asg-bar-label" style="font-size:11px; white-space:nowrap">👤 Tester phụ trách *</label>
+          <select id="detail-assignee" class="asg-bar-select" style="min-width:170px; max-width:210px; height:32px; font-weight:700"></select>
+        </div>
+        <div class="asg-bar-item">
+          <label class="asg-bar-label" style="font-size:11px; white-space:nowrap">📅 Bắt đầu</label>
+          <input type="date" id="detail-start-date" class="asg-bar-select" style="width:130px; height:32px; font-size:11.5px" />
+        </div>
+        <div class="asg-bar-item">
+          <label class="asg-bar-label" style="font-size:11px; white-space:nowrap">⏰ Hạn chót *</label>
+          <input type="date" id="detail-due-date" class="asg-bar-select" style="width:130px; height:32px; font-size:11.5px" />
+        </div>
+        <button type="button" class="btn btn-primary" onclick="confirmBatchDispatch()" style="height:32px; padding:0 14px; font-weight:700; font-size:12px; white-space:nowrap">
+          🚀 Giao Kịch Bản Đang Chọn
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: THỐNG KÊ TỔNG QUAN -->
+    <div id="asg-tab-content-overview" style="display:none">
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card stat-total">
+          <div class="stat-icon">📦</div>
+          <div class="stat-body">
+            <div class="stat-value" id="asg-stat-total">0</div>
+            <div class="stat-label">Tổng kịch bản đợt test</div>
+          </div>
+        </div>
+        <div class="stat-card stat-pass">
+          <div class="stat-icon">👤</div>
+          <div class="stat-body">
+            <div class="stat-value" id="asg-stat-assigned">0</div>
+            <div class="stat-label">Đã phân công</div>
+          </div>
+        </div>
+        <div class="stat-card stat-fail">
+          <div class="stat-icon">⚪</div>
+          <div class="stat-body">
+            <div class="stat-value" id="asg-stat-unassigned">0</div>
+            <div class="stat-label">Chưa phân công</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+            👥 Ma Trận Tải Công Việc Của Đội Ngũ Kiểm Thử Trong Dự Án
+          </h3>
+        </div>
+        <table class="asg-tc-table" style="table-layout:auto; width:100%">
+          <thead>
+            <tr>
+              <th style="width:240px">Người kiểm tra (Tester)</th>
+              <th style="width:140px; text-align:center">Tổng bài nhận</th>
+              <th style="width:140px; text-align:center">Tỷ lệ tải</th>
+              <th style="width:160px; text-align:center">Trạng thái Tải</th>
+              <th style="width:140px; text-align:center">Thao tác nhanh</th>
+            </tr>
+          </thead>
+          <tbody id="asg-workload-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: CẤU HÌNH GIAO VIỆC CHI TIẾT -->
+    <div id="asg-tab-content-detail">
+      <!-- 3-Tier Cascade Scope Selection Bar (Project -> Version -> Cycle) -->
+      <div class="asg-interactive-breadcrumb-bar" style="margin-bottom:14px">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%">
+          <!-- Tier 1: Project -->
+          <div class="asg-cascade-item asg-cascade-prj">
+            <span class="asg-cascade-label">🏢 DỰ ÁN:</span>
+            <select id="asg-project-selector" class="asg-cascade-select" onchange="handleAsgProjectChange(this.value)"></select>
+          </div>
+
+          <span class="asg-cascade-sep">➔</span>
+
+          <!-- Tier 2: Version -->
+          <div class="asg-cascade-item asg-cascade-ver">
+            <span class="asg-cascade-label">📦 PHIÊN BẢN:</span>
+            <select id="asg-version-selector" class="asg-cascade-select" onchange="handleAsgVersionChange(this.value)"></select>
+          </div>
+
+          <span class="asg-cascade-sep">➔</span>
+
+          <!-- Tier 3: Cycle -->
+          <div class="asg-cascade-item asg-cascade-cycle" style="flex:1; min-width:280px">
+            <span class="asg-cascade-label">🎯 ĐỢT TEST:</span>
+            <select id="detail-cycle" class="asg-cascade-select" onchange="handleAsgCycleChange(this.value)" style="width:100%"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets Toolbar & Stats Ribbon -->
+      <div class="asg-presets-bar">
+        <div class="asg-presets-group">
+          <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">⚡ Chọn nhanh:</span>
+          <button type="button" class="asg-preset-btn asg-preset-btn-danger" onclick="applyAsgPreset('FAILED_RECENT')" title="Chọn bài bị lỗi ở đợt trước để giao Re-test">
+            ⚠️ Lỗi đợt trước (Re-test)
+          </button>
+          <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('UNASSIGNED')" title="Chọn kịch bản chưa giao">
+            ⚪ Kịch bản Chưa giao
+          </button>
+          <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('ALL')" title="Chọn toàn bộ bài đợt test">
+            ⚡ Tất cả bài đợt test
+          </button>
+          <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('NONE')" title="Bỏ chọn">
+            ✕ Bỏ chọn
+          </button>
+        </div>
+
+        <div class="asg-stat-ribbon">
+          <div class="asg-stat-pill asg-stat-pill-primary" title="Số kịch bản đã chọn để giao việc">
+            🎯 Đã chọn: <strong id="asg-selected-count-badge" style="margin-left:2px">0 / 0</strong>
+          </div>
+          <div class="asg-stat-pill" style="border-left:3px solid #10b981" title="Tiến độ phân công kịch bản của đợt test">
+            👤 Đã giao: <strong id="asg-stat-assigned-badge" style="color:#10b981; margin-left:2px">0 (0%)</strong>
+          </div>
+          <div class="asg-stat-pill asg-stat-pill-danger" title="Số kịch bản bị lỗi ở các đợt trước cần giao xác minh">
+            ⚠️ <strong id="asg-stat-fail-badge" style="margin-left:2px">0 lỗi cần Re-test</strong>
+          </div>
+          <div class="asg-stat-pill asg-stat-pill-success" title="Số kịch bản đã từng pass ở đợt trước">
+            ✅ <strong id="asg-stat-pass-badge" style="margin-left:2px">0 đã Pass</strong>
+          </div>
+          <div class="asg-stat-pill" style="color:var(--text-muted)" title="Số kịch bản chưa phân công">
+            ⚪ <span id="asg-stat-unassigned-badge" style="margin-left:2px">0 chưa giao</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi-dimensional Filter Bar -->
+      <div class="asg-filter-bar" style="margin-bottom:14px">
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:200px">
+          <span style="color:var(--text-muted); font-size:12px">🔍</span>
+          <input type="text" id="asg-filter-search" class="asg-filter-input" placeholder="Tìm theo mã TC, tiêu đề, mục tiêu..." oninput="handleAsgFilterChange()" style="flex:1" />
+        </div>
+        <select id="asg-filter-status" class="asg-filter-select" onchange="handleAsgFilterChange()" title="Lọc theo trạng thái phân công">
+          <option value="">🔘 Trạng thái: Tất cả</option>
+          <option value="UNASSIGNED">⚪ Chưa giao việc</option>
+          <option value="ASSIGNED">👤 Đã phân công</option>
+        </select>
+        <select id="asg-filter-history" class="asg-filter-select" onchange="handleAsgFilterChange()" title="Lọc theo kết quả đợt test trước">
+          <option value="">🧪 Lịch sử: Tất cả</option>
+          <option value="FAIL" style="color:#dc2626; font-weight:700">❌ Từng BỊ LỖI (Cần Re-test)</option>
+          <option value="PASS" style="color:#16a34a; font-weight:700">✅ Đã từng PASS ở đợt trước</option>
+          <option value="UNTESTED" style="color:#64748b">⚪ Chưa từng thực hiện (Bài mới)</option>
+        </select>
+        <select id="asg-filter-priority" class="asg-filter-select" onchange="handleAsgFilterChange()" title="Lọc theo mức ưu tiên">
+          <option value="">🏷️ Tất cả ưu tiên</option>
+          <option value="P1">P1 — Critical / Smoke</option>
+          <option value="P2">P2 — High / Regression</option>
+          <option value="P3">P3 — Medium</option>
+          <option value="P4">P4 — Low</option>
+        </select>
+        <button type="button" class="btn btn-outline btn-xs" onclick="resetAsgFilters()" title="Xóa bộ lọc">🔄 Đặt lại</button>
+        <div id="asg-filter-count-badge" style="font-size:11.5px; font-weight:700; color:var(--text-muted); margin-left:auto; white-space:nowrap">
+          Đang lọc: 0 kịch bản
+        </div>
+      </div>
+
+      <!-- Master-Detail 2 Columns -->
+      <div class="asg-master-detail-grid">
+        <!-- Left: Modules List -->
+        <div class="asg-module-sidebar">
+          <div class="asg-sidebar-head">
+            <strong style="font-size:12.5px">📦 Phân Hệ Nghiệp Vụ</strong>
+            <span style="font-size:11px; color:var(--text-muted)">Tích ô để chọn cả phân hệ</span>
+          </div>
+          <ul class="asg-module-list" id="detail-modules-list"></ul>
+        </div>
+
+        <!-- Right: Test Cases Table -->
+        <div class="asg-tc-detail-panel">
+          <div class="asg-panel-head" id="detail-panel-head"></div>
+          <div class="asg-panel-body">
+            <table class="asg-tc-table" style="table-layout:auto; width:100%">
+              <thead>
+                <tr>
+                  <th style="width:36px; text-align:center">
+                    <input type="checkbox" id="asg-mod-select-all" onchange="batchSelectCurrentMod(this.checked)" style="cursor:pointer" title="Chọn tất cả kịch bản đang hiển thị" />
+                  </th>
+                  <th style="width:105px; text-align:center">Mã kịch bản</th>
+                  <th style="width:70px; text-align:center">Phân hệ</th>
+                  <th style="width:65px; text-align:center">Ưu tiên</th>
+                  <th style="min-width:280px">Tiêu đề & Mục tiêu kiểm thử</th>
+                  <th style="width:190px">Lịch sử đợt trước</th>
+                  <th style="width:150px">Người thực hiện</th>
+                  <th style="width:120px; text-align:center">Trạng thái</th>
+                  <th style="width:115px; text-align:center">Thời hạn</th>
+                  <th style="width:85px; text-align:center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="detail-tc-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal Spec Detail -->
+  <div class="modal" id="modal-asg-tc-detail">
+    <div class="modal-box" style="max-width:820px">
+      <div class="modal-header">
+        <h3 id="modal-asg-tc-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          Bản Mô Tả Chi Tiết Kịch Bản Kiểm Thử
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-asg-tc-detail')">✕</button>
+      </div>
+      <div class="modal-body" id="modal-asg-tc-body" style="padding:20px; max-height:75vh; overflow-y:auto"></div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-asg-tc-detail')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
+  <script src="../shared/js/assignment.js"></script>
+
+  <!-- Modular Lead Scripts -->
+  <script src="js/lead-context.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+      LeadContext.init();
+      initAssignmentModule();
+    });
+  </script>
+</body>
+</html>
