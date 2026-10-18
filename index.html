@@ -172,7 +172,7 @@
       border-radius: 10px;
       padding: 3px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 4px;
       margin-bottom: 24px;
     }
@@ -510,23 +510,32 @@
         <p class="brand-subtitle">Cổng Đăng Nhập & Xác Thực Hệ Thống</p>
       </div>
 
-      <!-- Segmented Role Switcher (Ultra Clean Pill Tab) -->
+      <!-- Segmented Role Switcher (4 Tiers: Super Admin, Project Lead, Tester, Dev) -->
       <div class="segmented-role-control" role="tablist">
         <button 
           type="button" 
           class="segmented-btn active" 
           id="tab-admin" 
           onclick="selectRole('admin')"
-          title="Tài khoản Quản trị viên / QA Lead"
+          title="Quản trị viên Cấp cao Hệ thống (Super Admin)"
         >
-          Quản trị
+          Admin HT
+        </button>
+        <button 
+          type="button" 
+          class="segmented-btn" 
+          id="tab-lead" 
+          onclick="selectRole('lead')"
+          title="Quản trị viên Dự án (Project Lead / PM)"
+        >
+          Quản trị DA
         </button>
         <button 
           type="button" 
           class="segmented-btn" 
           id="tab-tester" 
           onclick="selectRole('tester')"
-          title="Tài khoản Kiểm thử viên (Tester)"
+          title="Kiểm thử viên (Tester)"
         >
           Tester
         </button>
@@ -651,7 +660,7 @@
 
       <div class="account-row">
         <div class="account-info">
-          <div class="account-role">Quản trị viên (QA Lead)</div>
+          <div class="account-role">🛡️ Quản trị Cấp cao Hệ thống (Super Admin)</div>
           <div class="account-creds">User: <strong>admin</strong> | Pass: <strong>123</strong></div>
         </div>
         <button type="button" class="btn-apply-acc" onclick="applyAccount('admin', '123')">Điền</button>
@@ -659,7 +668,15 @@
 
       <div class="account-row">
         <div class="account-info">
-          <div class="account-role">Kiểm thử viên (Tester)</div>
+          <div class="account-role">👑 Quản trị Dự án (Project Lead / PM)</div>
+          <div class="account-creds">User: <strong>lead</strong> | Pass: <strong>123</strong></div>
+        </div>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('lead', '123')">Điền</button>
+      </div>
+
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">🧪 Kiểm thử viên (Tester)</div>
           <div class="account-creds">User: <strong>tester</strong> | Pass: <strong>123</strong></div>
         </div>
         <button type="button" class="btn-apply-acc" onclick="applyAccount('tester', '123')">Điền</button>
@@ -667,7 +684,7 @@
 
       <div class="account-row">
         <div class="account-info">
-          <div class="account-role">Lập trình viên (Developer)</div>
+          <div class="account-role">💻 Lập trình viên (Developer)</div>
           <div class="account-creds">User: <strong>dev</strong> | Pass: <strong>123</strong></div>
         </div>
         <button type="button" class="btn-apply-acc" onclick="applyAccount('dev', '123')">Điền</button>
@@ -690,6 +707,7 @@
   <script>
     const ROLE_ACCOUNTS = {
       admin: { username: 'admin', password: '123' },
+      lead: { username: 'lead', password: '123' },
       tester: { username: 'tester', password: '123' },
       dev: { username: 'dev', password: '123' }
     };
@@ -828,6 +846,8 @@
         targetUrl = 'tester/index.html';
       } else if (user.role === 'developer') {
         targetUrl = 'dev/index.html';
+      } else if (user.role === 'project_lead' || user.username === 'lead') {
+        targetUrl = 'admin/testcases.html';
       } else {
         targetUrl = 'admin/index.html';
       }

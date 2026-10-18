@@ -13,8 +13,20 @@ const DEFAULT_SYSTEM_USERS = [
     password: '123',
     name: 'Nguyễn Văn Huy',
     role: 'admin',
-    roleTitle: 'Quản trị viên (QA Lead)',
+    roleTitle: 'Quản trị viên Cấp cao (Super Admin)',
     email: 'huy.nv@smartvms.local',
+    assignedProjects: [],
+    status: 'ACTIVE',
+    createdAt: '2026-10-01'
+  },
+  {
+    id: 'usr_006',
+    username: 'lead',
+    password: '123',
+    name: 'Hoàng Hải Đăng',
+    role: 'project_lead',
+    roleTitle: 'Quản trị viên Dự án (Project Lead)',
+    email: 'dang.hh@smartvms.local',
     assignedProjects: [],
     status: 'ACTIVE',
     createdAt: '2026-10-01'
