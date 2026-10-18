@@ -11,187 +11,353 @@
   // Ensure XLSX is available (from vendor or CDN)
   function ensureXlsxLoaded() {
     return new Promise((resolve) => {
-      if (typeof window.XLSX !== 'undefined') {
-        return resolve(true);
-      }
-      // Try local vendor first, then CDN fallback
+      if (typeof window.XLSX !== 'undefined') return resolve(true);
       const script = document.createElement('script');
       script.src = window.location.pathname.includes('/admin/') || window.location.pathname.includes('/tester/') || window.location.pathname.includes('/dev/')
         ? '../shared/js/vendor/xlsx.full.min.js'
         : 'shared/js/vendor/xlsx.full.min.js';
-
-      script.onload = () => {
-        if (typeof window.XLSX !== 'undefined') return resolve(true);
-        loadCdnXlsx(resolve);
+      script.onload = () => resolve(typeof window.XLSX !== 'undefined');
+      script.onerror = () => {
+        const cdn = document.createElement('script');
+        cdn.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        cdn.onload = () => resolve(typeof window.XLSX !== 'undefined');
+        cdn.onerror = () => resolve(false);
+        document.head.appendChild(cdn);
       };
-      script.onerror = () => loadCdnXlsx(resolve);
       document.head.appendChild(script);
     });
   }
 
-  function loadCdnXlsx(resolve) {
-    const cdn = document.createElement('script');
-    cdn.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-    cdn.onload = () => resolve(typeof window.XLSX !== 'undefined');
-    cdn.onerror = () => resolve(false);
-    document.head.appendChild(cdn);
+  // Ensure ExcelJS is available for rich formatting
+  function ensureExcelJsLoaded() {
+    return new Promise((resolve) => {
+      if (typeof window.ExcelJS !== 'undefined') return resolve(true);
+      const script = document.createElement('script');
+      script.src = window.location.pathname.includes('/admin/') || window.location.pathname.includes('/tester/') || window.location.pathname.includes('/dev/')
+        ? '../shared/js/vendor/exceljs.min.js'
+        : 'shared/js/vendor/exceljs.min.js';
+      script.onload = () => resolve(typeof window.ExcelJS !== 'undefined');
+      script.onerror = () => {
+        const cdn = document.createElement('script');
+        cdn.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+        cdn.onload = () => resolve(typeof window.ExcelJS !== 'undefined');
+        cdn.onerror = () => resolve(false);
+        document.head.appendChild(cdn);
+      };
+      document.head.appendChild(script);
+    });
   }
 
-  // 1. TẢI FILE MẪU EXCEL CHUẨN (.xlsx)
+  const MODULE_DISPLAY_NAMES = {
+    'M01': 'M01 - Xác thực & Quản lý Ca trực',
+    'M02': 'M02 - Check-in Khách Đơn & Cấp Thẻ',
+    'M03': 'M03 - Khách Đoàn & Lưu Trú Qua Đêm',
+    'M04': 'M04 - Check-out & Thu Hồi Thẻ Mất',
+    'M05': 'M05 - Giao Diện Trực Ban & Tra Cứu',
+    'M06': 'M06 - Chi Tiết Lượt Khách & Timeline',
+    'M07': 'M07 - Sổ Sách Ngoại Lệ (DataEntry)',
+    'M08': 'M08 - Quản Trị Admin & Giám Sát',
+    'M09': 'M09 - Trung Tâm Báo Cáo & Thống Kê',
+    'M10': 'M10 - Cấu Hình Hệ Thống & CSDL',
+    'M11': 'M11 - Thiết Bị Ngoại Vi & Phần Cứng',
+    'M12': 'M12 - Dịch Vụ Nền Tảng & Chịu Lỗi'
+  };
+
+  const PRIORITY_COLOR_MAP = {
+    'P1': { bg: 'FFFEE2E2', text: 'FFDC2626', label: '🔴 P1 - Critical' },
+    'P2': { bg: 'FFFFEDD5', text: 'FFEA580C', label: '🟠 P2 - Important' },
+    'P3': { bg: 'FFFEF3C7', text: 'FFD97706', label: '🟡 P3 - Medium' },
+    'P4': { bg: 'FFF1F5F9', text: 'FF475569', label: '🟢 P4 - Low' }
+  };
+
+  const STATUS_COLOR_MAP = {
+    'Pass': { bg: 'FFDCFCE7', text: 'FF16A34A', label: '✅ ĐẠT (Pass)' },
+    'Fail': { bg: 'FFFEE2E2', text: 'FFDC2626', label: '❌ LỖI (Fail)' },
+    'Skip': { bg: 'FFFEF3C7', text: 'FFD97706', label: '⏭ BỎ QUA (Skip)' },
+    'Not Run': { bg: 'FFF1F5F9', text: 'FF64748B', label: '⏳ Chưa chạy' }
+  };
+
+  // 1. TẢI FILE MẪU EXCEL CHUẨN ĐẸP (.xlsx)
   async function downloadExcelTemplate() {
-    const ok = await ensureXlsxLoaded();
-    if (!ok) {
-      alert('Không thể tải thư viện xử lý Excel. Vui lòng kiểm tra lại kết nối mạng.');
-      return;
+    // Nếu chạy qua Web HTTP, ưu tiên tải file mẫu đã tạo sẵn trên server
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      try {
+        const res = await fetch('../data/SmartVMS_Mau_KichBan_KiemThu.xlsx');
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'SmartVMS_Mau_KichBan_KiemThu.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          if (window.showToast) window.showToast('📑 Đã tải file mẫu Excel kịch bản chuẩn hóa!', 'success');
+          return;
+        }
+      } catch (e) {}
     }
 
-    const templateRows = [
-      {
-        'Mã Test Case (*)': 'TC-AUTH-001',
-        'Phân hệ (*)': 'M01',
-        'Tiêu đề kịch bản (*)': 'Đăng nhập Trạm gác hợp lệ bằng tài khoản trạm (Không mật khẩu)',
-        'Mức ưu tiên': 'P1',
-        'Loại kiểm thử': 'Chức năng',
-        'Bộ kịch bản': 'SMOKE',
-        'Nền tảng': 'Web Trực ban',
-        'Mã SRS': 'SRS-AUTH-01',
-        'Điều kiện tiên quyết': 'Hệ thống SmartVMS Local SingleSite đang hoạt động. Trạm gác B01 đã được tạo và kích hoạt.',
-        'Dữ liệu kiểm thử': 'Station Code = B01',
-        'Các bước thực hiện': '1. Mở trình duyệt Web tại http://smartvms.local/station\n2. Nhập mã trạm: b01\n3. Bấm Đăng nhập vào bốt trực',
-        'Kết quả kỳ vọng': '• Tự động chuẩn hóa chữ thường thành chữ hoa B01\n• Xác thực thành công vào Dashboard\n• Lưu Token ca trực hợp lệ',
-        'Ghi chú': 'Không phân biệt chữ hoa, chữ thường'
-      },
-      {
-        'Mã Test Case (*)': 'TC-AUTH-002',
-        'Phân hệ (*)': 'M01',
-        'Tiêu đề kịch bản (*)': 'Đăng nhập với mã trạm không tồn tại trong CSDL',
-        'Mức ưu tiên': 'P2',
-        'Loại kiểm thử': 'Ngoại lệ',
-        'Bộ kịch bản': 'REGRESSION',
-        'Nền tảng': 'Web Trực ban',
-        'Mã SRS': 'SRS-AUTH-02',
-        'Điều kiện tiên quyết': 'Trực ban mở giao diện đăng nhập.',
-        'Dữ liệu kiểm thử': 'Station Code = B999',
-        'Các bước thực hiện': '1. Nhập mã trạm: B999\n2. Bấm Đăng nhập',
-        'Kết quả kỳ vọng': '• Hiển thị thông báo lỗi: Mã trạm không tồn tại\n• Chặn truy cập vào hệ thống',
-        'Ghi chú': 'Kiểm tra thông báo thân thiện với người dùng'
-      },
-      {
-        'Mã Test Case (*)': 'TC-CKIN-001',
-        'Phân hệ (*)': 'M02',
-        'Tiêu đề kịch bản (*)': 'Tiếp đón khách đơn có quét thẻ CCCD gắn chip',
-        'Mức ưu tiên': 'P1',
-        'Loại kiểm thử': 'Chức năng',
-        'Bộ kịch bản': 'REGRESSION',
-        'Nền tảng': 'Web Trực ban',
-        'Mã SRS': 'SRS-CKIN-01',
-        'Điều kiện tiên quyết': 'Thiết bị đọc thẻ CCCD W3/EA09N kết nối online.',
-        'Dữ liệu kiểm thử': 'Thẻ CCCD thử nghiệm hợp lệ',
-        'Các bước thực hiện': '1. Đặt thẻ CCCD lên máy đọc\n2. Bấm Đọc thẻ CCCD\n3. Nhập Mục đích: Liên hệ công việc.\n4. Bấm Check-in',
-        'Kết quả kỳ vọng': '• Điền tự động Họ tên, CCCD, Ảnh chân dung\n• Mục đích mặc định là Liên hệ công việc.\n• Tạo lượt viếng thăm thành công',
-        'Ghi chú': 'Mục đích vào làm việc mặc định là Liên hệ công việc.'
-      }
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(templateRows);
-
-    // Căn chỉnh độ rộng cột Excel
-    ws['!cols'] = [
-      { wch: 18 }, // Mã
-      { wch: 12 }, // Phân hệ
-      { wch: 45 }, // Tiêu đề
-      { wch: 14 }, // Ưu tiên
-      { wch: 16 }, // Loại
-      { wch: 14 }, // Bộ
-      { wch: 16 }, // Nền tảng
-      { wch: 14 }, // SRS
-      { wch: 40 }, // Tiền điều kiện
-      { wch: 30 }, // Dữ liệu
-      { wch: 45 }, // Các bước
-      { wch: 45 }, // Kết quả kỳ vọng
-      { wch: 30 }  // Ghi chú
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'DanhMuc_KichBan');
-
-    XLSX.writeFile(wb, 'SmartVMS_Mau_KichBan_KiemThu.xlsx');
-    if (window.showToast) window.showToast('📑 Đã tải file mẫu Excel kịch bản kiểm thử (.xlsx)!', 'success');
+    // Nếu chạy file:/// hoặc fetch không được, xuất bằng ExcelJS
+    await exportCatalogToExcel({ isTemplateOnly: true });
   }
 
-  // 2. XUẤT TOÀN BỘ KỊCH BẢN HIỆN TẠI RA FILE EXCEL (.xlsx)
-  async function exportCatalogToExcel() {
-    const ok = await ensureXlsxLoaded();
-    if (!ok) {
-      alert('Không thể tải thư viện xử lý Excel.');
-      return;
+  // 2. XUẤT TOÀN BỘ KỊCH BẢN HIỆN TẠI RA FILE EXCEL ĐẸP, CHUYÊN NGHIỆP (.xlsx)
+  async function exportCatalogToExcel(opts = {}) {
+    const isTpl = opts.isTemplateOnly === true;
+    const ok = await ensureExcelJsLoaded();
+    if (!ok || typeof window.ExcelJS === 'undefined') {
+      // Fallback to basic XLSX if ExcelJS fails to load
+      return exportCatalogToExcelFallback(isTpl);
     }
 
-    const tcs = (typeof window.getAllTcs === 'function') ? window.getAllTcs() : (window.state?.projects?.[0]?.testCases || []);
+    const tcs = isTpl
+      ? [
+          {
+            id: 'TC-AUTH-001', module: 'M01', name: 'Đăng nhập Trạm gác hợp lệ bằng tài khoản trạm (Không mật khẩu)',
+            priority: 'P1', type: 'Chức năng', suite: 'SMOKE', platform: 'Giao diện Web Trực ban',
+            precondition: 'Hệ thống SmartVMS Local hoạt động. Trạm gác B01 đã kích hoạt.', testData: 'Tên trạm: "B01"',
+            steps: ['1. Mở trang đăng nhập trạm (/staff.html)', '2. Nhập mã bốt: B01 và bấm Đăng nhập'],
+            expected: ['• Tự động chuẩn hóa chữ hoa B01', '• Mở ca trực thành công và lưu Token'],
+            notes: 'Không yêu cầu mật khẩu'
+          },
+          {
+            id: 'TC-CKIN-001', module: 'M02', name: 'Tiếp đón khách đơn có quét thẻ CCCD gắn chip',
+            priority: 'P1', type: 'Chức năng', suite: 'REGRESSION', platform: 'Giao diện Web Trực ban',
+            precondition: 'Thiết bị đọc thẻ CCCD kết nối online.', testData: 'Thẻ CCCD thử nghiệm hợp lệ',
+            steps: ['1. Đặt thẻ CCCD lên máy đọc', '2. Bấm Đọc thẻ CCCD', '3. Mục đích vào làm việc mặc định là "Liên hệ công việc."', '4. Bấm Check-in'],
+            expected: ['• Điền tự động thông tin khách và ảnh CCCD', '• Tạo lượt viếng thăm hợp lệ'],
+            notes: 'Mục đích mặc định: Liên hệ công việc.'
+          }
+        ]
+      : ((typeof window.getAllTcs === 'function') ? window.getAllTcs() : (window.state?.projects?.[0]?.testCases || []));
+
     if (!tcs || tcs.length === 0) {
       alert('Chưa có kịch bản kiểm thử nào trong hệ thống để xuất.');
       return;
     }
 
     const results = window.state?.results || {};
+    const FONT_NAME = 'Segoe UI';
 
-    const rows = tcs.map((t, idx) => {
-      const res = results[t.id];
-      const statusText = res ? res.status : (t.status || 'Not Run');
-      const stepsText = Array.isArray(t.steps) ? t.steps.join('\n') : (t.steps || '');
-      const expectedText = Array.isArray(t.expected) ? t.expected.join('\n') : (t.expected || '');
+    const wb = new window.ExcelJS.Workbook();
+    wb.creator = 'SmartVMS QA Automation Hub';
+    wb.created = new Date();
 
-      return {
-        'STT': idx + 1,
-        'Mã Test Case': t.id,
-        'Phân hệ': t.module || 'M01',
-        'Tiêu đề kịch bản': t.name || t.title || '',
-        'Mức ưu tiên': t.priority || 'P2',
-        'Loại kiểm thử': t.type || 'Chức năng',
-        'Bộ kịch bản': t.suite || 'REGRESSION',
-        'Nền tảng': t.platform || 'Web Trực ban',
-        'Mã SRS': t.reqId || '',
-        'Điều kiện tiên quyết': t.precondition || '',
-        'Dữ liệu kiểm thử': t.testData || '',
-        'Các bước thực hiện': stepsText,
-        'Kết quả kỳ vọng': expectedText,
-        'Ghi chú': t.notes || '',
-        'Trạng thái Test hiện tại': statusText,
-        'Người test gần nhất': res?.tester || '',
-        'Thời gian test': res?.runAt ? new Date(res.runAt).toLocaleString('vi-VN') : ''
+    // Sheet 1: Kịch bản kiểm thử
+    const sheetTitle = isTpl ? 'Mau_KichBan' : '📋 Danh Mục Kịch Bản';
+    const ws = wb.addWorksheet(sheetTitle, {
+      views: [{ state: 'frozen', xSplit: 2, ySplit: 4, showGridLines: true }],
+      properties: { tabColor: { argb: 'FF2563EB' } }
+    });
+
+    // Row 1: Banner Header
+    ws.mergeCells('A1:N1');
+    const r1 = ws.getCell('A1');
+    r1.value = isTpl
+      ? '📑 SMARTVMS LOCAL SINGLESITE — FILE MẪU NHẬP LIỆU KỊCH BẢN KIỂM THỬ (ISO 29119-3)'
+      : `🎯 SMARTVMS LOCAL SINGLESITE 2026 — DANH MỤC KỊCH BẢN KIỂM THỬ CHUẨN HÓA (${tcs.length} TCs)`;
+    r1.font = { name: FONT_NAME, size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+    r1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+    r1.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    ws.getRow(1).height = 36;
+
+    // Row 2: Subtitle
+    ws.mergeCells('A2:N2');
+    const r2 = ws.getCell('A2');
+    r2.value = '📋 Tiêu chuẩn: ISO/IEC/IEEE 29119-3:2021 & ISO/IEC 25010 | Đơn vị: SmartVMS QA Hub | Ngày xuất: ' + new Date().toLocaleDateString('vi-VN');
+    r2.font = { name: FONT_NAME, size: 10, color: { argb: 'FFE2E8F0' } };
+    r2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    r2.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    ws.getRow(2).height = 24;
+
+    // Row 3: Spacer
+    ws.getRow(3).height = 8;
+
+    // Row 4: Column Headers
+    const headers = [
+      'STT', 'Mã Test Case (*)', 'Phân hệ (Module) (*)', 'Tiêu đề kịch bản (*)',
+      'Mức ưu tiên', 'Loại kiểm thử', 'Bộ kịch bản', 'Nền tảng',
+      'Điều kiện tiên quyết (Preconditions)', 'Dữ liệu kiểm thử (Test Data)',
+      'Quy trình các bước (Test Steps)', 'Kết quả kỳ vọng (Expected Results)',
+      'Trạng thái Test', 'Ghi chú kỹ thuật'
+    ];
+
+    const hRow = ws.getRow(4);
+    hRow.height = 30;
+    headers.forEach((h, idx) => {
+      const cell = hRow.getCell(idx + 1);
+      cell.value = h;
+      cell.font = { name: FONT_NAME, size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: [1, 2, 5, 6, 7, 8, 13].includes(idx + 1) ? 'center' : 'left',
+        wrapText: true
+      };
+      cell.border = {
+        top: { style: 'medium', color: { argb: 'FF1E3A8A' } },
+        bottom: { style: 'medium', color: { argb: 'FF1E3A8A' } },
+        left: { style: 'thin', color: { argb: 'FF3B82F6' } },
+        right: { style: 'thin', color: { argb: 'FF3B82F6' } }
       };
     });
 
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [
-      { wch: 6 },  // STT
-      { wch: 18 }, // Mã
-      { wch: 12 }, // Phân hệ
-      { wch: 45 }, // Tiêu đề
-      { wch: 14 }, // Ưu tiên
-      { wch: 16 }, // Loại
-      { wch: 14 }, // Bộ
-      { wch: 16 }, // Nền tảng
-      { wch: 14 }, // SRS
-      { wch: 40 }, // Tiền điều kiện
-      { wch: 30 }, // Dữ liệu
-      { wch: 50 }, // Các bước
-      { wch: 50 }, // Kết quả kỳ vọng
-      { wch: 30 }, // Ghi chú
-      { wch: 18 }, // Trạng thái
-      { wch: 22 }, // Người test
-      { wch: 20 }  // Ngày test
+    ws.autoFilter = { from: 'A4', to: 'N4' };
+
+    // Border template for data cells
+    const cellBorder = {
+      top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+    };
+
+    // Populate Rows
+    tcs.forEach((tc, idx) => {
+      const rowIdx = idx + 5;
+      const row = ws.getRow(rowIdx);
+      const isOdd = idx % 2 === 1;
+      const baseBg = isOdd ? 'FFF8FAFC' : 'FFFFFFFF';
+
+      let stepsText = Array.isArray(tc.steps) ? tc.steps.join('\n') : String(tc.steps || '');
+      let expectedText = Array.isArray(tc.expected) ? tc.expected.join('\n') : String(tc.expected || '');
+
+      const res = results[tc.id];
+      const curStatus = res ? res.status : (tc.status || 'Not Run');
+      const prioKey = (tc.priority || 'P2').trim().toUpperCase();
+      const prioCfg = PRIORITY_COLOR_MAP[prioKey] || PRIORITY_COLOR_MAP['P2'];
+      const statCfg = STATUS_COLOR_MAP[curStatus] || STATUS_COLOR_MAP['Pass'];
+      const modName = MODULE_DISPLAY_NAMES[tc.module] || tc.module || 'M01';
+
+      row.getCell(1).value = idx + 1;
+      row.getCell(2).value = tc.id;
+      row.getCell(3).value = modName;
+      row.getCell(4).value = tc.name || tc.title || '';
+      row.getCell(5).value = prioCfg.label;
+      row.getCell(6).value = tc.type || 'Chức năng';
+      row.getCell(7).value = tc.suite || 'REGRESSION';
+      row.getCell(8).value = tc.platform || 'Giao diện Web Trực ban';
+      row.getCell(9).value = tc.precondition || '';
+      row.getCell(10).value = tc.testData || '';
+      row.getCell(11).value = stepsText;
+      row.getCell(12).value = expectedText;
+      row.getCell(13).value = statCfg.label;
+      row.getCell(14).value = tc.notes || '';
+
+      const stepLines = (stepsText.match(/\n/g) || []).length + 1;
+      const expLines = (expectedText.match(/\n/g) || []).length + 1;
+      row.height = Math.min(Math.max(Math.max(stepLines, expLines) * 18, 40), 160);
+
+      for (let c = 1; c <= 14; c++) {
+        const cell = row.getCell(c);
+        cell.border = cellBorder;
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: baseBg } };
+
+        if (c === 1) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.font = { name: FONT_NAME, size: 9.5, bold: true, color: { argb: 'FF64748B' } };
+        } else if (c === 2) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.font = { name: 'Consolas', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } };
+        } else if (c === 3) {
+          cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+          cell.font = { name: FONT_NAME, size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        } else if (c === 4) {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.font = { name: FONT_NAME, size: 10, bold: true, color: { argb: 'FF0F172A' } };
+        } else if (c === 5) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: prioCfg.bg } };
+          cell.font = { name: FONT_NAME, size: 9, bold: true, color: { argb: prioCfg.text } };
+        } else if ([6, 7, 8].includes(c)) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+          cell.font = { name: FONT_NAME, size: 9, color: { argb: 'FF334155' } };
+        } else if (c === 9 || c === 10) {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.font = { name: c === 10 ? 'Consolas' : FONT_NAME, size: 9, color: { argb: 'FF334155' } };
+        } else if (c === 11) {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.font = { name: FONT_NAME, size: 9.5, color: { argb: 'FF0F172A' } };
+        } else if (c === 12) {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.font = { name: FONT_NAME, size: 9.5, color: { argb: 'FF15803D' } };
+        } else if (c === 13) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: statCfg.bg } };
+          cell.font = { name: FONT_NAME, size: 9.5, bold: true, color: { argb: statCfg.text } };
+        } else if (c === 14) {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.font = { name: FONT_NAME, size: 9, italic: true, color: { argb: 'FF64748B' } };
+        }
+      }
+    });
+
+    ws.columns = [
+      { key: 'stt', width: 7 },
+      { key: 'id', width: 16 },
+      { key: 'module', width: 34 },
+      { key: 'title', width: 44 },
+      { key: 'priority', width: 17 },
+      { key: 'type', width: 16 },
+      { key: 'suite', width: 17 },
+      { key: 'platform', width: 22 },
+      { key: 'precondition', width: 38 },
+      { key: 'testData', width: 34 },
+      { key: 'steps', width: 62 },
+      { key: 'expected', width: 62 },
+      { key: 'status', width: 18 },
+      { key: 'notes', width: 32 }
     ];
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'TestCases');
+    // Download in browser
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = isTpl
+      ? 'SmartVMS_Mau_KichBan_KiemThu.xlsx'
+      : `SmartVMS_KichBan_KiemThu_${tcs.length}TCs_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 
-    const fileName = `SmartVMS_KichBan_KiemThu_${tcs.length}TCs_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    if (window.showToast) window.showToast(`📊 Đã xuất thành công ${tcs.length} kịch bản sang file Excel [${fileName}]!`, 'success');
+    if (window.showToast) {
+      window.showToast(`📊 Đã xuất thành công ${tcs.length} kịch bản sang file Excel chuẩn đẹp!`, 'success');
+    }
   }
 
-  // 3. NẠP KỊCH BẢN TỪ FILE EXCEL (.xlsx / .xls)
+  // Fallback function using basic XLSX if ExcelJS is unavailable
+  function exportCatalogToExcelFallback(isTpl) {
+    const tcs = (typeof window.getAllTcs === 'function') ? window.getAllTcs() : (window.state?.projects?.[0]?.testCases || []);
+    const results = window.state?.results || {};
+    const rows = tcs.map((t, idx) => ({
+      'STT': idx + 1,
+      'Mã Test Case (*)': t.id,
+      'Phân hệ (*)': t.module || 'M01',
+      'Tiêu đề kịch bản (*)': t.name || t.title || '',
+      'Mức ưu tiên': t.priority || 'P2',
+      'Loại kiểm thử': t.type || 'Chức năng',
+      'Bộ kịch bản': t.suite || 'REGRESSION',
+      'Nền tảng': t.platform || 'Web Trực ban',
+      'Mã SRS': t.reqId || '',
+      'Điều kiện tiên quyết': t.precondition || '',
+      'Dữ liệu kiểm thử': t.testData || '',
+      'Các bước thực hiện': Array.isArray(t.steps) ? t.steps.join('\n') : (t.steps || ''),
+      'Kết quả kỳ vọng': Array.isArray(t.expected) ? t.expected.join('\n') : (t.expected || ''),
+      'Ghi chú': t.notes || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'DanhMuc_KichBan');
+    XLSX.writeFile(wb, `SmartVMS_KichBan_KiemThu_${tcs.length}TCs.xlsx`);
+  }
+
+  // 3. NẠP KỊCH BẢN TỪ FILE EXCEL (.xlsx / .xls) VỚI TỰ ĐỘNG PHÁT HIỆN DÒNG TIÊU ĐỀ
   async function importCatalogFromExcel(fileInput) {
     if (!fileInput.files || fileInput.files.length === 0) return;
     const ok = await ensureXlsxLoaded();
@@ -209,7 +375,13 @@
         const workbook = XLSX.read(data, { type: 'array' });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        // Tự động tìm vị trí hàng tiêu đề (bỏ qua banner tiêu đề lớn ở các dòng đầu)
+        const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        let headerRowIndex = aoa.findIndex(r => Array.isArray(r) && r.some(c => /Mã\s*(Test\s*Case|TC)|ID/i.test(String(c))));
+        if (headerRowIndex === -1) headerRowIndex = 0;
+
+        const rawRows = XLSX.utils.sheet_to_json(worksheet, { range: headerRowIndex, defval: '' });
 
         if (!rawRows || rawRows.length === 0) {
           alert('File Excel không có dữ liệu kịch bản!');
@@ -217,27 +389,31 @@
         }
 
         const parsedTcs = [];
-        rawRows.forEach((row, idx) => {
-          // Dynamic Header resolution (both VN and EN supported)
+        rawRows.forEach((row) => {
           const id = String(row['Mã Test Case'] || row['Mã Test Case (*)'] || row['Mã TC'] || row['ID'] || row['id'] || row['tc_id'] || '').trim();
           const title = String(row['Tiêu đề kịch bản'] || row['Tiêu đề kịch bản (*)'] || row['Tên kịch bản'] || row['Tiêu đề'] || row['Title'] || row['name'] || '').trim();
-          if (!id || !title) return; // Skip invalid row
+          if (!id || !title) return;
 
-          const module = String(row['Phân hệ'] || row['Phân hệ (*)'] || row['Module'] || row['module'] || 'M01').trim().toUpperCase();
-          const priority = String(row['Mức ưu tiên'] || row['Ưu tiên'] || row['Priority'] || row['priority'] || 'P2').trim();
-          const type = String(row['Loại kiểm thử'] || row['Loại'] || row['Type'] || row['type'] || 'Chức năng').trim();
-          const suite = String(row['Bộ kịch bản'] || row['Bộ'] || row['Suite'] || row['suite'] || 'REGRESSION').trim();
-          const platform = String(row['Nền tảng'] || row['Platform'] || row['platform'] || 'Web Trực ban').trim();
-          const reqId = String(row['Mã SRS'] || row['SRS'] || row['reqId'] || '').trim();
-          const precondition = String(row['Điều kiện tiên quyết'] || row['Tiền điều kiện'] || row['Precondition'] || '').trim();
-          const testData = String(row['Dữ liệu kiểm thử'] || row['Dữ liệu'] || row['Test Data'] || '').trim();
-          const notes = String(row['Ghi chú'] || row['Notes'] || row['note'] || '').trim();
+          let module = String(row['Phân hệ'] || row['Phân hệ (*)'] || row['Phân hệ (Module) (*)'] || row['Module'] || 'M01').trim();
+          const modMatch = module.match(/M\d+/i);
+          if (modMatch) module = modMatch[0].toUpperCase();
 
-          // Split steps and expected lines
-          const rawSteps = String(row['Các bước thực hiện'] || row['Quy trình'] || row['Steps'] || row['steps'] || '').trim();
+          let priority = String(row['Mức ưu tiên'] || row['Ưu tiên'] || row['Priority'] || 'P2').trim();
+          const pMatch = priority.match(/P[1-4]/i);
+          if (pMatch) priority = pMatch[0].toUpperCase();
+
+          const type = String(row['Loại kiểm thử'] || row['Loại'] || row['Type'] || 'Chức năng').trim();
+          const suite = String(row['Bộ kịch bản'] || row['Bộ'] || row['Suite'] || 'REGRESSION').trim();
+          const platform = String(row['Nền tảng'] || row['Platform'] || 'Giao diện Web Trực ban').trim();
+          const reqId = String(row['Mã SRS'] || row['SRS'] || '').trim();
+          const precondition = String(row['Điều kiện tiên quyết'] || row['Điều kiện tiên quyết (Preconditions)'] || row['Tiền điều kiện'] || '').trim();
+          const testData = String(row['Dữ liệu kiểm thử'] || row['Dữ liệu kiểm thử (Test Data)'] || row['Dữ liệu'] || '').trim();
+          const notes = String(row['Ghi chú'] || row['Ghi chú kỹ thuật'] || '').trim();
+
+          const rawSteps = String(row['Quy trình các bước (Test Steps)'] || row['Các bước thực hiện'] || row['Steps'] || '').trim();
           const steps = rawSteps ? rawSteps.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : ['1. Thực hiện kiểm thử theo quy trình chuẩn.'];
 
-          const rawExpected = String(row['Kết quả kỳ vọng'] || row['Kỳ vọng'] || row['Expected'] || row['expected'] || '').trim();
+          const rawExpected = String(row['Kết quả kỳ vọng (Expected Results)'] || row['Kết quả kỳ vọng'] || row['Expected'] || '').trim();
           const expected = rawExpected ? rawExpected.split(/\r?\n/).map(s => s.trim().replace(/^[•\-\*]\s*/, '')).filter(Boolean) : ['Hệ thống đáp ứng đúng yêu cầu thiết kế.'];
 
           parsedTcs.push({
