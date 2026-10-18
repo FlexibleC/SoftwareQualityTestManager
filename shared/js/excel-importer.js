@@ -81,26 +81,72 @@
   async function downloadExcelTemplate() {
     // Nếu chạy qua Web HTTP, ưu tiên tải file mẫu đã tạo sẵn trên server
     if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-      try {
-        const res = await fetch('../data/SmartVMS_Mau_KichBan_KiemThu.xlsx');
-        if (res.ok) {
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'SmartVMS_Mau_KichBan_KiemThu.xlsx';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          if (window.showToast) window.showToast('📑 Đã tải file mẫu Excel kịch bản chuẩn hóa!', 'success');
-          return;
-        }
-      } catch (e) {}
+      const candidates = [
+        { url: '../data/SmartVMS_157_KichBan_ChuaTest.xlsx', name: 'SmartVMS_157_KichBan_ChuaTest.xlsx' },
+        { url: 'data/SmartVMS_157_KichBan_ChuaTest.xlsx', name: 'SmartVMS_157_KichBan_ChuaTest.xlsx' },
+        { url: '../data/SmartVMS_157_KichBan_ChuanHoa.xlsx', name: 'SmartVMS_157_KichBan_ChuanHoa.xlsx' },
+        { url: 'data/SmartVMS_157_KichBan_ChuanHoa.xlsx', name: 'SmartVMS_157_KichBan_ChuanHoa.xlsx' },
+        { url: '../data/SmartVMS_Mau_KichBan_KiemThu.xlsx', name: 'SmartVMS_157_KichBan_ChuaTest.xlsx' },
+        { url: 'data/SmartVMS_Mau_KichBan_KiemThu.xlsx', name: 'SmartVMS_157_KichBan_ChuaTest.xlsx' }
+      ];
+
+      for (const item of candidates) {
+        try {
+          const res = await fetch(item.url);
+          if (res.ok) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = item.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            if (window.showToast) window.showToast('📑 Đã tải file 157 kịch bản kiểm thử chuẩn hóa (.xlsx)!', 'success');
+            return;
+          }
+        } catch (e) {}
+      }
     }
 
     // Nếu chạy file:/// hoặc fetch không được, xuất bằng ExcelJS
     await exportCatalogToExcel({ isTemplateOnly: true });
+  }
+
+  // 1b. NẠP NHANH 157 KỊCH BẢN CHUẨN HÓA E2E TỪ MÁY CHỦ (1-CLICK LOAD)
+  async function loadPrebuilt157Catalog() {
+    try {
+      const paths = [
+        '../data/SmartVMS_157_KichBan_ChuanHoa.json',
+        'data/SmartVMS_157_KichBan_ChuanHoa.json',
+        '../data/SmartVMS_157_KichBan_ChuaTest.json',
+        'data/SmartVMS_157_KichBan_ChuaTest.json'
+      ];
+      let json = null;
+      for (const p of paths) {
+        try {
+          const res = await fetch(p);
+          if (res.ok) {
+            json = await res.json();
+            break;
+          }
+        } catch (e) {}
+      }
+
+      if (!json || !Array.isArray(json.testCases) || json.testCases.length === 0) {
+        alert('⚠️ Không thể tải bộ 157 kịch bản chuẩn hóa từ máy chủ! Vui lòng sử dụng tính năng "Nhập Excel (.xlsx)" để chọn file từ máy.');
+        return;
+      }
+
+      const confirmMsg = `📊 Tìm thấy ${json.testCases.length} kịch bản kiểm thử chuẩn hóa Frontend E2E (Vét cạn & Liên thông 12 phân hệ).\n\nBạn có muốn nạp vào hệ thống để bắt đầu kiểm thử dự án?`;
+      if (!confirm(confirmMsg)) return;
+
+      applyImportedCatalog(json.testCases, '157 Kịch Bản Chuẩn Hóa E2E');
+    } catch (err) {
+      console.error('Lỗi nạp 157 kịch bản:', err);
+      alert('❌ Lỗi nạp 157 kịch bản: ' + err.message);
+    }
   }
 
   // 2. XUẤT TOÀN BỘ KỊCH BẢN HIỆN TẠI RA FILE EXCEL ĐẸP, CHUYÊN NGHIỆP (.xlsx)
@@ -807,6 +853,7 @@
 
   // Export toàn cục
   window.downloadExcelTemplate = downloadExcelTemplate;
+  window.loadPrebuilt157Catalog = loadPrebuilt157Catalog;
   window.exportCatalogToExcel = exportCatalogToExcel;
   window.importCatalogFromExcel = importCatalogFromExcel;
   window.importCatalogFromJson = importCatalogFromJson;

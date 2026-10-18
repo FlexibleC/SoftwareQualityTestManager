@@ -59,14 +59,14 @@
           📗 Nhập Excel (.xlsx)
           <input type="file" accept=".xlsx, .xls" style="display:none" onchange="importCatalogFromExcel(this)" />
         </label>
-        <button type="button" class="btn btn-outline btn-sm" onclick="downloadExcelTemplate()" title="Tải file mẫu Excel chuẩn ISO 29119-3">📑 Tải Mẫu Excel</button>
+        <button type="button" class="btn btn-outline btn-sm" style="background:rgba(59,130,246,0.12); border-color:#2563eb; color:#2563eb; font-weight:700" onclick="loadPrebuilt157Catalog()" title="Nạp nhanh 157 kịch bản kiểm thử chuẩn hóa Frontend E2E (Vét cạn & Liên thông)">⚡ Nạp 157 Kịch Bản Mẫu</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="downloadExcelTemplate()" title="Tải file 157 kịch bản Excel chuẩn ISO 29119-3">📑 Tải Mẫu 157 Kịch Bản (.xlsx)</button>
         <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogToExcel()" title="Xuất toàn bộ kịch bản và kết quả ra file Excel">📊 Xuất Excel (.xlsx)</button>
         <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0" title="Nạp danh mục kịch bản từ file JSON">
           📁 Nạp JSON
           <input type="file" accept=".json" style="display:none" onchange="importCatalogFromJson(this)" />
         </label>
         <button type="button" class="btn btn-outline btn-sm" onclick="exportCatalogJson()" title="Xuất danh mục kịch bản ra JSON">💾 Xuất JSON</button>
-        <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626" onclick="deleteSkippedTestCases()" title="Xóa bỏ vĩnh viễn các ca kịch bản đang Bỏ qua (Skip)">🗑️ Xóa ca Bỏ Qua (Skip)</button>
         <button type="button" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#ef4444; background:rgba(239,68,68,0.08); font-weight:700" onclick="wipeProjectData()" title="Xóa toàn bộ kịch bản, kết quả, phân công để nạp file mới tinh">🧹 Xóa Trắng Dữ Liệu Dự Án</button>
         <button type="button" class="btn btn-primary btn-sm" onclick="openAddTcModal()">➕ Thêm Test Case Mới</button>
       </div>
