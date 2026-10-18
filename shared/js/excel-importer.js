@@ -139,10 +139,13 @@
         return;
       }
 
-      const confirmMsg = `📊 Tìm thấy ${json.testCases.length} kịch bản kiểm thử chuẩn hóa Frontend E2E (Vét cạn & Liên thông 12 phân hệ).\n\nBạn có muốn nạp vào hệ thống để bắt đầu kiểm thử dự án?`;
-      if (!confirm(confirmMsg)) return;
+      const existingCount = window.state?.projects?.[0]?.testCases?.length || 0;
+      if (existingCount > 0 && typeof window.confirm === 'function') {
+        const confirmMsg = `📊 Tìm thấy ${json.testCases.length} kịch bản kiểm thử chuẩn hóa Frontend E2E (Vét cạn & Liên thông 12 phân hệ).\n\nBạn có muốn nạp vào hệ thống để thay thế danh mục kịch bản hiện tại?`;
+        if (!confirm(confirmMsg)) return;
+      }
 
-      applyImportedCatalog(json.testCases, '157 Kịch Bản Chuẩn Hóa E2E');
+      applyImportedCatalog(json.testCases, 'SmartVMS Local SingleSite 2026');
     } catch (err) {
       console.error('Lỗi nạp 157 kịch bản:', err);
       alert('❌ Lỗi nạp 157 kịch bản: ' + err.message);
@@ -486,10 +489,13 @@
           return;
         }
 
-        const confirmMsg = `📊 Tìm thấy ${parsedTcs.length} kịch bản kiểm thử hợp lệ trong file Excel [${file.name}].\n\nBạn có muốn nạp vào hệ thống để thay thế toàn bộ danh mục kịch bản hiện tại?`;
-        if (!confirm(confirmMsg)) {
-          fileInput.value = '';
-          return;
+        const existingCount = window.state?.projects?.[0]?.testCases?.length || 0;
+        if (existingCount > 0 && typeof window.confirm === 'function') {
+          const confirmMsg = `📊 Tìm thấy ${parsedTcs.length} kịch bản kiểm thử hợp lệ trong file Excel [${file.name}].\n\nBạn có muốn nạp vào hệ thống để thay thế toàn bộ danh mục kịch bản hiện tại?`;
+          if (!confirm(confirmMsg)) {
+            fileInput.value = '';
+            return;
+          }
         }
 
         applyImportedCatalog(parsedTcs, `Excel: ${file.name}`);
@@ -532,9 +538,15 @@
           expected: Array.isArray(t.expected) ? t.expected : (t.expected ? [t.expected] : [])
         })).filter(t => t.id && t.name);
 
-        if (confirm(`Tìm thấy ${validTcs.length} kịch bản kiểm thử từ tệp JSON. Bạn có muốn nạp vào hệ thống?`)) {
-          applyImportedCatalog(validTcs, `JSON: ${file.name}`);
+        const existingCount = window.state?.projects?.[0]?.testCases?.length || 0;
+        if (existingCount > 0 && typeof window.confirm === 'function') {
+          if (!confirm(`Tìm thấy ${validTcs.length} kịch bản kiểm thử từ tệp JSON. Bạn có muốn nạp vào hệ thống?`)) {
+            fileInput.value = '';
+            return;
+          }
         }
+
+        applyImportedCatalog(validTcs, `JSON: ${file.name}`);
         fileInput.value = '';
       } catch (err) {
         alert('❌ Lỗi khi đọc file JSON: ' + err.message);
@@ -548,19 +560,27 @@
   // 5. HÀM ÁP DỤNG DANH MỤC VÀO STATE, CYCLES & ĐỒNG BỘ
   function applyImportedCatalog(newTcs, sourceName = 'Imported') {
     if (!window.state) window.state = {};
+
+    const modIds = [...new Set(newTcs.map(t => t.module || 'M01'))].sort();
+    const defaultModules = modIds.map(mId => ({
+      id: mId,
+      name: MODULE_DISPLAY_NAMES[mId] || `Phân hệ ${mId}`,
+      versions: ['v1.0', 'v1.0.0']
+    }));
+
     if (!window.state.projects || window.state.projects.length === 0) {
-      const cleanFileName = sourceName.replace(/^(Excel|JSON):\s*/i, '').replace(/\.[^/.]+$/, '').trim() || 'Dự án Mới';
-      const cleanCode = 'PRJ-' + (cleanFileName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase() || 'NEW01');
+      const cleanFileName = sourceName.replace(/^(Excel|JSON):\s*/i, '').replace(/\.[^/.]+$/, '').trim() || 'SmartVMS SingleSite';
+      const cleanCode = 'PRJ-SMARTVMS';
       const newProj = {
         id: cleanCode,
-        code: cleanCode.replace('PRJ-', ''),
-        name: cleanFileName,
-        domain: 'Hệ thống Phần mềm Doanh nghiệp',
-        lead: window.state?.currentUser?.name || 'QA Lead',
+        code: 'SMARTVMS',
+        name: cleanFileName.includes('SmartVMS') ? cleanFileName : 'SmartVMS Local SingleSite 2026',
+        domain: 'Quản lý Khách & Ra vào',
+        lead: window.state?.currentUser?.name || 'Nguyễn Văn Huy (QA Lead)',
         standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
-        activeVersion: 'v1.0',
-        versions: [{ version: 'v1.0', label: 'v1.0-Khởi tạo', status: 'IN_QA' }],
-        modules: [],
+        activeVersion: 'v1.0.0',
+        versions: [{ version: 'v1.0.0', label: 'v1.0.0-Base', status: 'IN_QA' }],
+        modules: defaultModules,
         testCases: newTcs
       };
       window.state.projects = [newProj];
@@ -569,6 +589,9 @@
     } else {
       const prj = window.state.projects.find(p => p.id === window.state.activeProjectId) || window.state.projects[0];
       prj.testCases = newTcs;
+      if (!prj.modules || prj.modules.length === 0) {
+        prj.modules = defaultModules;
+      }
       if (window.pushProjectsToCloud) window.pushProjectsToCloud(window.state.projects);
     }
 
@@ -772,6 +795,7 @@
   // Helper refresh tất cả các màn hình đang mở
   function refreshAllActiveScreens() {
     try {
+      if (typeof window.initTestcasesModule === 'function') window.initTestcasesModule();
       if (typeof window.renderTestcasesTable === 'function') window.renderTestcasesTable();
       if (typeof window.renderMyTasks === 'function') window.renderMyTasks();
       if (typeof window.renderSummaryMatrix === 'function') window.renderSummaryMatrix();
@@ -779,6 +803,8 @@
       if (typeof window.renderAssignmentsTable === 'function') window.renderAssignmentsTable();
       if (typeof window.filterExecList === 'function') window.filterExecList();
       if (typeof window.renderDefectList === 'function') window.renderDefectList();
+      if (typeof window.renderAdminOverview === 'function') window.renderAdminOverview();
+      if (typeof window.renderProjectsTab === 'function') window.renderProjectsTab();
       window.dispatchEvent(new CustomEvent('smartvms:catalog-updated'));
     } catch (e) {
       console.warn('Lỗi refresh UI:', e);
