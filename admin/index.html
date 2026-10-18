@@ -155,7 +155,7 @@
   <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function updateDashboardKPIs() {
       const p = getActiveProject();
       if (!p) return;
       const tcs = p.testCases || [];
@@ -183,6 +183,12 @@
       if (sel) {
         sel.innerHTML = getAllProjects().map(pr => `<option value="${pr.id}" ${pr.id === p.id ? 'selected' : ''}>${pr.name}</option>`).join('');
       }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateDashboardKPIs();
+      window.addEventListener('smartvms:cloud-synced', updateDashboardKPIs);
+      window.addEventListener('smartvms:catalog-updated', updateDashboardKPIs);
     });
   </script>
 </body>

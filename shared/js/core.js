@@ -171,7 +171,14 @@ function initCoreState() {
         }
       });
     }
-    if (state.isCleanProjectState) {
+    // NGUYÊN TẮC: DATABASE LÀ NGUỒN DUY NHẤT — KHÔNG LƯU TRỮ CỤC BỘ DỮ LIỆU CŨ TRÊN TRÌNH DUYỆT
+    if (catalog && Array.isArray(catalog.testCases) && catalog.testCases.length === 0 && !state.isCustomCatalog) {
+      if (actPrj) actPrj.testCases = [];
+      state.isCleanProjectState = true;
+      state.results = {};
+      state.cycleResults = {};
+      state.assignments = [];
+    } else if (state.isCleanProjectState) {
       if (!actPrj.testCases) actPrj.testCases = [];
     } else if (!actPrj.testCases || actPrj.testCases.length === 0) {
       if (!state.isCustomCatalog) {

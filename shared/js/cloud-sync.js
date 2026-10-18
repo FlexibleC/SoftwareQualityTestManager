@@ -953,6 +953,15 @@
       const dashFail = document.getElementById('dash-fail');
       const dashBlocked = document.getElementById('dash-blocked');
       const dashTotal = document.getElementById('dash-total');
+      const dashAsg = document.getElementById('dash-asg');
+      if (dashTotal) {
+        const curTcs = window.state?.projects?.[0]?.testCases || [];
+        dashTotal.textContent = curTcs.length;
+      }
+      if (dashAsg) {
+        const curAsgs = window.state?.assignments || [];
+        dashAsg.textContent = curAsgs.length;
+      }
       if (dashPass && dashFail && window.state?.results) {
         let pass = 0, fail = 0, blk = 0;
         Object.values(window.state.results).forEach(r => {
