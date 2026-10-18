@@ -4,16 +4,17 @@
  * Handles testcase catalog browsing, search/filter, CRUD, Cloning, Override/Reset, and JSON import/export.
  */
 
-function initTestcasesModule() {
-  initCoreState();
+function initTestcasesModule(skipResetState = false) {
+  if (!skipResetState) {
+    initCoreState();
+  }
   const p = getActiveProject();
-  if (!p) return;
 
   // Populate module filter
   const modFilter = document.getElementById('filter-module');
   if (modFilter) {
     const user = getCurrentUser();
-    const mods = getAccessibleModulesForUser(user, state.activeProjectId);
+    const mods = p ? getAccessibleModulesForUser(user, state.activeProjectId) : [];
     modFilter.innerHTML = `<option value="">Tất cả phân hệ (${mods.length} Phân hệ)</option>` +
       mods.map(m => `<option value="${m.id}">[${m.id}] ${m.name}</option>`).join('');
   }
@@ -27,7 +28,8 @@ function initTestcasesModule() {
 
   // Hook up header checkbox if present
   const headCheckbox = document.querySelector('.tc-table thead input[type="checkbox"]');
-  if (headCheckbox) {
+  if (headCheckbox && !headCheckbox.__bound) {
+    headCheckbox.__bound = true;
     headCheckbox.addEventListener('change', function() {
       toggleSelectAllTcs(this.checked);
     });

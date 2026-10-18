@@ -98,11 +98,15 @@ let state = {
 // ================================================================
 // STATE PERSISTENCE & INITIALIZATION (DATABASE-FIRST ARCHITECTURE)
 // ================================================================
-function initCoreState() {
+function initCoreState(force = false) {
   // NGUYÊN TẮC: DATABASE LÀ NGUỒN DUY NHẤT — KHÔNG LƯU TRỮ DỮ LIỆU DỰ ÁN TRÊN TRÌNH DUYỆT
   try {
     localStorage.removeItem(STATE_STORAGE_KEY);
   } catch (e) {}
+
+  if (!force && state.projects && state.projects.length > 0) {
+    return;
+  }
 
   state.projects = [];
   state.activeProjectId = null;

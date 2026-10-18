@@ -1113,7 +1113,9 @@
       }
 
       // 4. Admin Testcases (Danh mục kịch bản)
-      if (typeof window.renderTestcasesTable === 'function') {
+      if (typeof window.initTestcasesModule === 'function') {
+        window.initTestcasesModule(true);
+      } else if (typeof window.renderTestcasesTable === 'function') {
         window.renderTestcasesTable();
       }
 
