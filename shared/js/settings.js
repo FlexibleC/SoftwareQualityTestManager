@@ -215,6 +215,8 @@ function renderActiveProjectCycles() {
 
   const p = getActiveProject();
   if (!p) {
+    if (titleEl) titleEl.innerHTML = '🎯 Quản Lý Các Đợt Kiểm Thử (Test Cycles)';
+    if (filterContainer) filterContainer.innerHTML = '';
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:16px; color:var(--text-muted)">Chưa có dự án nào</td></tr>';
     return;
   }
