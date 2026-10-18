@@ -95,243 +95,57 @@ let state = {
 // ================================================================
 // STATE PERSISTENCE & INITIALIZATION
 // ================================================================
+// ================================================================
+// STATE PERSISTENCE & INITIALIZATION (DATABASE-FIRST ARCHITECTURE)
+// ================================================================
 function initCoreState() {
+  // NGUYÊN TẮC: DATABASE LÀ NGUỒN DUY NHẤT — KHÔNG LƯU TRỮ DỮ LIỆU DỰ ÁN TRÊN TRÌNH DUYỆT
   try {
-    const raw = localStorage.getItem(STATE_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      state = { ...state, ...parsed };
-    }
-  } catch (e) {
-    console.warn('Could not read state from localStorage:', e);
-  }
+    localStorage.removeItem(STATE_STORAGE_KEY);
+  } catch (e) {}
 
-  const manifest = window.OPENQAS_ENTERPRISE_MANIFEST || window.ENTERPRISE_PROJECTS_MANIFEST;
-  const catalog = window.SMARTVMS_DEFAULT_CATALOG || window.SMARTVMS_TEST_CATALOG;
+  state.projects = [];
+  state.activeProjectId = null;
+  state.assignments = [];
+  state.results = {};
+  state.cycleResults = {};
+  state.comments = {};
+  state.evidences = {};
+  state.executionLogs = [];
+  state.adhocDefects = [];
+  state.testCycles = [];
+  state.isCleanProjectState = true;
 
-  // Ensure projects exist from manifest if not loaded
-  if (!state.projects || state.projects.length === 0) {
-    if (manifest && manifest.projects) {
-      state.projects = JSON.parse(JSON.stringify(manifest.projects));
-    }
-  }
+  // Cấu hình tài khoản người dùng hệ thống (RBAC)
+  state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
 
-  if (!state.projects || state.projects.length === 0) {
-    state.projects = [{ id: 'PRJ-SMARTVMS', name: 'SmartVMS — Quản lý Khách & Ra vào', code: 'SMARTVMS' }];
-  }
-
-  // Ensure users exist
-  if (!state.users || state.users.length === 0) {
-    state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
-  }
-
-  // Contextual Role alignment based on portal directory
+  // Phân quyền ngữ cảnh người dùng theo thư mục giao diện
   const currentPath = (window.location.pathname || '').toLowerCase();
   const allUsers = state.users || DEFAULT_SYSTEM_USERS;
   if (currentPath.includes('/tester/')) {
     if (!state.currentUser || state.currentUser.role !== 'tester') {
-      const testerUser = allUsers.find(u => u.role === 'tester') || allUsers[1];
-      state.currentUser = testerUser;
-    }
-    if (state.currentUser && state.currentUser.username === 'tester') {
-      state.currentUser.assignedProjects = ['PRJ-SMARTVMS'];
-    }
-    const storedUser = (state.users || []).find(u => u.username === 'tester');
-    if (storedUser) {
-      storedUser.assignedProjects = ['PRJ-SMARTVMS'];
+      state.currentUser = allUsers.find(u => u.role === 'tester') || allUsers[1];
     }
   } else if (currentPath.includes('/admin/')) {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
-      const adminUser = allUsers.find(u => u.role === 'admin') || allUsers[0];
-      state.currentUser = adminUser;
+      state.currentUser = allUsers.find(u => u.role === 'admin') || allUsers[0];
     }
   } else if (currentPath.includes('/dev/')) {
     if (!state.currentUser || state.currentUser.role !== 'developer') {
-      const devUser = allUsers.find(u => u.role === 'developer') || allUsers[4];
-      state.currentUser = devUser;
+      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers[4];
     }
   }
 
-  // Ensure active project exists
-  let actPrj = state.projects.find(p => p.id === state.activeProjectId);
-  if (!actPrj) {
-    actPrj = state.projects[0];
-    state.activeProjectId = actPrj.id;
-  }
-
-  // Ensure modules and test cases are populated from catalog
-  if (catalog) {
-    if (!actPrj.modules || actPrj.modules.length === 0) {
-      actPrj.modules = JSON.parse(JSON.stringify(catalog.modules || []));
-    } else if (catalog.modules) {
-      actPrj.modules.forEach(m => {
-        if (!m.desc) {
-          const catM = catalog.modules.find(cm => cm.id === m.id);
-          if (catM && catM.desc) m.desc = catM.desc;
-        }
-      });
-    }
-    // NGUYÊN TẮC: DATABASE LÀ NGUỒN DUY NHẤT — KHÔNG LƯU TRỮ CỤC BỘ DỮ LIỆU CŨ TRÊN TRÌNH DUYỆT
-    if (catalog && Array.isArray(catalog.testCases) && catalog.testCases.length === 0 && !state.isCustomCatalog) {
-      if (actPrj) actPrj.testCases = [];
-      state.isCleanProjectState = true;
-      state.results = {};
-      state.cycleResults = {};
-      state.assignments = [];
-      state.adhocDefects = [];
-      saveCoreState();
-    } else if (state.isCleanProjectState) {
-      if (!actPrj.testCases) actPrj.testCases = [];
-    } else if (!actPrj.testCases || actPrj.testCases.length === 0) {
-      if (!state.isCustomCatalog) {
-        const tcs = JSON.parse(JSON.stringify(catalog.testCases || []));
-        actPrj.testCases = tcs;
-      } else {
-        actPrj.testCases = [];
-      }
-    } else if (!state.isCustomCatalog && catalog && catalog.testCases) {
-      // Chỉ đồng bộ khi chưa nạp catalog tùy chỉnh (Excel / JSON)
-      const catMap = new Map((catalog.testCases || []).map(t => [t.id, t]));
-      actPrj.testCases = actPrj.testCases.map(t => {
-        if (catMap.has(t.id) && !t.isCustom) {
-          const fresh = catMap.get(t.id);
-          return {
-            ...t,
-            ...fresh,
-            status: t.status || 'Untested',
-            actualResult: t.actualResult || '',
-            note: t.note || '',
-            executionDate: t.executionDate || '',
-            tester: t.tester || '',
-            evidence: t.evidence || [],
-            snips: t.snips || [],
-            defectId: t.defectId || '',
-            history: t.history || []
-          };
-        }
-        return t;
-      });
-      // Merge any new test cases from catalog that don't exist yet
-      const existingIds = new Set(actPrj.testCases.map(t => t.id));
-      catalog.testCases.forEach(catTc => {
-        if (!existingIds.has(catTc.id)) {
-          actPrj.testCases.push(JSON.parse(JSON.stringify(catTc)));
-        }
-      });
-    }
-  }
-
-  // Ensure and normalize Test Type & Test Suite for all projects & testcases (ISO/IEC 25010 & ISO 29119)
-  (state.projects || []).forEach(prj => {
-    (prj.testCases || []).forEach(t => {
-      if (!t.title) t.title = t.name;
-      if (!t.name) t.name = t.title;
-      const c = classifyTestCase(t);
-      if (!t.type || t.type === 'Chức năng') t.type = c.type;
-      if (!t.suite || t.suite === 'REGRESSION') t.suite = c.suite;
-    });
-  });
-
-  // STRICT SYSTEM SCOPE: ONLY 1 PROJECT (SmartVMS), ONLY 1 VERSION (v2.0), ONLY 1 CYCLE (CYC-SMARTVMS-01)
-  state.projects = (state.projects || []).filter(p => p.id === 'PRJ-SMARTVMS');
-  if (state.projects.length === 0) {
-    const manifest = window.OPENQAS_ENTERPRISE_MANIFEST || window.ENTERPRISE_PROJECTS_MANIFEST;
-    state.projects = JSON.parse(JSON.stringify(manifest?.projects || []));
-  }
-  state.activeProjectId = 'PRJ-SMARTVMS';
-
-  const curPrj = state.projects[0];
-  if (curPrj) {
-    curPrj.activeVersion = 'v2.0';
-    curPrj.versions = [
-      {
-        version: 'v2.0',
-        label: 'v2.0-SingleSite 2026',
-        status: 'IN_QA',
-        targetDate: '2026-10-30',
-        changelog: 'Phiên bản Offline Standalone cho trụ sở đơn lẻ'
-      }
-    ];
-  }
-
-  if (state.isCleanProjectState) {
-    state.activeCycleId = 'CYC-SMARTVMS-01';
-    if (!state.testCycles || state.testCycles.length === 0) {
-      state.testCycles = [{
-        id: 'CYC-SMARTVMS-01',
-        code: 'DOT-1',
-        name: 'Đợt 1 — Kịch bản Mới',
-        projectId: 'PRJ-SMARTVMS',
-        version: 'v2.0',
-        status: 'ACTIVE',
-        targetSuite: 'REGRESSION',
-        testCaseIds: [],
-        description: 'Đợt kiểm thử kịch bản mới'
-      }];
-    } else {
-      state.testCycles[0].testCaseIds = [];
-    }
-    state.cycleResults = state.cycleResults || {};
-    state.assignments = state.assignments || [];
-    state.results = state.results || {};
-    state.executionLogs = state.executionLogs || [];
-    state.adhocDefects = state.adhocDefects || [];
-  } else {
-    // Ensure single test cycle (respect any number of test cases, no hardcoded < 200 restriction)
-    if (!state.testCycles || state.testCycles.length === 0 || !state.testCycles[0].testCaseIds || state.testCycles[0].testCaseIds.length === 0) {
-      seedDefaultTestCycles();
-    } else {
-      state.activeCycleId = 'CYC-SMARTVMS-01';
-    }
-
-    // Seed default demo cycle results if empty
-    if (!state.cycleResults || Object.keys(state.cycleResults).length === 0) {
-      seedDefaultCycleResults();
-    }
-
-    // Ensure all testcases in single cycle are assigned (no hardcoded < 200 restriction)
-    if (!state.assignments || state.assignments.length === 0) {
-      seedDefaultAssignments();
-    }
-
-    // Seed default demo test results if empty
-    if (!state.results || Object.keys(state.results).length === 0) {
-      seedDefaultResults();
-    }
-
-    // Seed default demo execution logs if empty (ISO/IEC/IEEE 29119-3 Audit Trail)
-    if (!state.executionLogs || state.executionLogs.length === 0) {
-      seedDefaultExecutionLogs();
-    }
-
-    // Seed default demo ad-hoc defects if empty (ISO/IEC/IEEE 29119-3 Incident Report)
-    if (!state.adhocDefects || state.adhocDefects.length === 0) {
-      seedDefaultAdhocDefects();
-    }
-  }
-
-  // Ensure active project is accessible to current user
-  const u = getCurrentUser();
-  if (u && (u.role === 'tester' || currentPath.includes('/tester/'))) {
-    const accPrjs = getAccessibleProjects(u);
-    if (!accPrjs.some(p => p.id === state.activeProjectId) && accPrjs.length > 0) {
-      state.activeProjectId = accPrjs[0].id;
-    }
-  }
-
-  // Apply theme
+  // Khôi phục giao diện Dark/Light
   const savedTheme = localStorage.getItem('smartvms_theme') || state.theme || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
-
-  saveCoreState();
 }
 
 function saveCoreState() {
+  // Không lưu dữ liệu dự án vào localStorage theo quy chuẩn Database-First
   try {
-    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('Failed to save state to localStorage:', e);
-  }
+    localStorage.removeItem(STATE_STORAGE_KEY);
+  } catch (e) {}
 }
 
 function seedDefaultTestCycles() {
@@ -519,7 +333,7 @@ function getAccessibleProjects(user) {
     accessible = all.filter(p => (u.assignedProjects || []).includes(p.id));
   }
 
-  return accessible.length > 0 ? accessible : [all[0]];
+  return accessible.length > 0 ? accessible : (all.length > 0 ? [all[0]] : []);
 }
 
 function getAllTcs(version, projectId) {
@@ -1131,27 +945,15 @@ function addProject(projData) {
         changelog: 'Phiên bản khởi tạo ban đầu'
       }
     ],
-    modules: [
-      { id: `${code.slice(0, 2)}01`, name: 'Phân hệ Nghiệp vụ Cốt lõi', desc: 'Chức năng khởi động, xác thực và quản trị trung tâm' }
-    ],
-    testCases: [
-      {
-        id: `TC-${code.slice(0, 4)}-001`,
-        module: `${code.slice(0, 2)}01`,
-        priority: 'P1',
-        title: `Kiểm tra khởi động và xác thực hệ thống ${projData.name || code}`,
-        name: `Kiểm tra khởi động và xác thực hệ thống ${projData.name || code}`,
-        type: 'Chức năng (Functional)',
-        platform: 'Web & Desktop',
-        precondition: 'Dịch vụ hệ thống đang kích hoạt',
-        testData: 'Tài khoản quản trị viên',
-        steps: ['1. Truy cập vào ứng dụng.', '2. Đăng nhập hệ thống.'],
-        expected: ['Đăng nhập thành công, tải màn hình chính.']
-      }
-    ]
+    modules: [],
+    testCases: []
   };
   state.projects.push(newProj);
+  state.activeProjectId = projId;
   saveCoreState();
+  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+    window.pushProjectsToCloud(state.projects);
+  }
   return newProj;
 }
 
@@ -1164,20 +966,26 @@ function updateProject(projId, updatedData) {
   if (updatedData.standards) p.standards = updatedData.standards;
   if (updatedData.activeVersion) p.activeVersion = updatedData.activeVersion;
   saveCoreState();
+  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+    window.pushProjectsToCloud(state.projects);
+  }
   return p;
 }
 
 function deleteProject(projId) {
-  if (!state.projects || state.projects.length <= 1) {
-    throw new Error('Không thể xóa! Hệ thống phải duy trì ít nhất 1 dự án.');
+  if (!state.projects || state.projects.length === 0) {
+    throw new Error('Không có dự án nào để xóa!');
   }
   const idx = state.projects.findIndex(p => p.id === projId);
   if (idx === -1) throw new Error('Không tìm thấy dự án cần xóa!');
   const deleted = state.projects.splice(idx, 1)[0];
   if (state.activeProjectId === projId) {
-    state.activeProjectId = state.projects[0].id;
+    state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
   }
   saveCoreState();
+  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+    window.pushProjectsToCloud(state.projects);
+  }
   return deleted;
 }
 

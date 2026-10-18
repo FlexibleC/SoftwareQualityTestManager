@@ -59,6 +59,26 @@ function renderProjectsTab() {
   const projects = getAllProjects();
   const activePrj = getActiveProject();
 
+  if (!projects || projects.length === 0) {
+    grid.innerHTML = `
+      <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; border: 2px dashed var(--border); background: var(--bg-card)">
+        <div style="font-size: 44px; margin-bottom: 12px">🏢</div>
+        <h3 style="margin-bottom: 8px; font-size: 17px; font-weight: 800; color: var(--text-primary)">
+          Chưa Có Dự Án Nào Trong Cơ Sở Dữ Liệu (0 Dự Án)
+        </h3>
+        <p style="color: var(--text-secondary); max-width: 520px; margin: 0 auto 20px auto; font-size: 13px">
+          Toàn bộ các dự án cũ đã được làm sạch 100%. Bạn có thể bắt đầu tạo dự án mới từ đầu. Mọi dự án tạo ra sẽ được lưu trữ và đồng bộ hóa trực tiếp lên Cloud Database.
+        </p>
+        <button type="button" class="btn btn-primary" onclick="openAddProjectModal()" style="font-weight: 700; padding: 10px 22px; font-size: 14px">
+          ➕ Thêm Dự Án Mới
+        </button>
+      </div>
+    `;
+    renderActiveProjectVersions();
+    renderActiveProjectCycles();
+    return;
+  }
+
   grid.innerHTML = projects.map(p => {
     const isCurrent = activePrj && p.id === activePrj.id;
     const tcCount = (p.testCases || []).length;
@@ -122,9 +142,7 @@ function renderProjectsTab() {
         <div class="project-card-footer">
           <div style="display:flex; gap:6px">
             <button type="button" class="btn btn-outline btn-xs" onclick="openEditProjectModal('${p.id}')" title="Sửa thông tin dự án">✏️ Sửa</button>
-            ${projects.length > 1 ? `
-              <button type="button" class="btn btn-outline btn-xs btn-delete" onclick="deleteProjectHandler('${p.id}')" title="Xóa dự án" style="color:#ef4444; border-color:rgba(239,68,68,0.3)">🗑️ Xóa</button>
-            ` : ''}
+            <button type="button" class="btn btn-outline btn-xs btn-delete" onclick="deleteProjectHandler('${p.id}')" title="Xóa dự án" style="color:#ef4444; border-color:rgba(239,68,68,0.3)">🗑️ Xóa</button>
           </div>
           ${isCurrent ? 
             '<span style="font-size:12px; font-weight:700; color:var(--success)">✓ Dự án hiện tại</span>' : 

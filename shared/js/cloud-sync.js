@@ -119,10 +119,13 @@
         subscribeRealtimeChanges();
       }
 
-      // Tự động kéo danh mục kịch bản từ Database Cloud về (Database là Single Source of Truth)
+      // 1. Kéo trạng thái Dự án (Projects), Đợt test (Cycles), Phân công (Assignments) từ Database Cloud
+      await pullCloudProjectState({ silent: true });
+
+      // 2. Kéo danh mục kịch bản từ Database Cloud về (Database là Single Source of Truth)
       await pullCloudCatalog({ silent: true });
 
-      // Tự động kéo dữ liệu Cloud mới nhất về (Auto-Pull)
+      // 3. Kéo dữ liệu Cloud mới nhất về (Auto-Pull)
       if (cloudState.config.autoSync) {
         await pullCloudResults({ silent: true });
       }
@@ -166,9 +169,14 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'test_cases_custom' }, () => {
           pullCloudCatalog({ silent: true });
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'test_sessions' }, () => {
+          pullCloudProjectState({ silent: true }).then(() => {
+            triggerUiRefresh();
+          });
+        })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_results, test_comments & test_cases_custom');
+            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_sessions, test_results, test_comments & test_cases_custom');
           }
         });
     } catch (err) {
@@ -378,6 +386,154 @@
     }
   }
 
+  // 5a. Kéo trạng thái Dự án (Projects), Đợt test (Cycles), Phân công (Assignments) từ Database Cloud
+  async function pullCloudProjectState(opts = {}) {
+    if (!cloudState.client) return false;
+    try {
+      const { data: sessionRows, error } = await cloudState.client
+        .from('test_sessions')
+        .select('*');
+
+      if (!window.state) window.state = {};
+
+      if (error || !Array.isArray(sessionRows) || sessionRows.length === 0) {
+        window.state.projects = [];
+        window.state.activeProjectId = null;
+        window.state.testCycles = [];
+        window.state.assignments = [];
+        console.log('⚡ [Cloud Database] Không có dự án nào trên Supabase Cloud (0 Dự án).');
+        return true;
+      }
+
+      // 1. Phục hồi projects
+      const prjRow = sessionRows.find(r => r.id === 'system_projects');
+      if (prjRow && prjRow.notes) {
+        try {
+          const parsed = JSON.parse(prjRow.notes);
+          window.state.projects = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          window.state.projects = [];
+        }
+      } else {
+        window.state.projects = [];
+      }
+
+      if (window.state.projects.length > 0) {
+        if (!window.state.activeProjectId || !window.state.projects.some(p => p.id === window.state.activeProjectId)) {
+          window.state.activeProjectId = window.state.projects[0].id;
+        }
+      } else {
+        window.state.activeProjectId = null;
+      }
+
+      // 2. Phục hồi test cycles
+      const cycleRow = sessionRows.find(r => r.id === 'system_cycles');
+      if (cycleRow && cycleRow.notes) {
+        try {
+          const parsedCycles = JSON.parse(cycleRow.notes);
+          window.state.testCycles = Array.isArray(parsedCycles) ? parsedCycles : [];
+        } catch (e) {
+          window.state.testCycles = [];
+        }
+      } else {
+        window.state.testCycles = [];
+      }
+
+      // 3. Phục hồi assignments
+      const asgRow = sessionRows.find(r => r.id === 'system_assignments');
+      if (asgRow && asgRow.notes) {
+        try {
+          const parsedAsgs = JSON.parse(asgRow.notes);
+          window.state.assignments = Array.isArray(parsedAsgs) ? parsedAsgs : [];
+        } catch (e) {
+          window.state.assignments = [];
+        }
+      } else {
+        window.state.assignments = [];
+      }
+
+      console.log(`⚡ [Cloud Database] Đã tải ${window.state.projects.length} dự án từ Supabase Cloud.`);
+      return true;
+    } catch (err) {
+      console.warn('Lỗi pullCloudProjectState:', err);
+      return false;
+    }
+  }
+
+  // 5a-2. Đẩy danh mục dự án lên Supabase Cloud
+  async function pushProjectsToCloud(projects) {
+    if (!cloudState.client) return false;
+    try {
+      if (!Array.isArray(projects) || projects.length === 0) {
+        await cloudState.client.from('test_sessions').delete().eq('id', 'system_projects');
+        console.log('⚡ [Cloud Database] Đã xóa danh mục dự án trên Cloud (0 Dự án).');
+        return true;
+      }
+      const payload = {
+        id: 'system_projects',
+        name: 'System Projects Catalog',
+        owner: window.state?.currentUser?.username || 'admin',
+        version: 'v2.0',
+        notes: JSON.stringify(projects),
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+      if (!error) {
+        console.log(`⚡ [Cloud Database] Đã đồng bộ ${projects.length} dự án lên Supabase Cloud.`);
+      }
+      return !error;
+    } catch (e) {
+      console.error('Lỗi ngoại lệ pushProjectsToCloud:', e);
+      return false;
+    }
+  }
+
+  // 5a-3. Đẩy danh mục đợt test lên Supabase Cloud
+  async function pushCyclesToCloud(cycles) {
+    if (!cloudState.client) return false;
+    try {
+      if (!Array.isArray(cycles) || cycles.length === 0) {
+        await cloudState.client.from('test_sessions').delete().eq('id', 'system_cycles');
+        return true;
+      }
+      const payload = {
+        id: 'system_cycles',
+        name: 'System Test Cycles',
+        owner: window.state?.currentUser?.username || 'admin',
+        version: 'v2.0',
+        notes: JSON.stringify(cycles),
+        updated_at: new Date().toISOString()
+      };
+      await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // 5a-4. Đẩy danh mục phân công lên Supabase Cloud
+  async function pushAssignmentsToCloud(assignments) {
+    if (!cloudState.client) return false;
+    try {
+      if (!Array.isArray(assignments) || assignments.length === 0) {
+        await cloudState.client.from('test_sessions').delete().eq('id', 'system_assignments');
+        return true;
+      }
+      const payload = {
+        id: 'system_assignments',
+        name: 'System Assignments',
+        owner: window.state?.currentUser?.username || 'admin',
+        version: 'v2.0',
+        notes: JSON.stringify(assignments),
+        updated_at: new Date().toISOString()
+      };
+      await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // 5b. Kéo toàn bộ danh mục kịch bản từ Cloud về (Database là Single Source of Truth)
   async function pullCloudCatalog(opts = {}) {
     if (!cloudState.client) return false;
@@ -393,20 +549,22 @@
       }
 
       if (!window.state) window.state = {};
-      if (!window.state.projects || window.state.projects.length === 0) {
-        window.state.projects = [{ id: 'PRJ-SMARTVMS', name: 'SmartVMS — Quản lý Khách & Ra vào', code: 'SMARTVMS' }];
-      }
+      if (!window.state.projects) window.state.projects = [];
 
       if (dbTcs && dbTcs.length > 0) {
         const mapped = dbTcs.map(mapCloudTestCaseToLocal);
-        window.state.projects[0].testCases = mapped;
+        if (window.state.projects.length > 0) {
+          window.state.projects[0].testCases = mapped;
+        }
         window.state.isCustomCatalog = true;
         window.state.isCleanProjectState = false;
         window.state.catalogSource = 'Supabase Cloud Database';
         console.log(`⚡ [Database Sync] Đã đồng bộ ${mapped.length} kịch bản từ Cloud Database về trình duyệt.`);
       } else {
         // Database Cloud sạch sẽ (0 kịch bản): Đảm bảo trình duyệt cũng sạch sẽ 100%
-        window.state.projects[0].testCases = [];
+        if (window.state.projects.length > 0) {
+          window.state.projects.forEach(p => p.testCases = []);
+        }
         window.state.isCustomCatalog = true;
         window.state.isCleanProjectState = true;
         window.state.results = {};
@@ -997,10 +1155,16 @@
       await cloudState.client.from('test_comments').delete().neq('tc_id', '___NONE___');
       // Xóa toàn bộ test cases tùy chỉnh trên bảng test_cases_custom
       await cloudState.client.from('test_cases_custom').delete().neq('tc_id', '___NONE___');
+      // Xóa toàn bộ dự án, đợt test, phân công trên bảng test_sessions
+      await cloudState.client.from('test_sessions').delete().neq('id', '___NONE___');
+      // Xóa toàn bộ đợt kiểm thử trên bảng test_runs
+      await cloudState.client.from('test_runs').delete().neq('id', '___NONE___');
+      // Xóa toàn bộ danh mục test_modules
+      await cloudState.client.from('test_modules').delete().neq('id', '___NONE___');
 
       cloudState.cloudRecordCount = 0;
       updateCloudStatusCountUI();
-      console.log('⚡ [Cloud] Đã làm sạch toàn bộ dữ liệu dự án trên Supabase Cloud.');
+      console.log('⚡ [Cloud] Đã làm sạch toàn bộ dữ liệu dự án trên Supabase Cloud (0 dự án, 0 kết quả).');
       return { success: true };
     } catch (err) {
       console.error('Lỗi khi xóa dữ liệu trên Supabase Cloud:', err);
@@ -1016,6 +1180,10 @@
 
   // Export toàn cục
   window.initCloudSync = initCloudSync;
+  window.pullCloudProjectState = pullCloudProjectState;
+  window.pushProjectsToCloud = pushProjectsToCloud;
+  window.pushCyclesToCloud = pushCyclesToCloud;
+  window.pushAssignmentsToCloud = pushAssignmentsToCloud;
   window.pullCloudResults = pullCloudResults;
   window.pushAllResultsToCloud = pushAllResultsToCloud;
   window.pullCloudCatalog = pullCloudCatalog;

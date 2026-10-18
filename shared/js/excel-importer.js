@@ -503,11 +503,28 @@
   function applyImportedCatalog(newTcs, sourceName = 'Imported') {
     if (!window.state) window.state = {};
     if (!window.state.projects || window.state.projects.length === 0) {
-      window.state.projects = [{ id: 'PRJ-SMARTVMS', name: 'SmartVMS — Quản lý Khách & Ra vào', code: 'SMARTVMS' }];
+      const cleanFileName = sourceName.replace(/^(Excel|JSON):\s*/i, '').replace(/\.[^/.]+$/, '').trim() || 'Dự án Mới';
+      const cleanCode = 'PRJ-' + (cleanFileName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase() || 'NEW01');
+      const newProj = {
+        id: cleanCode,
+        code: cleanCode.replace('PRJ-', ''),
+        name: cleanFileName,
+        domain: 'Hệ thống Phần mềm Doanh nghiệp',
+        lead: window.state?.currentUser?.name || 'QA Lead',
+        standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
+        activeVersion: 'v1.0',
+        versions: [{ version: 'v1.0', label: 'v1.0-Khởi tạo', status: 'IN_QA' }],
+        modules: [],
+        testCases: newTcs
+      };
+      window.state.projects = [newProj];
+      window.state.activeProjectId = newProj.id;
+      if (window.pushProjectsToCloud) window.pushProjectsToCloud(window.state.projects);
+    } else {
+      const prj = window.state.projects.find(p => p.id === window.state.activeProjectId) || window.state.projects[0];
+      prj.testCases = newTcs;
+      if (window.pushProjectsToCloud) window.pushProjectsToCloud(window.state.projects);
     }
-
-    const prj = window.state.projects[0];
-    prj.testCases = newTcs;
 
     // Đánh dấu rõ ràng là danh mục do người dùng nạp (không dùng nạp đè bằng file code cứng)
     window.state.isCleanProjectState = false;
@@ -517,22 +534,26 @@
 
     // Cập nhật Test Cycle
     const allIds = newTcs.map(t => t.id);
+    const curPId = window.state.activeProjectId || 'PRJ-NEW';
     if (!window.state.testCycles || window.state.testCycles.length === 0) {
       window.state.testCycles = [{
-        id: 'CYC-SMARTVMS-01',
+        id: `CYC-${curPId.replace('PRJ-', '')}-01`,
         code: 'DOT-1',
-        name: 'Đợt 1 — Kịch bản Chuẩn hóa Vận hành',
-        projectId: 'PRJ-SMARTVMS',
-        version: 'v2.0',
+        name: `Đợt 1 — ${sourceName}`,
+        projectId: curPId,
+        version: 'v1.0',
+        startDate: new Date().toISOString().slice(0, 10),
+        endDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
         status: 'ACTIVE',
         targetSuite: 'REGRESSION',
         testCaseIds: allIds,
-        description: `Kiểm thử toàn diện ${newTcs.length} kịch bản`
+        description: `Đợt kiểm thử nạp từ ${sourceName} (${newTcs.length} ca kiểm thử)`
       }];
+      window.state.activeCycleId = window.state.testCycles[0].id;
     } else {
       window.state.testCycles[0].testCaseIds = allIds;
     }
-    window.state.activeCycleId = 'CYC-SMARTVMS-01';
+    if (window.pushCyclesToCloud) window.pushCyclesToCloud(window.state.testCycles);
 
     // Cập nhật ma trận phân công
     const today = new Date().toISOString().slice(0, 10);
@@ -718,29 +739,25 @@
     }
   }
 
-  // 7. XÓA TRẮNG TOÀN BỘ DỮ LIỆU DỰ ÁN (WIPE PROJECT DATA)
+  // 7. XÓA TRẮNG TOÀN BỘ CÁC DỰ ÁN VÀ DỮ LIỆU (WIPE ALL PROJECTS & DATA)
   async function wipeProjectData(skipConfirm = false) {
     if (!skipConfirm) {
       const ok = confirm(
-        '⚠️ CẢNH BÁO: BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU LIÊN QUAN ĐẾN DỰ ÁN?\n\n' +
+        '⚠️ CẢNH BÁO: BẠN CÓ CHẮC CHẮN MUỐN XÓA TRẮNG TOÀN BỘ CÁC DỰ ÁN?\n\n' +
+        '• Toàn bộ danh mục Dự án sẽ bị xóa sạch về 0 (sẵn sàng tạo dự án từ đầu).\n' +
         '• Toàn bộ kịch bản kiểm thử (Test Cases) sẽ được xóa sạch về 0.\n' +
         '• Toàn bộ kết quả chấm (Pass, Fail, Skip, Bằng chứng ảnh) sẽ bị xóa.\n' +
-        '• Toàn bộ phân công kiểm thử và lịch sử sẽ được làm mới.\n' +
+        '• Toàn bộ phân công kiểm thử và lịch sử sẽ được làm sạch.\n' +
         '• Cơ sở dữ liệu Supabase Cloud cũng sẽ được đồng bộ làm sạch 100%.\n\n' +
-        'Dự án sẽ chuyển về trạng thái sạch (Clean Slate) để bạn sẵn sàng nạp file Excel/JSON mới tinh.\n\n' +
+        'Hệ thống sẽ chuyển về trạng thái sạch (0 dự án, 0 kịch bản) để bạn tạo dự án mới từ đầu.\n\n' +
         'Nhấn OK để xóa trắng ngay bây giờ.'
       );
       if (!ok) return false;
     }
 
     if (!window.state) window.state = {};
-    if (!window.state.projects || window.state.projects.length === 0) {
-      window.state.projects = [{ id: 'PRJ-SMARTVMS', name: 'SmartVMS — Quản lý Khách & Ra vào', code: 'SMARTVMS' }];
-    }
-
-    const prj = window.state.projects[0];
-    prj.testCases = [];
-
+    window.state.projects = [];
+    window.state.activeProjectId = null;
     window.state.isCleanProjectState = true;
     window.state.isCustomCatalog = true;
     window.state.catalogSource = 'Clean Slate (Xóa trắng)';
@@ -752,17 +769,19 @@
     window.state.executionLogs = [];
     window.state.adhocDefects = [];
     window.state.comments = {};
+    window.state.testCycles = [];
 
-    if (window.state.testCycles && window.state.testCycles.length > 0) {
-      window.state.testCycles[0].testCaseIds = [];
-    }
+    // Xóa sạch localStorage trình duyệt
+    try {
+      localStorage.removeItem('smartvms_qa_hub_state_v3');
+    } catch (e) {}
 
     // Lưu Core State
     if (typeof window.saveCoreState === 'function') {
       window.saveCoreState();
     }
 
-    // Làm sạch Cloud Database nếu có
+    // Làm sạch Cloud Database 100%
     if (window.wipeCloudProjectData && typeof window.wipeCloudProjectData === 'function') {
       try {
         await window.wipeCloudProjectData();
@@ -780,8 +799,8 @@
     // Refresh UI mọi trang đang mở
     refreshAllActiveScreens();
 
-    const msg = '🧹 ĐÃ XÓA TRẮNG TOÀN BỘ DỮ LIỆU DỰ ÁN!\nHệ thống đã sạch 100% (0 kịch bản, 0 kết quả). Bây giờ bạn có thể nạp file test case Excel hoặc JSON mới tinh.';
-    alert(msg);
+    const msg = '🧹 ĐÃ XÓA TRẮNG TOÀN BỘ CÁC DỰ ÁN VÀ DỮ LIỆU!\nHệ thống và Database Cloud hiện đã sạch 100% (0 dự án, 0 kịch bản, 0 kết quả). Bạn có thể tạo dự án mới từ đầu ngay bây giờ.';
+    if (!skipConfirm) alert(msg);
     if (window.showToast) window.showToast(msg, 'success');
     return true;
   }

@@ -235,7 +235,13 @@ function jumpToDetailForTester(username) {
 
 function renderAsgDetailTab() {
   const p = getActiveProject();
-  if (!p) return;
+  if (!p) {
+    const list = document.getElementById('asg-module-list');
+    if (list) list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted)">Chưa có dự án nào</div>';
+    const tbody = document.getElementById('asg-tc-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:36px; color:var(--text-muted)">Chưa có dự án nào trong hệ thống</td></tr>';
+    return;
+  }
 
   const cycleId = document.getElementById('detail-cycle')?.value || state.activeCycleId;
   const cycle = getCycleById(cycleId);

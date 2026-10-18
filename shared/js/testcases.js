@@ -82,6 +82,28 @@ function renderTestcasesTable() {
   const countSpan = document.getElementById('tc-count');
   if (countSpan) countSpan.textContent = filtered.length;
 
+  if (!state.projects || state.projects.length === 0) {
+    if (countBadge) countBadge.textContent = '0 test cases';
+    if (countSpan) countSpan.textContent = '0';
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:48px 20px; color:var(--text-muted)">
+      <div style="font-size:38px; margin-bottom:12px">🏢</div>
+      <div style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:6px">Chưa Có Dự Án Nào Trong Hệ Thống (0 Dự Án)</div>
+      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:20px; max-width:550px; margin-left:auto; margin-right:auto">
+        Toàn bộ dữ liệu dự án đã được làm sạch 100%. Vui lòng tạo dự án mới hoặc nạp trực tiếp file Excel kịch bản để hệ thống tự động khởi tạo dự án và đồng bộ lên Database Cloud.
+      </div>
+      <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap">
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.location.href='../admin/settings.html?tab=projects'" style="font-weight:700">
+          ➕ Thêm Dự Án Mới
+        </button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer; font-weight:700; color:#16a34a; border-color:#16a34a">
+          📗 Nhập Kịch Bản Từ Excel (.xlsx)
+          <input type="file" accept=".xlsx, .xls" style="display:none" onchange="importCatalogFromExcel(this)" />
+        </label>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
   if (allTcs.length === 0) {
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:48px 20px; color:var(--text-muted)">
       <div style="font-size:38px; margin-bottom:12px">📭</div>

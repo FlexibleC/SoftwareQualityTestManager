@@ -61,6 +61,14 @@
       </div>
     </div>
 
+    <!-- Empty Projects Banner -->
+    <div id="dash-empty-banner" style="display:none; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.25); border-radius:8px; padding:12px 18px; margin-bottom:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
+      <div style="font-size:13px; color:var(--text-secondary)">
+        🏢 <strong>Cơ sở dữ liệu đang ở trạng thái sạch (0 Dự án).</strong> Hãy tạo dự án mới để bắt đầu nhập kịch bản và phân công kiểm thử.
+      </div>
+      <a href="../admin/settings.html?tab=projects" class="btn btn-primary btn-xs" style="font-weight:700">➕ Thêm Dự Án Mới</a>
+    </div>
+
     <!-- KPI Metric Cards -->
     <div class="stats-grid">
       <div class="stat-card stat-total">
@@ -157,7 +165,26 @@
   <script>
     function updateDashboardKPIs() {
       const p = getActiveProject();
-      if (!p) return;
+      const allProjects = getAllProjects();
+      const banner = document.getElementById('dash-empty-banner');
+      const sel = document.getElementById('dash-project-select');
+
+      if (!p || allProjects.length === 0) {
+        document.getElementById('dash-total').textContent = '0';
+        document.getElementById('dash-pass').textContent = '0';
+        document.getElementById('dash-fail').textContent = '0';
+        if (document.getElementById('dash-blocked')) {
+          document.getElementById('dash-blocked').textContent = '0';
+        }
+        document.getElementById('dash-asg').textContent = '0';
+        if (sel) {
+          sel.innerHTML = '<option value="">(Chưa có dự án nào - 0 Dự án)</option>';
+        }
+        if (banner) banner.style.display = 'flex';
+        return;
+      }
+
+      if (banner) banner.style.display = 'none';
       const tcs = p.testCases || [];
       const asgs = (state.assignments || []).filter(a => a.projectId === p.id);
       let pass = 0, fail = 0, blocked = 0;
@@ -179,9 +206,8 @@
       }
       document.getElementById('dash-asg').textContent = asgs.length;
 
-      const sel = document.getElementById('dash-project-select');
       if (sel) {
-        sel.innerHTML = getAllProjects().map(pr => `<option value="${pr.id}" ${pr.id === p.id ? 'selected' : ''}>${pr.name}</option>`).join('');
+        sel.innerHTML = allProjects.map(pr => `<option value="${pr.id}" ${pr.id === p.id ? 'selected' : ''}>${pr.name}</option>`).join('');
       }
     }
 
