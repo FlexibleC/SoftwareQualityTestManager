@@ -553,8 +553,32 @@
 
       if (dbTcs && dbTcs.length > 0) {
         const mapped = dbTcs.map(mapCloudTestCaseToLocal);
-        if (window.state.projects.length > 0) {
+        const modIds = [...new Set(mapped.map(t => t.module || 'M01'))].sort();
+        const defaultModules = modIds.map(mId => ({
+          id: mId,
+          name: `Phân hệ ${mId}`,
+          versions: ['v1.0', 'v1.0.0']
+        }));
+
+        if (!window.state.projects || window.state.projects.length === 0) {
+          window.state.projects = [{
+            id: 'PRJ-SMARTVMS',
+            code: 'SMARTVMS',
+            name: 'SmartVMS Local SingleSite 2026',
+            domain: 'Quản lý Khách & Ra vào',
+            lead: 'Nguyễn Văn Huy (QA Lead)',
+            standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
+            activeVersion: 'v1.0.0',
+            versions: [{ version: 'v1.0.0', label: 'v1.0.0-Base', status: 'IN_QA' }],
+            modules: defaultModules,
+            testCases: mapped
+          }];
+          window.state.activeProjectId = 'PRJ-SMARTVMS';
+        } else {
           window.state.projects[0].testCases = mapped;
+          if (!window.state.projects[0].modules || window.state.projects[0].modules.length === 0) {
+            window.state.projects[0].modules = defaultModules;
+          }
         }
         window.state.isCustomCatalog = true;
         window.state.isCleanProjectState = false;
