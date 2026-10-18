@@ -15,7 +15,7 @@ const DEFAULT_SYSTEM_USERS = [
     role: 'admin',
     roleTitle: 'Quản trị viên (QA Lead)',
     email: 'huy.nv@smartvms.local',
-    assignedProjects: ['PRJ-SMARTVMS'],
+    assignedProjects: [],
     status: 'ACTIVE',
     createdAt: '2026-10-01'
   },
@@ -27,7 +27,7 @@ const DEFAULT_SYSTEM_USERS = [
     role: 'tester',
     roleTitle: 'Kiểm thử viên 1 (Tester)',
     email: 'nam.nv@smartvms.local',
-    assignedProjects: ['PRJ-SMARTVMS'],
+    assignedProjects: [],
     status: 'ACTIVE',
     createdAt: '2026-10-01'
   },
@@ -39,7 +39,7 @@ const DEFAULT_SYSTEM_USERS = [
     role: 'tester',
     roleTitle: 'Kiểm thử viên 2 (Tester)',
     email: 'lan.tt@smartvms.local',
-    assignedProjects: ['PRJ-SMARTVMS'],
+    assignedProjects: [],
     status: 'ACTIVE',
     createdAt: '2026-10-05'
   },
@@ -51,7 +51,7 @@ const DEFAULT_SYSTEM_USERS = [
     role: 'tester',
     roleTitle: 'Kiểm thử viên 3 (Tester)',
     email: 'minh.lh@smartvms.local',
-    assignedProjects: ['PRJ-SMARTVMS'],
+    assignedProjects: [],
     status: 'ACTIVE',
     createdAt: '2026-10-08'
   },
@@ -63,7 +63,7 @@ const DEFAULT_SYSTEM_USERS = [
     role: 'developer',
     roleTitle: 'Lập trình viên (Developer)',
     email: 'tuan.tq@smartvms.local',
-    assignedProjects: ['PRJ-SMARTVMS'],
+    assignedProjects: [],
     status: 'ACTIVE',
     createdAt: '2026-10-01'
   }
@@ -72,7 +72,7 @@ const DEFAULT_SYSTEM_USERS = [
 // Default Application State
 let state = {
   projects: [],
-  activeProjectId: 'PRJ-SMARTVMS',
+  activeProjectId: null,
   currentUser: { username: 'admin', name: 'Nguyễn Văn Huy', role: 'admin', title: 'QA Lead' },
   users: [],
   assignments: [],
@@ -148,151 +148,13 @@ function saveCoreState() {
   } catch (e) {}
 }
 
-function seedDefaultTestCycles() {
-  const allIds = ((state.projects && state.projects[0] && state.projects[0].testCases) || window.SMARTVMS_TEST_CATALOG?.testCases || []).map(t => t.id);
-  state.testCycles = [
-    {
-      id: 'CYC-SMARTVMS-01',
-      projectId: 'PRJ-SMARTVMS',
-      code: 'ROUND-1',
-      name: 'Đợt 1 — Kiểm thử toàn diện SmartVMS v2.0',
-      version: 'v2.0',
-      startDate: '2026-10-15',
-      endDate: '2026-10-30',
-      status: 'ACTIVE',
-      targetSuite: 'REGRESSION',
-      testCaseIds: allIds,
-      description: 'Kiểm thử toàn diện 12 phân hệ nghiệp vụ phần mềm SmartVMS Local v2.0 (204 ca kiểm thử).'
-    }
-  ];
-  state.activeCycleId = 'CYC-SMARTVMS-01';
-  saveCoreState();
-}
-
-function ensureMultiVersionTestCycles() {
-  // Single project, single version, single test cycle strictly enforced
-}
-
-function seedDefaultCycleResults() {
-  state.cycleResults = {
-    'CYC-SMARTVMS-01': {
-      'TC-AUTH-001': { status: 'Pass', tester: 'Nguyễn Văn Nam', runAt: '2026-10-15T08:30:00.000Z', actualResult: 'Đăng nhập trạm gác thành công' },
-      'TC-AUTH-002': { status: 'Pass', tester: 'Nguyễn Văn Nam', runAt: '2026-10-15T09:00:00.000Z', actualResult: 'Không phân biệt hoa thường' },
-      'TC-AUTH-003': { status: 'Pass', tester: 'Nguyễn Văn Nam', runAt: '2026-10-15T09:30:00.000Z', actualResult: 'Xử lý tài khoản không tồn tại chuẩn' },
-      'TC-AUTH-004': { status: 'Pass', tester: 'Nguyễn Văn Nam', runAt: '2026-10-15T10:00:00.000Z', actualResult: 'Khóa tài khoản chính xác' },
-      'TC-AUTH-005': { status: 'Fail', tester: 'Nguyễn Văn Nam', runAt: '2026-10-15T10:30:00.000Z', failReason: 'Hệ thống không hiển thị cảnh báo chiếm quyền trạm gác đang có cán bộ trực', assignedDev: 'Trần Quốc Tuấn (Dev)' }
-    }
-  };
-}
-
-function seedDefaultAssignments() {
-  const tcs = getAllTcs();
-  if (tcs.length === 0) return;
-  const now = new Date();
-  const dDue = '2026-10-30';
-  const today = now.toISOString().slice(0, 10);
-
-  state.assignments = tcs.map((tc, idx) => {
-    let st = 'WIP';
-    if (tc.id === 'TC-AUTH-001') st = 'PASSED';
-    else if (tc.id === 'TC-AUTH-005') st = 'FAILED';
-    else if (idx < 5) st = 'WIP';
-    else st = 'Not Run';
-
-    return {
-      id: `asg-${String(idx + 1).padStart(3, '0')}`,
-      cycleId: 'CYC-SMARTVMS-01',
-      projectId: 'PRJ-SMARTVMS',
-      tcId: tc.id,
-      assigneeUsername: 'tester',
-      assigneeName: 'Nguyễn Văn Nam (Tester)',
-      assignedBy: 'Nguyễn Văn Huy (QA Lead)',
-      startDate: today,
-      dueDate: dDue,
-      status: st,
-      priority: tc.priority || 'P2',
-      module: tc.module || 'M01',
-      notes: 'Phân công toàn bộ kịch bản kiểm thử đợt 1 SmartVMS v2.0',
-      assignedAt: now.toISOString()
-    };
-  });
-}
-
-function seedDefaultResults() {
-  state.results = {
-    'TC-AUTH-001': { status: 'Pass', tester: 'Nguyễn Văn Nam', runAt: new Date().toISOString(), note: 'Đăng nhập trạm gác thành công hợp lệ' },
-    'TC-AUTH-005': { status: 'Fail', tester: 'Nguyễn Văn Nam', runAt: new Date().toISOString(), failReason: 'Hệ thống không hiển thị popup hỏi ghi đè phiên', defectStatus: 'New', severity: 'Critical', assignedDev: 'Trần Quốc Tuấn (Dev)' }
-  };
-}
-
-function seedDefaultExecutionLogs() {
-  state.executionLogs = [
-    {
-      id: 'LOG-20261014-001',
-      sessionId: 'SES-202610-01',
-      sessionName: 'Sprint 1 - Regression Test',
-      projectId: 'PRJ-SMARTVMS',
-      tcId: 'TC-AUTH-001',
-      tcName: 'Đăng nhập Trạm gác hợp lệ bằng tài khoản trạm (Không mật khẩu)',
-      module: 'M01',
-      testerUsername: 'tester',
-      testerName: 'Nguyễn Văn Nam (Tester)',
-      executedAt: '2026-10-14T21:30:15.000Z',
-      status: 'Pass',
-      actualResult: 'Hệ thống tự động chuẩn hóa chữ thường, xác thực thành công và lưu Token đăng nhập trạm.',
-      failReason: '',
-      defectCategory: '',
-      severity: '',
-      assignedDev: '',
-      evidenceCount: 1
-    },
-    {
-      id: 'LOG-20261014-002',
-      sessionId: 'SES-202610-01',
-      sessionName: 'Sprint 1 - Regression Test',
-      projectId: 'PRJ-SMARTVMS',
-      tcId: 'TC-AUTH-005',
-      tcName: 'Xử lý xung đột phiên trạm: Phát hiện trạm đang mở dở dang',
-      module: 'M01',
-      testerUsername: 'tester',
-      testerName: 'Nguyễn Văn Nam (Tester)',
-      executedAt: '2026-10-14T22:15:40.000Z',
-      status: 'Fail',
-      actualResult: 'Hệ thống không hiển thị cảnh báo chiếm quyền trạm gác.',
-      failReason: 'Không có popup hỏi ghi đè phiên khi trạm đang có cán bộ trực',
-      defectCategory: 'Logic nghiệp vụ',
-      severity: 'Critical',
-      assignedDev: 'Trần Quốc Tuấn (Dev)',
-      evidenceCount: 1
-    }
-  ];
-}
-
-function seedDefaultAdhocDefects() {
-  state.adhocDefects = [
-    {
-      id: 'INC-20261014-001',
-      projectId: 'PRJ-SMARTVMS',
-      module: 'M01',
-      title: 'Thiếu tính năng: Chưa có cơ chế ép đổi ca / thu hồi phiên trạm gác khi cán bộ trực nghỉ đột xuất',
-      defectType: 'MISSING_FEATURE',
-      severity: 'S2-Critical',
-      priority: 'P2-High',
-      stepsToReproduce: '1. Đăng nhập trạm gác B01 bằng tài khoản trực ban A.\n2. Cán bộ A rời khỏi trạm mà quên bấm bàn giao ca.\n3. Cán bộ B vào ca trực muốn mở phiên mới nhưng hệ thống báo lỗi xung đột phiên.',
-      actualResult: 'Hệ thống chặn không cho cán bộ B đăng nhập và không có tùy chọn yêu cầu Trưởng ca phê duyệt thu hồi phiên.',
-      expectedResult: 'Cần có popup cho phép cán bộ B gửi yêu cầu thu hồi phiên cũ kèm xác thực mã OTP Trưởng ca để bàn giao trạm.',
-      environment: 'Web Trực ban, Edge 129, Trạm gác Cổng 1',
-      evidences: [],
-      reporterUsername: 'tester',
-      reporterName: 'Nguyễn Văn Nam (Tester)',
-      reportedAt: '2026-10-14T22:30:00.000Z',
-      suggestConvertToTc: true,
-      status: 'PENDING_REVIEW',
-      assignedDev: '',
-      convertedTcId: ''
-    }
-  ];
-}
+function seedDefaultTestCycles() {}
+function ensureMultiVersionTestCycles() {}
+function seedDefaultCycleResults() {}
+function seedDefaultAssignments() {}
+function seedDefaultResults() {}
+function seedDefaultExecutionLogs() {}
+function seedDefaultAdhocDefects() {}
 
 // ================================================================
 // PROJECT & TESTCASE SELECTORS (WITH RBAC ACCESS CONTROL)
