@@ -82,6 +82,28 @@ function renderTestcasesTable() {
   const countSpan = document.getElementById('tc-count');
   if (countSpan) countSpan.textContent = filtered.length;
 
+  if (allTcs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:48px 20px; color:var(--text-muted)">
+      <div style="font-size:38px; margin-bottom:12px">📭</div>
+      <div style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:6px">Dự Án Đang Ở Trạng Thái Sạch (0 Kịch Bản)</div>
+      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:20px; max-width:550px; margin-left:auto; margin-right:auto">
+        Toàn bộ dữ liệu cũ đã được xóa sạch sẽ. Bạn có thể nạp file Excel hoặc JSON kịch bản mới tinh của dự án lên hệ thống ngay tại đây:
+      </div>
+      <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap">
+        <label class="btn btn-primary btn-sm" style="cursor:pointer; font-weight:700">
+          📗 Nhập Kịch Bản Từ File Excel (.xlsx)
+          <input type="file" accept=".xlsx, .xls" style="display:none" onchange="importCatalogFromExcel(this)" />
+        </label>
+        <button type="button" class="btn btn-outline btn-sm" onclick="downloadExcelTemplate()">📑 Tải Mẫu Excel ISO 29119-3</button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer">
+          📁 Nạp JSON
+          <input type="file" accept=".json" style="display:none" onchange="importCatalogFromJson(this)" />
+        </label>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:36px; color:var(--text-muted)">🔍 Không tìm thấy kịch bản nào phù hợp bộ lọc.</td></tr>`;
     return;

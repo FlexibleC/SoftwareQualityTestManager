@@ -171,9 +171,15 @@ function initCoreState() {
         }
       });
     }
-    if (!actPrj.testCases || actPrj.testCases.length === 0) {
-      const tcs = JSON.parse(JSON.stringify(catalog.testCases || []));
-      actPrj.testCases = tcs;
+    if (state.isCleanProjectState) {
+      if (!actPrj.testCases) actPrj.testCases = [];
+    } else if (!actPrj.testCases || actPrj.testCases.length === 0) {
+      if (!state.isCustomCatalog) {
+        const tcs = JSON.parse(JSON.stringify(catalog.testCases || []));
+        actPrj.testCases = tcs;
+      } else {
+        actPrj.testCases = [];
+      }
     } else if (!state.isCustomCatalog && catalog && catalog.testCases) {
       // Chỉ đồng bộ khi chưa nạp catalog tùy chỉnh (Excel / JSON)
       const catMap = new Map((catalog.testCases || []).map(t => [t.id, t]));
@@ -239,36 +245,60 @@ function initCoreState() {
     ];
   }
 
-  // Ensure single test cycle (respect any number of test cases, no hardcoded < 200 restriction)
-  if (!state.testCycles || state.testCycles.length === 0 || !state.testCycles[0].testCaseIds || state.testCycles[0].testCaseIds.length === 0) {
-    seedDefaultTestCycles();
-  } else {
+  if (state.isCleanProjectState) {
     state.activeCycleId = 'CYC-SMARTVMS-01';
-  }
+    if (!state.testCycles || state.testCycles.length === 0) {
+      state.testCycles = [{
+        id: 'CYC-SMARTVMS-01',
+        code: 'DOT-1',
+        name: 'Đợt 1 — Kịch bản Mới',
+        projectId: 'PRJ-SMARTVMS',
+        version: 'v2.0',
+        status: 'ACTIVE',
+        targetSuite: 'REGRESSION',
+        testCaseIds: [],
+        description: 'Đợt kiểm thử kịch bản mới'
+      }];
+    } else {
+      state.testCycles[0].testCaseIds = [];
+    }
+    state.cycleResults = state.cycleResults || {};
+    state.assignments = state.assignments || [];
+    state.results = state.results || {};
+    state.executionLogs = state.executionLogs || [];
+    state.adhocDefects = state.adhocDefects || [];
+  } else {
+    // Ensure single test cycle (respect any number of test cases, no hardcoded < 200 restriction)
+    if (!state.testCycles || state.testCycles.length === 0 || !state.testCycles[0].testCaseIds || state.testCycles[0].testCaseIds.length === 0) {
+      seedDefaultTestCycles();
+    } else {
+      state.activeCycleId = 'CYC-SMARTVMS-01';
+    }
 
-  // Seed default demo cycle results if empty
-  if (!state.cycleResults || Object.keys(state.cycleResults).length === 0) {
-    seedDefaultCycleResults();
-  }
+    // Seed default demo cycle results if empty
+    if (!state.cycleResults || Object.keys(state.cycleResults).length === 0) {
+      seedDefaultCycleResults();
+    }
 
-  // Ensure all testcases in single cycle are assigned (no hardcoded < 200 restriction)
-  if (!state.assignments || state.assignments.length === 0) {
-    seedDefaultAssignments();
-  }
+    // Ensure all testcases in single cycle are assigned (no hardcoded < 200 restriction)
+    if (!state.assignments || state.assignments.length === 0) {
+      seedDefaultAssignments();
+    }
 
-  // Seed default demo test results if empty
-  if (!state.results || Object.keys(state.results).length === 0) {
-    seedDefaultResults();
-  }
+    // Seed default demo test results if empty
+    if (!state.results || Object.keys(state.results).length === 0) {
+      seedDefaultResults();
+    }
 
-  // Seed default demo execution logs if empty (ISO/IEC/IEEE 29119-3 Audit Trail)
-  if (!state.executionLogs || state.executionLogs.length === 0) {
-    seedDefaultExecutionLogs();
-  }
+    // Seed default demo execution logs if empty (ISO/IEC/IEEE 29119-3 Audit Trail)
+    if (!state.executionLogs || state.executionLogs.length === 0) {
+      seedDefaultExecutionLogs();
+    }
 
-  // Seed default demo ad-hoc defects if empty (ISO/IEC/IEEE 29119-3 Incident Report)
-  if (!state.adhocDefects || state.adhocDefects.length === 0) {
-    seedDefaultAdhocDefects();
+    // Seed default demo ad-hoc defects if empty (ISO/IEC/IEEE 29119-3 Incident Report)
+    if (!state.adhocDefects || state.adhocDefects.length === 0) {
+      seedDefaultAdhocDefects();
+    }
   }
 
   // Ensure active project is accessible to current user

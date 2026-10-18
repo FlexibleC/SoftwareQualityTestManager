@@ -859,6 +859,30 @@
     }
   }
 
+  // 9. Xóa trắng toàn bộ dữ liệu trên Supabase Cloud
+  async function wipeCloudProjectData() {
+    if (!cloudState.client) {
+      console.warn('Supabase Cloud client chưa khởi tạo.');
+      return { success: false, error: 'Chưa kết nối Cloud' };
+    }
+    try {
+      // Xóa toàn bộ kết quả test trên bảng test_results
+      await cloudState.client.from('test_results').delete().neq('tc_id', '___NONE___');
+      // Xóa toàn bộ trao đổi bình luận trên bảng test_comments
+      await cloudState.client.from('test_comments').delete().neq('tc_id', '___NONE___');
+      // Xóa toàn bộ test cases tùy chỉnh trên bảng test_cases_custom
+      await cloudState.client.from('test_cases_custom').delete().neq('tc_id', '___NONE___');
+
+      cloudState.cloudRecordCount = 0;
+      updateCloudStatusCountUI();
+      console.log('⚡ [Cloud] Đã làm sạch toàn bộ dữ liệu dự án trên Supabase Cloud.');
+      return { success: true };
+    } catch (err) {
+      console.error('Lỗi khi xóa dữ liệu trên Supabase Cloud:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
   // Khởi động khi DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {
     injectCloudWidgetToTopbar();
@@ -871,6 +895,7 @@
   window.pushAllResultsToCloud = pushAllResultsToCloud;
   window.syncResultToCloud = syncResultToCloud;
   window.syncCommentToCloud = syncCommentToCloud;
+  window.wipeCloudProjectData = wipeCloudProjectData;
   window.openCloudManagerModal = openCloudManagerModal;
   window.closeCloudManagerModal = closeCloudManagerModal;
   window.triggerCloudPullManual = () => pullCloudResults({ silent: false });
@@ -883,3 +908,4 @@
   };
 
 })(window);
+

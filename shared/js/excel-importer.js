@@ -510,6 +510,7 @@
     prj.testCases = newTcs;
 
     // Đánh dấu rõ ràng là danh mục do người dùng nạp (không dùng nạp đè bằng file code cứng)
+    window.state.isCleanProjectState = false;
     window.state.isCustomCatalog = true;
     window.state.catalogSource = sourceName;
     window.state.catalogUpdatedAt = new Date().toISOString();
@@ -712,6 +713,74 @@
     }
   }
 
+  // 7. XÓA TRẮNG TOÀN BỘ DỮ LIỆU DỰ ÁN (WIPE PROJECT DATA)
+  async function wipeProjectData(skipConfirm = false) {
+    if (!skipConfirm) {
+      const ok = confirm(
+        '⚠️ CẢNH BÁO: BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU LIÊN QUAN ĐẾN DỰ ÁN?\n\n' +
+        '• Toàn bộ kịch bản kiểm thử (Test Cases) sẽ được xóa sạch về 0.\n' +
+        '• Toàn bộ kết quả chấm (Pass, Fail, Skip, Bằng chứng ảnh) sẽ bị xóa.\n' +
+        '• Toàn bộ phân công kiểm thử và lịch sử sẽ được làm mới.\n' +
+        '• Cơ sở dữ liệu Supabase Cloud cũng sẽ được đồng bộ làm sạch 100%.\n\n' +
+        'Dự án sẽ chuyển về trạng thái sạch (Clean Slate) để bạn sẵn sàng nạp file Excel/JSON mới tinh.\n\n' +
+        'Nhấn OK để xóa trắng ngay bây giờ.'
+      );
+      if (!ok) return false;
+    }
+
+    if (!window.state) window.state = {};
+    if (!window.state.projects || window.state.projects.length === 0) {
+      window.state.projects = [{ id: 'PRJ-SMARTVMS', name: 'SmartVMS — Quản lý Khách & Ra vào', code: 'SMARTVMS' }];
+    }
+
+    const prj = window.state.projects[0];
+    prj.testCases = [];
+
+    window.state.isCleanProjectState = true;
+    window.state.isCustomCatalog = true;
+    window.state.catalogSource = 'Clean Slate (Xóa trắng)';
+    window.state.catalogUpdatedAt = new Date().toISOString();
+
+    window.state.results = {};
+    window.state.cycleResults = {};
+    window.state.assignments = [];
+    window.state.executionLogs = [];
+    window.state.adhocDefects = [];
+    window.state.comments = {};
+
+    if (window.state.testCycles && window.state.testCycles.length > 0) {
+      window.state.testCycles[0].testCaseIds = [];
+    }
+
+    // Lưu Core State
+    if (typeof window.saveCoreState === 'function') {
+      window.saveCoreState();
+    }
+
+    // Làm sạch Cloud Database nếu có
+    if (window.wipeCloudProjectData && typeof window.wipeCloudProjectData === 'function') {
+      try {
+        await window.wipeCloudProjectData();
+      } catch (err) {
+        console.warn('Lỗi làm sạch Cloud Supabase:', err);
+      }
+    }
+
+    // Gửi catalog rỗng lên server LAN nếu đang chạy
+    saveCatalogToLanServer([]);
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      fetch('/api/sync', { method: 'DELETE' }).catch(() => {});
+    }
+
+    // Refresh UI mọi trang đang mở
+    refreshAllActiveScreens();
+
+    const msg = '🧹 ĐÃ XÓA TRẮNG TOÀN BỘ DỮ LIỆU DỰ ÁN!\nHệ thống đã sạch 100% (0 kịch bản, 0 kết quả). Bây giờ bạn có thể nạp file test case Excel hoặc JSON mới tinh.';
+    alert(msg);
+    if (window.showToast) window.showToast(msg, 'success');
+    return true;
+  }
+
   // Export toàn cục
   window.downloadExcelTemplate = downloadExcelTemplate;
   window.exportCatalogToExcel = exportCatalogToExcel;
@@ -720,5 +789,7 @@
   window.importCatalogJson = importCatalogFromJson;
   window.exportCatalogJson = exportCatalogJson;
   window.deleteSkippedTestCases = deleteSkippedTestCases;
+  window.wipeProjectData = wipeProjectData;
 
 })(window);
+

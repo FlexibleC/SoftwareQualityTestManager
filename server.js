@@ -126,6 +126,12 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ results: {}, updatedAt: new Date().toISOString() }));
       }
       return;
+    } else if (req.method === 'DELETE') {
+      const current = { results: {}, updatedAt: new Date().toISOString() };
+      fs.writeFileSync(syncPath, JSON.stringify(current, null, 2), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, count: 0 }));
+      return;
     } else if (req.method === 'POST') {
       let body = '';
       req.on('data', chunk => { body += chunk; });
