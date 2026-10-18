@@ -3,580 +3,342 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cổng Đăng Nhập - QA Hub | Enterprise Test Management Platform</title>
-  <meta name="description" content="Nền tảng quản lý và đánh giá chất lượng kiểm thử phần mềm chuyên nghiệp theo tiêu chuẩn quốc tế ISO/IEC/IEEE 29119 & ISO/IEC 25010." />
+  <title>Đăng Nhập - SmartVMS Test Manager</title>
+  <meta name="description" content="Hệ thống Quản lý và Giám sát Kiểm thử Phần mềm SmartVMS Test Manager." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared/css/base.css" />
   <style>
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-app);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      margin: 0;
-      padding: 0;
-      color: var(--text-primary);
+    :root {
+      --login-card-bg: #ffffff;
+      --login-card-border: #e2e8f0;
+      --login-input-bg: #f8fafc;
+      --login-input-border: #cbd5e1;
+      --login-segmented-bg: #f1f5f9;
+      --login-ambient-glow: rgba(37, 99, 235, 0.08);
+      --login-dot-color: #cbd5e1;
     }
 
-    /* Top Navigation */
-    .login-topbar {
-      height: 60px;
-      padding: 0 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-card);
-      z-index: 20;
+    [data-theme="dark"] {
+      --login-card-bg: #0f172a;
+      --login-card-border: #1e293b;
+      --login-input-bg: #0b1120;
+      --login-input-border: #334155;
+      --login-segmented-bg: #090e1a;
+      --login-ambient-glow: rgba(59, 130, 246, 0.12);
+      --login-dot-color: #1e293b;
     }
-    .login-brand {
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-app);
+      background-image: 
+        radial-gradient(ellipse at 50% 0%, var(--login-ambient-glow) 0%, transparent 70%),
+        radial-gradient(var(--login-dot-color) 1px, transparent 1px);
+      background-size: 100% 100%, 28px 28px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text-primary);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Top Corner Theme Switcher */
+    .top-actions {
+      position: absolute;
+      top: 20px;
+      right: 24px;
       display: flex;
       align-items: center;
       gap: 12px;
-      text-decoration: none;
+      z-index: 10;
     }
-    .login-brand-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+
+    .theme-toggle-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .theme-toggle-pill:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    /* Centered Login Card */
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      margin: auto;
+    }
+
+    .login-card {
+      background: var(--login-card-bg);
+      border: 1px solid var(--login-card-border);
+      border-radius: 16px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
+      transition: all 0.3s ease;
+    }
+
+    /* Brand Header */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-logo-wrap {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 14px;
+      border-radius: 12px;
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.35);
+    }
+
+    .brand-logo-wrap svg {
+      width: 26px;
+      height: 26px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-title {
       font-size: 20px;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-    }
-    .login-brand-title {
-      font-size: 16.5px;
-      font-weight: 900;
+      font-weight: 800;
       color: var(--text-primary);
-      letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .platform-tag {
-      font-size: 10.5px;
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
-      color: #ffffff;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-    }
-    .login-brand-subtitle {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      font-weight: 500;
-      display: block;
-    }
-    .login-topbar-tools {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .system-status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: rgba(16, 185, 129, 0.1);
-      color: #059669;
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .system-status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-      animation: pulse-dot 2s infinite;
-    }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-    }
-
-    /* Portal Main Area - Dual Pane */
-    .portal-main {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-    }
-    .login-box-wrapper {
-      width: 100%;
-      max-width: 1180px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.16), 0 12px 24px -8px rgba(0, 0, 0, 0.08);
-      display: grid;
-      grid-template-columns: 1.18fr 1fr;
-      overflow: hidden;
-      min-height: 660px;
-    }
-
-    /* Left Hero Showcase Pane (Universal QA Platform) */
-    .hero-pane {
-      background: linear-gradient(145deg, #090e1a 0%, #0f1c3f 50%, #080c18 100%);
-      padding: 42px 38px;
-      color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-pane::before {
-      content: '';
-      position: absolute;
-      top: -120px;
-      right: -120px;
-      width: 340px;
-      height: 340px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(37, 99, 235, 0.35) 0%, rgba(37, 99, 235, 0) 70%);
-      pointer-events: none;
-    }
-    .hero-pane::after {
-      content: '';
-      position: absolute;
-      bottom: -100px;
-      left: -100px;
-      width: 280px;
-      height: 280px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0) 70%);
-      pointer-events: none;
-    }
-
-    .hero-badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 11.5px;
-      font-weight: 800;
-      color: #93c5fd;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      align-self: flex-start;
-      margin-bottom: 16px;
-    }
-    .hero-heading {
-      font-size: 26px;
-      font-weight: 900;
-      line-height: 1.35;
-      letter-spacing: -0.6px;
-      margin: 0 0 12px 0;
-      color: #ffffff;
-    }
-    .hero-heading span {
-      background: linear-gradient(90deg, #60a5fa, #38bdf8, #818cf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero-desc {
-      font-size: 13.5px;
-      color: #94a3b8;
-      line-height: 1.65;
-      margin: 0 0 22px 0;
-    }
-
-    /* 4 Core Pillars of Universal QA */
-    .qa-pillars-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-    .qa-pillar-card {
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      transition: all 0.2s;
-    }
-    .qa-pillar-card:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(96, 165, 250, 0.35);
-      transform: translateY(-2px);
-    }
-    .qa-pillar-icon {
-      font-size: 20px;
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-      background: rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .qa-pillar-title {
-      font-size: 12.5px;
-      font-weight: 800;
-      color: #f1f5f9;
-      margin-bottom: 2px;
-    }
-    .qa-pillar-desc {
-      font-size: 11px;
-      color: #94a3b8;
-      line-height: 1.45;
-    }
-
-    /* Active Working Context Card (Dynamic SUT Info) */
-    .active-context-card {
-      background: rgba(37, 99, 235, 0.12);
-      border: 1px solid rgba(96, 165, 250, 0.28);
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 18px;
-    }
-    .active-context-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .active-context-tag {
-      font-size: 10.5px;
-      font-weight: 800;
-      color: #93c5fd;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .active-context-status {
-      font-size: 11px;
-      color: #34d399;
-      font-weight: 700;
-    }
-    .active-context-body {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .active-context-name {
-      font-size: 13.5px;
-      font-weight: 800;
-      color: #ffffff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .active-context-meta {
-      font-size: 11.5px;
-      color: #cbd5e1;
-      margin-top: 2px;
-    }
-    .active-context-badge {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      color: #f8fafc;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    /* Standards pill strip */
-    .hero-standards-bar {
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #64748b;
-    }
-    .hero-standards-bar strong {
-      color: #93c5fd;
-      font-weight: 700;
-    }
-
-    /* Right Login Form Pane */
-    .login-form-pane {
-      padding: 42px 38px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      background: var(--bg-card);
-    }
-    .login-header {
-      margin-bottom: 22px;
-    }
-    .login-title-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    .login-title-icon {
-      font-size: 24px;
-    }
-    .login-title {
-      font-size: 22px;
-      font-weight: 900;
-      color: var(--text-primary);
-      margin: 0;
+      margin: 0 0 6px 0;
       letter-spacing: -0.4px;
     }
-    .login-subtitle {
+
+    .brand-subtitle {
       font-size: 13px;
       color: var(--text-muted);
       margin: 0;
-      line-height: 1.5;
+      font-weight: 500;
     }
 
-    /* Role Quick Select Chips */
-    .role-quick-label {
-      font-size: 11.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .role-quick-grid {
+    /* Segmented Role Switcher */
+    .segmented-role-control {
+      background: var(--login-segmented-bg);
+      border: 1px solid var(--border-light);
+      border-radius: 9px;
+      padding: 3px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 3px;
+      margin-bottom: 24px;
+    }
+
+    .segmented-btn {
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .segmented-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .segmented-btn.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Form Controls */
+    .form-group {
       margin-bottom: 18px;
     }
-    .role-chip {
-      background: var(--bg-surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      user-select: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-    .role-chip:hover {
-      border-color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
-    }
-    .role-chip.active {
-      background: rgba(37, 99, 235, 0.08);
-      border-color: var(--primary);
-      box-shadow: 0 0 0 1px var(--primary), var(--shadow-sm);
-    }
-    .role-chip-icon {
-      font-size: 20px;
-    }
-    .role-chip-name {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--text-primary);
-    }
-    .role-chip-title {
-      font-size: 10.5px;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
 
-    /* Form Fields */
-    .form-group {
-      margin-bottom: 15px;
-    }
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-    .input-with-icon {
-      display: flex;
-      align-items: center;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--bg-surface);
-      transition: all 0.15s;
-      overflow: hidden;
-    }
-    .input-with-icon:focus-within {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-      background: var(--bg-card);
-    }
-    .input-icon-box {
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: var(--text-muted);
-      flex-shrink: 0;
-      user-select: none;
-    }
-    input.login-input {
-      flex: 1;
-      height: 44px;
-      padding: 0 12px 0 0 !important;
-      font-size: 13.5px;
-      border: none !important;
-      outline: none !important;
-      background: transparent !important;
-      color: var(--text-primary);
-      box-shadow: none !important;
-      font-family: inherit;
-      width: auto !important;
-    }
-    .btn-toggle-pwd {
-      width: 40px;
-      height: 44px;
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-    .btn-toggle-pwd:hover {
-      color: var(--text-primary);
-    }
-
-    /* Destination Workspace Banner */
-    .dest-banner {
-      background: rgba(37, 99, 235, 0.06);
-      border: 1px dashed rgba(37, 99, 235, 0.35);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 12px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text-secondary);
-      transition: all 0.2s;
-    }
-    .dest-banner-icon {
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-    .dest-banner strong {
-      color: var(--primary);
-    }
-
-    /* Remember & Help Row */
-    .form-meta-row {
+    .form-label-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      margin-bottom: 7px;
+    }
+
+    .form-label {
       font-size: 12.5px;
-    }
-    .remember-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
+      font-weight: 600;
       color: var(--text-secondary);
-      user-select: none;
     }
-    .help-link {
+
+    .form-link {
+      font-size: 12px;
       color: var(--primary);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
     }
-    .help-link:hover {
+    .form-link:hover {
       text-decoration: underline;
     }
 
-    /* Primary Login Button */
-    .btn-login-submit {
+    .input-field-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--login-input-bg);
+      border: 1px solid var(--login-input-border);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .input-field-wrap:focus-within {
+      background: var(--bg-card);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .input-icon-leading {
+      width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .input-icon-leading svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 2;
+    }
+
+    .login-field {
+      flex: 1;
+      height: 42px;
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      font-family: inherit;
+      padding: 0 12px 0 0;
+      box-shadow: none !important;
+    }
+
+    .input-icon-trailing {
+      background: none;
+      border: none;
+      width: 38px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .input-icon-trailing:hover {
+      color: var(--text-primary);
+    }
+    .input-icon-trailing svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 2;
+    }
+
+    /* Meta row (Remember me) */
+    .form-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      font-size: 13px;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Submit Button */
+    .btn-submit {
       width: 100%;
-      height: 46px;
+      height: 44px;
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: #ffffff;
       border: none;
-      border-radius: 9px;
-      font-size: 14px;
-      font-weight: 800;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
       letter-spacing: 0.2px;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      font-family: inherit;
     }
-    .btn-login-submit:hover {
+
+    .btn-submit:hover {
       background: linear-gradient(135deg, #1d4ed8, #1e40af);
-      transform: translateY(-1.5px);
-      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
     }
-    .btn-login-submit:active {
+
+    .btn-submit:active {
       transform: translateY(0);
     }
 
-    /* Fast 1-Click Access Row */
-    .quick-enter-row {
-      margin-top: 10px;
-      display: flex;
-      gap: 8px;
-    }
-    .btn-quick-enter {
-      flex: 1;
-      height: 38px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .btn-quick-enter:hover {
-      background: var(--border-light);
-      color: var(--text-primary);
+    .btn-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
     }
 
     /* Error Alert */
-    .login-error-alert {
+    .error-alert {
       display: none;
       background: #fef2f2;
       border: 1px solid #fecaca;
@@ -584,511 +346,433 @@
       padding: 10px 14px;
       border-radius: 8px;
       font-size: 12.5px;
-      font-weight: 600;
-      margin-bottom: 16px;
+      font-weight: 500;
+      margin-bottom: 18px;
       align-items: center;
       gap: 8px;
     }
-    [data-theme="dark"] .login-error-alert {
+    [data-theme="dark"] .error-alert {
       background: rgba(185, 28, 28, 0.15);
-      border-color: rgba(185, 28, 28, 0.35);
+      border-color: rgba(185, 28, 28, 0.3);
       color: #fca5a5;
     }
+    .error-alert svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      stroke-width: 2;
+    }
 
-    /* Account Help Modal */
-    .account-modal {
+    /* Footer */
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .login-footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Credentials Modal */
+    .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(4px);
       z-index: 100;
       align-items: center;
       justify-content: center;
       padding: 16px;
     }
-    .account-modal.active {
+    .modal-backdrop.active {
       display: flex;
     }
-    .account-modal-box {
+
+    .modal-dialog {
       width: 100%;
-      max-width: 520px;
+      max-width: 440px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 24px;
       box-shadow: var(--shadow-lg);
     }
-    .account-item-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
+
+    .account-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .account-row:hover {
+      border-color: var(--primary);
     }
 
-    /* Page Footer */
-    .portal-page-footer {
-      text-align: center;
-      padding: 18px 20px;
-      font-size: 12px;
+    .account-info {
+      font-size: 12.5px;
+    }
+    .account-role {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .account-creds {
+      font-family: monospace;
       color: var(--text-muted);
-      border-top: 1px solid var(--border);
-      background: var(--bg-card);
+      font-size: 11.5px;
     }
 
-    @media (max-width: 960px) {
-      .login-box-wrapper {
-        grid-template-columns: 1fr;
-      }
-      .hero-pane {
-        padding: 30px 24px;
-      }
-      .login-form-pane {
-        padding: 30px 24px;
-      }
+    .btn-apply-acc {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-apply-acc:hover {
+      background: var(--primary-hover);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
-  <header class="login-topbar">
-    <a href="index.html" class="login-brand">
-      <div class="login-brand-icon">⚡</div>
-      <div>
-        <div class="login-brand-title">
-          QA Hub
-          <span class="platform-tag">Enterprise Test Studio</span>
-        </div>
-        <span class="login-brand-subtitle">Nền Tảng Quản Lý & Đánh Giá Chất Lượng Phần Mềm Toàn Diện</span>
-      </div>
-    </a>
-    <div class="login-topbar-tools">
-      <div class="system-status-chip">
-        <span class="system-status-dot"></span>
-        Máy Chủ Kiểm Thử Sẵn Sàng
-      </div>
-      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi chế độ sáng / tối">🌙</button>
-    </div>
-  </header>
+  <!-- Top Right Theme Action -->
+  <div class="top-actions">
+    <button class="theme-toggle-pill" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">
+      <span id="theme-icon">🌙</span>
+      <span id="theme-label" style="font-size:12px">Giao diện</span>
+    </button>
+  </div>
 
-  <!-- Portal Dual-Pane Area -->
-  <main class="portal-main">
-    <div class="login-box-wrapper">
+  <!-- Center Card Area -->
+  <div class="login-container">
+    <div class="login-card">
       
-      <!-- Left Hero Showcase Pane (Universal QA Platform) -->
-      <section class="hero-pane">
-        <div>
-          <div class="hero-badge-pill">
-            🛡️ Universal Software QA Platform
-          </div>
-          <h1 class="hero-heading">
-            Quản Lý & Thẩm Định Chất Lượng <span>Mọi Dự Án Phần Mềm</span>
-          </h1>
-          <p class="hero-desc">
-            Nền tảng kiểm thử tiêu chuẩn hóa theo quy chuẩn quốc tế ISO/IEC/IEEE 29119 & ISO/IEC 25010. Cho phép khởi tạo, quản trị kịch bản, điều phối nhân lực và giám sát chất lượng cho mọi sản phẩm công nghệ (Web, Mobile, Desktop, API, Nhúng & IoT).
-          </p>
+      <!-- Logo & Branding -->
+      <div class="brand-header">
+        <div class="brand-logo-wrap" title="SmartVMS Test Manager">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">SmartVMS Test Manager</h1>
+        <p class="brand-subtitle">Đăng nhập vào hệ thống kiểm thử phần mềm</p>
+      </div>
 
-          <!-- 4 Core Pillars of Universal QA Platform -->
-          <div class="qa-pillars-grid">
-            <div class="qa-pillar-card">
-              <div class="qa-pillar-icon">📋</div>
-              <div>
-                <div class="qa-pillar-title">Test Repository</div>
-                <div class="qa-pillar-desc">Cấu trúc hóa thư viện kịch bản, modules & test suites chi tiết theo chuẩn ISO 29119.</div>
-              </div>
-            </div>
-            <div class="qa-pillar-card">
-              <div class="qa-pillar-icon">🎯</div>
-              <div>
-                <div class="qa-pillar-title">Test Cycles & Runs</div>
-                <div class="qa-pillar-desc">Kiểm thử đa vòng: Smoke, Regression, UAT bàn giao và phân tích xu hướng đạt/lỗi.</div>
-              </div>
-            </div>
-            <div class="qa-pillar-card">
-              <div class="qa-pillar-icon">⚖️</div>
-              <div>
-                <div class="qa-pillar-title">Workload Balancing</div>
-                <div class="qa-pillar-desc">Ma trận điều phối tải 2 chiều giữa QA Lead và Tester, ngăn ngừa nghẽn tiến độ.</div>
-              </div>
-            </div>
-            <div class="qa-pillar-card">
-              <div class="qa-pillar-icon">🐞</div>
-              <div>
-                <div class="qa-pillar-title">Defect Traceability</div>
-                <div class="qa-pillar-desc">Theo dõi sự cố, tái hiện bước lỗi, đính kèm bằng chứng ảnh và luồng khắc phục Dev.</div>
-              </div>
-            </div>
-          </div>
+      <!-- Segmented Role Switcher (Ultra Clean Pill Tab) -->
+      <div class="segmented-role-control" role="tablist">
+        <button 
+          type="button" 
+          class="segmented-btn active" 
+          id="tab-admin" 
+          onclick="selectRole('admin')"
+          title="Tài khoản Quản trị viên / QA Lead"
+        >
+          Quản trị
+        </button>
+        <button 
+          type="button" 
+          class="segmented-btn" 
+          id="tab-tester" 
+          onclick="selectRole('tester')"
+          title="Tài khoản Kiểm thử viên (Tester)"
+        >
+          Tester
+        </button>
+        <button 
+          type="button" 
+          class="segmented-btn" 
+          id="tab-dev" 
+          onclick="selectRole('dev')"
+          title="Tài khoản Lập trình viên (Developer)"
+        >
+          Developer
+        </button>
+      </div>
 
-          <!-- Dynamic Active Working Context Card -->
-          <div class="active-context-card">
-            <div class="active-context-header">
-              <span class="active-context-tag">
-                <span>🏢</span> Dự Án Đang Mở Kiểm Thử
-              </span>
-              <span class="active-context-status" id="active-context-status">● Đang hoạt động</span>
+      <!-- Error Alert -->
+      <div class="error-alert" id="login-error-alert" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="login-error-msg">Tài khoản hoặc mật khẩu không chính xác!</span>
+      </div>
+
+      <!-- Authentication Form -->
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        
+        <!-- Username -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="auth-username">Tài khoản</label>
+          </div>
+          <div class="input-field-wrap">
+            <div class="input-icon-leading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
-            <div class="active-context-body">
-              <div style="min-width:0">
-                <div class="active-context-name" id="active-project-name">Đang tải dự án...</div>
-                <div class="active-context-meta" id="active-project-meta">Phiên bản: -- | Đợt kiểm thử: --</div>
-              </div>
-              <div class="active-context-badge" id="active-project-tccount">
-                -- Kịch bản
-              </div>
-            </div>
+            <input
+              type="text"
+              id="auth-username"
+              class="login-field"
+              placeholder="Tên đăng nhập"
+              value="admin"
+              required
+              autocomplete="username"
+            />
           </div>
         </div>
 
-        <!-- Compliance & Standards Bar -->
-        <div class="hero-standards-bar">
-          <div>Tiêu chuẩn: <strong>ISO/IEC/IEEE 29119-3 • ISO 25010 • ISTQB</strong></div>
-          <div style="color:#10b981; font-weight:700">● Local CSDL Độc Lập</div>
-        </div>
-      </section>
-
-      <!-- Right Login Form Pane -->
-      <section class="login-form-pane">
-        <div class="login-header">
-          <div class="login-title-row">
-            <span class="login-title-icon">🔐</span>
-            <h2 class="login-title">Đăng Nhập Không Gian QA</h2>
+        <!-- Password -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="auth-password">Mật khẩu</label>
+            <a class="form-link" onclick="openCredentialsModal()">Tài khoản mẫu?</a>
           </div>
-          <p class="login-subtitle">
-            Chọn nhanh vai trò làm việc để tự động điền tài khoản hoặc nhập thông tin xác thực chuyên biệt:
-          </p>
-        </div>
-
-        <!-- Quick Role Switcher -->
-        <div>
-          <div class="role-quick-label">
-            <span>⚡ Chọn nhanh vai trò làm việc:</span>
-            <span style="color:var(--primary); font-size:11px; cursor:pointer" onclick="openAccountHelp()">🔑 Xem tài khoản mẫu</span>
-          </div>
-          <div class="role-quick-grid">
-            <div class="role-chip active" id="chip-admin" onclick="switchLoginRole('admin')">
-              <span class="role-chip-icon">👑</span>
-              <span class="role-chip-name">QA Lead</span>
-              <span class="role-chip-title">Quản Trị Viên</span>
+          <div class="input-field-wrap">
+            <div class="input-icon-leading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
             </div>
-            <div class="role-chip" id="chip-tester" onclick="switchLoginRole('tester')">
-              <span class="role-chip-icon">🧪</span>
-              <span class="role-chip-name">Tester</span>
-              <span class="role-chip-title">Kiểm Thử Viên</span>
-            </div>
-            <div class="role-chip" id="chip-dev" onclick="switchLoginRole('dev')">
-              <span class="role-chip-icon">💻</span>
-              <span class="role-chip-name">Developer</span>
-              <span class="role-chip-title">Kỹ Sư Phần Mềm</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dynamic Destination Banner -->
-        <div class="dest-banner" id="dest-banner">
-          <span class="dest-banner-icon" id="dest-banner-icon">👑</span>
-          <div id="dest-banner-text">
-            Không gian <strong>QA Lead / Quản Trị</strong>: Dashboard KPI tiến độ, Điều phối kịch bản 2 chiều, Quản lý đợt test và Xuất báo cáo chất lượng.
-          </div>
-        </div>
-
-        <!-- Error Alert -->
-        <div class="login-error-alert" id="login-error-box">
-          <span>⚠️</span>
-          <span id="login-error-text">Tên đăng nhập hoặc mật khẩu không chính xác!</span>
-        </div>
-
-        <!-- Form Elements -->
-        <form id="login-form" onsubmit="handleFormSubmit(event)">
-          <div class="form-group">
-            <label class="form-label" for="login-username">Tài Khoản / Tên Đăng Nhập</label>
-            <div class="input-with-icon">
-              <div class="input-icon-box">👤</div>
-              <input
-                type="text"
-                id="login-username"
-                class="login-input"
-                placeholder="Nhập tên đăng nhập (ví dụ: admin, tester, dev)"
-                value="admin"
-                required
-                autocomplete="username"
-              />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="login-password">Mật Khẩu Truy Cập</label>
-            <div class="input-with-icon">
-              <div class="input-icon-box">🔒</div>
-              <input
-                type="password"
-                id="login-password"
-                class="login-input"
-                placeholder="Nhập mật khẩu"
-                value="123"
-                required
-                autocomplete="current-password"
-              />
-              <button
-                type="button"
-                class="btn-toggle-pwd"
-                onclick="togglePasswordVisibility()"
-                title="Hiện / ẩn mật khẩu"
-                id="toggle-pwd-btn"
-              >👁️</button>
-            </div>
-          </div>
-
-          <div class="form-meta-row">
-            <label class="remember-label">
-              <input type="checkbox" id="remember-me" checked style="accent-color:var(--primary)" />
-              <span>Ghi nhớ phiên làm việc</span>
-            </label>
-            <a class="help-link" onclick="openAccountHelp()">Trợ giúp tài khoản</a>
-          </div>
-
-          <button type="submit" class="btn-login-submit" id="btn-login-submit">
-            <span>🚀</span>
-            <span>ĐĂNG NHẬP VÀO KHÔNG GIAN LÀM VIỆC</span>
-          </button>
-
-          <div class="quick-enter-row">
-            <button type="button" class="btn-quick-enter" onclick="quickDirectLogin()">
-              <span>⚡</span>
-              <span>Truy Cập Nhanh 1-Click</span>
+            <input
+              type="password"
+              id="auth-password"
+              class="login-field"
+              placeholder="Mật khẩu"
+              value="123"
+              required
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="input-icon-trailing"
+              id="pwd-toggle-btn"
+              onclick="togglePasswordVisibility()"
+              title="Hiện/Ẩn mật khẩu"
+            >
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
             </button>
           </div>
-        </form>
+        </div>
 
-      </section>
+        <!-- Remember Me -->
+        <div class="form-meta">
+          <label class="checkbox-label">
+            <input type="checkbox" id="auth-remember" checked />
+            <span>Ghi nhớ phiên đăng nhập</span>
+          </label>
+        </div>
+
+        <!-- Action Button -->
+        <button type="submit" class="btn-submit" id="btn-submit">
+          <span>Đăng Nhập</span>
+        </button>
+
+      </form>
 
     </div>
-  </main>
 
-  <!-- Account Help Modal -->
-  <div class="account-modal" id="account-modal" onclick="closeAccountHelp(event)">
-    <div class="account-modal-box" onclick="event.stopPropagation()">
+    <!-- Minimal Enterprise Footer -->
+    <footer class="login-footer">
+      <div>SmartVMS Test Manager • Phiên bản 2.5</div>
+      <div style="margin-top:4px; font-size:11.5px; opacity:0.8">Hệ thống Quản lý & Giám sát Kiểm thử Nội bộ</div>
+    </footer>
+  </div>
+
+  <!-- Accounts Modal -->
+  <div class="modal-backdrop" id="creds-modal" onclick="closeCredentialsModal(event)">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px">
-        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          🔑 Danh Sách Tài Khoản Phân Quyền QA Hub
+        <h3 style="margin:0; font-size:15px; font-weight:700; color:var(--text-primary)">
+          Danh Sách Tài Khoản Phân Quyền
         </h3>
-        <button type="button" class="btn-close" onclick="closeAccountHelp()" style="background:none; border:none; font-size:18px; cursor:pointer">✕</button>
-      </div>
-      <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 16px 0">
-        Hệ thống được cấu hình sẵn 3 tài khoản nghiệp vụ tiêu chuẩn để phục vụ quản lý và thực thi kiểm thử:
-      </p>
-
-      <!-- Account 1 -->
-      <div class="account-item-card">
-        <div>
-          <div style="font-weight:800; font-size:13px; color:var(--text-primary)">👑 QA Lead / Quản Trị Viên</div>
-          <div style="font-size:11.5px; color:var(--text-muted)">Nguyễn Văn Huy • Quản lý dự án & Điều phối kịch bản</div>
-          <div style="font-size:11.5px; font-family:monospace; margin-top:2px">User: <strong>admin</strong> | Pass: <strong>123</strong></div>
-        </div>
-        <button type="button" class="btn btn-primary btn-xs" onclick="selectAndApplyAccount('admin', '123')">Chọn</button>
+        <button type="button" onclick="closeCredentialsModal()" style="background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-muted)">✕</button>
       </div>
 
-      <!-- Account 2 -->
-      <div class="account-item-card">
-        <div>
-          <div style="font-weight:800; font-size:13px; color:var(--text-primary)">🧪 Kiểm Thử Viên (Tester)</div>
-          <div style="font-size:11.5px; color:var(--text-muted)">Nguyễn Văn Nam • Thực thi kiểm thử & Ghi nhận kết quả</div>
-          <div style="font-size:11.5px; font-family:monospace; margin-top:2px">User: <strong>tester</strong> | Pass: <strong>123</strong></div>
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">Quản trị viên (QA Lead)</div>
+          <div class="account-creds">User: <strong>admin</strong> | Pass: <strong>123</strong></div>
         </div>
-        <button type="button" class="btn btn-primary btn-xs" onclick="selectAndApplyAccount('tester', '123')">Chọn</button>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('admin', '123')">Điền</button>
       </div>
 
-      <!-- Account 3 -->
-      <div class="account-item-card">
-        <div>
-          <div style="font-weight:800; font-size:13px; color:var(--text-primary)">💻 Kỹ Sư Lập Trình (Developer)</div>
-          <div style="font-size:11.5px; color:var(--text-muted)">Trần Quốc Tuấn • Tiếp nhận Defect, Tái hiện bug & Fix</div>
-          <div style="font-size:11.5px; font-family:monospace; margin-top:2px">User: <strong>dev</strong> | Pass: <strong>123</strong></div>
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">Kiểm thử viên (Tester)</div>
+          <div class="account-creds">User: <strong>tester</strong> | Pass: <strong>123</strong></div>
         </div>
-        <button type="button" class="btn btn-primary btn-xs" onclick="selectAndApplyAccount('dev', '123')">Chọn</button>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('tester', '123')">Điền</button>
+      </div>
+
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">Lập trình viên (Developer)</div>
+          <div class="account-creds">User: <strong>dev</strong> | Pass: <strong>123</strong></div>
+        </div>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('dev', '123')">Điền</button>
       </div>
 
       <div style="text-align:right; margin-top:16px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeAccountHelp()">Đóng</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeCredentialsModal()">Đóng</button>
       </div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
-  <!-- Page Footer -->
-  <footer class="portal-page-footer">
-    <div><strong>QA Hub — Enterprise Test Management Platform</strong> • Nền Tảng Quản Lý & Đánh Giá Chất Lượng Kiểm Thử Phần Mềm</div>
-    <div style="margin-top:4px; font-size:11px">Phân quyền RBAC • ISO/IEC/IEEE 29119-3 Audit Trail • Sẵn sàng cho mọi dự án phần mềm công nghệ</div>
-  </footer>
-
-  <!-- Scripts -->
+  <!-- Core Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data/enterprise_projects_manifest.js"></script>
   <script src="data/smartvms_test_catalog.js"></script>
   <script src="shared/js/core.js"></script>
   <script src="shared/js/cloud-sync.js"></script>
   <script>
-    let activeSelectedRole = 'admin';
-
-    const ROLE_CONFIGS = {
-      admin: {
-        username: 'admin',
-        password: '123',
-        icon: '👑',
-        destUrl: 'admin/index.html',
-        destTitle: 'QA Lead / Quản Trị',
-        destDesc: 'Dashboard KPI tiến độ, Điều phối kịch bản 2 chiều, Quản lý đợt test và Xuất báo cáo chất lượng ISO.'
-      },
-      tester: {
-        username: 'tester',
-        password: '123',
-        icon: '🧪',
-        destUrl: 'tester/index.html',
-        destTitle: 'Kiểm Thử Viên (Tester)',
-        destDesc: 'Bàn kiểm thử "Việc Của Tôi", Thực thi kịch bản từng bước, Ghi nhận Pass/Fail và Đính kèm ảnh bằng chứng lỗi.'
-      },
-      dev: {
-        username: 'dev',
-        password: '123',
-        icon: '💻',
-        destUrl: 'dev/index.html',
-        destTitle: 'Lập Trình Viên (Developer)',
-        destDesc: 'Defect Bug Tracker, Tái hiện lỗi từng bước, Xác nhận sửa lỗi và cập nhật Commit ID.'
-      }
+    const ROLE_ACCOUNTS = {
+      admin: { username: 'admin', password: '123' },
+      tester: { username: 'tester', password: '123' },
+      dev: { username: 'dev', password: '123' }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
 
-      // Bind dynamic active project context into the left showcase card
-      bindDynamicActiveProjectContext();
+      // Check current theme
+      const curTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      updateThemeUI(curTheme);
 
-      // Check current user if any, otherwise default to admin
-      const u = getCurrentUser();
-      if (u && (u.username === 'tester' || u.role === 'tester')) {
-        switchLoginRole('tester');
-      } else if (u && (u.username === 'dev' || u.role === 'developer')) {
-        switchLoginRole('dev');
-      } else {
-        switchLoginRole('admin');
-      }
-
-      // Input listener to update destination if user types
-      const userInp = document.getElementById('login-username');
+      // Listen for input changes to sync tabs
+      const userInp = document.getElementById('auth-username');
       userInp.addEventListener('input', () => {
         const val = userInp.value.trim().toLowerCase();
-        if (val === 'tester') updateRoleChipUI('tester');
-        else if (val === 'dev') updateRoleChipUI('dev');
-        else if (val === 'admin') updateRoleChipUI('admin');
+        if (ROLE_ACCOUNTS[val]) {
+          highlightRoleTab(val);
+        } else {
+          highlightRoleTab(null);
+        }
       });
     });
 
-    function bindDynamicActiveProjectContext() {
-      try {
-        const prj = getActiveProject();
-        const cycle = getActiveCycle();
-        const tcs = getAllTcs();
-
-        const nameEl = document.getElementById('active-project-name');
-        const metaEl = document.getElementById('active-project-meta');
-        const badgeEl = document.getElementById('active-project-tccount');
-
-        if (prj && nameEl) {
-          nameEl.textContent = prj.name || 'Dự án Chưa đặt tên';
-          nameEl.title = prj.name;
-        }
-        if (metaEl) {
-          const v = prj?.activeVersion || 'v1.0';
-          const cName = cycle ? (cycle.code || cycle.name) : 'Đợt 1';
-          metaEl.textContent = `Phiên bản: ${v} | ${cName}`;
-        }
-        if (badgeEl) {
-          const count = tcs ? tcs.length : 0;
-          badgeEl.textContent = `${count} Kịch Bản`;
-        }
-      } catch (err) {
-        console.warn('Could not bind dynamic active project context:', err);
+    function selectRole(role) {
+      highlightRoleTab(role);
+      const acc = ROLE_ACCOUNTS[role];
+      if (acc) {
+        document.getElementById('auth-username').value = acc.username;
+        document.getElementById('auth-password').value = acc.password;
       }
+      hideErrorAlert();
     }
 
-    function switchLoginRole(role) {
-      activeSelectedRole = role;
-      updateRoleChipUI(role);
-
-      const cfg = ROLE_CONFIGS[role];
-      if (cfg) {
-        document.getElementById('login-username').value = cfg.username;
-        document.getElementById('login-password').value = cfg.password;
-        updateDestinationBanner(cfg);
-      }
-      hideLoginError();
-    }
-
-    function updateRoleChipUI(role) {
-      document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('active'));
-      const chip = document.getElementById(`chip-${role}`);
-      if (chip) chip.classList.add('active');
-    }
-
-    function updateDestinationBanner(cfg) {
-      const banner = document.getElementById('dest-banner');
-      const icon = document.getElementById('dest-banner-icon');
-      const text = document.getElementById('dest-banner-text');
-      if (icon) icon.textContent = cfg.icon;
-      if (text) {
-        text.innerHTML = `Không gian <strong>${cfg.destTitle}</strong>: ${cfg.destDesc}`;
+    function highlightRoleTab(role) {
+      document.querySelectorAll('.segmented-btn').forEach(btn => btn.classList.remove('active'));
+      if (role) {
+        const el = document.getElementById(`tab-${role}`);
+        if (el) el.classList.add('active');
       }
     }
 
     function togglePasswordVisibility() {
-      const pwd = document.getElementById('login-password');
-      const btn = document.getElementById('toggle-pwd-btn');
+      const pwd = document.getElementById('auth-password');
+      const eyeIcon = document.getElementById('eye-icon');
       if (pwd.type === 'password') {
         pwd.type = 'text';
-        btn.textContent = '🙈';
+        eyeIcon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
       } else {
         pwd.type = 'password';
-        btn.textContent = '👁️';
+        eyeIcon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
       }
     }
 
-    function showLoginError(msg) {
-      const box = document.getElementById('login-error-box');
-      const txt = document.getElementById('login-error-text');
-      if (box && txt) {
-        txt.textContent = msg;
-        box.style.display = 'flex';
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('theme-icon');
+      if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // Override toggleTheme to update local UI icon
+    const originalToggleTheme = window.toggleTheme;
+    window.toggleTheme = function() {
+      if (typeof originalToggleTheme === 'function') {
+        originalToggleTheme();
+      } else {
+        const cur = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('smartvms_theme', next);
+      }
+      const curTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      updateThemeUI(curTheme);
+    };
+
+    function showErrorAlert(msg) {
+      const el = document.getElementById('login-error-alert');
+      const msgEl = document.getElementById('login-error-msg');
+      if (el && msgEl) {
+        msgEl.textContent = msg;
+        el.style.display = 'flex';
       }
     }
 
-    function hideLoginError() {
-      const box = document.getElementById('login-error-box');
-      if (box) box.style.display = 'none';
+    function hideErrorAlert() {
+      const el = document.getElementById('login-error-alert');
+      if (el) el.style.display = 'none';
     }
 
-    function handleFormSubmit(e) {
+    function handleAuthSubmit(e) {
       e.preventDefault();
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
 
       if (!username) {
-        showLoginError('Vui lòng nhập tên đăng nhập!');
+        showErrorAlert('Vui lòng nhập tên đăng nhập!');
         return;
       }
 
-      // Check against system users
-      const allUsers = state.users && state.users.length > 0 ? state.users : DEFAULT_SYSTEM_USERS;
+      const allUsers = (state && state.users && state.users.length > 0) ? state.users : DEFAULT_SYSTEM_USERS;
       const foundUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
 
       if (!foundUser) {
-        showLoginError(`Không tìm thấy tài khoản "${username}" trong hệ thống!`);
+        showErrorAlert(`Không tìm thấy tài khoản "${username}"!`);
         return;
       }
 
@@ -1096,35 +780,24 @@
       const isPassValid = !foundUser.password || foundUser.password === password || validPasswords.includes(password);
 
       if (!isPassValid) {
-        showLoginError('Mật khẩu không chính xác! (Mật khẩu mặc định: 123 hoặc admin123)');
+        showErrorAlert('Mật khẩu không chính xác!');
         return;
       }
 
-      // Successful authentication
-      hideLoginError();
-      executeLogin(foundUser);
+      hideErrorAlert();
+      executeLoginFlow(foundUser);
     }
 
-    function quickDirectLogin() {
-      const cfg = ROLE_CONFIGS[activeSelectedRole] || ROLE_CONFIGS.admin;
-      const allUsers = state.users && state.users.length > 0 ? state.users : DEFAULT_SYSTEM_USERS;
-      const foundUser = allUsers.find(u => u.username === cfg.username) || allUsers[0];
-      executeLogin(foundUser);
-    }
-
-    function executeLogin(user) {
-      // Set active current user
+    function executeLoginFlow(user) {
       state.currentUser = user;
       saveCoreState();
 
-      // Button loading animation
-      const btn = document.getElementById('btn-login-submit');
+      const btn = document.getElementById('btn-submit');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span>⏳</span><span>ĐANG ĐĂNG NHẬP...</span>';
+        btn.innerHTML = '<div class="spinner"></div><span>Đang đăng nhập...</span>';
       }
 
-      // Determine redirect destination
       let targetUrl = 'admin/index.html';
       if (user.role === 'tester') {
         targetUrl = 'tester/index.html';
@@ -1140,27 +813,24 @@
         targetUrl = targetUrl.replace(/\/+/g, '/');
       }
 
-      showToast(`✅ Đăng nhập thành công! Chào mừng ${user.name}`, 'success');
-
       setTimeout(() => {
         window.location.href = targetUrl;
-      }, 350);
+      }, 300);
     }
 
-    function openAccountHelp() {
-      document.getElementById('account-modal').classList.add('active');
+    function openCredentialsModal() {
+      document.getElementById('creds-modal').classList.add('active');
     }
 
-    function closeAccountHelp(e) {
-      document.getElementById('account-modal').classList.remove('active');
+    function closeCredentialsModal(e) {
+      document.getElementById('creds-modal').classList.remove('active');
     }
 
-    function selectAndApplyAccount(user, pass) {
-      document.getElementById('login-username').value = user;
-      document.getElementById('login-password').value = pass;
-      closeAccountHelp();
-      switchLoginRole(user);
-      showToast(`⚡ Đã nạp tài khoản [${user}]! Nhấn Đăng Nhập để vào hệ thống.`, 'info');
+    function applyAccount(u, p) {
+      document.getElementById('auth-username').value = u;
+      document.getElementById('auth-password').value = p;
+      closeCredentialsModal();
+      highlightRoleTab(u);
     }
   </script>
 </body>
