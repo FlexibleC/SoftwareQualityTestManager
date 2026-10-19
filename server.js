@@ -1,7 +1,7 @@
 /**
- * SMARTVMS TEST MANAGER - LAN & INTRANET HTTP WEB SERVER
+ * SOFTWARE QUALITY & TEST MANAGEMENT SYSTEM (SQTM) - LAN & INTRANET HTTP WEB SERVER
  * Pure Node.js Web Server (Zero dependencies required)
- * Tự động phục vụ hệ thống test trong mạng LAN cơ quan và in mã QR / địa chỉ IP
+ * Tự động phục vụ hệ thống test trong mạng LAN cơ quan và in địa chỉ IP kết nối
  */
 
 const http = require('http');
@@ -26,7 +26,8 @@ const MIME_TYPES = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
-  '.txt': 'text/plain; charset=utf-8'
+  '.txt': 'text/plain; charset=utf-8',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 };
 
 // Tìm các địa chỉ IPv4 mạng LAN của máy
@@ -44,10 +45,10 @@ function getLocalIpAddresses() {
 }
 
 const server = http.createServer((req, res) => {
-  // CORS Headers để hỗ trợ gọi API mượt mà
+  // CORS Headers để hỗ trợ gọi API mượt mà từ mọi nguồn LAN
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -55,20 +56,57 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API ENDPOINTS: Đồng bộ hóa nội bộ (LAN Mode) & Nạp Catalog động
+  // 1. API QUẢN LÝ DANH MỤC DỰ ÁN BỀN VỮNG (Multi-Project Database on Disk)
+  if (req.url.startsWith('/api/projects')) {
+    const projectsPath = path.join(ROOT_DIR, 'data', 'projects_state.json');
+    if (req.method === 'GET') {
+      if (fs.existsSync(projectsPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        fs.createReadStream(projectsPath).pipe(res);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ projects: [], updatedAt: new Date().toISOString() }));
+      }
+      return;
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          const projectsList = Array.isArray(parsed) ? parsed : (parsed.projects || []);
+          const statePayload = {
+            updatedAt: new Date().toISOString(),
+            totalProjects: projectsList.length,
+            projects: projectsList
+          };
+          if (!fs.existsSync(path.join(ROOT_DIR, 'data'))) {
+            fs.mkdirSync(path.join(ROOT_DIR, 'data'), { recursive: true });
+          }
+          fs.writeFileSync(projectsPath, JSON.stringify(statePayload, null, 2), 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, count: projectsList.length }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // 2. API ENDPOINTS: Đồng bộ hóa nội bộ (LAN Mode) & Nạp Catalog động
   if (req.url.startsWith('/api/catalog')) {
     const catalogPath = path.join(ROOT_DIR, 'data', 'smartvms_test_catalog.json');
     const catalogJsPath = path.join(ROOT_DIR, 'data', 'smartvms_test_catalog.js');
     if (req.method === 'GET') {
-      fs.readFile(catalogPath, 'utf8', (err, data) => {
-        if (err) {
-          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: err.message }));
-        } else {
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(data);
-        }
-      });
+      if (fs.existsSync(catalogPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        fs.createReadStream(catalogPath).pipe(res);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ modules: [], testCases: [] }));
+      }
       return;
     } else if (req.method === 'POST') {
       let body = '';
@@ -78,25 +116,12 @@ const server = http.createServer((req, res) => {
           const parsed = JSON.parse(body);
           const tcs = parsed.testCases || parsed;
           const fullCatalog = {
-            schema: "https://smartvms.local/schemas/test-catalog-v4.json",
-            title: "SmartVMS Local SingleSite 2026 — Danh mục Kịch bản Kiểm thử Chuẩn hóa",
-            version: "3.5.0",
+            schema: "https://sqtm.local/schemas/test-catalog-v4.json",
+            title: parsed.title || "Software Quality & Test Management System — Test Catalog",
+            version: parsed.version || "3.0.0",
             exportedAt: new Date().toISOString(),
             totalTestCases: tcs.length,
-            modules: parsed.modules || [
-              { id: "M01", name: "Xác thực, Phân quyền & Quản lý Ca trực", short: "Auth & Ca trực" },
-              { id: "M02", name: "Check-in Khách Đơn & Cấp phát Thẻ", short: "Check-in Khách" },
-              { id: "M03", name: "Khách Đoàn, Người đi cùng & Lưu trú Qua đêm", short: "Đoàn & Đi cùng" },
-              { id: "M04", name: "Check-out, Quản lý Phương tiện & Thu hồi Thẻ mất", short: "Check-out & Thẻ" },
-              { id: "M05", name: "Giao diện Trực ban Cải tiến & Tra cứu Nâng cao", short: "Trực ban & Tra cứu" },
-              { id: "M06", name: "Chi tiết Lượt khách & Dòng thời gian Timeline", short: "Chi tiết & Timeline" },
-              { id: "M07", name: "Phân hệ Sổ sách Ngoại lệ - DataEntry", short: "Sổ sách DataEntry" },
-              { id: "M08", name: "Quản trị Admin & Giám sát Vận hành", short: "Admin & Giám sát" },
-              { id: "M09", name: "Trung tâm Báo cáo, Thống kê & Báo cáo Thẻ mất", short: "Báo cáo & Thống kê" },
-              { id: "M10", name: "Cấu hình Hệ thống, Bốt trực & Đổi mật khẩu", short: "Cấu hình & Đổi pass" },
-              { id: "M11", name: "Tích hợp Thiết bị Ngoại vi & Camera", short: "Thiết bị Ngoại vi" },
-              { id: "M12", name: "Độ tin cậy & Tự phục hồi Offline/LAN", short: "Tin cậy & Offline" }
-            ],
+            modules: parsed.modules || [],
             testCases: tcs
           };
 
@@ -114,7 +139,7 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // API ĐỒNG BỘ KẾT QUẢ TEST REALTIME TRONG MẠNG LAN
+  // 3. API ĐỒNG BỘ KẾT QUẢ TEST REALTIME TRONG MẠNG LAN
   if (req.url.startsWith('/api/sync')) {
     const syncPath = path.join(ROOT_DIR, 'data', 'lan_sync_state.json');
     if (req.method === 'GET') {
@@ -161,7 +186,7 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Phân tích URL và xử lý query string
+  // 4. PHỤC VỤ CÁC TỆP TĨNH (STATIC FILES)
   let safePath = req.url.split('?')[0].split('#')[0];
   if (safePath === '/' || safePath === '') {
     safePath = '/index.html';
@@ -185,8 +210,8 @@ const server = http.createServer((req, res) => {
           res.end(`
             <div style="font-family:sans-serif; text-align:center; padding:50px">
               <h2>404 - Không tìm thấy trang</h2>
-              <p>Đường dẫn <code>${escapeHtml(safePath)}</code> không tồn tại trên hệ thống SmartVMS Test Manager.</p>
-              <a href="/" style="color:#2563eb">Quay lại Trang Chủ</a>
+              <p>Đường dẫn <code>${escapeHtml(safePath)}</code> không tồn tại trên Hệ thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm (SQTM).</p>
+              <a href="/" style="color:#2563eb; font-weight:700">Quay lại Cổng Đăng Nhập</a>
             </div>
           `);
         } else {
@@ -211,7 +236,8 @@ function escapeHtml(str) {
 server.listen(PORT, '0.0.0.0', () => {
   const ips = getLocalIpAddresses();
   console.log('\n================================================================');
-  console.log('🚀 SMARTVMS TEST MANAGER - MÁY CHỦ MẠNG LAN ĐANG HOẠT ĐỘNG');
+  console.log('🚀 HỆ THỐNG KIỂM THỬ & QUẢN LÝ CHẤT LƯỢNG PHẦN MỀM (SQTM v3.0)');
+  console.log('   MÁY CHỦ MẠNG LAN / INTRANET ĐANG HOẠT ĐỘNG (PORT ' + PORT + ')');
   console.log('================================================================');
   console.log(`\n• Truy cập trên máy này:`);
   console.log(`  👉 http://localhost:${PORT}`);
@@ -224,10 +250,7 @@ server.listen(PORT, '0.0.0.0', () => {
     });
   }
 
-  console.log(`\n• Truy cập Online Internet toàn cầu (Vercel HTTPS):`);
-  console.log(`  👉 https://smartvms-test-manager.vercel.app`);
-
-  console.log(`\n• Cơ sở dữ liệu đám mây: Supabase PostgreSQL (Singapore Realtime)`);
+  console.log(`\n• Cơ sở dữ liệu đám mây: Supabase PostgreSQL Realtime`);
   console.log('----------------------------------------------------------------');
   console.log('Nhấn Ctrl + C để dừng máy chủ bất cứ lúc nào.\n');
 });

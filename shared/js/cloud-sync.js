@@ -396,34 +396,35 @@
 
       if (!window.state) window.state = {};
 
-      if (error || !Array.isArray(sessionRows) || sessionRows.length === 0) {
-        window.state.projects = [];
-        window.state.activeProjectId = null;
-        window.state.testCycles = [];
-        window.state.assignments = [];
-        console.log('⚡ [Cloud Database] Không có dự án nào trên Supabase Cloud (0 Dự án).');
-        return true;
+      if (error || !Array.isArray(sessionRows)) {
+        console.warn('⚡ [Cloud Database] Không thể truy vấn bảng test_sessions:', error);
+        return false;
       }
 
-      // 1. Phục hồi projects
+      let projectsUpdated = false;
+
+      // 1. Phục hồi projects từ Cloud
       const prjRow = sessionRows.find(r => r.id === 'system_projects');
       if (prjRow && prjRow.notes) {
         try {
           const parsed = JSON.parse(prjRow.notes);
-          window.state.projects = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          window.state.projects = [];
-        }
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            window.state.projects = parsed;
+            projectsUpdated = true;
+          }
+        } catch (e) {}
       } else {
-        window.state.projects = [];
+        // NẾU CLOUD CHƯA CÓ DỰ ÁN NÀO:
+        // Nếu client đang có dự án ở LocalStorage/State, tự động đồng bộ ngay lên Cloud!
+        if (window.state.projects && Array.isArray(window.state.projects) && window.state.projects.length > 0) {
+          pushProjectsToCloud(window.state.projects);
+        }
       }
 
-      if (window.state.projects.length > 0) {
+      if (window.state.projects && window.state.projects.length > 0) {
         if (!window.state.activeProjectId || !window.state.projects.some(p => p.id === window.state.activeProjectId)) {
           window.state.activeProjectId = window.state.projects[0].id;
         }
-      } else {
-        window.state.activeProjectId = null;
       }
 
       // 2. Phục hồi test cycles
@@ -431,12 +432,14 @@
       if (cycleRow && cycleRow.notes) {
         try {
           const parsedCycles = JSON.parse(cycleRow.notes);
-          window.state.testCycles = Array.isArray(parsedCycles) ? parsedCycles : [];
-        } catch (e) {
-          window.state.testCycles = [];
-        }
+          if (Array.isArray(parsedCycles) && parsedCycles.length > 0) {
+            window.state.testCycles = parsedCycles;
+          }
+        } catch (e) {}
       } else {
-        window.state.testCycles = [];
+        if (window.state.testCycles && window.state.testCycles.length > 0) {
+          pushCyclesToCloud(window.state.testCycles);
+        }
       }
 
       // 3. Phục hồi assignments
@@ -444,15 +447,30 @@
       if (asgRow && asgRow.notes) {
         try {
           const parsedAsgs = JSON.parse(asgRow.notes);
-          window.state.assignments = Array.isArray(parsedAsgs) ? parsedAsgs : [];
-        } catch (e) {
-          window.state.assignments = [];
-        }
+          if (Array.isArray(parsedAsgs) && parsedAsgs.length > 0) {
+            window.state.assignments = parsedAsgs;
+          }
+        } catch (e) {}
       } else {
-        window.state.assignments = [];
+        if (window.state.assignments && window.state.assignments.length > 0) {
+          pushAssignmentsToCloud(window.state.assignments);
+        }
       }
 
-      console.log(`⚡ [Cloud Database] Đã tải ${window.state.projects.length} dự án từ Supabase Cloud.`);
+      if (projectsUpdated) {
+        if (typeof window.saveCoreState === 'function') {
+          window.saveCoreState();
+        }
+        // Cập nhật lại giao diện tương ứng nếu đang mở trang
+        if (typeof AdminPortfolio !== 'undefined' && typeof AdminPortfolio.init === 'function') {
+          AdminPortfolio.init();
+        }
+        if (typeof LeadContext !== 'undefined' && typeof LeadContext.init === 'function') {
+          LeadContext.init();
+        }
+      }
+
+      console.log(`⚡ [Cloud Database] Đã đồng bộ trạng thái: ${(window.state.projects || []).length} dự án.`);
       return true;
     } catch (err) {
       console.warn('Lỗi pullCloudProjectState:', err);

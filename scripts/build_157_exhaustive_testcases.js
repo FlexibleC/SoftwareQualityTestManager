@@ -1,6 +1,14 @@
 const fs = require('fs');
-const path = require('path');
-const ExcelJS = require('D:/DevSoft/SmartVMS-LocalSinglesite/Web/node_modules/exceljs');
+let ExcelJS;
+try {
+  ExcelJS = require('exceljs');
+} catch (e) {
+  try {
+    ExcelJS = require('D:/DevSoft/SmartVMS-LocalSinglesite/Web/node_modules/exceljs');
+  } catch (err) {
+    console.warn('Vui lòng cài đặt exceljs (npm i exceljs) để chạy script xuất file Excel.');
+  }
+}
 
 console.log('🚀 Bắt đầu khởi tạo bộ 157 kịch bản kiểm thử chuẩn hóa Frontend E2E (Vét cạn & Liên thông)...');
 
