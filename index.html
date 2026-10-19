@@ -833,6 +833,10 @@
 
     function executeLoginFlow(user) {
       state.currentUser = user;
+      try {
+        sessionStorage.setItem('smartvms_current_user', JSON.stringify(user));
+        localStorage.setItem('smartvms_current_user', JSON.stringify(user));
+      } catch (e) {}
       saveCoreState();
 
       const btn = document.getElementById('btn-submit');

@@ -6,27 +6,30 @@
 const LeadContext = {
   init() {
     this.resolveActiveProject();
+    this.renderUserInfo();
     this.renderProjectHeader();
     this.bindProjectSwitcher();
-    this.renderUserInfo();
   },
 
   resolveActiveProject() {
+    const available = typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects();
     const params = new URLSearchParams(window.location.search);
     const paramPrjId = params.get('projectId');
     
-    if (paramPrjId) {
+    if (paramPrjId && available.some(p => p.id === paramPrjId)) {
       state.activeProjectId = paramPrjId;
       sessionStorage.setItem('smartvms_active_project_id', paramPrjId);
     } else {
       const savedId = sessionStorage.getItem('smartvms_active_project_id') || localStorage.getItem('smartvms_active_project_id');
-      if (savedId && (state.projects || []).some(p => p.id === savedId)) {
+      if (savedId && available.some(p => p.id === savedId)) {
         state.activeProjectId = savedId;
+      } else if (available.length > 0) {
+        state.activeProjectId = available[0].id;
       }
     }
 
-    if (!state.activeProjectId && state.projects && state.projects.length > 0) {
-      state.activeProjectId = state.projects[0].id;
+    if (!state.activeProjectId && available.length > 0) {
+      state.activeProjectId = available[0].id;
     }
   },
 
@@ -34,8 +37,19 @@ const LeadContext = {
     const u = getCurrentUser();
     const nameEl = document.getElementById('lead-user-name');
     const roleEl = document.getElementById('lead-user-role');
+    const avatarEl = document.getElementById('lead-user-avatar') || document.querySelector('.vms-user-avatar');
+
     if (nameEl && u) nameEl.textContent = u.name || u.username;
-    if (roleEl && u) roleEl.textContent = u.roleTitle || 'Quản trị viên Dự án';
+    if (roleEl && u) {
+      roleEl.textContent = (u.role === 'admin') 
+        ? 'Quản trị viên cấp cao' 
+        : (u.roleTitle || 'Quản trị viên dự án');
+    }
+    if (avatarEl && u) {
+      const char = (u.name || u.username || 'L').trim().charAt(0).toUpperCase();
+      avatarEl.textContent = char;
+      avatarEl.style.background = (u.role === 'admin') ? '#2563eb' : '#d97706';
+    }
   },
 
   renderProjectHeader() {
@@ -43,23 +57,27 @@ const LeadContext = {
     if (!hero) return;
 
     const p = getActiveProject();
-    const projects = getAllProjects();
+    const projects = typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects();
+    const u = getCurrentUser();
 
     if (!p) {
       hero.innerHTML = `
-        <div style="padding:24px; text-align:center; width:100%">
+        <div style="padding:28px 20px; text-align:center; width:100%">
           <div style="font-size:36px; margin-bottom:8px">🏢</div>
           <h3 style="margin:0 0 6px 0; color:var(--text-primary)">Chưa chọn dự án nào</h3>
-          <p style="color:var(--text-muted); font-size:13px; margin:0 0 16px 0">Vui lòng khởi tạo dự án trên Cổng Quản Trị Hệ Thống hoặc chọn một dự án có sẵn.</p>
-          <a href="../admin/index.html" class="btn btn-primary btn-sm">⬅ Về Cổng Quản Trị Cấp Cao</a>
+          <p style="color:var(--text-muted); font-size:13px; margin:0 0 16px 0">
+            Hiện tại bạn chưa được phân bổ vào dự án nào hoặc chưa có dự án sẵn sàng.
+          </p>
+          ${u && u.role === 'admin' ? '<a href="../admin/index.html" class="btn btn-primary btn-sm">⬅ Về cổng quản trị hệ thống</a>' : ''}
         </div>
       `;
       return;
     }
 
     const tcsCount = (p.testCases || []).length;
-    const cyclesCount = (p.testCycles || []).length;
-    const members = getProjectMembers(p.id);
+    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id) : [];
+    const cyclesCount = cycles.length;
+    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : [];
 
     hero.innerHTML = `
       <div class="lead-project-info-wrap">
@@ -68,7 +86,7 @@ const LeadContext = {
         </div>
         <div>
           <div class="lead-project-tagline">
-            <span>👑</span> KHÔNG GIAN ĐIỀU HÀNH DỰ ÁN
+            <span>👑</span> Không gian điều hành dự án
           </div>
           <h1 class="lead-project-heading">${p.name}</h1>
           <div class="lead-project-meta-strip">
@@ -76,18 +94,18 @@ const LeadContext = {
             <span>•</span>
             <span class="badge badge-info" style="font-size:10.5px">Phiên bản: ${p.activeVersion || 'v1.0'}</span>
             <span>•</span>
-            <span>Thư viện: <strong>${tcsCount}</strong> Kịch bản</span>
+            <span>Thư viện: <strong>${tcsCount}</strong> kịch bản</span>
             <span>•</span>
-            <span>Chu kỳ: <strong>${cyclesCount}</strong> Đợt test</span>
+            <span>Chu kỳ: <strong>${cyclesCount}</strong> đợt test</span>
             <span>•</span>
-            <span>Nhân sự: <strong>${members.length}</strong> Người</span>
+            <span>Nhân sự: <strong>${members.length}</strong> người</span>
           </div>
         </div>
       </div>
 
       <div class="lead-project-tools">
-        <div style="display:flex; align-items:center; gap:6px">
-          <span style="font-size:12px; color:var(--text-muted); font-weight:700">Đổi dự án:</span>
+        <div style="display:flex; align-items:center; gap:8px">
+          <span style="font-size:12px; color:var(--text-muted); font-weight:600">Đổi dự án:</span>
           <select class="lead-project-select" onchange="LeadContext.switchProject(this.value)">
             ${projects.map(proj => `
               <option value="${proj.id}" ${proj.id === p.id ? 'selected' : ''}>
@@ -96,9 +114,11 @@ const LeadContext = {
             `).join('')}
           </select>
         </div>
-        <a href="../admin/index.html" class="btn btn-outline btn-sm" title="Về Cổng Quản Trị Cấp Cao Hệ Thống">
-          🛡️ Cổng Super Admin
-        </a>
+        ${u && u.role === 'admin' ? `
+          <a href="../admin/index.html" class="btn btn-outline btn-sm" title="Về cổng quản trị cấp cao hệ thống">
+            🛡️ Cổng Super Admin
+          </a>
+        ` : ''}
       </div>
     `;
   },

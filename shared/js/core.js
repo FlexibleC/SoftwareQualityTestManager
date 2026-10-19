@@ -158,10 +158,31 @@ function initCoreState(force = false) {
       if (parsedState.evidences) state.evidences = parsedState.evidences;
       if (parsedState.executionLogs) state.executionLogs = parsedState.executionLogs;
       if (parsedState.adhocDefects) state.adhocDefects = parsedState.adhocDefects;
+      if (Array.isArray(parsedState.testCycles) && parsedState.testCycles.length > 0) {
+        state.testCycles = parsedState.testCycles;
+      }
     }
   } catch (e) {}
 
-  state.testCycles = [];
+  // Khôi phục các đợt test bền vững từ storage
+  if (!state.testCycles || state.testCycles.length === 0) {
+    try {
+      const rawCycles = localStorage.getItem('smartvms_test_cycles_v3') || sessionStorage.getItem('smartvms_test_cycles_v3');
+      if (rawCycles) {
+        const parsedCycles = JSON.parse(rawCycles);
+        if (Array.isArray(parsedCycles)) {
+          state.testCycles = parsedCycles;
+        }
+      }
+    } catch (e) {}
+  }
+  if (!state.testCycles || !Array.isArray(state.testCycles)) {
+    state.testCycles = [];
+  }
+
+  // Tự động đảm bảo mỗi dự án luôn có sẵn ít nhất một đợt test mặc định để phân công công việc
+  ensureDefaultTestCyclesForProjects();
+
   state.isCleanProjectState = state.projects.length === 0;
 
   // Cấu hình tài khoản người dùng hệ thống (RBAC) với cơ chế lưu bền vững
@@ -184,24 +205,40 @@ function initCoreState(force = false) {
   // Tự động đồng bộ hai chiều giữa project.members (từ Cloud) và user.assignedProjects
   syncUserProjectsWithMembers();
 
-  // Phân quyền ngữ cảnh người dùng theo thư mục giao diện
-  const currentPath = (window.location.pathname || '').toLowerCase();
+  // Khôi phục phiên người dùng đã đăng nhập (Session-First)
+  let savedUser = null;
+  try {
+    const rawUser = sessionStorage.getItem('smartvms_current_user') || localStorage.getItem('smartvms_current_user');
+    if (rawUser) {
+      savedUser = JSON.parse(rawUser);
+    }
+  } catch (e) {}
+
   const allUsers = state.users || DEFAULT_SYSTEM_USERS;
-  if (currentPath.includes('/tester/')) {
-    if (!state.currentUser || state.currentUser.role !== 'tester') {
+  if (savedUser && savedUser.username) {
+    const matched = allUsers.find(u => u.username.toLowerCase() === savedUser.username.toLowerCase());
+    state.currentUser = matched || savedUser;
+  } else {
+    state.currentUser = null;
+  }
+
+  // Phân quyền ngữ cảnh người dùng theo thư mục giao diện nếu chưa có phiên hoặc cần fallback phù hợp
+  const currentPath = (window.location.pathname || '').toLowerCase();
+  if (currentPath.includes('/lead/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'project_lead' && state.currentUser.role !== 'admin')) {
+      state.currentUser = allUsers.find(u => u.role === 'project_lead' || u.username === 'lead') || allUsers.find(u => u.username === 'lead');
+    }
+  } else if (currentPath.includes('/tester/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'tester' && state.currentUser.role !== 'admin')) {
       state.currentUser = allUsers.find(u => u.role === 'tester') || allUsers.find(u => u.username === 'tester');
     }
-  } else if (currentPath.includes('/lead/')) {
-    if (!state.currentUser || (state.currentUser.role !== 'project_lead' && state.currentUser.role !== 'admin')) {
-      state.currentUser = allUsers.find(u => u.role === 'project_lead') || allUsers.find(u => u.username === 'lead');
+  } else if (currentPath.includes('/dev/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'developer' && state.currentUser.role !== 'admin')) {
+      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers.find(u => u.username === 'dev');
     }
   } else if (currentPath.includes('/admin/')) {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
       state.currentUser = allUsers.find(u => u.role === 'admin') || allUsers[0];
-    }
-  } else if (currentPath.includes('/dev/')) {
-    if (!state.currentUser || state.currentUser.role !== 'developer') {
-      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers.find(u => u.username === 'dev');
     }
   }
 
@@ -298,6 +335,34 @@ function syncUserProjectsWithMembers() {
 }
 
 /**
+ * Tự động đảm bảo mỗi dự án luôn có ít nhất một đợt test mặc định để sẵn sàng phân công công việc
+ */
+function ensureDefaultTestCyclesForProjects() {
+  if (!state.projects || !Array.isArray(state.projects)) return;
+  if (!state.testCycles) state.testCycles = [];
+
+  state.projects.forEach(p => {
+    const pCycles = state.testCycles.filter(c => c.projectId === p.id);
+    if (pCycles.length === 0) {
+      const ver = p.activeVersion || 'v1.0';
+      const defaultCycle = {
+        id: `CYC-${(p.id || 'PRJ').replace('PRJ-', '')}-01`,
+        projectId: p.id,
+        code: 'ROUND-1',
+        name: `Đợt 1 — Kiểm thử phát hành (${ver})`,
+        version: ver,
+        startDate: new Date().toISOString().slice(0, 10),
+        endDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+        status: 'ACTIVE',
+        targetSuite: 'REGRESSION',
+        description: 'Đợt kiểm thử tích hợp ban đầu'
+      };
+      state.testCycles.push(defaultCycle);
+    }
+  });
+}
+
+/**
  * Lưu trạng thái bền vững (LocalStorage + SessionStorage + LAN Server + Cloud)
  */
 function saveCoreState() {
@@ -322,7 +387,21 @@ function saveCoreState() {
       sessionStorage.setItem('smartvms_system_users_v3', usersJson);
     }
 
-    // 3. Lưu trạng thái công việc và kết quả
+    // 3. Lưu phiên đăng nhập người dùng hiện tại
+    if (state.currentUser) {
+      const curUserJson = JSON.stringify(state.currentUser);
+      localStorage.setItem('smartvms_current_user', curUserJson);
+      sessionStorage.setItem('smartvms_current_user', curUserJson);
+    }
+
+    // 4. Lưu danh sách các đợt test (Test Cycles) bền vững
+    if (state.testCycles && Array.isArray(state.testCycles)) {
+      const cyclesJson = JSON.stringify(state.testCycles);
+      localStorage.setItem('smartvms_test_cycles_v3', cyclesJson);
+      sessionStorage.setItem('smartvms_test_cycles_v3', cyclesJson);
+    }
+
+    // 5. Lưu trạng thái công việc và kết quả
     const appPayload = {
       assignments: state.assignments || [],
       results: state.results || {},
@@ -330,21 +409,25 @@ function saveCoreState() {
       comments: state.comments || {},
       evidences: state.evidences || {},
       executionLogs: state.executionLogs || [],
-      adhocDefects: state.adhocDefects || []
+      adhocDefects: state.adhocDefects || [],
+      testCycles: state.testCycles || []
     };
     localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
 
-    // 4. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects)
+    // 6. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects)
     if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
       syncProjectsToLanServer(state.projects);
     }
 
-    // 5. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud Database
+    // 7. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud Database
     if (typeof window !== 'undefined' && window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
       window.pushProjectsToCloud(state.projects);
     }
     if (typeof window !== 'undefined' && window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
       window.pushUsersToCloud(state.users);
+    }
+    if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+      window.pushCyclesToCloud(state.testCycles);
     }
   } catch (e) {
     console.warn('Lỗi saveCoreState:', e);
@@ -435,39 +518,62 @@ function getAllProjects() {
 }
 
 /**
- * Lấy danh sách các Dự án mà User có quyền truy cập.
+ * Lấy danh sách các Dự án mà Trưởng Dự Án (Project Lead) phụ trách.
  * - Admin: Toàn bộ dự án trong hệ thống
- * - Tester: Chỉ các dự án nằm trong user.assignedProjects hoặc có bài được phân công
+ * - Leader: Các dự án mà Leader này được phân bổ (leadUsername, leadUsernames, member lead, hoặc user.assignedProjects)
+ */
+function getLeaderProjects(user) {
+  const all = getAllProjects();
+  const u = user || getCurrentUser();
+  if (!u || u.role === 'admin') return all;
+
+  const myProjects = all.filter(p => {
+    if (p.leadUsername === u.username) return true;
+    if (Array.isArray(p.leadUsernames) && p.leadUsernames.includes(u.username)) return true;
+    if (Array.isArray(p.members) && p.members.some(m => m.username === u.username)) return true;
+    if (Array.isArray(u.assignedProjects) && u.assignedProjects.includes(p.id)) return true;
+    return false;
+  });
+
+  return myProjects.length > 0 ? myProjects : all;
+}
+
+/**
+ * Lấy danh sách các Dự án mà User có quyền truy cập theo vai trò.
+ * - Admin: Toàn bộ dự án trong hệ thống
+ * - Leader: Các dự án Leader phụ trách
+ * - Tester: Các dự án mà Tester có bài được phân công hoặc là thành viên
+ * - Dev: Các dự án Dev được phân công
  */
 function getAccessibleProjects(user) {
   const all = getAllProjects();
   const u = user || getCurrentUser();
-  const isTesterPortal = (window.location.pathname || '').toLowerCase().includes('/tester/');
-  if (!isTesterPortal && (!u || u.role === 'admin' || u.role === 'project_lead')) return all;
+  if (!u || u.role === 'admin') return all;
 
-  // Đối với Tester: Chỉ lấy các dự án mà Tester THỰC SỰ có kịch bản/nhiệm vụ được phân công trong state.assignments
+  if (u.role === 'project_lead' || u.username === 'lead') {
+    return getLeaderProjects(u);
+  }
+
+  // Đối với Tester / Developer:
   const assignedPrjIds = new Set();
   (state.assignments || []).forEach(a => {
-    if (a.assigneeUsername === u.username || a.assigneeUsername === 'tester') {
-      assignedPrjIds.add(a.projectId);
+    if (a.assigneeUsername === u.username || (u.role === 'tester' && a.assigneeUsername === 'tester')) {
+      if (a.projectId) assignedPrjIds.add(a.projectId);
     }
   });
 
-  // Bổ sung xét theo danh sách thành viên dự án (project.members)
-  const memberPrjIds = new Set();
   all.forEach(p => {
     if (p.members && Array.isArray(p.members)) {
       if (p.members.some(m => m.username === u.username)) {
-        memberPrjIds.add(p.id);
+        assignedPrjIds.add(p.id);
       }
+    }
+    if (Array.isArray(u.assignedProjects) && u.assignedProjects.includes(p.id)) {
+      assignedPrjIds.add(p.id);
     }
   });
 
-  if (memberPrjIds.size > 0) {
-    memberPrjIds.forEach(id => assignedPrjIds.add(id));
-    accessible = all.filter(p => assignedPrjIds.has(p.id));
-  }
-
+  let accessible = all.filter(p => assignedPrjIds.has(p.id));
   return accessible.length > 0 ? accessible : (all.length > 0 ? [all[0]] : []);
 }
 
@@ -1547,21 +1653,40 @@ function deleteUser(userId) {
 function getCurrentUser() {
   const users = getUsers();
   if (state.currentUser) {
-    const matched = users.find(u => u.username === state.currentUser.username);
+    const matched = users.find(u => u.username.toLowerCase() === state.currentUser.username.toLowerCase());
     if (matched) return matched;
     return state.currentUser;
   }
-  const isTesterPortal = typeof window !== 'undefined' && (window.location.pathname || '').toLowerCase().includes('/tester');
-  if (isTesterPortal) {
-    const tUser = users.find(u => u.role === 'tester' || u.username === 'tester') || {
-      username: 'tester',
-      name: 'Nguyễn Văn Huy (Tester)',
-      role: 'tester',
-      title: 'Kiểm Thử Viên'
-    };
-    return tUser;
+
+  // Thử đọc từ sessionStorage / localStorage nếu state chưa kịp gán
+  try {
+    const rawUser = sessionStorage.getItem('smartvms_current_user') || localStorage.getItem('smartvms_current_user');
+    if (rawUser) {
+      const parsed = JSON.parse(rawUser);
+      if (parsed && parsed.username) {
+        const matched = users.find(u => u.username.toLowerCase() === parsed.username.toLowerCase());
+        state.currentUser = matched || parsed;
+        return state.currentUser;
+      }
+    }
+  } catch (e) {}
+
+  // Fallback theo URL ngữ cảnh
+  const path = typeof window !== 'undefined' ? (window.location.pathname || '').toLowerCase() : '';
+  if (path.includes('/lead/')) {
+    const leadUser = users.find(u => u.role === 'project_lead' || u.username === 'lead');
+    if (leadUser) return leadUser;
   }
-  return users[0] || { username: 'admin', name: 'Nguyễn Văn Huy', role: 'admin', title: 'QA Lead' };
+  if (path.includes('/tester/')) {
+    const tUser = users.find(u => u.role === 'tester' || u.username === 'tester');
+    if (tUser) return tUser;
+  }
+  if (path.includes('/dev/')) {
+    const dUser = users.find(u => u.role === 'developer' || u.username === 'dev');
+    if (dUser) return dUser;
+  }
+
+  return users.find(u => u.role === 'admin') || users[0] || { username: 'admin', name: 'Nguyễn Văn Huy', role: 'admin', roleTitle: 'Quản trị viên Cấp cao' };
 }
 
 function switchRole(roleTarget) {
@@ -1578,11 +1703,17 @@ function switchRole(roleTarget) {
     window.location.href = '../tester/index.html';
   } else if (user.role === 'developer') {
     window.location.href = '../dev/index.html';
+  } else if (user.role === 'project_lead' || user.username === 'lead') {
+    window.location.href = '../lead/index.html';
   }
 }
 
 function handleLogout() {
   state.currentUser = null;
+  try {
+    sessionStorage.removeItem('smartvms_current_user');
+    localStorage.removeItem('smartvms_current_user');
+  } catch (e) {}
   saveCoreState();
   window.location.href = '../index.html';
 }

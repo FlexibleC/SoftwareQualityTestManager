@@ -57,7 +57,14 @@ function initAssignmentModule() {
 function populateAsgProjectSelector(activeId) {
   const prjSel = document.getElementById('asg-project-selector');
   if (!prjSel) return;
-  const projects = getAllProjects();
+  const isLead = (window.location.pathname || '').toLowerCase().includes('/lead/');
+  const projects = isLead ? (typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects()) : (typeof getAccessibleProjects === 'function' ? getAccessibleProjects() : getAllProjects());
+  
+  if (projects.length > 0 && !projects.some(pr => pr.id === activeId)) {
+    activeId = projects[0].id;
+    state.activeProjectId = activeId;
+  }
+
   prjSel.innerHTML = projects.map(pr => `
     <option value="${pr.id}" ${pr.id === activeId ? 'selected' : ''}>
       ${escapeHtml(pr.name)} (${(pr.testCases || []).length} bài)
@@ -72,10 +79,12 @@ function populateAsgVersionSelector(projectId) {
   const p = (state.projects || []).find(x => x.id === projectId) || getActiveProject();
   if (!p) return;
 
-  const versions = p.versions || [{ version: p.activeVersion || 'v1.0', label: p.activeVersion || 'v1.0' }];
+  const versions = (Array.isArray(p.versions) && p.versions.length > 0)
+    ? p.versions
+    : [{ version: p.activeVersion || 'v1.0', label: p.activeVersion || 'v1.0' }];
 
   if (!asgSelectedVersion || (!versions.some(v => v.version === asgSelectedVersion) && asgSelectedVersion !== '')) {
-    asgSelectedVersion = p.activeVersion || versions[0]?.version || '';
+    asgSelectedVersion = p.activeVersion || versions[0]?.version || 'v1.0';
   }
 
   let options = versions.map(v => `
@@ -92,7 +101,20 @@ function populateAsgVersionSelector(projectId) {
 function populateAsgCycleSelector(projectId, version) {
   const cycleSel = document.getElementById('detail-cycle');
   if (!cycleSel) return;
-  const cycles = getTestCyclesForProject(projectId, version);
+  let cycles = getTestCyclesForProject(projectId, version);
+
+  if (cycles.length === 0 && version) {
+    // Nếu lọc theo phiên bản mà không có, fallback lấy tất cả các đợt test của dự án
+    cycles = getTestCyclesForProject(projectId);
+  }
+
+  if (cycles.length === 0) {
+    // Nếu dự án thực sự chưa có đợt test nào, tự động kích hoạt tạo đợt test mặc định
+    if (typeof ensureDefaultTestCyclesForProjects === 'function') {
+      ensureDefaultTestCyclesForProjects();
+      cycles = getTestCyclesForProject(projectId);
+    }
+  }
 
   if (cycles.length === 0) {
     cycleSel.innerHTML = `<option value="">(Chưa có đợt test cho phiên bản này)</option>`;
