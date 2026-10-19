@@ -552,6 +552,98 @@ function getTesterExecutionLogs(username, projectId) {
 }
 
 // ================================================================
+// MULTI-PROJECT RESULT & DEFECT ISOLATION ENGINE
+// Khóa kết hợp: [projectId]__[tcId] giúp cô lập tuyệt đối dữ liệu giữa các dự án
+// ================================================================
+function makeResultKey(tcId, projectId) {
+  const pId = projectId || state.activeProjectId || 'PRJ_DEFAULT';
+  return `${pId}__${tcId}`;
+}
+
+function getResultForTc(tcId, projectId) {
+  if (!state.results) state.results = {};
+  const pId = projectId || state.activeProjectId;
+  if (pId) {
+    const compoundKey = `${pId}__${tcId}`;
+    if (state.results[compoundKey]) return state.results[compoundKey];
+  }
+  for (const k of Object.keys(state.results)) {
+    const res = state.results[k];
+    if (res && (res.tcId === tcId || k === tcId)) {
+      if (!pId || !res.projectId || res.projectId === pId) return res;
+    }
+  }
+  return state.results[tcId] || null;
+}
+
+function setResultForTc(tcId, resultRecord, projectId) {
+  if (!state.results) state.results = {};
+  const pId = projectId || state.activeProjectId || (getActiveProject()?.id) || 'PRJ_DEFAULT';
+  const compoundKey = `${pId}__${tcId}`;
+  
+  resultRecord.projectId = pId;
+  resultRecord.tcId = tcId;
+  state.results[compoundKey] = resultRecord;
+  // Đồng thời lưu vào key phẳng nếu chưa có để tương thích ngược code cũ
+  state.results[tcId] = resultRecord;
+  saveCoreState();
+  return resultRecord;
+}
+
+/**
+ * Lấy danh sách toàn bộ lỗi (Defects) của một dự án cụ thể
+ */
+function getProjectDefects(projectId) {
+  const pId = projectId || state.activeProjectId;
+  if (!pId) return [];
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return [];
+
+  const tcMap = {};
+  (p.testCases || []).forEach(t => { tcMap[t.id] = t; });
+
+  const defects = [];
+  const seenTcIds = new Set();
+
+  Object.keys(state.results || {}).forEach(key => {
+    const res = state.results[key];
+    if (!res) return;
+    
+    // Kiểm tra xem record có thuộc dự án này không
+    const isSameProject = res.projectId === pId || key.startsWith(pId + '__') || (tcMap[res.tcId || key] !== undefined);
+    if (!isSameProject) return;
+
+    const actualTcId = res.tcId || key.replace(/^[A-Za-z0-9_-]+__/, '');
+    if (seenTcIds.has(actualTcId)) return;
+
+    if (res.status === 'Fail' || res.status === 'FAILED' || res.status === 'Blocked' || res.failReason || (res.defectStatus && res.defectStatus !== 'None')) {
+      seenTcIds.add(actualTcId);
+      const tc = tcMap[actualTcId] || { title: actualTcId, name: actualTcId, module: 'M01', priority: 'P2' };
+      defects.push({
+        projectId: pId,
+        projectName: p.name,
+        tcId: actualTcId,
+        module: tc.module || 'M01',
+        tcTitle: tc.name || tc.title || actualTcId,
+        failReason: res.failReason || 'Phát hiện lỗi trong quá trình thực thi kiểm thử',
+        severity: res.severity || 'Critical',
+        defectStatus: res.defectStatus || 'New',
+        tester: res.tester || 'Kiểm thử viên',
+        assignedDev: res.assignedDev || '',
+        fixVersion: res.fixVersion || '',
+        commitHash: res.commitHash || '',
+        runAt: res.runAt,
+        devNotes: res.devNotes || '',
+        cycleId: res.cycleId || '',
+        cycleName: res.cycleName || ''
+      });
+    }
+  });
+
+  return defects;
+}
+
+// ================================================================
 // AD-HOC DEFECT / INCIDENT REPORTING (ISO/IEC/IEEE 29119-3 Clause 8)
 // ================================================================
 function getDefectTypeLabel(type) {

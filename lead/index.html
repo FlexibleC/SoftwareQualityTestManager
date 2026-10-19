@@ -134,6 +134,69 @@
 
     </div>
 
+    <!-- Developer Defect Resolution Pipeline (ISO 29119-3 Defect Tracking) -->
+    <div class="card" style="margin-top:20px; overflow:hidden">
+      <div class="card-header" style="justify-content:space-between; border-bottom:1px solid var(--border)">
+        <div>
+          <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+            🛠️ Tiến Độ Xử Lý Lỗi Của Developer (Defect Resolution Pipeline)
+          </h3>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+            Theo dõi vòng đời khắc phục lỗi, tỷ lệ lỗi tái phát (Reopened) và bàn giao Re-test của đội ngũ Lập trình viên
+          </div>
+        </div>
+        <a href="../dev/index.html" class="btn btn-outline btn-xs" title="Chuyển sang Bảng theo dõi lỗi của Developer">
+          💻 Xem Bảng Dev ➔
+        </a>
+      </div>
+      <div class="card-body" style="padding:16px">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px">
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #dc2626">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase">Lỗi Mới Tiếp Nhận</div>
+            <div style="font-size:20px; font-weight:800; color:#dc2626; margin-top:2px" id="lead-dev-kpi-new">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #f59e0b">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase">Dev Đang Sửa</div>
+            <div style="font-size:20px; font-weight:800; color:#f59e0b; margin-top:2px" id="lead-dev-kpi-wip">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #b91c1c">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase">Lỗi Tái Phát (Reopened)</div>
+            <div style="font-size:20px; font-weight:800; color:#b91c1c; margin-top:2px" id="lead-dev-kpi-reopened">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #7c3aed">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase">Đã Fix (Chờ Re-test)</div>
+            <div style="font-size:20px; font-weight:800; color:#7c3aed; margin-top:2px" id="lead-dev-kpi-fixed">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #16a34a">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase">Đã Nghiệm Thu (Closed)</div>
+            <div style="font-size:20px; font-weight:800; color:#16a34a; margin-top:2px" id="lead-dev-kpi-closed">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #2563eb">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase">Tỷ Lệ Fix Thành Công</div>
+            <div style="font-size:20px; font-weight:800; color:#2563eb; margin-top:2px" id="lead-dev-kpi-fixrate">0%</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; margin-bottom:4px">
+            <span>Tiến độ luồng khắc phục lỗi</span>
+            <span id="lead-dev-pipeline-desc">0 / 0 lỗi đã giải quyết</span>
+          </div>
+          <div style="height:8px; border-radius:4px; background:var(--bg-body); overflow:hidden; display:flex; border:1px solid var(--border-light)">
+            <div id="lead-pipe-closed" style="background:#16a34a; width:0%" title="Đã đóng"></div>
+            <div id="lead-pipe-fixed" style="background:#7c3aed; width:0%" title="Đã fix, chờ re-test"></div>
+            <div id="lead-pipe-wip" style="background:#f59e0b; width:0%" title="Đang sửa"></div>
+            <div id="lead-pipe-reopened" style="background:#b91c1c; width:0%" title="Lỗi tái phát"></div>
+            <div id="lead-pipe-new" style="background:#dc2626; width:0%" title="Lỗi mới"></div>
+          </div>
+        </div>
+
+        <div id="lead-dev-hot-defects">
+          <!-- Rendered by lead-dashboard.js -->
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Management Action Strip -->
     <div style="margin-top:24px; display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px">
       

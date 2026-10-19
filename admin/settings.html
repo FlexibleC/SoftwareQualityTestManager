@@ -25,8 +25,9 @@
       </a>
       <nav class="vms-nav-container">
         <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item">🏢 Trung Tâm Điều Hành Đa Dự Án</a>
-          <a href="settings.html" class="nav-item active">⚙️ Cài Đặt Hệ Thống & CSDL Đám Mây</a>
+          <a href="index.html" class="nav-item">📊 Giám Sát Vĩ Mô (Cockpit)</a>
+          <a href="portfolio.html" class="nav-item">🏢 Danh Mục & Nhân Sự</a>
+          <a href="settings.html" class="nav-item active">⚙️ Cấu Hình Kỹ Thuật & CSDL</a>
         </div>
       </nav>
     </div>
@@ -51,30 +52,29 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px">
       <div>
         <h1 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
-          ⚙️ Quản Trị Nền Tảng & Cài Đặt Cấp Hệ Thống
+          ⚙️ Cấu Hình Nền Tảng Kỹ Thuật & Lưu Trữ CSDL
         </h1>
         <div style="font-size:12.5px; color:var(--text-muted); margin-top:3px">
-          Điều hành tài nguyên vĩ mô: Đồng bộ Đám mây Supabase, Quản lý CSDL Hệ thống, Hồ bơi Nhân sự và Danh mục Dự án.
+          Quản trị hạ tầng kỹ thuật: Kết nối đám mây Supabase PostgreSQL và Sao lưu / Phục hồi CSDL tập trung.
         </div>
       </div>
-      <a href="index.html" class="btn btn-outline btn-sm">
-        ⬅ Quay Lại Trung Tâm Điều Hành
-      </a>
+      <div style="display:flex; gap:8px">
+        <a href="portfolio.html" class="btn btn-outline btn-sm">
+          🏢 Sang Quản Trị Danh Mục & Nhân Sự ➔
+        </a>
+        <a href="index.html" class="btn btn-primary btn-sm">
+          📊 Vào Trung Tâm Giám Sát Cockpit ➔
+        </a>
+      </div>
     </div>
 
-    <!-- Settings Subtabs Navigation -->
+    <!-- Settings Subtabs Navigation (Chỉ 2 Tab Kỹ Thuật Duy Nhất) -->
     <div class="settings-tabs-nav" style="margin-bottom:20px">
       <button type="button" class="settings-tab-btn active" data-subtab="cloud" onclick="switchSettingsTab('cloud')">
         ⚡ 1. Đồng Bộ Đám Mây & Supabase Cloud
       </button>
       <button type="button" class="settings-tab-btn" data-subtab="storage" onclick="switchSettingsTab('storage')">
         💾 2. Quản Lý Dữ Liệu & Sao Lưu Local (JSON)
-      </button>
-      <button type="button" class="settings-tab-btn" data-subtab="projects" onclick="switchSettingsTab('projects')">
-        🏢 3. Danh Mục Các Dự Án Hệ Thống
-      </button>
-      <button type="button" class="settings-tab-btn" data-subtab="users" onclick="switchSettingsTab('users')">
-        👥 4. Hồ Bơi Người Dùng & Phân Quyền (RBAC)
       </button>
     </div>
 
@@ -185,179 +185,7 @@
       </div>
     </div>
 
-    <!-- TAB 3: PROJECTS MANAGEMENT -->
-    <div class="settings-tab-pane" id="settings-pane-projects" style="display:none">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
-        <div>
-          <h3 style="font-size:15px; font-weight:800; color:var(--text-primary); margin:0">
-            🏢 Danh Mục Dự Án Đang Được Quản Trị Trên Toàn Hệ Thống
-          </h3>
-          <div style="font-size:12px; color:var(--text-muted)">
-            Mỗi dự án là một không gian độc lập. Nhấp "Vào Không Gian Dự Án" để làm việc với tư cách Quản Trị Viên Dự Án.
-          </div>
-        </div>
-        <div style="display:flex; gap:8px">
-          <button type="button" class="btn btn-primary btn-sm" onclick="openAddProjectModal()">
-            ➕ Thêm Dự Án Mới
-          </button>
-        </div>
-      </div>
-
-      <div id="settings-projects-cards-grid" class="projects-grid">
-        <!-- Rendered via settings.js -->
-      </div>
-    </div>
-
-    <!-- TAB 4: USERS MANAGEMENT -->
-    <div class="settings-tab-pane" id="settings-pane-users" style="display:none">
-      <div class="card">
-        <div class="card-header" style="justify-content:space-between">
-          <div>
-            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              👥 Hồ Bơi Nhân Sự & Phân Quyền Vai Trò (RBAC)
-            </h3>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Quản lý tài khoản Super Admin, Quản trị viên Dự án, Kiểm thử viên và Lập trình viên.
-            </div>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="openAddUserModal()">
-            ➕ Thêm Người Dùng
-          </button>
-        </div>
-
-        <table class="asg-tc-table" style="table-layout:auto; width:100%">
-          <thead>
-            <tr>
-              <th style="width:50px; text-align:center">#</th>
-              <th style="width:200px">Họ và Tên</th>
-              <th style="width:130px">Tên Đăng Nhập</th>
-              <th style="width:180px; text-align:center">Vai Trò Hệ Thống</th>
-              <th style="width:220px">Email Liên Hệ</th>
-              <th style="width:120px; text-align:center">Trạng Thái</th>
-              <th style="width:160px; text-align:center">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody id="users-tbody">
-            <!-- Rendered via settings.js -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
   </main>
-
-  <!-- Modal Thêm/Sửa Dự Án Mới -->
-  <div class="modal" id="modal-project-form">
-    <div class="modal-box" style="max-width:560px">
-      <div class="modal-header">
-        <h3 id="modal-project-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          🏢 Khởi Tạo Không Gian Dự Án Mới
-        </h3>
-        <button type="button" class="btn-close" onclick="closeModal('modal-project-form')">✕</button>
-      </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
-        <input type="hidden" id="pf-id" />
-        <div>
-          <label class="form-label" style="font-weight:700">Tên Dự Án Phần Mềm (*)</label>
-          <input type="text" id="pf-name" class="form-control" placeholder="Ví dụ: SmartVMS — Quản lý Khách & Ra vào" required />
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div>
-            <label class="form-label" style="font-weight:700">Mã Dự Án Viết Tắt (*)</label>
-            <input type="text" id="pf-code" class="form-control" placeholder="VD: SMARTVMS, ERP, CRM" required />
-          </div>
-          <div>
-            <label class="form-label" style="font-weight:700">Phiên Bản Ban Đầu</label>
-            <input type="text" id="pf-version" class="form-control" placeholder="VD: v1.0" value="v1.0" />
-          </div>
-        </div>
-        <div>
-          <label class="form-label" style="font-weight:700">Mô Tả Mục Tiêu Dự Án</label>
-          <textarea id="pf-desc" class="form-control" rows="3" placeholder="Mô tả phạm vi sản phẩm, mục tiêu kiểm định..."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-project-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveProject()">💾 Lưu Dự Án</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Thêm/Sửa Người Dùng & Phân Quyền -->
-  <div class="modal" id="modal-user-form">
-    <div class="modal-box" style="max-width:540px">
-      <div class="modal-header">
-        <h3 id="modal-user-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          ➕ Thêm Người Dùng Mới
-        </h3>
-        <button type="button" class="btn-close" onclick="closeModal('modal-user-form')">✕</button>
-      </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
-        <input type="hidden" id="uf-id" />
-        <div class="form-group">
-          <label class="form-label" style="font-weight:700">Họ và Tên Đầy Đủ (*)</label>
-          <input type="text" id="uf-name" class="form-control" placeholder="VD: Nguyễn Văn Nam" required />
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div class="form-group">
-            <label class="form-label" style="font-weight:700">Tên Đăng Nhập (*)</label>
-            <input type="text" id="uf-username" class="form-control" placeholder="VD: nam.nv" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="font-weight:700">Mật Khẩu (*)</label>
-            <input type="text" id="uf-password" class="form-control" placeholder="Mật khẩu" value="123" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" style="font-weight:700">Địa Chỉ Email</label>
-          <input type="email" id="uf-email" class="form-control" placeholder="VD: nam.nv@smartvms.local" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" style="font-weight:700">Vai Trò Hệ Thống (Role) (*)</label>
-          <select id="uf-role" class="form-control">
-            <option value="tester" selected>🧪 Kiểm thử viên (Tester)</option>
-            <option value="project_lead">👑 Quản trị viên Dự án (Project Lead)</option>
-            <option value="admin">🛡️ Quản trị viên Cấp cao (Super Admin)</option>
-            <option value="developer">💻 Lập trình viên (Developer)</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-user-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveUser()">💾 Lưu Người Dùng</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Reset Mật Khẩu -->
-  <div class="modal" id="modal-reset-password">
-    <div class="modal-box" style="max-width:440px">
-      <div class="modal-header">
-        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          🔑 Đổi Mật Khẩu Người Dùng
-        </h3>
-        <button type="button" class="btn-close" onclick="closeModal('modal-reset-password')">✕</button>
-      </div>
-      <div class="modal-body" style="padding:20px">
-        <input type="hidden" id="pwd-user-id" />
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px">
-          Tài khoản: <strong id="pwd-user-name" style="color:var(--text-primary)">--</strong>
-        </div>
-        <div class="form-group">
-          <label class="form-label" style="font-weight:700">Mật Khẩu Mới (*)</label>
-          <input type="text" id="pwd-new-val" class="form-control" placeholder="Nhập mật khẩu mới" />
-        </div>
-        <div style="display:flex; gap:8px; margin-top:10px">
-          <button type="button" class="btn btn-outline btn-xs" onclick="document.getElementById('pwd-new-val').value='123'">Gán "123"</button>
-          <button type="button" class="btn btn-outline btn-xs" onclick="document.getElementById('pwd-new-val').value='Admin@2026!'">Gán "Admin@2026!"</button>
-        </div>
-      </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-reset-password')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="confirmResetPassword()">💾 Xác Nhận</button>
-      </div>
-    </div>
-  </div>
 
   <div class="toast" id="toast"></div>
 

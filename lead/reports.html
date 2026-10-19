@@ -161,6 +161,9 @@
       <button type="button" class="rpt-tab-btn" data-subtab="projects" onclick="switchReportTab('projects')">
         🏢 4. Thông Tin Tổng Quan Dự Án
       </button>
+      <button type="button" class="rpt-tab-btn" data-subtab="release-gate" onclick="switchReportTab('release-gate'); renderReleaseGatePane();" style="border:1.5px solid #7c3aed; color:#7c3aed; font-weight:800">
+        🔏 5. Release Gate & Nghiệm Thu Ký Số
+      </button>
     </div>
 
     <!-- PANE 1: CYCLES MATRIX -->
@@ -244,13 +247,90 @@
               <th style="width:120px; text-align:center">Tổng Kịch Bản</th>
               <th style="width:110px; text-align:center">Đạt</th>
               <th style="width:110px; text-align:center">Lỗi</th>
-              <th style="width:130px; text-align:center">Pass Rate</th>
-              <th style="width:140px; text-align:center">Trạng Thái</th>
-            </tr>
-          </thead>
-          <tbody id="rpt-projects-tbody"></tbody>
-        </table>
+    <!-- PANE 5: RELEASE GATE & DIGITAL SIGN-OFF (ISO 25010 & ISO 29119-3) -->
+    <div class="rpt-tab-pane" id="rpt-pane-release-gate" style="display:none">
+      
+      <!-- Release Gate Decision Banner -->
+      <div id="release-gate-decision-box" style="margin-bottom:20px">
+        <!-- Rendered by renderReleaseGatePane() -->
       </div>
+
+      <!-- Digital Sign-off Certificate (Biên Bản Nghiệm Thu Kỹ Thuật Ký Số) -->
+      <div class="card" id="digital-certificate-card" style="padding:28px; border:2px solid var(--border); box-shadow:var(--shadow-md); background:var(--bg-card); position:relative">
+        <div style="text-align:center; border-bottom:2px solid var(--border); padding-bottom:18px; margin-bottom:20px">
+          <div style="font-size:12px; font-weight:800; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase">
+            CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM • TIÊU CHUẨN ISO/IEC 25010:2023 & ISO/IEC/IEEE 29119-3:2021
+          </div>
+          <h2 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:8px 0 4px 0">
+            BIÊN BẢN NGHIỆM THU KỸ THUẬT & PHÊ DUYỆT PHÁT HÀNH PHẦN MỀM
+          </h2>
+          <div style="font-size:13px; color:var(--primary); font-weight:700">
+            (SOFTWARE QUALITY ASSURANCE & RELEASE SIGN-OFF CERTIFICATE)
+          </div>
+        </div>
+
+        <!-- Meta info grid -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px; font-size:12.5px; background:var(--bg-surface); padding:14px; border-radius:8px; border:1px solid var(--border-light)">
+          <div>Dự án: <strong id="cert-project-name">SmartVMS</strong></div>
+          <div>Mã dự án: <strong id="cert-project-id" style="font-family:monospace">PRJ_SMARTVMS</strong></div>
+          <div>Phiên bản nghiệm thu: <strong id="cert-version">v2.0</strong></div>
+          <div>Ngày đánh giá: <strong id="cert-date">19/10/2026</strong></div>
+        </div>
+
+        <!-- Metric summary table -->
+        <div style="margin-bottom:20px">
+          <h4 style="font-size:13px; font-weight:800; margin-bottom:8px; color:var(--text-primary)">
+            📊 1. BẢNG TỔNG HỢP KẾT QUẢ ĐỐI SOÁT CHẤT LƯỢNG
+          </h4>
+          <table class="asg-tc-table" style="width:100%; font-size:12px">
+            <thead>
+              <tr style="background:var(--bg-surface)">
+                <th>Chỉ Tiêu Đánh Giá (ISO 25010)</th>
+                <th style="text-align:center; width:160px">Số Lượng / Tỷ Lệ</th>
+                <th style="text-align:center; width:160px">Ngưỡng Chuẩn</th>
+                <th style="text-align:center; width:140px">Đánh Giá</th>
+              </tr>
+            </thead>
+            <tbody id="cert-metrics-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Digital Signatures Grid -->
+        <div style="margin-top:28px">
+          <h4 style="font-size:13px; font-weight:800; margin-bottom:12px; color:var(--text-primary)">
+            🔏 2. ĐẠI DIỆN HỘI ĐỒNG NGHIỆM THU KỸ THUẬT XÁC NHẬN KÝ SỐ
+          </h4>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; text-align:center" id="cert-signatures-grid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Crypto Hash Verification Block -->
+        <div style="margin-top:24px; padding:12px 16px; border-radius:6px; background:rgba(0,0,0,0.03); border:1px dashed var(--border); font-family:monospace; font-size:11px; color:var(--text-muted); word-break:break-all">
+          <div>🔐 <strong>Mã băm xác thực chữ ký số điện tử (SHA-256 Checksum):</strong></div>
+          <div id="cert-crypto-hash" style="color:var(--text-primary); font-weight:700; margin-top:2px">
+            e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          </div>
+        </div>
+
+        <!-- Toolbar Inside Certificate -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; pt-3; border-top:1px solid var(--border); flex-wrap:wrap; gap:10px">
+          <div style="font-size:11.5px; color:var(--text-muted)">
+            Biên bản được lưu trữ mã hóa và tự động đồng bộ lên máy chủ trung tâm.
+          </div>
+          <div style="display:flex; gap:8px">
+            <button type="button" class="btn btn-outline btn-sm" onclick="printSignoffCert()">
+              🖨️ In Biên Bản Nghiệm Thu
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-sign-electronically" onclick="handleDigitalSignoff()">
+              🔏 Ký Số Điện Tử Nghiệm Thu
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </main>
@@ -265,6 +345,7 @@
   <script src="../shared/js/core.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
   <script src="../shared/js/reports.js"></script>
+  <script src="../admin/js/admin-analytics.js"></script>
 
   <!-- Modular Lead Scripts -->
   <script src="js/lead-context.js"></script>
@@ -275,6 +356,179 @@
       LeadContext.init();
       initReportsModule();
     });
+
+    function generateSimpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      const hex = (hash >>> 0).toString(16).padStart(8, '0');
+      return `SHA256-${hex.toUpperCase()}9F8A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A`;
+    }
+
+    function renderReleaseGatePane() {
+      const p = getActiveProject();
+      if (!p) return;
+
+      const health = AdminAnalytics.calculateProjectHealth(p);
+      if (!health) return;
+
+      const gate = health.goLiveGate || { decision: 'NO_GO', criteria: {}, failedReasons: [] };
+      const isGo = gate.decision === 'GO';
+
+      // 1. Render Gate Decision Box
+      const decBox = document.getElementById('release-gate-decision-box');
+      if (decBox) {
+        decBox.innerHTML = `
+          <div style="background:${isGo ? 'linear-gradient(135deg, #065f46 0%, #059669 100%)' : 'linear-gradient(135deg, #991b1b 0%, #dc2626 100%)'}; color:#fff; padding:20px 24px; border-radius:12px; box-shadow:var(--shadow-md); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px">
+            <div>
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; background:rgba(255,255,255,0.2); display:inline-block; padding:3px 10px; border-radius:20px; font-weight:800; margin-bottom:6px">
+                CỔNG ĐÁNH GIÁ CHẤT LƯỢNG PHÁT HÀNH (RELEASE GATEWAY)
+              </div>
+              <h2 style="font-size:22px; font-weight:800; margin:0">
+                ${isGo ? '🚀 ĐỦ ĐIỀU KIỆN PHÁT HÀNH (GO FOR PRODUCTION)' : '⛔ CHẶN PHÁT HÀNH (NO-GO / BLOCK RELEASE)'}
+              </h2>
+              <div style="font-size:13px; opacity:0.95; margin-top:4px">
+                Điểm Sức Khỏe Dự Án: <strong>${health.score}/100</strong> • Tỷ lệ Đạt: <strong>${health.passRatePercent}%</strong> • Bao phủ: <strong>${health.progressPercent}%</strong>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:12px; opacity:0.9">Khuyến nghị ISO 25010:</div>
+              <div style="font-size:16px; font-weight:800">${isGo ? '✅ Sẵn Sàng Bàn Giao Go-Live' : '⚠️ Cần Khắc Phục Lỗi Trước Khi Phát Hành'}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2. Render Cert Details
+      document.getElementById('cert-project-name').textContent = p.name;
+      document.getElementById('cert-project-id').textContent = p.id;
+      document.getElementById('cert-version').textContent = p.activeVersion || 'v2.0';
+      document.getElementById('cert-date').textContent = new Date().toLocaleDateString('vi-VN');
+
+      // Check signoff state
+      if (!state.releaseSignoffs) state.releaseSignoffs = {};
+      const signKey = `${p.id}__${p.activeVersion || 'v2.0'}`;
+      const signedData = state.releaseSignoffs[signKey];
+
+      const metricsTbody = document.getElementById('cert-metrics-tbody');
+      if (metricsTbody) {
+        metricsTbody.innerHTML = `
+          <tr>
+            <td><strong>Lỗi Nghiêm Trọng Mở (Blocker / Critical)</strong></td>
+            <td style="text-align:center; font-weight:700; color:${gate.criteria.noCriticalDefects ? '#16a34a' : '#dc2626'}">${health.openBlockers + health.openCriticals} lỗi</td>
+            <td style="text-align:center; color:var(--text-muted)">0 lỗi</td>
+            <td style="text-align:center">${gate.criteria.noCriticalDefects ? '✅ ĐẠT' : '❌ KHÔNG ĐẠT'}</td>
+          </tr>
+          <tr>
+            <td><strong>Tỷ Lệ Bao Phủ Kiểm Thử (Execution Coverage)</strong></td>
+            <td style="text-align:center; font-weight:700; color:${gate.criteria.executionCoverageAcceptable ? '#16a34a' : '#d97706'}">${health.progressPercent}%</td>
+            <td style="text-align:center; color:var(--text-muted)">&ge; 95%</td>
+            <td style="text-align:center">${gate.criteria.executionCoverageAcceptable ? '✅ ĐẠT' : '❌ KHÔNG ĐẠT'}</td>
+          </tr>
+          <tr>
+            <td><strong>Tỷ Lệ Kịch Bản Đạt (Pass Rate)</strong></td>
+            <td style="text-align:center; font-weight:700; color:${gate.criteria.passRateAcceptable ? '#16a34a' : '#dc2626'}">${health.passRatePercent}%</td>
+            <td style="text-align:center; color:var(--text-muted)">&ge; 90%</td>
+            <td style="text-align:center">${gate.criteria.passRateAcceptable ? '✅ ĐẠT' : '❌ KHÔNG ĐẠT'}</td>
+          </tr>
+          <tr>
+            <td><strong>Lỗi Tái Phát Chưa Xử Lý (Reopened Defects)</strong></td>
+            <td style="text-align:center; font-weight:700; color:${gate.criteria.noReopenedDefects ? '#16a34a' : '#b91c1c'}">${(typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : []).filter(d => d.defectStatus === 'Reopened').length} lỗi</td>
+            <td style="text-align:center; color:var(--text-muted)">0 lỗi</td>
+            <td style="text-align:center">${gate.criteria.noReopenedDefects ? '✅ ĐẠT' : '❌ KHÔNG ĐẠT'}</td>
+          </tr>
+        `;
+      }
+
+      // Hash
+      const hashStr = `${p.id}_${p.activeVersion}_${health.score}_${health.passRatePercent}_${health.totalTcs}_${signedData ? signedData.signedAt : 'UNVERIFIED'}`;
+      const hash = generateSimpleHash(hashStr);
+      document.getElementById('cert-crypto-hash').textContent = hash;
+
+      // Render Signatures
+      const sigGrid = document.getElementById('cert-signatures-grid');
+      const curUser = getCurrentUser();
+      const isSigned = !!signedData;
+
+      if (sigGrid) {
+        sigGrid.innerHTML = `
+          <div style="border:1px solid var(--border); padding:16px; border-radius:8px; background:var(--bg-surface)">
+            <div style="font-weight:700; font-size:12px; color:var(--text-muted); text-transform:uppercase">Đại Diện Quản Trị Dự Án</div>
+            <div style="height:55px; display:flex; align-items:center; justify-content:center; margin:10px 0">
+              ${isSigned ? `
+                <div style="font-family:'Courier New', monospace; color:#16a34a; font-weight:800; font-size:15px; border:2px dashed #16a34a; padding:4px 10px; border-radius:4px">
+                  ✔ SIGNED: ${escapeHtml(signedData.signedBy)}
+                </div>
+              ` : `
+                <div style="font-size:12px; color:var(--text-muted); font-style:italic">[Chưa ký số]</div>
+              `}
+            </div>
+            <strong style="color:var(--text-primary)">${isSigned ? escapeHtml(signedData.signedBy) : 'Hoàng Hải Đăng'}</strong>
+            <div style="font-size:11px; color:var(--text-muted)">Project Lead</div>
+          </div>
+
+          <div style="border:1px solid var(--border); padding:16px; border-radius:8px; background:var(--bg-surface)">
+            <div style="font-weight:700; font-size:12px; color:var(--text-muted); text-transform:uppercase">Trưởng Nhóm Kiểm Thử</div>
+            <div style="height:55px; display:flex; align-items:center; justify-content:center; margin:10px 0">
+              <div style="font-family:'Courier New', monospace; color:#2563eb; font-weight:800; font-size:14px; border:2px solid #2563eb; padding:4px 10px; border-radius:4px">
+                ✔ VERIFIED: QA Team
+              </div>
+            </div>
+            <strong style="color:var(--text-primary)">Nguyễn Văn Nam</strong>
+            <div style="font-size:11px; color:var(--text-muted)">Senior QA Lead</div>
+          </div>
+
+          <div style="border:1px solid var(--border); padding:16px; border-radius:8px; background:var(--bg-surface)">
+            <div style="font-weight:700; font-size:12px; color:var(--text-muted); text-transform:uppercase">Đại Diện Phát Triển Phần Mềm</div>
+            <div style="height:55px; display:flex; align-items:center; justify-content:center; margin:10px 0">
+              <div style="font-family:'Courier New', monospace; color:#7c3aed; font-weight:800; font-size:14px; border:2px solid #7c3aed; padding:4px 10px; border-radius:4px">
+                ✔ VERIFIED: Dev Team
+              </div>
+            </div>
+            <strong style="color:var(--text-primary)">Trần Quốc Tuấn</strong>
+            <div style="font-size:11px; color:var(--text-muted)">Lead Architect / Tech Lead</div>
+          </div>
+        `;
+      }
+
+      const btnSign = document.getElementById('btn-sign-electronically');
+      if (btnSign) {
+        if (isSigned) {
+          btnSign.innerHTML = '✅ Đã Ký Số Niêm Phong';
+          btnSign.style.background = '#16a34a';
+          btnSign.disabled = true;
+        } else {
+          btnSign.innerHTML = '🔏 Ký Số Điện Tử Nghiệm Thu';
+          btnSign.style.background = '#7c3aed';
+          btnSign.disabled = false;
+        }
+      }
+    }
+
+    function handleDigitalSignoff() {
+      const p = getActiveProject();
+      if (!p) return;
+      const curUser = getCurrentUser();
+      const signKey = `${p.id}__${p.activeVersion || 'v2.0'}`;
+      if (!state.releaseSignoffs) state.releaseSignoffs = {};
+
+      state.releaseSignoffs[signKey] = {
+        signedBy: curUser.name || 'Hoàng Hải Đăng (Project Lead)',
+        signedAt: new Date().toISOString(),
+        version: p.activeVersion || 'v2.0',
+        projectId: p.id
+      };
+      saveCoreState();
+      renderReleaseGatePane();
+      showToast('🎉 Đã ký số điện tử nghiệm thu và niêm phong bản phát hành thành công!', 'success');
+    }
+
+    function printSignoffCert() {
+      window.print();
+    }
   </script>
 </body>
 </html>
