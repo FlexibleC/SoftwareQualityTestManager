@@ -72,7 +72,8 @@ const AdminAnalytics = {
 
     // Kiểm tra nhân sự phụ trách
     const members = typeof getProjectMembers === 'function' ? getProjectMembers(pId) : (project.members || []);
-    const leadMember = members.find(m => m.projectRole === 'lead' || m.projectRole === 'admin') || { name: 'Chưa chỉ định' };
+    const leadMembers = members.filter(m => m.projectRole === 'lead' || m.projectRole === 'admin');
+    const leadNames = leadMembers.map(m => m.name).join(', ') || project.lead || 'Chưa chỉ định';
     const testerMembers = members.filter(m => m.projectRole === 'tester');
     const devMembers = members.filter(m => m.projectRole === 'dev');
     const hasTester = testerMembers.length > 0;
@@ -162,7 +163,7 @@ const AdminAnalytics = {
       fixedAwaitingRetest,
       closedDefects,
       totalDefects: defects.length,
-      leadName: leadMember.name,
+      leadName: leadNames,
       testerCount: testerMembers.length,
       devCount: devMembers.length,
       healthStatus,

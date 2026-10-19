@@ -367,10 +367,11 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" style="font-weight:700">Chỉ định trưởng dự án (Project Lead) (*)</label>
-          <select id="asg-staff-lead-select" class="form-control" style="width:100%">
+          <label class="form-label" style="font-weight:700">Ban quản trị dự án (Leader & Quản trị viên) — Chọn một hoặc nhiều người (*):</label>
+          <div id="asg-staff-leads-box" style="max-height:120px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
             <!-- Populated via JS -->
-          </select>
+          </div>
+          <select id="asg-staff-lead-select" style="display:none"></select>
         </div>
 
         <div class="form-group">

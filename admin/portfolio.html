@@ -276,10 +276,11 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" style="font-weight:700">Chỉ định trưởng dự án (Project Lead) (*)</label>
-          <select id="asg-staff-lead-select" class="form-control" style="width:100%">
+          <label class="form-label" style="font-weight:700">Ban quản trị dự án (Leader & Quản trị viên) — Chọn một hoặc nhiều người (*):</label>
+          <div id="asg-staff-leads-box" style="max-height:120px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
             <!-- Populated via JS -->
-          </select>
+          </div>
+          <select id="asg-staff-lead-select" style="display:none"></select>
         </div>
 
         <div class="form-group">
@@ -430,6 +431,14 @@
         if (u.assignedProjects) {
           u.assignedProjects.forEach(pid => myPrjIds.add(pid));
         }
+        (state.projects || []).forEach(p => {
+          if (p.leadUsername === u.username || (p.leadUsernames || []).includes(u.username)) {
+            myPrjIds.add(p.id);
+          }
+          if ((p.members || []).some(m => m.username === u.username)) {
+            myPrjIds.add(p.id);
+          }
+        });
 
         const prjNames = Array.from(myPrjIds).map(pid => {
           const prj = projects.find(p => p.id === pid);

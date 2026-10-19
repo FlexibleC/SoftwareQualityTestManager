@@ -457,6 +457,30 @@
         }
       }
 
+      // 4. Phục hồi danh mục người dùng (Users & Roles) từ Cloud Database
+      const usrRow = sessionRows.find(r => r.id === 'system_users');
+      if (usrRow && usrRow.notes) {
+        try {
+          const parsedUsers = JSON.parse(usrRow.notes);
+          if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+            window.state.users = parsedUsers;
+            try {
+              localStorage.setItem('smartvms_system_users_v3', JSON.stringify(parsedUsers));
+              sessionStorage.setItem('smartvms_system_users_v3', JSON.stringify(parsedUsers));
+            } catch (e) {}
+          }
+        } catch (e) {}
+      } else {
+        if (window.state.users && window.state.users.length > 0) {
+          pushUsersToCloud(window.state.users);
+        }
+      }
+
+      // 5. Tự động đồng bộ hai chiều giữa project.members (từ Cloud) và user.assignedProjects
+      if (typeof window.syncUserProjectsWithMembers === 'function') {
+        window.syncUserProjectsWithMembers();
+      }
+
       if (projectsUpdated) {
         if (typeof window.saveCoreState === 'function') {
           window.saveCoreState();
@@ -468,6 +492,13 @@
         if (typeof LeadContext !== 'undefined' && typeof LeadContext.init === 'function') {
           LeadContext.init();
         }
+      }
+
+      if (typeof renderUsersTab === 'function') {
+        renderUsersTab();
+      }
+      if (typeof renderWorkloadHeatmap === 'function') {
+        renderWorkloadHeatmap();
       }
 
       if (typeof window.initCockpit === 'function') {
@@ -555,6 +586,28 @@
       await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
       return true;
     } catch (e) {
+      return false;
+    }
+  }
+
+  // 5a-5. Đẩy danh mục tài khoản người dùng và phân quyền lên Supabase Cloud
+  async function pushUsersToCloud(users) {
+    if (!cloudState.client) return false;
+    try {
+      if (!Array.isArray(users) || users.length === 0) return true;
+      const payload = {
+        id: 'system_users',
+        name: 'System Users Catalog',
+        owner: window.state?.currentUser?.username || 'admin',
+        version: 'v2.0',
+        notes: JSON.stringify(users),
+        updated_at: new Date().toISOString()
+      };
+      await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+      console.log(`⚡ [Cloud Database] Đã đồng bộ ${users.length} tài khoản người dùng lên Supabase Cloud.`);
+      return true;
+    } catch (e) {
+      console.warn('Lỗi pushUsersToCloud:', e);
       return false;
     }
   }
@@ -1235,6 +1288,7 @@
   window.pushProjectsToCloud = pushProjectsToCloud;
   window.pushCyclesToCloud = pushCyclesToCloud;
   window.pushAssignmentsToCloud = pushAssignmentsToCloud;
+  window.pushUsersToCloud = pushUsersToCloud;
   window.pullCloudResults = pullCloudResults;
   window.pushAllResultsToCloud = pushAllResultsToCloud;
   window.pullCloudCatalog = pullCloudCatalog;
