@@ -470,6 +470,13 @@
         }
       }
 
+      if (typeof window.initCockpit === 'function') {
+        window.initCockpit();
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('sqtm:projects-updated'));
+      } catch (e) {}
+
       console.log(`⚡ [Cloud Database] Đã đồng bộ trạng thái: ${(window.state.projects || []).length} dự án.`);
       return true;
     } catch (err) {

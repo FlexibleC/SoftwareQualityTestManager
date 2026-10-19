@@ -139,9 +139,10 @@ function renderProjectsTab() {
           👤 <strong>PM/Lead:</strong> ${escapeHtml(p.lead || 'QA Lead')}
         </div>
 
-        <div class="project-card-footer">
-          <div style="display:flex; gap:6px">
+        <div class="project-card-footer" style="flex-wrap:wrap; gap:6px">
+          <div style="display:flex; gap:6px; flex-wrap:wrap">
             <button type="button" class="btn btn-outline btn-xs" onclick="openEditProjectModal('${p.id}')" title="Sửa thông tin dự án">✏️ Sửa</button>
+            <button type="button" class="btn btn-outline btn-xs" onclick="openAssignProjectStaffModal('${p.id}')" style="background:rgba(124,58,237,0.08); color:#7c3aed; border-color:rgba(124,58,237,0.3); font-weight:700" title="Phân bổ nhân sự (Leader, Tester, Dev) vào dự án này">👥 Phân bổ nhân sự</button>
             <button type="button" class="btn btn-outline btn-xs btn-delete" onclick="deleteProjectHandler('${p.id}')" title="Xóa dự án" style="color:#ef4444; border-color:rgba(239,68,68,0.3)">🗑️ Xóa</button>
           </div>
           <div style="display:flex; gap:6px; align-items:center">
@@ -1135,42 +1136,89 @@ function confirmSaveCycleScope() {
 }
 
 function openAddProjectModal() {
-  document.getElementById('modal-proj-title').textContent = '➕ Thêm Dự Án Phần Mềm Mới';
-  document.getElementById('pf-id').value = '';
-  document.getElementById('pf-code').value = '';
-  document.getElementById('pf-code').removeAttribute('readonly');
-  document.getElementById('pf-name').value = '';
-  document.getElementById('pf-domain').value = '';
-  document.getElementById('pf-lead').value = state.currentUser?.name || 'QA Lead';
-  document.getElementById('pf-version').value = 'v1.0.0';
-  document.getElementById('pf-standards').value = 'ISO 9001:2015, ISO/IEC/IEEE 29119, ISO/IEC 25010';
+  const titleEl = document.getElementById('modal-project-title') || document.getElementById('modal-proj-title');
+  if (titleEl) titleEl.textContent = '➕ Thêm dự án mới';
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+
+  setVal('pf-id', '');
+  setVal('pf-code', '');
+  const codeEl = document.getElementById('pf-code');
+  if (codeEl) codeEl.removeAttribute('readonly');
+
+  setVal('pf-name', '');
+  setVal('pf-domain', 'Hệ thống phần mềm');
+  setVal('pf-desc', '');
+  setVal('pf-version', 'v1.0');
+  setVal('pf-standards', 'ISO/IEC 25010, ISO/IEC/IEEE 29119');
+
+  populateProjectLeadDropdown('');
   openModal('modal-project-form');
 }
 
 function openEditProjectModal(projId) {
   const p = (state.projects || []).find(x => x.id === projId);
-  if (!p) return;
+  if (!p) {
+    showToast('⚠️ Không tìm thấy thông tin dự án!', 'error');
+    return;
+  }
 
-  document.getElementById('modal-proj-title').textContent = '✏️ Chỉnh Sửa Thông Tin Dự Án';
-  document.getElementById('pf-id').value = p.id;
-  document.getElementById('pf-code').value = p.code || p.id;
-  document.getElementById('pf-code').setAttribute('readonly', 'true');
-  document.getElementById('pf-name').value = p.name || '';
-  document.getElementById('pf-domain').value = p.domain || '';
-  document.getElementById('pf-lead').value = p.lead || '';
-  document.getElementById('pf-version').value = p.activeVersion || 'v1.0';
-  document.getElementById('pf-standards').value = (p.standards || []).join(', ');
+  const titleEl = document.getElementById('modal-project-title') || document.getElementById('modal-proj-title');
+  if (titleEl) titleEl.textContent = '✏️ Chỉnh sửa thông tin dự án';
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+
+  setVal('pf-id', p.id);
+  setVal('pf-code', p.code || p.id);
+  const codeEl = document.getElementById('pf-code');
+  if (codeEl) codeEl.setAttribute('readonly', 'true');
+
+  setVal('pf-name', p.name || '');
+  setVal('pf-domain', p.domain || 'Hệ thống phần mềm');
+  setVal('pf-desc', p.desc || p.description || '');
+  setVal('pf-version', p.activeVersion || (p.versions && p.versions[0]?.version) || 'v1.0');
+  setVal('pf-standards', Array.isArray(p.standards) ? p.standards.join(', ') : (p.standards || 'ISO/IEC 25010'));
+
+  populateProjectLeadDropdown(p.leadUsername || p.lead || '');
   openModal('modal-project-form');
 }
 
+function populateProjectLeadDropdown(selectedLead) {
+  const sel = document.getElementById('pf-lead-select');
+  if (!sel) return;
+
+  const users = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+  const leads = users.filter(u => u.role === 'project_lead' || u.role === 'admin');
+
+  sel.innerHTML = leads.map(u => `
+    <option value="${u.username}" ${u.username === selectedLead ? 'selected' : ''}>
+      👑 ${escapeHtml(u.name)} (@${escapeHtml(u.username)})
+    </option>
+  `).join('');
+}
+
 function confirmSaveProject() {
-  const id = document.getElementById('pf-id').value.trim();
-  const code = document.getElementById('pf-code').value.trim().toUpperCase();
-  const name = document.getElementById('pf-name').value.trim();
-  const domain = document.getElementById('pf-domain').value.trim();
-  const lead = document.getElementById('pf-lead').value.trim();
-  const activeVersion = document.getElementById('pf-version').value.trim() || 'v1.0.0';
-  const standards = document.getElementById('pf-standards').value.split(',').map(s => s.trim()).filter(Boolean);
+  const getVal = id => {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  };
+
+  const id = getVal('pf-id');
+  const code = getVal('pf-code').toUpperCase();
+  const name = getVal('pf-name');
+  const domain = getVal('pf-domain') || 'Hệ thống phần mềm';
+  const desc = getVal('pf-desc');
+  const leadSelect = document.getElementById('pf-lead-select');
+  const lead = leadSelect ? leadSelect.value : (getVal('pf-lead') || 'lead');
+  const activeVersion = getVal('pf-version') || 'v1.0';
+  const rawStandards = getVal('pf-standards');
+  const standards = rawStandards ? rawStandards.split(',').map(s => s.trim()).filter(Boolean) : ['ISO/IEC 25010'];
 
   if (!code || !name) {
     showToast('⚠️ Vui lòng nhập đầy đủ Mã dự án và Tên dự án!', 'error');
@@ -1180,15 +1228,110 @@ function confirmSaveProject() {
   try {
     if (id) {
       // Edit
-      updateProject(id, { name, domain, lead, activeVersion, standards });
+      updateProject(id, { name, code, domain, desc, lead, leadUsername: lead, activeVersion, standards });
       showToast(`✅ Đã cập nhật dự án "${name}"`, 'success');
     } else {
       // Add
-      addProject({ code, name, domain, lead, activeVersion, standards });
+      addProject({ code, name, domain, desc, lead, leadUsername: lead, activeVersion, standards });
       showToast(`🎉 Đã thêm dự án mới thành công: "${name}"`, 'success');
     }
     closeModal('modal-project-form');
     renderProjectsTab();
+    if (typeof window.initCockpit === 'function') {
+      window.initCockpit();
+    }
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  }
+}
+
+/**
+ * Mở modal phân bổ nhân sự (Leader, Tester, Dev) cho một dự án cụ thể
+ */
+function openAssignProjectStaffModal(projectId) {
+  const p = (state.projects || []).find(x => x.id === projectId);
+  if (!p) {
+    showToast('⚠️ Không tìm thấy dự án!', 'error');
+    return;
+  }
+
+  const titleEl = document.getElementById('asg-staff-modal-title');
+  if (titleEl) {
+    titleEl.textContent = `👥 Phân bổ nhân sự: [${p.code || p.id}] ${p.name}`;
+  }
+
+  const idInput = document.getElementById('asg-staff-prj-id');
+  if (idInput) idInput.value = p.id;
+
+  const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+
+  // 1. Leader Select
+  const leadSel = document.getElementById('asg-staff-lead-select');
+  if (leadSel) {
+    const leads = allUsers.filter(u => u.role === 'project_lead' || u.role === 'admin');
+    leadSel.innerHTML = leads.map(u => `
+      <option value="${u.username}" ${u.username === p.leadUsername ? 'selected' : ''}>
+        👑 ${escapeHtml(u.name)} (@${escapeHtml(u.username)})
+      </option>
+    `).join('');
+  }
+
+  // 2. Testers Checkboxes
+  const testersContainer = document.getElementById('asg-staff-testers-box');
+  if (testersContainer) {
+    const testers = allUsers.filter(u => u.role === 'tester');
+    testersContainer.innerHTML = testers.map(u => {
+      const isChecked = (u.assignedProjects || []).includes(p.id);
+      return `
+        <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; padding:3px 0">
+          <input type="checkbox" name="asg-staff-tester-cb" value="${u.username}" ${isChecked ? 'checked' : ''} />
+          <span>🧪 <strong>${escapeHtml(u.name)}</strong> (@${escapeHtml(u.username)})</span>
+        </label>
+      `;
+    }).join('');
+  }
+
+  // 3. Devs Checkboxes
+  const devsContainer = document.getElementById('asg-staff-devs-box');
+  if (devsContainer) {
+    const devs = allUsers.filter(u => u.role === 'developer' || u.role === 'dev');
+    devsContainer.innerHTML = devs.map(u => {
+      const isChecked = (u.assignedProjects || []).includes(p.id);
+      return `
+        <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; padding:3px 0">
+          <input type="checkbox" name="asg-staff-dev-cb" value="${u.username}" ${isChecked ? 'checked' : ''} />
+          <span>💻 <strong>${escapeHtml(u.name)}</strong> (@${escapeHtml(u.username)})</span>
+        </label>
+      `;
+    }).join('');
+  }
+
+  openModal('modal-assign-project-staff');
+}
+
+/**
+ * Lưu kết quả phân bổ nhân sự cho dự án
+ */
+function confirmSaveProjectStaff() {
+  const prjId = document.getElementById('asg-staff-prj-id')?.value;
+  if (!prjId) return;
+
+  const leadUsername = document.getElementById('asg-staff-lead-select')?.value;
+  const selectedTesters = Array.from(document.querySelectorAll('input[name="asg-staff-tester-cb"]:checked')).map(el => el.value);
+  const selectedDevs = Array.from(document.querySelectorAll('input[name="asg-staff-dev-cb"]:checked')).map(el => el.value);
+
+  try {
+    if (typeof assignStaffToProject === 'function') {
+      assignStaffToProject(prjId, { leadUsername, testerUsernames: selectedTesters, devUsernames: selectedDevs });
+    }
+    closeModal('modal-assign-project-staff');
+    showToast('✅ Đã phân bổ nhân sự cho dự án thành công!', 'success');
+
+    // Cập nhật lại UI
+    if (typeof renderProjectsTab === 'function') renderProjectsTab();
+    if (typeof renderUsersTab === 'function') renderUsersTab();
+    if (typeof renderWorkloadHeatmap === 'function') renderWorkloadHeatmap();
+    if (typeof window.initCockpit === 'function') window.initCockpit();
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   }
@@ -1203,6 +1346,7 @@ function deleteProjectHandler(projId) {
     deleteProject(projId);
     showToast(`🗑️ Đã xóa dự án "${p.name}"`, 'info');
     renderProjectsTab();
+    if (typeof window.initCockpit === 'function') window.initCockpit();
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   }

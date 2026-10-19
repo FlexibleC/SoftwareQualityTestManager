@@ -351,6 +351,49 @@
 
   </main>
 
+  <!-- Modal Phân Bổ Nhân Sự Cho Dự Án -->
+  <div class="modal" id="modal-assign-project-staff">
+    <div class="modal-box" style="max-width:600px">
+      <div class="modal-header">
+        <h3 id="asg-staff-modal-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          👥 Phân bổ nhân sự dự án
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-assign-project-staff')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <input type="hidden" id="asg-staff-prj-id" />
+        <div style="font-size:12.5px; color:var(--text-muted); line-height:1.4">
+          Hệ thống cho phép một nhân sự (Leader, Tester, Dev) tham gia nhiều dự án đồng thời. Chỉ định Leader và phân bổ các kỹ sư phụ trách dự án này:
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Chỉ định trưởng dự án (Project Lead) (*)</label>
+          <select id="asg-staff-lead-select" class="form-control" style="width:100%">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Đội ngũ kiểm thử viên (Tester) — Chọn nhiều người:</label>
+          <div id="asg-staff-testers-box" style="max-height:130px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Đội ngũ lập trình viên (Developer) — Chọn nhiều người:</label>
+          <div id="asg-staff-devs-box" style="max-height:130px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-project-staff')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveProjectStaff()">💾 Lưu phân bổ nhân sự</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <!-- Core Scripts -->
@@ -362,6 +405,7 @@
   <script src="../shared/js/cloud-sync.js?v=3.0.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="js/admin-analytics.js?v=3.0.1"></script>
+  <script src="../shared/js/settings.js?v=3.0.1"></script>
 
   <script>
     let portfolioData = null;
@@ -377,11 +421,23 @@
       if (topName && u) topName.textContent = u.name || u.username;
 
       initCockpit();
+
+      // Đảm bảo cập nhật khi Cloud Sync hoặc Server trả về dự án
+      setTimeout(initCockpit, 600);
+      setTimeout(initCockpit, 1800);
+    });
+
+    window.addEventListener('sqtm:projects-updated', () => initCockpit());
+    window.addEventListener('storage', e => {
+      if (e.key === 'smartvms_projects_data' || e.key === 'sqtm_projects_v3') {
+        initCockpit();
+      }
     });
 
     function initCockpit() {
       if (typeof AdminAnalytics === 'undefined') return;
 
+      initCoreState(true);
       portfolioData = AdminAnalytics.getExecutivePortfolioMetrics();
       if (!portfolioData) return;
 
@@ -536,6 +592,9 @@
             <td style="text-align:center">${gateBadge}</td>
             <td style="text-align:center">
               <div style="display:inline-flex; align-items:center; gap:6px">
+                <button type="button" class="btn btn-outline btn-xs" onclick="openAssignProjectStaffModal('${ps.projectId}')" style="background:rgba(124,58,237,0.08); color:#7c3aed; border-color:rgba(124,58,237,0.3); font-weight:700" title="Phân bổ nhân sự (Trưởng nhóm, Kiểm thử viên, Lập trình viên) vào dự án này">
+                  👥 Phân bổ
+                </button>
                 <a href="project-detail.html?id=${ps.projectId}" class="btn btn-primary btn-xs" title="Xem tổng quan chi tiết dự án cấp quản trị">
                   🔍 Xem chi tiết
                 </a>
@@ -654,7 +713,6 @@
       XLSX.utils.book_append_sheet(wb, ws, "ChatLuong_DuAn");
       XLSX.writeFile(wb, `BaoCao_ChatLuong_CacDuAn_${new Date().toISOString().substring(0,10)}.xlsx`);
       showToast('✅ Đã xuất báo cáo chất lượng các dự án thành công!', 'success');
-    }
     }
   </script>
 </body>
