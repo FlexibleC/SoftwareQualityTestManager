@@ -1,6 +1,7 @@
 /**
  * PROJECT LEAD WORKSPACE STYLES (lead-theme.css)
- * Hệ thống giao diện độc lập chuyên biệt dành cho Quản Trị Viên Dự Án (Project Lead)
+ * Hệ thống giao diện phân tầng chuyên biệt dành cho Quản Trị Viên Dự Án (Project Lead)
+ * Tuân thủ chuẩn Enterprise: Portfolio Hub (Đa dự án) & Dedicated Project Workspace (Đơn dự án)
  */
 
 /* ==================== PROJECT LEAD TOPBAR ==================== */
@@ -9,11 +10,14 @@
   border-bottom: 2px solid #1e293b;
   color: #ffffff;
   padding: 0 24px;
-  height: 60px;
+  height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .lead-brand-wrap {
@@ -24,17 +28,18 @@
 }
 
 .lead-brand-badge {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
   background: linear-gradient(135deg, #d97706, #b45309);
   color: #ffffff;
-  font-size: 18px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+  flex-shrink: 0;
 }
 
 .lead-brand-title {
@@ -54,331 +59,448 @@
   display: block;
 }
 
-/* ==================== PROJECT SCOPED BANNER ==================== */
-.lead-project-hero {
+/* ==================== TẦNG 2: COMPACT PROJECT NAVIGATION BAR ==================== */
+.lead-compact-bar {
   background: var(--bg-card);
-  border: 1.5px solid var(--border);
-  border-radius: 16px;
-  padding: 22px 28px;
-  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 62px;
+  z-index: 40;
+  padding: 0 24px;
+}
+
+.lead-compact-bar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 18px;
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-}
-
-.lead-project-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 6px;
-  background: linear-gradient(to bottom, #d97706, #2563eb);
-}
-
-.lead-project-info-wrap {
-  display: flex;
-  align-items: center;
+  height: 56px;
   gap: 16px;
 }
 
-.lead-project-cube {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+.lead-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.btn-back-hub {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-back-hub:hover {
+  background: var(--primary-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateX(-2px);
+}
+
+.lead-compact-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lead-compact-cube {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #0284c7);
   color: #ffffff;
-  font-size: 16px;
+  font-size: 12.5px;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 6px 14px rgba(29, 78, 216, 0.3);
 }
 
-.lead-project-tagline {
-  font-size: 11px;
-  font-weight: 800;
-  color: #d97706;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+.lead-compact-title-wrap {
+  min-width: 0;
 }
 
-.lead-project-heading {
-  font-size: 20px;
+.lead-compact-title {
+  font-size: 15px;
   font-weight: 800;
   color: var(--text-primary);
-  margin: 0 0 6px 0;
-  letter-spacing: -0.4px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.lead-project-meta-strip {
+.lead-compact-meta {
+  font-size: 11.5px;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  color: var(--text-muted);
 }
 
-.lead-project-tools {
+/* Tabs điều hướng nội bộ trong không gian dự án */
+.lead-project-tabs {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 4px;
+  height: 100%;
 }
 
-.lead-project-select {
-  height: 38px;
+.lead-project-tab {
+  height: 100%;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.lead-project-tab:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.lead-project-tab.active {
+  color: #2563eb;
+  font-weight: 800;
+  border-bottom-color: #2563eb;
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.lead-quick-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lead-quick-select {
+  height: 36px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   background: var(--bg-surface);
   color: var(--text-primary);
   font-size: 12.5px;
   font-weight: 700;
-  padding: 0 12px;
+  padding: 0 10px;
   outline: none;
   font-family: inherit;
+  cursor: pointer;
 }
 
-/* ==================== PROJECT WORKSPACE NAV PILLS ==================== */
-.lead-nav-pills {
-  display: flex;
-  gap: 6px;
-  background: var(--bg-surface);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border-light);
-}
-
-.lead-nav-pill {
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-decoration: none;
-  border-radius: 7px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-
-.lead-nav-pill:hover {
-  color: var(--text-primary);
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.lead-nav-pill.active {
+/* ==================== TẦNG 1: PORTFOLIO HUB (ĐA DỰ ÁN) ==================== */
+.lead-portfolio-header-strip {
   background: var(--bg-card);
-  color: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-/* ==================== KPI TILES ==================== */
-.lead-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
   margin-bottom: 24px;
-}
-
-.lead-kpi-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.lead-kpi-card:hover {
+.lead-portfolio-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.lead-portfolio-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 680px;
+  line-height: 1.5;
+}
+
+/* Portfolio Executive KPI Cards */
+.lead-portfolio-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.lead-portfolio-kpi-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.lead-portfolio-kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.lead-kpi-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+.lead-portfolio-kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   flex-shrink: 0;
 }
 
-.lead-kpi-val {
-  font-size: 24px;
+.lead-portfolio-kpi-val {
+  font-size: 26px;
   font-weight: 900;
   line-height: 1.1;
   color: var(--text-primary);
 }
 
-.lead-kpi-lbl {
-  font-size: 11.5px;
+.lead-portfolio-kpi-lbl {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* Lưới Thẻ Dự Án Quản Trị Đa Dự Án */
+.lead-portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.lead-portfolio-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.lead-portfolio-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: #2563eb;
+}
+
+.lead-portfolio-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.lead-portfolio-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lead-portfolio-cube {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25);
+}
+
+.lead-portfolio-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.lead-portfolio-card-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Thước đo tiến độ thẻ dự án */
+.lead-portfolio-progress-wrap {
+  margin: 8px 0;
+}
+
+.lead-portfolio-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 6px;
+}
+
+.lead-portfolio-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.lead-portfolio-stat-box {
+  text-align: center;
+}
+
+.lead-portfolio-stat-val {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.lead-portfolio-stat-lbl {
+  font-size: 11px;
   color: var(--text-muted);
   font-weight: 600;
   margin-top: 2px;
 }
 
-/* ==================== TEST CYCLE PROGRESS CARDS ==================== */
-.cycle-track-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 18px 20px;
-  margin-bottom: 14px;
-}
-
-.cycle-track-header {
+/* Nút hành động vào không gian dự án - TO, RÕ RÀNG, TƯƠNG PHẢN CAO */
+.btn-enter-workspace {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.cycle-track-title {
-  font-size: 14.5px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.progress-bar-wrap {
-  height: 8px;
-  border-radius: 999px;
-  background: var(--bg-surface);
-  overflow: hidden;
-  display: flex;
-  margin: 10px 0;
-}
-
-.progress-pass {
-  background: #16a34a;
-  height: 100%;
-}
-.progress-fail {
-  background: #dc2626;
-  height: 100%;
-}
-.progress-untested {
-  background: #cbd5e1;
-  height: 100%;
-}
-
-/* ==================== TESTER WORKLOAD IN PROJECT ==================== */
-.tester-roster-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
-}
-
-.tester-roster-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 20px;
+  background: #1d4ed8;
+  color: #ffffff !important;
+  font-size: 14px;
+  font-weight: 700;
   border-radius: 10px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
-/* ==================== MULTI-PROJECT OVERVIEW CARDS ==================== */
-.lead-multiprojects-section {
-  margin-bottom: 24px;
+.btn-enter-workspace:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29, 78, 216, 0.4);
 }
-.lead-multiprojects-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.lead-multiprojects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-}
-.lead-project-card {
+
+/* Bảng đối soát đa dự án (Comparison Matrix Table) */
+.lead-matrix-card {
   background: var(--bg-card);
   border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 28px;
 }
-.lead-project-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: #2563eb;
+
+.lead-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
 }
-.lead-project-card.active {
-  border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.03);
-  box-shadow: 0 0 0 1.5px #2563eb;
-}
-.lead-project-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-.lead-project-card-title {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
-  line-height: 1.3;
-}
-.lead-project-card-meta {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.lead-project-card-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+
+.lead-matrix-table th {
   background: var(--bg-surface);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 11px;
-}
-.lead-stat-item {
-  text-align: center;
-}
-.lead-stat-val {
-  font-weight: 800;
-  font-size: 13.5px;
-  color: var(--text-primary);
-}
-.lead-stat-lbl {
   color: var(--text-muted);
-  font-size: 10.5px;
-}
-.lead-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   font-size: 11.5px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--border-light);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 14px 18px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+.lead-matrix-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.lead-matrix-table tr:hover td {
+  background: rgba(37, 99, 235, 0.02);
+}
+
+/* Nút bấm chuẩn hóa độ tương phản cao */
+.btn-lead-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-lead-primary {
+  background: #1d4ed8;
+  color: #ffffff !important;
+  border: 1px solid #1e40af;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2);
+}
+.btn-lead-primary:hover {
+  background: #1e40af;
+  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
+}
+
+.btn-lead-outline {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+}
+.btn-lead-outline:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-subtle);
 }

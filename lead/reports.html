@@ -14,7 +14,7 @@
 </head>
 <body>
 
-  <!-- Lead Topbar -->
+  <!-- Lead Topbar (Global Header) -->
   <header class="lead-topbar">
     <div style="display:flex; align-items:center; gap:20px">
       <a href="index.html" class="lead-brand-wrap">
@@ -24,18 +24,9 @@
           <span class="lead-brand-subtitle">Không gian quản trị viên dự án (Project Lead)</span>
         </div>
       </a>
-
-      <!-- Navigation Pills -->
-      <nav class="lead-nav-pills" role="navigation">
-        <a href="index.html" class="lead-nav-pill">📊 Tổng quan dự án</a>
-        <a href="testcases.html" class="lead-nav-pill">📋 Kịch bản kiểm thử</a>
-        <a href="assignments.html" class="lead-nav-pill">📌 Điều phối & giao việc</a>
-        <a href="reports.html" class="lead-nav-pill active">📈 Báo cáo chất lượng</a>
-        <a href="settings.html" class="lead-nav-pill">⚙️ Cài đặt dự án</a>
-      </nav>
     </div>
 
-    <div style="display:flex; align-items:center; gap:14px">
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
       <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
       
@@ -50,13 +41,11 @@
     </div>
   </header>
 
+  <!-- Compact Project Navigation Bar (Tầng 2) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
   <!-- Main Content -->
   <main class="main-wrapper" id="reports-main-content" style="max-width:1440px; margin:24px auto; padding:0 24px">
-
-    <!-- Active Project Hero Banner -->
-    <div class="lead-project-hero" id="lead-project-hero">
-      <!-- Populated by lead-context.js -->
-    </div>
 
     <!-- Reports Header & Export Toolbar -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
@@ -353,7 +342,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
-      LeadContext.init();
+      LeadContext.init('reports');
       initReportsModule();
     });
 

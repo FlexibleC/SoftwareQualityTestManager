@@ -1,14 +1,29 @@
 /**
- * LEAD MODULE: PROJECT CONTEXT & NAVIGATION
- * Quản trị ngữ cảnh làm việc của Quản Trị Viên Dự Án (Project Lead)
+ * LEAD MODULE: PROJECT CONTEXT & COMPACT NAVIGATION (TẦNG 2)
+ * Quản trị ngữ cảnh làm việc khép kín của từng dự án
  */
 
 const LeadContext = {
-  init() {
+  activeTab: 'project', // 'project' | 'testcases' | 'assignments' | 'reports' | 'settings'
+
+  init(currentTab = '') {
+    this.detectCurrentTab(currentTab);
     this.resolveActiveProject();
     this.renderUserInfo();
-    this.renderProjectHeader();
-    this.bindProjectSwitcher();
+    this.renderCompactProjectBar();
+  },
+
+  detectCurrentTab(tabHint) {
+    if (tabHint) {
+      this.activeTab = tabHint;
+      return;
+    }
+    const path = (window.location.pathname || '').toLowerCase();
+    if (path.includes('testcases')) this.activeTab = 'testcases';
+    else if (path.includes('assignments')) this.activeTab = 'assignments';
+    else if (path.includes('reports')) this.activeTab = 'reports';
+    else if (path.includes('settings')) this.activeTab = 'settings';
+    else this.activeTab = 'project';
   },
 
   resolveActiveProject() {
@@ -37,7 +52,7 @@ const LeadContext = {
     const u = getCurrentUser();
     const nameEl = document.getElementById('lead-user-name');
     const roleEl = document.getElementById('lead-user-role');
-    const avatarEl = document.getElementById('lead-user-avatar') || document.querySelector('.vms-user-avatar');
+    const avatarEl = document.getElementById('lead-user-avatar');
 
     if (nameEl && u) nameEl.textContent = u.name || u.username;
     if (roleEl && u) {
@@ -52,61 +67,83 @@ const LeadContext = {
     }
   },
 
-  renderProjectHeader() {
-    const hero = document.getElementById('lead-project-hero');
-    if (!hero) return;
+  /**
+   * Render Thanh điều hướng dự án tinh gọn (Compact Project Navigation Bar)
+   */
+  renderCompactProjectBar() {
+    const container = document.getElementById('lead-compact-bar') || document.getElementById('lead-project-hero');
+    if (!container) return;
 
     const p = getActiveProject();
     const projects = typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects();
-    const u = getCurrentUser();
 
     if (!p) {
-      hero.innerHTML = `
-        <div style="padding:28px 20px; text-align:center; width:100%">
-          <div style="font-size:36px; margin-bottom:8px">🏢</div>
-          <h3 style="margin:0 0 6px 0; color:var(--text-primary)">Chưa chọn dự án nào</h3>
-          <p style="color:var(--text-muted); font-size:13px; margin:0 0 16px 0">
-            Hiện tại bạn chưa được phân bổ vào dự án nào hoặc chưa có dự án sẵn sàng.
-          </p>
-          ${u && u.role === 'admin' ? '<a href="../admin/index.html" class="btn btn-primary btn-sm">⬅ Về cổng quản trị hệ thống</a>' : ''}
+      container.innerHTML = `
+        <div style="padding:16px 24px; display:flex; align-items:center; justify-content:space-between">
+          <div style="display:flex; align-items:center; gap:12px">
+            <a href="index.html" class="btn-back-hub">⬅ Về danh mục dự án</a>
+            <span style="color:var(--text-muted); font-size:13px">Chưa chọn dự án nào</span>
+          </div>
         </div>
       `;
       return;
     }
 
-    const tcsCount = (p.testCases || []).length;
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id) : [];
-    const cyclesCount = cycles.length;
-    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : [];
+    const tId = encodeURIComponent(p.id);
 
-    hero.innerHTML = `
-      <div class="lead-project-info-wrap">
-        <div class="lead-project-cube">
-          ${(p.code || 'PRJ').substring(0, 3)}
-        </div>
-        <div>
-          <div class="lead-project-tagline">
-            <span>👑</span> Không gian điều hành dự án
-          </div>
-          <h1 class="lead-project-heading">${p.name}</h1>
-          <div class="lead-project-meta-strip">
-            <span>Mã: <strong>${p.code || 'PRJ'}</strong></span>
-            <span>•</span>
-            <span class="badge badge-info" style="font-size:10.5px">Phiên bản: ${p.activeVersion || 'v1.0'}</span>
-            <span>•</span>
-            <span>Thư viện: <strong>${tcsCount}</strong> kịch bản</span>
-            <span>•</span>
-            <span>Chu kỳ: <strong>${cyclesCount}</strong> đợt test</span>
-            <span>•</span>
-            <span>Nhân sự: <strong>${members.length}</strong> người</span>
-          </div>
-        </div>
-      </div>
+    container.className = 'lead-compact-bar';
+    container.innerHTML = `
+      <div class="lead-compact-bar-inner">
+        <!-- Vùng bên trái: Nút quay lại danh mục + Tên dự án -->
+        <div class="lead-compact-left">
+          <a href="index.html" class="btn-back-hub" title="Quay về Trung tâm điều hành danh mục dự án">
+            <span>⬅</span>
+            <span>Danh mục dự án</span>
+          </a>
 
-      <div class="lead-project-tools">
-        <div style="display:flex; align-items:center; gap:8px">
-          <span style="font-size:12px; color:var(--text-muted); font-weight:600">Đổi dự án:</span>
-          <select class="lead-project-select" onchange="LeadContext.switchProject(this.value)">
+          <div class="lead-compact-breadcrumb">
+            <div class="lead-compact-cube">
+              ${(p.code || 'PRJ').substring(0, 3)}
+            </div>
+            <div class="lead-compact-title-wrap">
+              <h2 class="lead-compact-title">${escapeHtml(p.name)}</h2>
+              <div class="lead-compact-meta">
+                <span>Mã: <strong>${escapeHtml(p.code || 'PRJ')}</strong></span>
+                <span>•</span>
+                <span class="badge badge-info" style="font-size:10.5px">Phiên bản: ${escapeHtml(p.activeVersion || 'v1.0')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vùng giữa: 5 Tabs phân hệ khép kín của dự án -->
+        <nav class="lead-project-tabs" role="navigation">
+          <a href="project.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'project' ? 'active' : ''}">
+            <span>📊</span>
+            <span>Tổng quan</span>
+          </a>
+          <a href="testcases.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'testcases' ? 'active' : ''}">
+            <span>📋</span>
+            <span>Kịch bản kiểm thử</span>
+          </a>
+          <a href="assignments.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'assignments' ? 'active' : ''}">
+            <span>📌</span>
+            <span>Điều phối & giao việc</span>
+          </a>
+          <a href="reports.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'reports' ? 'active' : ''}">
+            <span>📈</span>
+            <span>Báo cáo chất lượng</span>
+          </a>
+          <a href="settings.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'settings' ? 'active' : ''}">
+            <span>⚙️</span>
+            <span>Cài đặt dự án</span>
+          </a>
+        </nav>
+
+        <!-- Vùng bên phải: Dropdown đổi nhanh sang dự án khác -->
+        <div class="lead-quick-switcher">
+          <span style="font-size:12px; color:var(--text-muted); font-weight:700">Đổi DA:</span>
+          <select class="lead-quick-select" onchange="LeadContext.switchProject(this.value)">
             ${projects.map(proj => `
               <option value="${proj.id}" ${proj.id === p.id ? 'selected' : ''}>
                 [${proj.code}] ${proj.name}
@@ -114,31 +151,19 @@ const LeadContext = {
             `).join('')}
           </select>
         </div>
-        ${u && u.role === 'admin' ? `
-          <a href="../admin/index.html" class="btn btn-outline btn-sm" title="Về cổng quản trị cấp cao hệ thống">
-            🛡️ Cổng Super Admin
-          </a>
-        ` : ''}
       </div>
     `;
   },
 
   switchProject(newProjectId) {
-    if (!newProjectId || newProjectId === state.activeProjectId) return;
+    if (!newProjectId) return;
     state.activeProjectId = newProjectId;
     sessionStorage.setItem('smartvms_active_project_id', newProjectId);
     saveCoreState();
     
-    const curPage = window.location.pathname.split('/').pop() || 'index.html';
-    window.location.href = curPage + '?projectId=' + encodeURIComponent(newProjectId);
-  },
-
-  bindProjectSwitcher() {
-    const selects = document.querySelectorAll('#lead-project-select');
-    selects.forEach(sel => {
-      if (sel && state.activeProjectId) {
-        sel.value = state.activeProjectId;
-      }
-    });
+    // Giữ nguyên trang con hiện tại khi chuyển dự án
+    const curPage = window.location.pathname.split('/').pop() || 'project.html';
+    const targetPage = curPage.includes('index.html') ? 'project.html' : curPage;
+    window.location.href = targetPage + '?projectId=' + encodeURIComponent(newProjectId);
   }
 };

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không gian điều hành dự án - Quản trị dự án kiểm thử</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="css/lead-theme.css" />
+</head>
+<body>
+
+  <!-- Lead Topbar (Global Header) -->
+  <header class="lead-topbar">
+    <div style="display:flex; align-items:center; gap:20px">
+      <a href="index.html" class="lead-brand-wrap">
+        <div class="lead-brand-badge">👑</div>
+        <div>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án (Project Lead)</span>
+        </div>
+      </a>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Compact Project Navigation Bar (Tầng 2 Scoped Bar) -->
+  <div class="lead-compact-bar" id="lead-compact-bar">
+    <!-- Populated by lead-context.js -->
+  </div>
+
+  <!-- Main Container: Dedicated Project Workspace Content -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+
+    <!-- Project KPI Metric Cards -->
+    <div class="lead-kpi-grid">
+      <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
+        <div class="lead-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">📋</div>
+        <div>
+          <div class="lead-kpi-val" id="lead-kpi-total-tcs">0</div>
+          <div class="lead-kpi-lbl">Kịch bản trong dự án</div>
+        </div>
+      </div>
+
+      <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
+        <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">✅</div>
+        <div>
+          <div class="lead-kpi-val" id="lead-kpi-pass" style="color:#16a34a">0</div>
+          <div class="lead-kpi-lbl">Kịch bản kiểm thử đạt</div>
+        </div>
+      </div>
+
+      <div class="lead-kpi-card" style="border-left:4px solid #dc2626">
+        <div class="lead-kpi-icon" style="background:rgba(220,38,38,0.1); color:#dc2626">❌</div>
+        <div>
+          <div class="lead-kpi-val" id="lead-kpi-fail" style="color:#dc2626">0</div>
+          <div class="lead-kpi-lbl">Lỗi phát hiện</div>
+        </div>
+      </div>
+
+      <div class="lead-kpi-card" style="border-left:4px solid #d97706">
+        <div class="lead-kpi-icon" style="background:rgba(217,119,6,0.1); color:#d97706">📌</div>
+        <div>
+          <div class="lead-kpi-val" id="lead-kpi-assigned" style="color:#d97706">0</div>
+          <div class="lead-kpi-lbl">Kịch bản đã phân công</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 Column Layout: Cycles Progress & Team Roster -->
+    <div style="display:grid; grid-template-columns: 1.35fr 1fr; gap:20px; align-items:start">
+      
+      <!-- Left Column: Active Test Cycles Progress -->
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              🎯 Tiến độ các đợt kiểm thử
+            </h3>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+              Giám sát tỷ lệ đạt/lỗi theo từng đợt kiểm thử độc lập trong dự án
+            </div>
+          </div>
+          <a href="#" id="link-manage-cycles" class="btn btn-outline btn-xs">⚙️ Quản lý đợt test</a>
+        </div>
+        <div class="card-body" id="lead-cycles-progress-list" style="padding:16px">
+          <!-- Rendered by lead-dashboard.js -->
+        </div>
+      </div>
+
+      <!-- Right Column: Project Personnel Roster -->
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              👥 Nhân sự phụ trách dự án
+            </h3>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+              Đội ngũ kiểm thử viên & lập trình viên được phân bổ vào dự án này
+            </div>
+          </div>
+          <span class="badge badge-info" style="font-size:11px">Phân bổ dự án</span>
+        </div>
+        <div class="card-body" id="lead-team-roster-list" style="padding:16px; display:flex; flex-direction:column; gap:10px">
+          <!-- Rendered by lead-dashboard.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Developer Defect Resolution Pipeline -->
+    <div class="card" style="margin-top:20px; overflow:hidden">
+      <div class="card-header" style="justify-content:space-between; border-bottom:1px solid var(--border)">
+        <div>
+          <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+            🛠️ Tiến độ xử lý lỗi của lập trình viên
+          </h3>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+            Theo dõi vòng đời khắc phục lỗi, tỷ lệ lỗi tái phát và bàn giao kiểm thử lại của đội ngũ lập trình viên
+          </div>
+        </div>
+        <a href="../dev/index.html" class="btn btn-outline btn-xs" title="Chuyển sang bảng theo dõi lỗi của lập trình viên">
+          💻 Xem bảng lập trình viên ➔
+        </a>
+      </div>
+      <div class="card-body" style="padding:16px">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px">
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #dc2626">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700">Lỗi mới tiếp nhận</div>
+            <div style="font-size:20px; font-weight:800; color:#dc2626; margin-top:2px" id="lead-dev-kpi-new">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #f59e0b">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700">Dev đang sửa</div>
+            <div style="font-size:20px; font-weight:800; color:#f59e0b; margin-top:2px" id="lead-dev-kpi-wip">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #b91c1c">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700">Lỗi tái phát (Reopened)</div>
+            <div style="font-size:20px; font-weight:800; color:#b91c1c; margin-top:2px" id="lead-dev-kpi-reopened">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #7c3aed">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700">Đã sửa (Chờ kiểm thử lại)</div>
+            <div style="font-size:20px; font-weight:800; color:#7c3aed; margin-top:2px" id="lead-dev-kpi-fixed">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #16a34a">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700">Đã nghiệm thu (Đóng)</div>
+            <div style="font-size:20px; font-weight:800; color:#16a34a; margin-top:2px" id="lead-dev-kpi-closed">0</div>
+          </div>
+          <div style="padding:10px 14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #2563eb">
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700">Tỷ lệ sửa thành công</div>
+            <div style="font-size:20px; font-weight:800; color:#2563eb; margin-top:2px" id="lead-dev-kpi-fixrate">0%</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; margin-bottom:4px">
+            <span>Tiến độ luồng khắc phục lỗi</span>
+            <span id="lead-dev-pipeline-desc">0 / 0 lỗi đã giải quyết</span>
+          </div>
+          <div style="height:8px; border-radius:4px; background:var(--bg-body); overflow:hidden; display:flex; border:1px solid var(--border-light)">
+            <div id="lead-pipe-closed" style="background:#16a34a; width:0%" title="Đã đóng"></div>
+            <div id="lead-pipe-fixed" style="background:#7c3aed; width:0%" title="Đã sửa, chờ kiểm thử lại"></div>
+            <div id="lead-pipe-wip" style="background:#f59e0b; width:0%" title="Đang sửa"></div>
+            <div id="lead-pipe-reopened" style="background:#b91c1c; width:0%" title="Lỗi tái phát"></div>
+            <div id="lead-pipe-new" style="background:#dc2626; width:0%" title="Lỗi mới"></div>
+          </div>
+        </div>
+
+        <div id="lead-dev-hot-defects">
+          <!-- Rendered by lead-dashboard.js -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js?v=3.1.0"></script>
+  <script src="../data/smartvms_test_catalog.js?v=3.1.0"></script>
+  <script src="../shared/js/core.js?v=3.1.0"></script>
+  <script src="../shared/js/cloud-sync.js?v=3.1.0"></script>
+
+  <!-- Modular Lead Scripts -->
+  <script src="js/lead-context.js?v=3.1.0"></script>
+  <script src="js/lead-dashboard.js?v=3.1.0"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+      LeadContext.init('project');
+      LeadDashboard.init();
+
+      // Cập nhật link quản lý đợt test
+      const p = getActiveProject();
+      const linkCycles = document.getElementById('link-manage-cycles');
+      if (linkCycles && p) {
+        linkCycles.href = `settings.html?projectId=${encodeURIComponent(p.id)}`;
+      }
+    });
+  </script>
+</body>
+</html>
