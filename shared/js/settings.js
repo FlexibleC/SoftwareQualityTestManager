@@ -144,10 +144,15 @@ function renderProjectsTab() {
             <button type="button" class="btn btn-outline btn-xs" onclick="openEditProjectModal('${p.id}')" title="Sửa thông tin dự án">✏️ Sửa</button>
             <button type="button" class="btn btn-outline btn-xs btn-delete" onclick="deleteProjectHandler('${p.id}')" title="Xóa dự án" style="color:#ef4444; border-color:rgba(239,68,68,0.3)">🗑️ Xóa</button>
           </div>
-          ${isCurrent ? 
-            '<span style="font-size:12px; font-weight:700; color:var(--success)">✓ Dự án hiện tại</span>' : 
-            `<button type="button" class="btn btn-primary btn-xs" onclick="switchProject('${p.id}')">👉 Chọn Dự Án</button>`
-          }
+          <div style="display:flex; gap:6px; align-items:center">
+            ${window.location.pathname.includes('/admin/') ? 
+              `<a href="project-detail.html?id=${p.id}" class="btn btn-primary btn-xs" title="Xem tổng quan chi tiết dự án">🔍 Xem chi tiết</a>` : 
+              (isCurrent ? 
+                '<span style="font-size:12px; font-weight:700; color:var(--success)">✓ Dự án hiện tại</span>' : 
+                `<button type="button" class="btn btn-primary btn-xs" onclick="switchProject('${p.id}')">👉 Chọn dự án</button>`
+              )
+            }
+          </div>
         </div>
       </div>
     `;
@@ -1279,7 +1284,7 @@ function renderUsersTab() {
   setEl('usr-stat-dev', users.filter(u => u.role === 'developer').length);
   setEl('usr-stat-locked', users.filter(u => u.status === 'LOCKED').length);
 
-  const tbody = document.getElementById('users-table-body');
+  const tbody = document.getElementById('users-table-body') || document.getElementById('users-tbody');
   if (!tbody) return;
 
   let filtered = users;
@@ -1309,20 +1314,27 @@ function renderUsersTab() {
 
   tbody.innerHTML = filtered.map(u => {
     const isLocked = u.status === 'LOCKED';
-    const roleBadge = u.role === 'admin' ? 
-      '<span class="badge badge-p1">👑 Quản lý (Admin/PM)</span>' : 
-      u.role === 'tester' ? 
-      '<span class="badge badge-pass">🧪 Kiểm thử viên (Tester)</span>' : 
-      '<span class="badge badge-nr">💻 Lập trình viên (Dev)</span>';
+    let roleBadge = '<span class="badge badge-nr">💻 Lập trình viên</span>';
+    if (u.role === 'admin') {
+      roleBadge = '<span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700">🛡️ Quản trị viên cấp cao</span>';
+    } else if (u.role === 'project_lead') {
+      roleBadge = '<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde047; font-weight:700">👑 Trưởng dự án</span>';
+    } else if (u.role === 'tester') {
+      roleBadge = '<span class="badge badge-pass">🧪 Kiểm thử viên</span>';
+    }
 
     const projBadges = (u.assignedProjects || []).map(pid => 
       `<span class="tc-badge-id" style="margin-right:4px; font-size:11px">${escapeHtml(projMap.get(pid) || pid)}</span>`
-    ).join('') || '<span style="color:var(--text-muted); font-size:12px">Chưa gán</span>';
+    ).join('') || '<span style="color:var(--text-muted); font-size:12px; font-style:italic">Chưa phân bổ</span>';
 
     const userTasks = tasks.filter(t => t.assigneeUsername === u.username);
     const activeTasks = userTasks.filter(t => t.status !== 'DONE' && t.status !== 'PASSED');
+    const isInsideAdmin = window.location.pathname.includes('/admin/');
     const taskCol = u.role === 'tester' ? 
-      `<a href="assignments.html" style="font-weight:700; color:var(--primary); text-decoration:underline" title="Xem chi tiết phân công">${activeTasks.length} bài đang test</a> (${userTasks.length} tổng)` : 
+      (isInsideAdmin ? 
+        `<span style="font-weight:700; color:var(--primary)">${activeTasks.length} bài</span> <span style="font-size:11.5px; color:var(--text-muted)">(${userTasks.length} tổng)</span>` : 
+        `<a href="assignments.html" style="font-weight:700; color:var(--primary); text-decoration:underline" title="Xem chi tiết phân công">${activeTasks.length} bài đang test</a> (${userTasks.length} tổng)`
+      ) : 
       '<span style="color:var(--text-muted); font-size:12px">—</span>';
 
     const avatarLetter = (u.name || u.username).trim().charAt(0).toUpperCase();

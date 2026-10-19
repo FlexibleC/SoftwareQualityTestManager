@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi tiết dự án - Cổng quản trị cấp cao</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="css/admin-console.css" />
+  <style>
+    .project-header-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .metric-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .metric-box-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .metric-box-val {
+      font-size: 22px;
+      font-weight: 800;
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+    .team-member-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      margin: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Executive Bar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon" style="background:linear-gradient(135deg, #1d4ed8, #0ea5e9)">🛡️</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">Hệ thống kiểm thử và quản lý chất lượng phần mềm</span>
+          <span class="vms-subtitle">Cổng quản trị cấp cao hệ thống</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="index.html" class="nav-item">Tổng quan chất lượng</a>
+          <a href="portfolio.html" class="nav-item active">Dự án và nhân sự</a>
+          <a href="settings.html" class="nav-item">Cài đặt hệ thống</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện sáng hoặc tối">🌙</button>
+      <div class="vms-user-profile" title="Tài khoản quản trị cấp cao">
+        <div class="vms-user-avatar">A</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="top-user-name">Nguyễn Văn Huy</span>
+          <span class="vms-user-role">Quản trị viên cấp cao</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+    
+    <!-- Navigation back -->
+    <div style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+      <div style="display:flex; align-items:center; gap:8px">
+        <a href="portfolio.html" class="btn btn-outline btn-sm">
+          ⬅ Quay lại danh sách dự án
+        </a>
+        <a href="index.html" class="btn btn-outline btn-sm">
+          📊 Bảng giám sát tổng thể
+        </a>
+      </div>
+      <div style="display:flex; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="openAssignStaffModal()">
+          👥 Điều phối nhân sự dự án
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openEditProjectInfoModal()">
+          ✏️ Chỉnh sửa thông tin dự án
+        </button>
+      </div>
+    </div>
+
+    <!-- Project Header Hero Card -->
+    <div class="project-header-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px">
+        <div>
+          <div style="display:flex; align-items:center; gap:10px">
+            <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:800; font-size:12px" id="prj-code">SMARTVMS</span>
+            <span class="badge badge-pass" id="prj-status-badge">Đang hoạt động</span>
+          </div>
+          <h1 style="font-size:22px; font-weight:800; color:var(--text-primary); margin:8px 0 4px 0" id="prj-name">
+            SmartVMS - Quản lý khách và phương tiện ra vào
+          </h1>
+          <p style="font-size:13px; color:var(--text-muted); margin:0; max-width:850px" id="prj-desc">
+            Phần mềm kiểm soát an ninh ra vào, nhận diện biển số và tích hợp thiết bị phần cứng barie, đầu đọc thẻ.
+          </p>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px; color:var(--text-muted)">Phiên bản đang kiểm thử:</div>
+          <div style="font-size:20px; font-weight:800; color:var(--primary)" id="prj-version">v2.0</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="prj-date">Khởi tạo: 01/10/2026</div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Ribbon -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-top:20px">
+        <div class="metric-box" style="border-left:4px solid #2563eb">
+          <div class="metric-box-title">Tổng số kịch bản</div>
+          <div class="metric-box-val" id="metric-total-tcs">0</div>
+        </div>
+        <div class="metric-box" style="border-left:4px solid #16a34a">
+          <div class="metric-box-title">Tiến độ thực hiện</div>
+          <div class="metric-box-val" id="metric-progress" style="color:#16a34a">0%</div>
+        </div>
+        <div class="metric-box" style="border-left:4px solid #0284c7">
+          <div class="metric-box-title">Tỷ lệ kịch bản đạt</div>
+          <div class="metric-box-val" id="metric-passrate" style="color:#0284c7">0%</div>
+        </div>
+        <div class="metric-box" style="border-left:4px solid #dc2626">
+          <div class="metric-box-title">Lỗi nghiêm trọng</div>
+          <div class="metric-box-val" id="metric-criticals" style="color:#dc2626">0</div>
+        </div>
+        <div class="metric-box" style="border-left:4px solid #7c3aed">
+          <div class="metric-box-title">Đánh giá xuất xưởng</div>
+          <div class="metric-box-val" id="metric-release-gate" style="font-size:16px; color:#7c3aed">Đang kiểm định</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 Column Layout: Nhân sự phụ trách & Tiến độ chất lượng -->
+    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:20px; align-items:start">
+      
+      <!-- Cột trái: Đội ngũ nhân sự được quản trị cấp cao phân bổ vào dự án này -->
+      <div class="card" style="padding:20px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-light); padding-bottom:10px">
+          <div>
+            <h3 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">
+              👥 Đội ngũ nhân sự dự án
+            </h3>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+              Nhân sự được quản trị cấp cao phê duyệt tham gia dự án này
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-xs" onclick="openAssignStaffModal()">
+            ➕ Phân bổ thêm
+          </button>
+        </div>
+
+        <!-- Trưởng dự án -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px">
+            👑 Quản trị viên dự án (Leader)
+          </div>
+          <div id="prj-lead-container">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Kiểm thử viên -->
+        <div style="margin-bottom:16px">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+            <span style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase">
+              🧪 Đội ngũ kiểm thử viên
+            </span>
+            <span class="badge" style="background:var(--bg-body)" id="prj-testers-count">0 người</span>
+          </div>
+          <div id="prj-testers-container" style="display:flex; flex-wrap:wrap; gap:6px">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Lập trình viên -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+            <span style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase">
+              💻 Đội ngũ lập trình viên khắc phục lỗi
+            </span>
+            <span class="badge" style="background:var(--bg-body)" id="prj-devs-count">0 người</span>
+          </div>
+          <div id="prj-devs-container" style="display:flex; flex-wrap:wrap; gap:6px">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột phải: Tiến độ các đợt kiểm thử & Đánh giá chất lượng -->
+      <div class="card" style="padding:20px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-light); padding-bottom:10px">
+          <div>
+            <h3 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">
+              🎯 Các đợt kiểm thử và chất lượng thực hiện
+            </h3>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+              Giám sát tiến độ đạt và các vấn đề phát sinh trong từng đợt
+            </div>
+          </div>
+          <a href="../lead/reports.html" id="link-view-report" class="btn btn-outline btn-xs">
+            📈 Xem báo cáo nghiệm thu ➔
+          </a>
+        </div>
+
+        <div id="prj-cycles-container" style="display:flex; flex-direction:column; gap:10px">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Khối thống kê lỗi của dự án -->
+        <div style="margin-top:20px; pt-3; border-top:1px solid var(--border-light)">
+          <h4 style="margin:0 0 10px 0; font-size:13px; font-weight:800; color:var(--text-primary)">
+            🐞 Tình hình xử lý lỗi trong dự án
+          </h4>
+          <div id="prj-defects-summary">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal điều phối nhân sự vào dự án này -->
+  <div class="modal" id="modal-assign-staff">
+    <div class="modal-box" style="max-width:620px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          👥 Điều phối nhân sự tham gia dự án
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-assign-staff')">✕</button>
+      </div>
+      <div class="modal-body" style="padding:20px">
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 16px 0">
+          Hệ thống cho phép một nhân sự (Leader, Kiểm thử viên, Lập trình viên) có thể tham gia nhiều dự án đồng thời. Tích chọn những nhân sự sẽ phụ trách dự án này:
+        </p>
+        
+        <!-- Chọn Leader -->
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label" style="font-weight:700">Chỉ định quản trị viên dự án (Leader) (*)</label>
+          <select id="assign-leader-select" class="form-control" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border)">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <!-- Chọn Kiểm thử viên (Checkboxes) -->
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label" style="font-weight:700">Phân bổ kiểm thử viên (chọn nhiều người):</label>
+          <div id="assign-testers-checkboxes" style="max-height:140px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:8px">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Chọn Lập trình viên (Checkboxes) -->
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Phân bổ lập trình viên sửa lỗi (chọn nhiều người):</label>
+          <div id="assign-devs-checkboxes" style="max-height:140px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:8px">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-staff')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveProjectStaffAssignment()">💾 Lưu phân bổ nhân sự</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Core Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js?v=3.0.1"></script>
+  <script src="../data/smartvms_test_catalog.js?v=3.0.1"></script>
+  <script src="../shared/js/core.js?v=3.0.1"></script>
+  <script src="../shared/js/cloud-sync.js?v=3.0.1"></script>
+  <script src="js/admin-analytics.js?v=3.0.1"></script>
+
+  <script>
+    let currentProject = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+
+      const u = getCurrentUser();
+      const topName = document.getElementById('top-user-name');
+      if (topName && u) topName.textContent = u.name || u.username;
+
+      const params = new URLSearchParams(window.location.search);
+      const prjId = params.get('id') || state.activeProjectId;
+
+      loadProjectDetail(prjId);
+    });
+
+    function loadProjectDetail(prjId) {
+      const projects = getAllProjects();
+      currentProject = projects.find(p => p.id === prjId) || projects[0];
+
+      if (!currentProject) {
+        showToast('Không tìm thấy dữ liệu dự án', 'error');
+        return;
+      }
+
+      // 1. Thông tin tiêu đề
+      document.getElementById('prj-name').textContent = currentProject.name;
+      document.getElementById('prj-code').textContent = currentProject.code || currentProject.id;
+      document.getElementById('prj-desc').textContent = currentProject.desc || 'Chưa có mô tả mục tiêu dự án.';
+      document.getElementById('prj-version').textContent = currentProject.activeVersion || 'v1.0';
+      document.getElementById('prj-date').textContent = `Khởi tạo: ${currentProject.createdAt || '01/10/2026'}`;
+
+      const linkReport = document.getElementById('link-view-report');
+      if (linkReport) linkReport.href = `../lead/reports.html?prj=${currentProject.id}`;
+
+      // 2. Tính toán số liệu chất lượng
+      if (typeof AdminAnalytics !== 'undefined') {
+        const health = AdminAnalytics.calculateProjectHealth(currentProject);
+        if (health) {
+          document.getElementById('metric-total-tcs').textContent = health.totalTcs;
+          document.getElementById('metric-progress').textContent = `${health.progressPercent}%`;
+          document.getElementById('metric-passrate').textContent = `${health.passRatePercent}%`;
+          document.getElementById('metric-criticals').textContent = health.openBlockers + health.openCriticals;
+          
+          const gateEl = document.getElementById('metric-release-gate');
+          if (health.releaseGate === 'GO') {
+            gateEl.textContent = '🟢 Đủ chuẩn xuất xưởng';
+            gateEl.style.color = '#16a34a';
+          } else if (health.releaseGate === 'NO_GO') {
+            gateEl.textContent = '🔴 Chưa đủ chuẩn';
+            gateEl.style.color = '#dc2626';
+          } else {
+            gateEl.textContent = '🟡 Đang kiểm tra';
+            gateEl.style.color = '#d97706';
+          }
+        }
+      }
+
+      // 3. Nhân sự phụ trách
+      renderProjectStaff();
+
+      // 4. Các đợt test
+      renderProjectCycles();
+
+      // 5. Thống kê lỗi
+      renderDefectsSummary();
+    }
+
+    function renderProjectStaff() {
+      const p = currentProject;
+      const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+
+      // Lọc những người có assignedProjects chứa p.id hoặc là lead của dự án
+      const members = allUsers.filter(u => {
+        if (u.role === 'admin') return false; // Không tính super admin
+        if (p.leadUsername && u.username === p.leadUsername) return true;
+        return (u.assignedProjects || []).includes(p.id);
+      });
+
+      // Leader
+      const leadUser = allUsers.find(u => u.username === p.leadUsername) || 
+                       members.find(u => u.role === 'project_lead');
+      const leadContainer = document.getElementById('prj-lead-container');
+      if (leadContainer) {
+        if (leadUser) {
+          leadContainer.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--bg-surface); border-radius:8px; border:1px solid var(--border)">
+              <div class="user-avatar-circle" style="width:34px; height:34px; font-weight:800; font-size:12px; background:#fef3c7; color:#b45309">
+                ${(leadUser.name || 'L').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <strong style="color:var(--text-primary); font-size:13px">${escapeHtml(leadUser.name)}</strong>
+                <div style="font-size:11.5px; color:var(--text-muted)">${escapeHtml(leadUser.email || leadUser.username)}</div>
+              </div>
+            </div>
+          `;
+        } else {
+          leadContainer.innerHTML = `
+            <div style="padding:10px; font-size:12px; color:var(--text-muted); background:var(--bg-surface); border-radius:6px">
+              ⚠️ Dự án chưa được chỉ định quản trị viên (Leader). Vui lòng bổ nhiệm ngay.
+            </div>
+          `;
+        }
+      }
+
+      // Testers
+      const testers = members.filter(u => u.role === 'tester');
+      document.getElementById('prj-testers-count').textContent = `${testers.length} người`;
+      const testersContainer = document.getElementById('prj-testers-container');
+      if (testersContainer) {
+        if (testers.length > 0) {
+          testersContainer.innerHTML = testers.map(t => `
+            <div class="team-member-pill">
+              <span style="font-weight:700">🧪 ${escapeHtml(t.name)}</span>
+              <span style="font-size:11px; color:var(--text-muted)">(${escapeHtml(t.username)})</span>
+            </div>
+          `).join('');
+        } else {
+          testersContainer.innerHTML = '<span style="font-size:12px; color:var(--text-muted); font-style:italic">Chưa có kiểm thử viên nào được phân bổ vào dự án này.</span>';
+        }
+      }
+
+      // Devs
+      const devs = members.filter(u => u.role === 'developer' || u.role === 'dev');
+      document.getElementById('prj-devs-count').textContent = `${devs.length} người`;
+      const devsContainer = document.getElementById('prj-devs-container');
+      if (devsContainer) {
+        if (devs.length > 0) {
+          devsContainer.innerHTML = devs.map(d => `
+            <div class="team-member-pill">
+              <span style="font-weight:700">💻 ${escapeHtml(d.name)}</span>
+              <span style="font-size:11px; color:var(--text-muted)">(${escapeHtml(d.username)})</span>
+            </div>
+          `).join('');
+        } else {
+          devsContainer.innerHTML = '<span style="font-size:12px; color:var(--text-muted); font-style:italic">Chưa có lập trình viên nào được phân bổ vào dự án này.</span>';
+        }
+      }
+    }
+
+    function renderProjectCycles() {
+      const container = document.getElementById('prj-cycles-container');
+      if (!container) return;
+
+      const cycles = currentProject.testCycles || [];
+      if (cycles.length === 0) {
+        container.innerHTML = `
+          <div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px; background:var(--bg-surface); border-radius:6px">
+            Dự án này chưa được cấu hình đợt kiểm thử nào.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = cycles.map(c => `
+        <div style="padding:10px 14px; background:var(--bg-surface); border-radius:6px; border:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; font-size:12px">
+          <div>
+            <strong style="color:var(--text-primary)">${escapeHtml(c.name)}</strong>
+            <span style="color:var(--text-muted); margin-left:8px; font-size:11px">(${escapeHtml(c.code || 'CYC')})</span>
+          </div>
+          <span class="badge ${c.status === 'DONE' ? 'badge-pass' : 'badge-draft'}">
+            ${c.status === 'DONE' ? 'Hoàn thành' : 'Đang thực hiện'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function renderDefectsSummary() {
+      const container = document.getElementById('prj-defects-summary');
+      if (!container) return;
+
+      const defects = typeof getProjectDefects === 'function' ? getProjectDefects(currentProject.id) : [];
+      let newCount = 0;
+      let wipCount = 0;
+      let fixedCount = 0;
+      let closedCount = 0;
+
+      defects.forEach(d => {
+        if (d.defectStatus === 'New') newCount++;
+        else if (d.defectStatus === 'In Progress') wipCount++;
+        else if (d.defectStatus === 'Fixed' || d.defectStatus === 'Resolved') fixedCount++;
+        else if (d.defectStatus === 'Closed') closedCount++;
+        else newCount++;
+      });
+
+      container.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; text-align:center; font-size:12px">
+          <div style="padding:8px; background:rgba(220,38,38,0.06); border-radius:6px; border:1px solid rgba(220,38,38,0.2)">
+            <div style="font-weight:800; color:#dc2626; font-size:16px">${newCount}</div>
+            <div style="font-size:11px; color:var(--text-muted)">Mới phát hiện</div>
+          </div>
+          <div style="padding:8px; background:rgba(245,158,11,0.06); border-radius:6px; border:1px solid rgba(245,158,11,0.2)">
+            <div style="font-weight:800; color:#d97706; font-size:16px">${wipCount}</div>
+            <div style="font-size:11px; color:var(--text-muted)">Đang sửa</div>
+          </div>
+          <div style="padding:8px; background:rgba(124,58,237,0.06); border-radius:6px; border:1px solid rgba(124,58,237,0.2)">
+            <div style="font-weight:800; color:#7c3aed; font-size:16px">${fixedCount}</div>
+            <div style="font-size:11px; color:var(--text-muted)">Chờ re-test</div>
+          </div>
+          <div style="padding:8px; background:rgba(22,163,74,0.06); border-radius:6px; border:1px solid rgba(22,163,74,0.2)">
+            <div style="font-weight:800; color:#16a34a; font-size:16px">${closedCount}</div>
+            <div style="font-size:11px; color:var(--text-muted)">Đã đóng</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openAssignStaffModal() {
+      const p = currentProject;
+      const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+
+      // Leader select
+      const leadSel = document.getElementById('assign-leader-select');
+      const leads = allUsers.filter(u => u.role === 'project_lead' || u.role === 'admin');
+      leadSel.innerHTML = leads.map(u => `
+        <option value="${u.username}" ${u.username === p.leadUsername ? 'selected' : ''}>
+          👑 ${escapeHtml(u.name)} (${escapeHtml(u.username)})
+        </option>
+      `).join('');
+
+      // Testers checkboxes
+      const testersBox = document.getElementById('assign-testers-checkboxes');
+      const testers = allUsers.filter(u => u.role === 'tester');
+      testersBox.innerHTML = testers.map(u => {
+        const isChecked = (u.assignedProjects || []).includes(p.id);
+        return `
+          <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer">
+            <input type="checkbox" name="assign-tester" value="${u.username}" ${isChecked ? 'checked' : ''} />
+            <span><strong>${escapeHtml(u.name)}</strong> (${escapeHtml(u.username)})</span>
+          </label>
+        `;
+      }).join('');
+
+      // Devs checkboxes
+      const devsBox = document.getElementById('assign-devs-checkboxes');
+      const devs = allUsers.filter(u => u.role === 'developer' || u.role === 'dev');
+      devsBox.innerHTML = devs.map(u => {
+        const isChecked = (u.assignedProjects || []).includes(p.id);
+        return `
+          <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer">
+            <input type="checkbox" name="assign-dev" value="${u.username}" ${isChecked ? 'checked' : ''} />
+            <span><strong>${escapeHtml(u.name)}</strong> (${escapeHtml(u.username)})</span>
+          </label>
+        `;
+      }).join('');
+
+      openModal('modal-assign-staff');
+    }
+
+    function saveProjectStaffAssignment() {
+      const p = currentProject;
+      const leadUsername = document.getElementById('assign-leader-select').value;
+      p.leadUsername = leadUsername;
+
+      // Lấy danh sách tester được chọn
+      const selectedTesters = Array.from(document.querySelectorAll('input[name="assign-tester"]:checked')).map(el => el.value);
+      const selectedDevs = Array.from(document.querySelectorAll('input[name="assign-dev"]:checked')).map(el => el.value);
+
+      const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+
+      allUsers.forEach(u => {
+        if (!u.assignedProjects) u.assignedProjects = [];
+        
+        // Nếu là leader được chọn
+        if (u.username === leadUsername) {
+          if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+        }
+
+        // Cập nhật tester
+        if (u.role === 'tester') {
+          if (selectedTesters.includes(u.username)) {
+            if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+          } else {
+            u.assignedProjects = u.assignedProjects.filter(id => id !== p.id);
+          }
+        }
+
+        // Cập nhật dev
+        if (u.role === 'developer' || u.role === 'dev') {
+          if (selectedDevs.includes(u.username)) {
+            if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+          } else {
+            u.assignedProjects = u.assignedProjects.filter(id => id !== p.id);
+          }
+        }
+      });
+
+      saveCoreState();
+      closeModal('modal-assign-staff');
+      loadProjectDetail(p.id);
+      showToast(`Đã cập nhật phân bổ nhân sự cho dự án [${p.code || p.id}] thành công`, 'success');
+    }
+  </script>
+</body>
+</html>
