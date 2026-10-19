@@ -212,7 +212,7 @@
 
   <!-- Modal Thêm/Sửa Dự Án Mới -->
   <div class="modal" id="modal-project-form">
-    <div class="modal-box" style="max-width:560px">
+    <div class="modal-box" style="max-width:580px">
       <div class="modal-header">
         <h3 id="modal-project-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
           🏢 Khởi tạo không gian dự án mới
@@ -235,14 +235,70 @@
             <input type="text" id="pf-version" class="form-control" placeholder="VD: v1.0" value="v1.0" />
           </div>
         </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Lĩnh vực sản phẩm</label>
+            <input type="text" id="pf-domain" class="form-control" placeholder="VD: Kiểm soát an ninh, IoT, VMS" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Trưởng dự án (Lead phụ trách)</label>
+            <select id="pf-lead-select" class="form-control">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
         <div>
           <label class="form-label" style="font-weight:700">Mô tả mục tiêu dự án</label>
-          <textarea id="pf-desc" class="form-control" rows="3" placeholder="Mô tả phạm vi sản phẩm, mục tiêu kiểm định..."></textarea>
+          <textarea id="pf-desc" class="form-control" rows="2" placeholder="Mô tả phạm vi sản phẩm, mục tiêu kiểm định..."></textarea>
         </div>
+        <input type="hidden" id="pf-standards" value="ISO/IEC 25010, ISO/IEC/IEEE 29119" />
       </div>
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-project-form')">Hủy</button>
         <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveProject()">💾 Lưu dự án</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Phân Bổ Nhân Sự Cho Dự Án -->
+  <div class="modal" id="modal-assign-project-staff">
+    <div class="modal-box" style="max-width:600px">
+      <div class="modal-header">
+        <h3 id="asg-staff-modal-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          👥 Phân bổ nhân sự dự án
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-assign-project-staff')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <input type="hidden" id="asg-staff-prj-id" />
+        <div style="font-size:12.5px; color:var(--text-muted); line-height:1.4">
+          Hệ thống cho phép một nhân sự (Leader, Tester, Dev) tham gia nhiều dự án đồng thời. Chỉ định Leader và phân bổ các kỹ sư phụ trách dự án này:
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Chỉ định trưởng dự án (Project Lead) (*)</label>
+          <select id="asg-staff-lead-select" class="form-control" style="width:100%">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Đội ngũ kiểm thử viên (Tester) — Chọn nhiều người:</label>
+          <div id="asg-staff-testers-box" style="max-height:130px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Đội ngũ lập trình viên (Developer) — Chọn nhiều người:</label>
+          <div id="asg-staff-devs-box" style="max-height:130px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-project-staff')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveProjectStaff()">💾 Lưu phân bổ nhân sự</button>
       </div>
     </div>
   </div>

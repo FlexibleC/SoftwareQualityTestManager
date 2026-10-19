@@ -1120,26 +1120,29 @@ function addProject(projData) {
   if (state.projects.some(p => p.id === projId || p.code === code)) {
     throw new Error(`Mã dự án "${code}" đã tồn tại trên hệ thống!`);
   }
-  const initVer = projData.activeVersion || 'v1.0.0';
+  const initVer = projData.activeVersion || 'v1.0';
   const newProj = {
     id: projId,
     code: code,
     name: projData.name || `Dự án ${code}`,
-    domain: projData.domain || 'Hệ thống Phần mềm Doanh nghiệp',
-    lead: projData.lead || (state.currentUser?.name || 'QA Lead'),
-    standards: projData.standards || ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
+    domain: projData.domain || 'Hệ thống phần mềm',
+    desc: projData.desc || '',
+    lead: projData.lead || 'QA Lead',
+    leadUsername: projData.leadUsername || projData.lead || 'lead',
+    standards: projData.standards || ['ISO/IEC 25010', 'ISO/IEC/IEEE 29119'],
     activeVersion: initVer,
     versions: [
       {
         version: initVer,
-        label: `${initVer}-Base`,
+        label: `${initVer}`,
         status: 'IN_QA',
         targetDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
         changelog: 'Phiên bản khởi tạo ban đầu'
       }
     ],
     modules: [],
-    testCases: []
+    testCases: [],
+    members: []
   };
   state.projects.push(newProj);
   state.activeProjectId = projId;
@@ -1154,10 +1157,95 @@ function updateProject(projId, updatedData) {
   const p = (state.projects || []).find(x => x.id === projId);
   if (!p) throw new Error('Không tìm thấy dự án!');
   if (updatedData.name) p.name = updatedData.name.trim();
-  if (updatedData.domain) p.domain = updatedData.domain.trim();
+  if (updatedData.code) p.code = updatedData.code.trim().toUpperCase();
+  if (updatedData.domain !== undefined) p.domain = updatedData.domain.trim();
+  if (updatedData.desc !== undefined) p.desc = updatedData.desc.trim();
   if (updatedData.lead) p.lead = updatedData.lead.trim();
+  if (updatedData.leadUsername) p.leadUsername = updatedData.leadUsername.trim();
   if (updatedData.standards) p.standards = updatedData.standards;
   if (updatedData.activeVersion) p.activeVersion = updatedData.activeVersion;
+  saveCoreState();
+  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+    window.pushProjectsToCloud(state.projects);
+  }
+  return p;
+}
+
+/**
+ * Phân bổ toàn diện nhân sự (Leader, Testers, Devs) cho một dự án cụ thể
+ */
+function assignStaffToProject(projectId, { leadUsername, testerUsernames, devUsernames }) {
+  const p = (state.projects || []).find(x => x.id === projectId);
+  if (!p) throw new Error('Không tìm thấy dự án!');
+
+  if (leadUsername) {
+    p.leadUsername = leadUsername;
+    const leadUser = (state.users || []).find(u => u.username === leadUsername);
+    if (leadUser) p.lead = leadUser.name;
+  }
+
+  const selectedTesters = Array.isArray(testerUsernames) ? testerUsernames : [];
+  const selectedDevs = Array.isArray(devUsernames) ? devUsernames : [];
+
+  const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+
+  allUsers.forEach(u => {
+    if (!u.assignedProjects) u.assignedProjects = [];
+
+    // Nếu là Leader
+    if (leadUsername && u.username === leadUsername) {
+      if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+    }
+
+    // Cập nhật Tester
+    if (u.role === 'tester') {
+      if (selectedTesters.includes(u.username)) {
+        if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+      } else {
+        u.assignedProjects = u.assignedProjects.filter(id => id !== p.id);
+      }
+    }
+
+    // Cập nhật Developer
+    if (u.role === 'developer' || u.role === 'dev') {
+      if (selectedDevs.includes(u.username)) {
+        if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+      } else {
+        u.assignedProjects = u.assignedProjects.filter(id => id !== p.id);
+      }
+    }
+  });
+
+  // Đồng bộ sang p.members
+  p.members = [];
+  if (leadUsername) {
+    const lu = allUsers.find(u => u.username === leadUsername);
+    p.members.push({
+      username: leadUsername,
+      name: lu ? lu.name : leadUsername,
+      projectRole: 'lead',
+      title: 'Trưởng dự án'
+    });
+  }
+  selectedTesters.forEach(un => {
+    const tu = allUsers.find(u => u.username === un);
+    p.members.push({
+      username: un,
+      name: tu ? tu.name : un,
+      projectRole: 'tester',
+      title: 'Kiểm thử viên'
+    });
+  });
+  selectedDevs.forEach(un => {
+    const du = allUsers.find(u => u.username === un);
+    p.members.push({
+      username: un,
+      name: du ? du.name : un,
+      projectRole: 'dev',
+      title: 'Lập trình viên'
+    });
+  });
+
   saveCoreState();
   if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
     window.pushProjectsToCloud(state.projects);
