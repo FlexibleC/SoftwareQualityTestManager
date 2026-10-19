@@ -1265,10 +1265,27 @@ function openAssignProjectStaffModal(projectId) {
 
   const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
 
-  // 1. Leader Select
+  // 1. Leaders Checkboxes (Hỗ trợ phân bổ một hoặc nhiều Leader/Quản trị viên)
+  const leadsContainer = document.getElementById('asg-staff-leads-box');
+  const leads = allUsers.filter(u => u.role === 'project_lead' || u.role === 'admin');
+  if (leadsContainer) {
+    leadsContainer.innerHTML = leads.map(u => {
+      const isMember = (p.members || []).some(m => m.username === u.username && (m.projectRole === 'lead' || m.projectRole === 'admin'));
+      const isAssigned = (u.assignedProjects || []).includes(p.id);
+      const isLead = u.username === p.leadUsername || (p.leadUsernames || []).includes(u.username);
+      const isChecked = isMember || isAssigned || isLead;
+      return `
+        <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; padding:3px 0">
+          <input type="checkbox" name="asg-staff-lead-cb" value="${u.username}" ${isChecked ? 'checked' : ''} />
+          <span>👑 <strong>${escapeHtml(u.name)}</strong> (@${escapeHtml(u.username)}) — <span style="font-size:11px; color:var(--text-muted)">${escapeHtml(u.roleTitle || u.role)}</span></span>
+        </label>
+      `;
+    }).join('');
+  }
+
+  // Fallback dropdown nếu giao diện cũ còn dùng
   const leadSel = document.getElementById('asg-staff-lead-select');
   if (leadSel) {
-    const leads = allUsers.filter(u => u.role === 'project_lead' || u.role === 'admin');
     leadSel.innerHTML = leads.map(u => `
       <option value="${u.username}" ${u.username === p.leadUsername ? 'selected' : ''}>
         👑 ${escapeHtml(u.name)} (@${escapeHtml(u.username)})
@@ -1281,7 +1298,9 @@ function openAssignProjectStaffModal(projectId) {
   if (testersContainer) {
     const testers = allUsers.filter(u => u.role === 'tester');
     testersContainer.innerHTML = testers.map(u => {
-      const isChecked = (u.assignedProjects || []).includes(p.id);
+      const isMember = (p.members || []).some(m => m.username === u.username && m.projectRole === 'tester');
+      const isAssigned = (u.assignedProjects || []).includes(p.id);
+      const isChecked = isMember || isAssigned;
       return `
         <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; padding:3px 0">
           <input type="checkbox" name="asg-staff-tester-cb" value="${u.username}" ${isChecked ? 'checked' : ''} />
@@ -1296,7 +1315,9 @@ function openAssignProjectStaffModal(projectId) {
   if (devsContainer) {
     const devs = allUsers.filter(u => u.role === 'developer' || u.role === 'dev');
     devsContainer.innerHTML = devs.map(u => {
-      const isChecked = (u.assignedProjects || []).includes(p.id);
+      const isMember = (p.members || []).some(m => m.username === u.username && m.projectRole === 'dev');
+      const isAssigned = (u.assignedProjects || []).includes(p.id);
+      const isChecked = isMember || isAssigned;
       return `
         <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; padding:3px 0">
           <input type="checkbox" name="asg-staff-dev-cb" value="${u.username}" ${isChecked ? 'checked' : ''} />
@@ -1316,13 +1337,28 @@ function confirmSaveProjectStaff() {
   const prjId = document.getElementById('asg-staff-prj-id')?.value;
   if (!prjId) return;
 
-  const leadUsername = document.getElementById('asg-staff-lead-select')?.value;
+  let selectedLeads = Array.from(document.querySelectorAll('input[name="asg-staff-lead-cb"]:checked')).map(el => el.value);
+  const fallbackLead = document.getElementById('asg-staff-lead-select')?.value;
+  if (selectedLeads.length === 0 && fallbackLead) {
+    selectedLeads.push(fallbackLead);
+  }
+
   const selectedTesters = Array.from(document.querySelectorAll('input[name="asg-staff-tester-cb"]:checked')).map(el => el.value);
   const selectedDevs = Array.from(document.querySelectorAll('input[name="asg-staff-dev-cb"]:checked')).map(el => el.value);
 
+  if (selectedLeads.length === 0) {
+    showToast('⚠️ Vui lòng chỉ định ít nhất một Trưởng dự án hoặc Quản trị viên phụ trách!', 'error');
+    return;
+  }
+
   try {
     if (typeof assignStaffToProject === 'function') {
-      assignStaffToProject(prjId, { leadUsername, testerUsernames: selectedTesters, devUsernames: selectedDevs });
+      assignStaffToProject(prjId, { 
+        leadUsername: selectedLeads[0], 
+        leadUsernames: selectedLeads, 
+        testerUsernames: selectedTesters, 
+        devUsernames: selectedDevs 
+      });
     }
     closeModal('modal-assign-project-staff');
     showToast('✅ Đã phân bổ nhân sự cho dự án thành công!', 'success');
@@ -1467,7 +1503,17 @@ function renderUsersTab() {
       roleBadge = '<span class="badge badge-pass">🧪 Kiểm thử viên</span>';
     }
 
-    const projBadges = (u.assignedProjects || []).map(pid => 
+    const myPrjIds = new Set(u.assignedProjects || []);
+    (state.projects || []).forEach(p => {
+      if (p.leadUsername === u.username || (p.leadUsernames || []).includes(u.username)) {
+        myPrjIds.add(p.id);
+      }
+      if ((p.members || []).some(m => m.username === u.username)) {
+        myPrjIds.add(p.id);
+      }
+    });
+
+    const projBadges = Array.from(myPrjIds).map(pid => 
       `<span class="tc-badge-id" style="margin-right:4px; font-size:11px">${escapeHtml(projMap.get(pid) || pid)}</span>`
     ).join('') || '<span style="color:var(--text-muted); font-size:12px; font-style:italic">Chưa phân bổ</span>';
 

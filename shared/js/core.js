@@ -164,8 +164,25 @@ function initCoreState(force = false) {
   state.testCycles = [];
   state.isCleanProjectState = state.projects.length === 0;
 
-  // Cấu hình tài khoản người dùng hệ thống (RBAC)
-  state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
+  // Cấu hình tài khoản người dùng hệ thống (RBAC) với cơ chế lưu bền vững
+  const savedUsersRaw = localStorage.getItem('smartvms_system_users_v3') || sessionStorage.getItem('smartvms_system_users_v3');
+  if (savedUsersRaw) {
+    try {
+      const parsedUsers = JSON.parse(savedUsersRaw);
+      if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+        state.users = parsedUsers;
+      } else {
+        state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
+      }
+    } catch (e) {
+      state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
+    }
+  } else {
+    state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
+  }
+
+  // Tự động đồng bộ hai chiều giữa project.members (từ Cloud) và user.assignedProjects
+  syncUserProjectsWithMembers();
 
   // Phân quyền ngữ cảnh người dùng theo thư mục giao diện
   const currentPath = (window.location.pathname || '').toLowerCase();
@@ -199,6 +216,88 @@ function initCoreState(force = false) {
 }
 
 /**
+ * Tự động đồng bộ hai chiều giữa project.members (lưu trên Cloud) và user.assignedProjects
+ */
+function syncUserProjectsWithMembers() {
+  if (!state.projects || !Array.isArray(state.projects)) return;
+  if (!state.users || !Array.isArray(state.users)) return;
+
+  state.projects.forEach(p => {
+    if (!p.members) p.members = [];
+
+    // 1. Đồng bộ Trưởng dự án chính
+    if (p.leadUsername) {
+      const lu = state.users.find(u => u.username === p.leadUsername);
+      if (lu) {
+        if (!lu.assignedProjects) lu.assignedProjects = [];
+        if (!lu.assignedProjects.includes(p.id)) lu.assignedProjects.push(p.id);
+      }
+      if (!p.members.some(m => m.username === p.leadUsername)) {
+        p.members.push({
+          username: p.leadUsername,
+          name: lu ? lu.name : p.leadUsername,
+          projectRole: 'lead',
+          title: (lu && lu.role === 'admin') ? 'Quản trị viên cấp cao' : 'Trưởng dự án'
+        });
+      }
+    }
+
+    // 2. Đồng bộ danh sách nhiều Leader (nếu có)
+    if (Array.isArray(p.leadUsernames)) {
+      p.leadUsernames.forEach(un => {
+        const lu = state.users.find(u => u.username === un);
+        if (lu) {
+          if (!lu.assignedProjects) lu.assignedProjects = [];
+          if (!lu.assignedProjects.includes(p.id)) lu.assignedProjects.push(p.id);
+        }
+        if (!p.members.some(m => m.username === un)) {
+          p.members.push({
+            username: un,
+            name: lu ? lu.name : un,
+            projectRole: 'lead',
+            title: (lu && lu.role === 'admin') ? 'Quản trị viên cấp cao' : 'Trưởng dự án'
+          });
+        }
+      });
+    }
+
+    // 3. Quét từng thành viên trong p.members để cập nhật vào assignedProjects của user
+    p.members.forEach(m => {
+      const u = state.users.find(usr => usr.username === m.username);
+      if (u) {
+        if (!u.assignedProjects) u.assignedProjects = [];
+        if (!u.assignedProjects.includes(p.id)) {
+          u.assignedProjects.push(p.id);
+        }
+      }
+    });
+
+    // 4. Quét từng user: nếu u.assignedProjects có p.id thì bổ sung vào p.members nếu chưa có
+    state.users.forEach(u => {
+      if (u.assignedProjects && u.assignedProjects.includes(p.id)) {
+        if (!p.members.some(m => m.username === u.username)) {
+          let role = 'tester';
+          let title = 'Kiểm thử viên';
+          if (u.role === 'admin' || u.role === 'project_lead') {
+            role = 'lead';
+            title = (u.role === 'admin') ? 'Quản trị viên cấp cao' : 'Trưởng dự án';
+          } else if (u.role === 'developer' || u.role === 'dev') {
+            role = 'dev';
+            title = 'Lập trình viên';
+          }
+          p.members.push({
+            username: u.username,
+            name: u.name || u.username,
+            projectRole: role,
+            title: title
+          });
+        }
+      }
+    });
+  });
+}
+
+/**
  * Lưu trạng thái bền vững (LocalStorage + SessionStorage + LAN Server + Cloud)
  */
 function saveCoreState() {
@@ -216,7 +315,14 @@ function saveCoreState() {
       sessionStorage.setItem('smartvms_active_project_id', state.activeProjectId);
     }
 
-    // 2. Lưu trạng thái công việc và kết quả
+    // 2. Lưu danh mục tài khoản người dùng và phân quyền vào LocalStorage & SessionStorage
+    if (state.users && Array.isArray(state.users)) {
+      const usersJson = JSON.stringify(state.users);
+      localStorage.setItem('smartvms_system_users_v3', usersJson);
+      sessionStorage.setItem('smartvms_system_users_v3', usersJson);
+    }
+
+    // 3. Lưu trạng thái công việc và kết quả
     const appPayload = {
       assignments: state.assignments || [],
       results: state.results || {},
@@ -228,14 +334,17 @@ function saveCoreState() {
     };
     localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
 
-    // 3. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects)
+    // 4. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects)
     if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
       syncProjectsToLanServer(state.projects);
     }
 
-    // 4. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud
+    // 5. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud Database
     if (typeof window !== 'undefined' && window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
       window.pushProjectsToCloud(state.projects);
+    }
+    if (typeof window !== 'undefined' && window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
+      window.pushUsersToCloud(state.users);
     }
   } catch (e) {
     console.warn('Lỗi saveCoreState:', e);
@@ -1174,27 +1283,40 @@ function updateProject(projId, updatedData) {
 /**
  * Phân bổ toàn diện nhân sự (Leader, Testers, Devs) cho một dự án cụ thể
  */
-function assignStaffToProject(projectId, { leadUsername, testerUsernames, devUsernames }) {
+function assignStaffToProject(projectId, { leadUsername, leadUsernames, testerUsernames, devUsernames }) {
   const p = (state.projects || []).find(x => x.id === projectId);
   if (!p) throw new Error('Không tìm thấy dự án!');
 
-  if (leadUsername) {
-    p.leadUsername = leadUsername;
-    const leadUser = (state.users || []).find(u => u.username === leadUsername);
-    if (leadUser) p.lead = leadUser.name;
+  const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
+
+  // Hỗ trợ chọn một hoặc nhiều Leader / Quản trị viên phụ trách
+  let selectedLeads = [];
+  if (Array.isArray(leadUsernames) && leadUsernames.length > 0) {
+    selectedLeads = leadUsernames.filter(Boolean);
+  } else if (leadUsername) {
+    selectedLeads = [leadUsername];
   }
+
+  p.leadUsernames = selectedLeads;
+  p.leadUsername = selectedLeads[0] || leadUsername || '';
+  p.lead = selectedLeads.map(un => {
+    const u = allUsers.find(x => x.username === un);
+    return u ? u.name : un;
+  }).join(', ') || (allUsers.find(u => u.username === p.leadUsername)?.name) || 'Chưa chỉ định';
 
   const selectedTesters = Array.isArray(testerUsernames) ? testerUsernames : [];
   const selectedDevs = Array.isArray(devUsernames) ? devUsernames : [];
 
-  const allUsers = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
-
   allUsers.forEach(u => {
     if (!u.assignedProjects) u.assignedProjects = [];
 
-    // Nếu là Leader
-    if (leadUsername && u.username === leadUsername) {
-      if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+    // Nếu là Leader hoặc Admin
+    if (u.role === 'project_lead' || u.role === 'admin') {
+      if (selectedLeads.includes(u.username)) {
+        if (!u.assignedProjects.includes(p.id)) u.assignedProjects.push(p.id);
+      } else {
+        u.assignedProjects = u.assignedProjects.filter(id => id !== p.id);
+      }
     }
 
     // Cập nhật Tester
@@ -1218,15 +1340,16 @@ function assignStaffToProject(projectId, { leadUsername, testerUsernames, devUse
 
   // Đồng bộ sang p.members
   p.members = [];
-  if (leadUsername) {
-    const lu = allUsers.find(u => u.username === leadUsername);
+  selectedLeads.forEach(un => {
+    const lu = allUsers.find(u => u.username === un);
     p.members.push({
-      username: leadUsername,
-      name: lu ? lu.name : leadUsername,
+      username: un,
+      name: lu ? lu.name : un,
       projectRole: 'lead',
-      title: 'Trưởng dự án'
+      title: (lu && lu.role === 'admin') ? 'Quản trị viên cấp cao' : 'Trưởng dự án'
     });
-  }
+  });
+
   selectedTesters.forEach(un => {
     const tu = allUsers.find(u => u.username === un);
     p.members.push({
@@ -1236,6 +1359,7 @@ function assignStaffToProject(projectId, { leadUsername, testerUsernames, devUse
       title: 'Kiểm thử viên'
     });
   });
+
   selectedDevs.forEach(un => {
     const du = allUsers.find(u => u.username === un);
     p.members.push({
@@ -1249,6 +1373,9 @@ function assignStaffToProject(projectId, { leadUsername, testerUsernames, devUse
   saveCoreState();
   if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
     window.pushProjectsToCloud(state.projects);
+  }
+  if (window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
+    window.pushUsersToCloud(state.users);
   }
   return p;
 }
@@ -1302,10 +1429,25 @@ function setProjectActiveVersion(projId, versionTag) {
 // ================================================================
 function getUsers() {
   if (!state.users || state.users.length === 0) {
-    state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
-    saveCoreState();
+    const saved = localStorage.getItem('smartvms_system_users_v3');
+    if (saved) {
+      try {
+        state.users = JSON.parse(saved);
+      } catch (e) {
+        state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
+      }
+    } else {
+      state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
+    }
+  }
+  if (typeof syncUserProjectsWithMembers === 'function') {
+    syncUserProjectsWithMembers();
   }
   return state.users;
+}
+
+function getAllUsers() {
+  return getUsers();
 }
 
 function getUserById(userId) {
@@ -1573,6 +1715,14 @@ function openLightbox(src, title) {
 function closeLightbox() {
   const modal = document.getElementById('lightbox-modal');
   if (modal) modal.classList.remove('active');
+}
+
+if (typeof window !== 'undefined') {
+  window.syncUserProjectsWithMembers = syncUserProjectsWithMembers;
+  window.getAllUsers = getAllUsers;
+  window.getUsers = getUsers;
+  window.assignStaffToProject = assignStaffToProject;
+  window.saveCoreState = saveCoreState;
 }
 
 // Initialize on script load
