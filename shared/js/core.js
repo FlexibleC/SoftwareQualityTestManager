@@ -1,10 +1,12 @@
 /**
- * SMARTVMS QA HUB - CORE MODULE
- * Central State Management, Persistence, Authentication & Shared UI Components
- * Compatible with file:/// and http:// protocols.
+ * SOFTWARE QUALITY & TEST MANAGEMENT SYSTEM (SQTM) - CORE MODULE
+ * Central State Management, Multi-Project Persistence, RBAC & Shared Utilities
+ * Chuẩn hóa: ISO/IEC/IEEE 29119-3:2021 & ISO/IEC 25010:2023
  */
 
-const STATE_STORAGE_KEY = 'smartvms_qa_hub_state_v3';
+const STATE_STORAGE_KEY = 'sqtm_qa_state_v3';
+const SQTM_PROJECTS_STORAGE_KEY = 'sqtm_enterprise_projects_v3';
+const SQTM_ACTIVE_PRJ_STORAGE_KEY = 'sqtm_active_project_id_v3';
 
 const DEFAULT_SYSTEM_USERS = [
   {
@@ -97,25 +99,17 @@ let state = {
     id: 'SES-202610-01',
     name: 'Sprint 1 - Regression Test',
     owner: 'Nguyễn Văn Huy (QA Lead)',
-    version: 'SmartVMS Local v2.0',
-    notes: 'Kiểm thử toàn diện 12 phân hệ nghiệp vụ',
+    version: 'v1.0',
+    notes: 'Kiểm thử toàn diện các phân hệ nghiệp vụ',
     startedAt: '2026-10-10'
   },
   theme: 'light'
 };
 
 // ================================================================
-// STATE PERSISTENCE & INITIALIZATION
-// ================================================================
-// ================================================================
-// STATE PERSISTENCE & INITIALIZATION (DATABASE-FIRST ARCHITECTURE)
+// STATE PERSISTENCE & INITIALIZATION (RESILIENT MULTI-TIER ARCHITECTURE)
 // ================================================================
 function initCoreState(force = false) {
-  // NGUYÊN TẮC: DATABASE LÀ NGUỒN DUY NHẤT — KHÔNG LƯU TRỮ DỮ LIỆU DỰ ÁN TRÊN TRÌNH DUYỆT
-  try {
-    localStorage.removeItem(STATE_STORAGE_KEY);
-  } catch (e) {}
-
   if (!force && state.projects && state.projects.length > 0) {
     return;
   }
@@ -123,32 +117,50 @@ function initCoreState(force = false) {
   state.projects = [];
   state.activeProjectId = null;
 
-  // Khôi phục các dự án được tạo trong phiên làm việc hiện tại (sessionStorage - không lưu vĩnh viễn trên ổ cứng)
+  // 1. Khôi phục danh mục dự án bền vững từ LocalStorage / SessionStorage
   try {
-    const sessionProjectsRaw = sessionStorage.getItem('smartvms_session_projects');
-    if (sessionProjectsRaw) {
-      const parsedPrjs = JSON.parse(sessionProjectsRaw);
-      if (Array.isArray(parsedPrjs) && parsedPrjs.length > 0) {
-        state.projects = parsedPrjs;
-        const savedActiveId = sessionStorage.getItem('smartvms_active_project_id');
-        if (savedActiveId && state.projects.some(p => p.id === savedActiveId)) {
-          state.activeProjectId = savedActiveId;
-        } else {
-          state.activeProjectId = state.projects[0].id;
-        }
+    const rawPrjs = localStorage.getItem(SQTM_PROJECTS_STORAGE_KEY) || 
+                    sessionStorage.getItem(SQTM_PROJECTS_STORAGE_KEY) || 
+                    sessionStorage.getItem('smartvms_session_projects');
+    if (rawPrjs) {
+      const parsed = JSON.parse(rawPrjs);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        state.projects = parsed;
+        // Đảm bảo đồng bộ ngược lại vào LocalStorage
+        try { localStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, rawPrjs); } catch(e){}
       }
     }
   } catch (e) {
-    console.warn('Could not parse session projects:', e);
+    console.warn('Lỗi đọc dự án từ Storage:', e);
   }
 
-  state.assignments = [];
-  state.results = {};
-  state.cycleResults = {};
-  state.comments = {};
-  state.evidences = {};
-  state.executionLogs = [];
-  state.adhocDefects = [];
+  // 2. Khôi phục Active Project ID
+  try {
+    const savedActiveId = localStorage.getItem(SQTM_ACTIVE_PRJ_STORAGE_KEY) || 
+                          sessionStorage.getItem(SQTM_ACTIVE_PRJ_STORAGE_KEY) || 
+                          sessionStorage.getItem('smartvms_active_project_id');
+    if (savedActiveId && state.projects.some(p => p.id === savedActiveId)) {
+      state.activeProjectId = savedActiveId;
+    } else if (state.projects.length > 0) {
+      state.activeProjectId = state.projects[0].id;
+    }
+  } catch (e) {}
+
+  // 3. Khôi phục trạng thái nhiệm vụ, kết quả và lỗi
+  try {
+    const rawState = localStorage.getItem(STATE_STORAGE_KEY) || sessionStorage.getItem(STATE_STORAGE_KEY);
+    if (rawState) {
+      const parsedState = JSON.parse(rawState);
+      if (parsedState.assignments) state.assignments = parsedState.assignments;
+      if (parsedState.results) state.results = parsedState.results;
+      if (parsedState.cycleResults) state.cycleResults = parsedState.cycleResults;
+      if (parsedState.comments) state.comments = parsedState.comments;
+      if (parsedState.evidences) state.evidences = parsedState.evidences;
+      if (parsedState.executionLogs) state.executionLogs = parsedState.executionLogs;
+      if (parsedState.adhocDefects) state.adhocDefects = parsedState.adhocDefects;
+    }
+  } catch (e) {}
+
   state.testCycles = [];
   state.isCleanProjectState = state.projects.length === 0;
 
@@ -179,18 +191,117 @@ function initCoreState(force = false) {
   // Khôi phục giao diện Dark/Light
   const savedTheme = localStorage.getItem('smartvms_theme') || state.theme || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // 4. Nếu đang chạy qua HTTP Server LAN, tự động gọi ngầm để đồng bộ từ máy chủ LAN
+  if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+    fetchProjectsFromLanServer();
+  }
 }
 
+/**
+ * Lưu trạng thái bền vững (LocalStorage + SessionStorage + LAN Server + Cloud)
+ */
 function saveCoreState() {
-  // Không lưu dữ liệu dự án vĩnh viễn vào localStorage theo quy chuẩn Database-First
   try {
-    localStorage.removeItem(STATE_STORAGE_KEY);
+    // 1. Lưu danh mục dự án bền vững vào LocalStorage & SessionStorage
     if (state.projects) {
-      sessionStorage.setItem('smartvms_session_projects', JSON.stringify(state.projects));
+      const prjJson = JSON.stringify(state.projects);
+      localStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, prjJson);
+      sessionStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, prjJson);
+      sessionStorage.setItem('smartvms_session_projects', prjJson);
     }
     if (state.activeProjectId) {
+      localStorage.setItem(SQTM_ACTIVE_PRJ_STORAGE_KEY, state.activeProjectId);
+      sessionStorage.setItem(SQTM_ACTIVE_PRJ_STORAGE_KEY, state.activeProjectId);
       sessionStorage.setItem('smartvms_active_project_id', state.activeProjectId);
     }
+
+    // 2. Lưu trạng thái công việc và kết quả
+    const appPayload = {
+      assignments: state.assignments || [],
+      results: state.results || {},
+      cycleResults: state.cycleResults || {},
+      comments: state.comments || {},
+      evidences: state.evidences || {},
+      executionLogs: state.executionLogs || [],
+      adhocDefects: state.adhocDefects || []
+    };
+    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
+
+    // 3. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects)
+    if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+      syncProjectsToLanServer(state.projects);
+    }
+
+    // 4. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud
+    if (typeof window !== 'undefined' && window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+      window.pushProjectsToCloud(state.projects);
+    }
+  } catch (e) {
+    console.warn('Lỗi saveCoreState:', e);
+  }
+}
+
+/**
+ * Đồng bộ danh mục dự án lên máy chủ LAN Node.js (lưu file data/projects_state.json)
+ */
+function syncProjectsToLanServer(projects) {
+  if (!projects || !Array.isArray(projects)) return;
+  try {
+    fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projects })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+/**
+ * Nạp danh mục dự án từ máy chủ LAN Node.js khi khởi động
+ */
+function fetchProjectsFromLanServer() {
+  try {
+    fetch('/api/projects')
+      .then(res => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then(data => {
+        if (!data) return;
+        const serverProjects = Array.isArray(data) ? data : (data.projects || []);
+        if (serverProjects.length > 0) {
+          let hasChange = false;
+          if (!state.projects || state.projects.length === 0) {
+            state.projects = serverProjects;
+            hasChange = true;
+          } else {
+            // Đối soát và gộp dự án từ server nếu client chưa có
+            serverProjects.forEach(sp => {
+              const idx = state.projects.findIndex(p => p.id === sp.id || p.code === sp.code);
+              if (idx === -1) {
+                state.projects.push(sp);
+                hasChange = true;
+              }
+            });
+          }
+          if (hasChange) {
+            if (!state.activeProjectId && state.projects.length > 0) {
+              state.activeProjectId = state.projects[0].id;
+            }
+            try {
+              localStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, JSON.stringify(state.projects));
+            } catch (e) {}
+            // Cập nhật lại UI nếu hàm tương ứng tồn tại trên trang
+            if (typeof AdminPortfolio !== 'undefined' && typeof AdminPortfolio.init === 'function') {
+              AdminPortfolio.init();
+            }
+            if (typeof LeadContext !== 'undefined' && typeof LeadContext.init === 'function') {
+              LeadContext.init();
+            }
+          }
+        }
+      })
+      .catch(() => {});
   } catch (e) {}
 }
 

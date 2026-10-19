@@ -2,7 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
 
-const ExcelJS = require('D:/DevSoft/SmartVMS-LocalSinglesite/Web/node_modules/exceljs');
+let ExcelJS;
+try {
+  ExcelJS = require('exceljs');
+} catch (e) {
+  try {
+    ExcelJS = require('D:/DevSoft/SmartVMS-LocalSinglesite/Web/node_modules/exceljs');
+  } catch (err) {
+    console.warn('Vui lòng cài đặt exceljs (npm i exceljs) để chạy script xuất file Excel.');
+  }
+}
 
 // 1. Extract the full 214 test case catalog from git history
 console.log('Reading 214 test cases from git history...');
