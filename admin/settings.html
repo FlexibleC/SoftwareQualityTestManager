@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cài Đặt & Quản Trị Nền Tảng - Cổng Super Admin Hệ Thống</title>
+  <title>Cài đặt hệ thống - Cổng quản trị cấp cao</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -19,27 +19,27 @@
       <a href="index.html" class="vms-brand">
         <div class="vms-brand-icon" style="background:linear-gradient(135deg, #1d4ed8, #0ea5e9)">🛡️</div>
         <div class="vms-brand-text">
-          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm</span>
-          <span class="vms-subtitle">Cổng Quản Trị Cấp Cao Hệ Thống (Global Enterprise Console)</span>
+          <span class="vms-title">Hệ thống kiểm thử và quản lý chất lượng phần mềm</span>
+          <span class="vms-subtitle">Cổng quản trị cấp cao hệ thống</span>
         </div>
       </a>
       <nav class="vms-nav-container">
         <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item">📊 Giám Sát Vĩ Mô (Cockpit)</a>
-          <a href="portfolio.html" class="nav-item">🏢 Danh Mục & Nhân Sự</a>
-          <a href="settings.html" class="nav-item active">⚙️ Cấu Hình Kỹ Thuật & CSDL</a>
+          <a href="index.html" class="nav-item">📊 Tổng quan chất lượng</a>
+          <a href="portfolio.html" class="nav-item">🏢 Dự án và nhân sự</a>
+          <a href="settings.html" class="nav-item active">⚙️ Cài đặt hệ thống</a>
         </div>
       </nav>
     </div>
 
     <div class="vms-topbar-right">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
-      <div class="vms-user-profile" title="Tài khoản Quản trị cấp cao">
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện sáng hoặc tối">🌙</button>
+      <div class="vms-user-profile" title="Tài khoản quản trị cấp cao">
         <div class="vms-user-avatar">A</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="top-user-name">Nguyễn Văn Huy</span>
-          <span class="vms-user-role">Quản trị viên Cấp cao (Super Admin)</span>
+          <span class="vms-user-role">Quản trị viên cấp cao</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
@@ -52,18 +52,18 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px">
       <div>
         <h1 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
-          ⚙️ Cấu Hình Nền Tảng Kỹ Thuật & Lưu Trữ CSDL
+          ⚙️ Cấu hình kỹ thuật và lưu trữ dữ liệu
         </h1>
         <div style="font-size:12.5px; color:var(--text-muted); margin-top:3px">
-          Quản trị hạ tầng kỹ thuật: Kết nối đám mây Supabase PostgreSQL và Sao lưu / Phục hồi CSDL tập trung.
+          Quản trị hạ tầng kỹ thuật: Kết nối đám mây Supabase PostgreSQL và sao lưu, phục hồi dữ liệu tập trung.
         </div>
       </div>
       <div style="display:flex; gap:8px">
         <a href="portfolio.html" class="btn btn-outline btn-sm">
-          🏢 Sang Quản Trị Danh Mục & Nhân Sự ➔
+          🏢 Sang danh mục dự án và nhân sự ➔
         </a>
         <a href="index.html" class="btn btn-primary btn-sm">
-          📊 Vào Trung Tâm Giám Sát Cockpit ➔
+          📊 Vào trung tâm giám sát chất lượng ➔
         </a>
       </div>
     </div>
@@ -71,10 +71,10 @@
     <!-- Settings Subtabs Navigation (Chỉ 2 Tab Kỹ Thuật Duy Nhất) -->
     <div class="settings-tabs-nav" style="margin-bottom:20px">
       <button type="button" class="settings-tab-btn active" data-subtab="cloud" onclick="switchSettingsTab('cloud')">
-        ⚡ 1. Đồng Bộ Đám Mây & Supabase Cloud
+        ⚡ 1. Đồng bộ đám mây Supabase
       </button>
       <button type="button" class="settings-tab-btn" data-subtab="storage" onclick="switchSettingsTab('storage')">
-        💾 2. Quản Lý Dữ Liệu & Sao Lưu Local (JSON)
+        💾 2. Quản lý dữ liệu và sao lưu cục bộ (JSON)
       </button>
     </div>
 
@@ -84,7 +84,7 @@
         <div class="card-header">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              ⚡ Cấu Hình Kết Nối Đám Mây Doanh Nghiệp (Supabase PostgreSQL)
+              ⚡ Cấu hình kết nối đám mây doanh nghiệp (Supabase PostgreSQL)
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
               Kết nối cơ sở dữ liệu đám mây tập trung, hỗ trợ làm việc thời gian thực đa người dùng và đa dự án.
@@ -110,13 +110,13 @@
             </div>
             <div style="display:flex; gap:8px">
               <button type="button" class="btn btn-outline btn-sm" onclick="testSupabaseConnection()">
-                🔍 Kiểm Tra Kết Nối
+                🔍 Kiểm tra kết nối
               </button>
               <button type="button" class="btn btn-primary btn-sm" onclick="saveCloudSyncSettings()">
-                💾 Lưu Cấu Hình Cloud
+                💾 Lưu cấu hình
               </button>
               <button type="button" class="btn btn-outline btn-sm" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700" onclick="triggerManualCloudSync()">
-                🔄 Đồng Bộ Ngay
+                🔄 Đồng bộ ngay
               </button>
             </div>
           </div>
@@ -130,10 +130,10 @@
         <div class="card-header">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              💾 Sao Lưu & Phục Hồi Toàn Bộ Cơ Sở Dữ Liệu Hệ Thống
+              💾 Sao lưu và phục hồi toàn bộ cơ sở dữ liệu hệ thống
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Xuất tệp sao lưu JSON độc lập chứa toàn bộ dự án, kịch bản, đợt test và nhật ký chất lượng.
+              Xuất tệp sao lưu JSON độc lập chứa toàn bộ dự án, kịch bản, đợt kiểm thử và kết quả chất lượng.
             </div>
           </div>
         </div>
@@ -143,26 +143,26 @@
             <!-- Export Card -->
             <div style="padding:18px; border:1px solid var(--border); border-radius:12px; background:var(--bg-surface)">
               <h4 style="margin:0 0 8px 0; font-size:14px; font-weight:800; color:var(--text-primary)">
-                📥 Xuất Tệp Sao Lưu (Export Full System JSON)
+                📥 Xuất tệp sao lưu (JSON)
               </h4>
               <p style="font-size:12px; color:var(--text-muted); margin:0 0 16px 0; line-height:1.4">
                 Tạo bản sao lưu toàn bộ dữ liệu đang vận hành để lưu trữ an toàn hoặc di chuyển sang máy chủ khác.
               </p>
               <button type="button" class="btn btn-primary btn-sm" onclick="exportStateBackup()">
-                ⬇️ Tải Tệp Sao Lưu (.json)
+                ⬇️ Tải tệp sao lưu (.json)
               </button>
             </div>
 
             <!-- Import Card -->
             <div style="padding:18px; border:1px solid var(--border); border-radius:12px; background:var(--bg-surface)">
               <h4 style="margin:0 0 8px 0; font-size:14px; font-weight:800; color:var(--text-primary)">
-                📤 Khôi Phục Dữ Liệu (Restore System JSON)
+                📤 Khôi phục dữ liệu (JSON)
               </h4>
               <p style="font-size:12px; color:var(--text-muted); margin:0 0 16px 0; line-height:1.4">
                 Nạp lại toàn bộ trạng thái hệ thống từ tệp sao lưu JSON trước đó. Lưu ý: Thao tác sẽ ghi đè dữ liệu hiện tại.
               </p>
               <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0">
-                📂 Chọn Tệp Sao Lưu (.json)
+                📂 Chọn tệp sao lưu (.json)
                 <input type="file" id="state-restore-file" accept=".json" style="display:none" onchange="importStateBackup(event)" />
               </label>
             </div>
@@ -172,13 +172,13 @@
           <!-- Danger Zone -->
           <div style="margin-top:24px; padding:18px; border:1px solid rgba(220,38,38,0.25); border-radius:12px; background:rgba(220,38,38,0.03)">
             <h4 style="margin:0 0 6px 0; font-size:14px; font-weight:800; color:#dc2626">
-              ⚠️ Vùng Nguy Hiểm: Dọn Dẹp & Xóa Dữ Liệu Rác
+              ⚠️ Vùng nguy hiểm: Dọn dẹp và đặt lại hệ thống
             </h4>
             <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px 0">
-              Xóa bỏ bộ nhớ tạm trên trình duyệt và thiết lập lại cấu hình gốc của hệ thống.
+              Xóa bỏ bộ nhớ đệm trên trình duyệt và thiết lập lại trạng thái ban đầu của hệ thống.
             </p>
             <button type="button" class="btn btn-outline btn-xs" style="color:#dc2626; border-color:#dc2626; font-weight:700" onclick="clearAllSystemData()">
-              🗑️ Xóa Bộ Nhớ Đệm & Reset Hệ Thống
+              🗑️ Xóa bộ nhớ đệm & reset hệ thống
             </button>
           </div>
         </div>

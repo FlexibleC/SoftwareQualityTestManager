@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản Trị Danh Mục & Hồ Bơi Nhân Sự - Super Admin</title>
+  <title>Quản lý dự án và nhân sự - Cổng quản trị cấp cao</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -33,27 +33,27 @@
       <a href="index.html" class="vms-brand">
         <div class="vms-brand-icon" style="background:linear-gradient(135deg, #1d4ed8, #0ea5e9)">🛡️</div>
         <div class="vms-brand-text">
-          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm</span>
-          <span class="vms-subtitle">Cổng Quản Trị Cấp Cao Hệ Thống (Global Enterprise Console)</span>
+          <span class="vms-title">Hệ thống kiểm thử và quản lý chất lượng phần mềm</span>
+          <span class="vms-subtitle">Cổng quản trị cấp cao hệ thống</span>
         </div>
       </a>
       <nav class="vms-nav-container">
         <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item">📊 Giám Sát Vĩ Mô (Cockpit)</a>
-          <a href="portfolio.html" class="nav-item active">🏢 Danh Mục & Nhân Sự</a>
-          <a href="settings.html" class="nav-item">⚙️ Cấu Hình Kỹ Thuật & CSDL</a>
+          <a href="index.html" class="nav-item">📊 Tổng quan chất lượng</a>
+          <a href="portfolio.html" class="nav-item active">🏢 Dự án và nhân sự</a>
+          <a href="settings.html" class="nav-item">⚙️ Cài đặt hệ thống</a>
         </div>
       </nav>
     </div>
 
     <div class="vms-topbar-right">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
-      <div class="vms-user-profile" title="Tài khoản Quản trị cấp cao">
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện sáng hoặc tối">🌙</button>
+      <div class="vms-user-profile" title="Tài khoản quản trị cấp cao">
         <div class="vms-user-avatar">A</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="top-user-name">Nguyễn Văn Huy</span>
-          <span class="vms-user-role">Quản trị viên Cấp cao (Super Admin)</span>
+          <span class="vms-user-role">Quản trị viên cấp cao</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
@@ -66,18 +66,18 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px">
       <div>
         <h1 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
-          🏢 Quản Trị Danh Mục Dự Án & Hồ Bơi Nhân Sự
+          🏢 Quản lý danh mục dự án và đội ngũ nhân sự
         </h1>
         <div style="font-size:12.5px; color:var(--text-muted); margin-top:3px">
-          Trung tâm điều phối duy nhất: Khởi tạo dự án, phân bổ kỹ sư QA/Dev và kiểm soát tải trọng lao động (Workload Heatmap).
+          Trung tâm điều phối: Khởi tạo dự án, phân bổ nhân sự kiểm thử và phát triển, theo dõi khối lượng công việc.
         </div>
       </div>
       <div style="display:flex; gap:8px">
         <button type="button" class="btn btn-primary btn-sm" onclick="openAddProjectModal()">
-          ➕ Thêm Dự Án Mới
+          ➕ Thêm dự án mới
         </button>
         <button type="button" class="btn btn-outline btn-sm" onclick="openAddUserModal()">
-          👤 Thêm Kỹ Sư / Tài Khoản
+          👤 Thêm nhân sự mới
         </button>
       </div>
     </div>
@@ -85,13 +85,13 @@
     <!-- Portfolio Subtabs Navigation -->
     <div class="settings-tabs-nav" style="margin-bottom:20px">
       <button type="button" class="settings-tab-btn active" data-subtab="projects" onclick="switchSettingsTab('projects')">
-        🏢 1. Danh Mục Các Dự Án Phần Mềm
+        🏢 1. Danh mục các dự án
       </button>
       <button type="button" class="settings-tab-btn" data-subtab="users" onclick="switchSettingsTab('users')">
-        👥 2. Hồ Bơi Nhân Sự & Phân Quyền (RBAC)
+        👥 2. Đội ngũ nhân sự và phân quyền
       </button>
       <button type="button" class="settings-tab-btn" data-subtab="workload" onclick="switchSettingsTab('workload'); renderWorkloadHeatmap();" style="border:1.5px solid #d97706; color:#d97706; font-weight:800">
-        🔥 3. Bản Đồ Nhiệt Tải Trọng Kỹ Sư (Workload Heatmap)
+        📊 3. Khối lượng công việc nhân sự
       </button>
     </div>
 
@@ -100,10 +100,10 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
         <div>
           <h3 style="font-size:15px; font-weight:800; color:var(--text-primary); margin:0">
-            🏢 Danh Mục Dự Án Toàn Hệ Thống
+            🏢 Danh mục dự án toàn hệ thống
           </h3>
           <div style="font-size:12px; color:var(--text-muted)">
-            Mỗi dự án là một không gian độc lập. Nhấp "Vào Dự Án" để trực tiếp điều hành với tư cách Quản Trị Viên Dự Án (Lead).
+            Danh sách các dự án đang quản lý. Nhấp "Xem chi tiết" để xem tổng quan sức khỏe và điều phối nhân sự.
           </div>
         </div>
       </div>
@@ -119,17 +119,17 @@
         <div class="card-header" style="justify-content:space-between">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              👥 Hồ Bơi Nhân Sự & Phân Quyền Vai Trò (RBAC)
+              👥 Đội ngũ nhân sự và phân quyền vai trò
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Quản lý tài khoản Super Admin, Quản trị viên Dự án, Kiểm thử viên và Lập trình viên.
+              Quản lý tài khoản quản trị cấp cao, trưởng dự án, kiểm thử viên và lập trình viên.
             </div>
           </div>
           <div style="display:flex; gap:8px">
             <select id="filter-user-role" onchange="selectedUserRoleFilter=this.value; renderUsersTab();" style="padding:4px 8px; border-radius:6px; font-size:12px; border:1px solid var(--border)">
               <option value="">Tất cả vai trò</option>
-              <option value="admin">Quản trị viên Cấp cao</option>
-              <option value="project_lead">Quản trị viên Dự án</option>
+              <option value="admin">Quản trị viên cấp cao</option>
+              <option value="project_lead">Trưởng dự án</option>
               <option value="tester">Kiểm thử viên</option>
               <option value="developer">Lập trình viên</option>
             </select>
@@ -139,16 +139,16 @@
         <table class="asg-tc-table" style="table-layout:auto; width:100%">
           <thead>
             <tr>
-              <th style="width:50px; text-align:center">#</th>
-              <th style="width:200px">Họ và Tên</th>
-              <th style="width:130px">Tên Đăng Nhập</th>
-              <th style="width:180px; text-align:center">Vai Trò Hệ Thống</th>
-              <th style="width:220px">Email Liên Hệ</th>
-              <th style="width:120px; text-align:center">Trạng Thái</th>
-              <th style="width:160px; text-align:center">Thao Tác</th>
+              <th style="width:220px">Họ và tên</th>
+              <th style="width:130px">Tên đăng nhập</th>
+              <th style="width:170px; text-align:center">Vai trò</th>
+              <th>Dự án tham gia</th>
+              <th style="width:140px; text-align:center">Công việc đang làm</th>
+              <th style="width:110px; text-align:center">Trạng thái</th>
+              <th style="width:150px; text-align:center">Thao tác</th>
             </tr>
           </thead>
-          <tbody id="users-tbody">
+          <tbody id="users-table-body">
             <!-- Rendered via settings.js -->
           </tbody>
         </table>
@@ -160,19 +160,19 @@
       <!-- Heatmap Summary Ribbon -->
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:16px">
         <div style="padding:14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #2563eb">
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Kỹ Sư Đang Hoạt Động</div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Nhân sự đang hoạt động</div>
           <div style="font-size:22px; font-weight:800; color:#2563eb; margin-top:2px" id="hm-total-staff">0</div>
         </div>
         <div style="padding:14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #dc2626">
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Cảnh Báo Quá Tải (&ge; 150%)</div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Cảnh báo quá tải (&ge; 150%)</div>
           <div style="font-size:22px; font-weight:800; color:#dc2626; margin-top:2px" id="hm-overloaded-staff">0</div>
         </div>
         <div style="padding:14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #16a34a">
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Tải Trọng Cân Bằng</div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Khối lượng cân bằng</div>
           <div style="font-size:22px; font-weight:800; color:#16a34a; margin-top:2px" id="hm-balanced-staff">0</div>
         </div>
         <div style="padding:14px; border-radius:8px; background:var(--bg-surface); border:1px solid var(--border); border-left:4px solid #f59e0b">
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Nhàn Rỗi / Thiếu Việc (&le; 30%)</div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase">Khối lượng thấp (&le; 30%)</div>
           <div style="font-size:22px; font-weight:800; color:#f59e0b; margin-top:2px" id="hm-underloaded-staff">0</div>
         </div>
       </div>
@@ -181,10 +181,10 @@
         <div class="card-header" style="justify-content:space-between">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              🔥 Bản Đồ Phân Phối Tải Trọng Kỹ Sư Toàn Doanh Nghiệp
+              📊 Phân bổ khối lượng công việc nhân sự toàn hệ thống
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Giúp Lãnh đạo kịp thời phát hiện điểm nghẽn nhân sự, tránh tình trạng "người làm không hết, người không có việc"
+              Giúp lãnh đạo kịp thời phát hiện điểm nghẽn nhân sự, tránh tình trạng quá tải hoặc phân bổ không đều việc.
             </div>
           </div>
         </div>
@@ -192,13 +192,13 @@
         <table class="asg-tc-table" style="table-layout:auto; width:100%; font-size:12px">
           <thead>
             <tr>
-              <th style="width:200px">Kỹ Sư (QA / Dev)</th>
-              <th style="width:140px; text-align:center">Vai Trò</th>
-              <th>Dự Án Đang Tham Gia</th>
-              <th style="width:120px; text-align:center">Việc Đang Giao</th>
-              <th style="width:120px; text-align:center">Bug Đang Sửa</th>
-              <th style="width:150px; text-align:center">Chỉ Số Tải Trọng</th>
-              <th style="width:140px; text-align:center">Trạng Thái Điều Phối</th>
+              <th style="width:200px">Nhân sự</th>
+              <th style="width:140px; text-align:center">Vai trò</th>
+              <th>Dự án đang tham gia</th>
+              <th style="width:120px; text-align:center">Việc đang giao</th>
+              <th style="width:120px; text-align:center">Lỗi đang sửa</th>
+              <th style="width:150px; text-align:center">Mức độ công việc</th>
+              <th style="width:140px; text-align:center">Trạng thái phân bổ</th>
             </tr>
           </thead>
           <tbody id="workload-heatmap-tbody">
@@ -215,80 +215,89 @@
     <div class="modal-box" style="max-width:560px">
       <div class="modal-header">
         <h3 id="modal-project-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          🏢 Khởi Tạo Không Gian Dự Án Mới
+          🏢 Khởi tạo không gian dự án mới
         </h3>
         <button type="button" class="btn-close" onclick="closeModal('modal-project-form')">✕</button>
       </div>
       <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
         <input type="hidden" id="pf-id" />
         <div>
-          <label class="form-label" style="font-weight:700">Tên Dự Án Phần Mềm (*)</label>
+          <label class="form-label" style="font-weight:700">Tên dự án phần mềm (*)</label>
           <input type="text" id="pf-name" class="form-control" placeholder="Ví dụ: SmartVMS — Quản lý Khách & Ra vào" required />
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
           <div>
-            <label class="form-label" style="font-weight:700">Mã Dự Án Viết Tắt (*)</label>
+            <label class="form-label" style="font-weight:700">Mã dự án viết tắt (*)</label>
             <input type="text" id="pf-code" class="form-control" placeholder="VD: SMARTVMS, ERP, CRM" required />
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Phiên Bản Ban Đầu</label>
+            <label class="form-label" style="font-weight:700">Phiên bản ban đầu</label>
             <input type="text" id="pf-version" class="form-control" placeholder="VD: v1.0" value="v1.0" />
           </div>
         </div>
         <div>
-          <label class="form-label" style="font-weight:700">Mô Tả Mục Tiêu Dự Án</label>
+          <label class="form-label" style="font-weight:700">Mô tả mục tiêu dự án</label>
           <textarea id="pf-desc" class="form-control" rows="3" placeholder="Mô tả phạm vi sản phẩm, mục tiêu kiểm định..."></textarea>
         </div>
       </div>
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-project-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveProject()">💾 Lưu Dự Án</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveProject()">💾 Lưu dự án</button>
       </div>
     </div>
   </div>
 
   <!-- Modal Thêm/Sửa Người Dùng & Phân Quyền -->
   <div class="modal" id="modal-user-form">
-    <div class="modal-box" style="max-width:540px">
+    <div class="modal-box" style="max-width:560px">
       <div class="modal-header">
         <h3 id="modal-user-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          ➕ Thêm Người Dùng Mới
+          ➕ Thêm người dùng mới
         </h3>
         <button type="button" class="btn-close" onclick="closeModal('modal-user-form')">✕</button>
       </div>
       <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
         <input type="hidden" id="uf-id" />
         <div class="form-group">
-          <label class="form-label" style="font-weight:700">Họ và Tên Đầy Đủ (*)</label>
+          <label class="form-label" style="font-weight:700">Họ và tên đầy đủ (*)</label>
           <input type="text" id="uf-name" class="form-control" placeholder="VD: Nguyễn Văn Nam" required />
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
           <div class="form-group">
-            <label class="form-label" style="font-weight:700">Tên Đăng Nhập (*)</label>
+            <label class="form-label" style="font-weight:700">Tên đăng nhập (*)</label>
             <input type="text" id="uf-username" class="form-control" placeholder="VD: nam.nv" required />
           </div>
           <div class="form-group">
-            <label class="form-label" style="font-weight:700">Mật Khẩu (*)</label>
+            <label class="form-label" style="font-weight:700">Mật khẩu (*)</label>
             <input type="text" id="uf-password" class="form-control" placeholder="Mật khẩu" value="123" required />
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" style="font-weight:700">Địa Chỉ Email</label>
+          <label class="form-label" style="font-weight:700">Địa chỉ email</label>
           <input type="email" id="uf-email" class="form-control" placeholder="VD: nam.nv@smartvms.local" />
         </div>
         <div class="form-group">
-          <label class="form-label" style="font-weight:700">Vai Trò Hệ Thống (Role) (*)</label>
+          <label class="form-label" style="font-weight:700">Vai trò hệ thống (*)</label>
           <select id="uf-role" class="form-control">
             <option value="tester" selected>🧪 Kiểm thử viên (Tester)</option>
-            <option value="project_lead">👑 Quản trị viên Dự án (Project Lead)</option>
-            <option value="admin">🛡️ Quản trị viên Cấp cao (Super Admin)</option>
+            <option value="project_lead">👑 Quản trị viên dự án (Project Lead)</option>
+            <option value="admin">🛡️ Quản trị viên cấp cao (Super Admin)</option>
             <option value="developer">💻 Lập trình viên (Developer)</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Dự án tham gia (Một nhân sự có thể tham gia nhiều dự án)</label>
+          <div id="uf-projects-checkboxes" style="max-height:140px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
+            <!-- Populated via settings.js -->
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px">
+            Tích chọn các dự án mà nhân sự này sẽ tham gia làm việc hoặc phụ trách.
+          </div>
         </div>
       </div>
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-user-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveUser()">💾 Lưu Người Dùng</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSaveUser()">💾 Lưu người dùng</button>
       </div>
     </div>
   </div>
@@ -298,7 +307,7 @@
     <div class="modal-box" style="max-width:440px">
       <div class="modal-header">
         <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          🔑 Đổi Mật Khẩu Người Dùng
+          🔑 Đổi mật khẩu người dùng
         </h3>
         <button type="button" class="btn-close" onclick="closeModal('modal-reset-password')">✕</button>
       </div>
@@ -308,7 +317,7 @@
           Tài khoản: <strong id="pwd-user-name" style="color:var(--text-primary)">--</strong>
         </div>
         <div class="form-group">
-          <label class="form-label" style="font-weight:700">Mật Khẩu Mới (*)</label>
+          <label class="form-label" style="font-weight:700">Mật khẩu mới (*)</label>
           <input type="text" id="pwd-new-val" class="form-control" placeholder="Nhập mật khẩu mới" />
         </div>
         <div style="display:flex; gap:8px; margin-top:10px">
@@ -318,7 +327,7 @@
       </div>
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-reset-password')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="confirmResetPassword()">💾 Xác Nhận</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmResetPassword()">💾 Xác nhận</button>
       </div>
     </div>
   </div>
@@ -382,16 +391,16 @@
 
         // Chỉ số tải trọng (Capacity Index): chuẩn là 10 TCs / 3 bugs = 100%
         const loadScore = (uAsgs.length * 10) + (bugsCount * 25);
-        let statusBadge = '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-weight:700">🟢 Cân Bằng</span>';
+        let statusBadge = '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-weight:700">🟢 Cân bằng</span>';
         let barClass = 'heatmap-balanced';
 
         if (loadScore >= 150) {
           overloaded++;
-          statusBadge = '<span class="badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #f87171; font-weight:800">🔴 Quá Tải</span>';
+          statusBadge = '<span class="badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #f87171; font-weight:800">🔴 Quá tải</span>';
           barClass = 'heatmap-overload';
         } else if (loadScore <= 30) {
           underloaded++;
-          statusBadge = '<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde047; font-weight:700">🟡 Nhàn Rỗi</span>';
+          statusBadge = '<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde047; font-weight:700">🟡 Nhàn rỗi</span>';
           barClass = 'heatmap-underload';
         } else {
           balanced++;
@@ -411,10 +420,10 @@
             <td>
               ${prjNames.length > 0 
                 ? prjNames.map(n => `<span class="badge" style="background:#f1f5f9; color:#475569; margin:2px; font-size:10.5px">${escapeHtml(n)}</span>`).join('') 
-                : '<span style="color:var(--text-muted); font-style:italic">Chưa gán dự án</span>'}
+                : '<span style="color:var(--text-muted); font-style:italic">Chưa phân bổ dự án</span>'}
             </td>
-            <td style="text-align:center; font-weight:700; color:var(--primary)">${uAsgs.length} TCs</td>
-            <td style="text-align:center; font-weight:700; color:#dc2626">${bugsCount} bugs</td>
+            <td style="text-align:center; font-weight:700; color:var(--primary)">${uAsgs.length} kịch bản</td>
+            <td style="text-align:center; font-weight:700; color:#dc2626">${bugsCount} lỗi</td>
             <td style="text-align:center">
               <div style="display:flex; align-items:center; justify-content:center; gap:8px">
                 <div class="heatmap-bar-wrap">

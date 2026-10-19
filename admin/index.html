@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enterprise QA Cockpit - Giám Sát Vĩ Mô Đa Dự Án</title>
+  <title>Giám sát tổng thể các dự án - Cổng quản trị cấp cao</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -171,27 +171,27 @@
       <a href="index.html" class="vms-brand">
         <div class="vms-brand-icon" style="background:linear-gradient(135deg, #1d4ed8, #0ea5e9)">🛡️</div>
         <div class="vms-brand-text">
-          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm</span>
-          <span class="vms-subtitle">Cổng Quản Trị Cấp Cao Hệ Thống (Global Enterprise Console)</span>
+          <span class="vms-title">Hệ thống kiểm thử và quản lý chất lượng phần mềm</span>
+          <span class="vms-subtitle">Cổng quản trị cấp cao hệ thống</span>
         </div>
       </a>
       <nav class="vms-nav-container">
         <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item active">📊 Giám Sát Vĩ Mô (Cockpit)</a>
-          <a href="portfolio.html" class="nav-item">🏢 Danh Mục & Nhân Sự</a>
-          <a href="settings.html" class="nav-item">⚙️ Cấu Hình Kỹ Thuật & CSDL</a>
+          <a href="index.html" class="nav-item active">📊 Tổng quan chất lượng</a>
+          <a href="portfolio.html" class="nav-item">🏢 Dự án và nhân sự</a>
+          <a href="settings.html" class="nav-item">⚙️ Cài đặt hệ thống</a>
         </div>
       </nav>
     </div>
 
     <div class="vms-topbar-right">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
-      <div class="vms-user-profile" title="Tài khoản Quản trị cấp cao">
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện sáng hoặc tối">🌙</button>
+      <div class="vms-user-profile" title="Tài khoản quản trị cấp cao">
         <div class="vms-user-avatar">A</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="top-user-name">Nguyễn Văn Huy</span>
-          <span class="vms-user-role">Quản trị viên Cấp cao (Super Admin)</span>
+          <span class="vms-user-role">Quản trị viên cấp cao</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
@@ -205,21 +205,21 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px">
       <div>
         <h1 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
-          📊 Bảng Điều Hành & Giám Sát Chất Lượng Vĩ Mô (Enterprise QA Cockpit)
+          📊 Bảng điều hành và giám sát chất lượng tổng thể
         </h1>
         <div style="font-size:12.5px; color:var(--text-muted); margin-top:3px">
-          Giám sát sức khỏe ISO 25010 thời gian thực của toàn bộ danh mục dự án, kiểm soát rủi ro nóng và tiêu chuẩn xuất xưởng Go-Live.
+          Giám sát sức khỏe chất lượng theo thời gian thực của toàn bộ danh mục dự án, kiểm soát rủi ro trọng yếu và tiêu chuẩn xuất xưởng phần mềm.
         </div>
       </div>
       <div style="display:flex; gap:8px">
         <a href="portfolio.html" class="btn btn-outline btn-sm">
-          🏢 Quản Trị Danh Mục & Nhân Sự ➔
+          🏢 Quản lý dự án và nhân sự ➔
         </a>
         <button type="button" class="btn btn-outline btn-sm" onclick="window.print()">
-          🖨️ In Báo Cáo
+          🖨️ In báo cáo
         </button>
         <button type="button" class="btn btn-primary btn-sm" onclick="exportPortfolioExcel()">
-          📥 Xuất Báo Cáo Excel
+          📥 Xuất file Excel
         </button>
       </div>
     </div>
@@ -235,8 +235,8 @@
         <div class="cockpit-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">🏢</div>
         <div>
           <div class="cockpit-kpi-val" id="kpi-portfolio-health">--</div>
-          <div class="cockpit-kpi-lbl">Sức Khỏe Danh Mục (Portfolio)</div>
-          <div class="cockpit-kpi-sub" id="kpi-portfolio-sub">0 dự án đang vận hành</div>
+          <div class="cockpit-kpi-lbl">Sức khỏe danh mục dự án</div>
+          <div class="cockpit-kpi-sub" id="kpi-portfolio-sub">0 dự án đang thực hiện</div>
         </div>
       </div>
 
@@ -244,16 +244,16 @@
         <div class="cockpit-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">🚀</div>
         <div>
           <div class="cockpit-kpi-val" id="kpi-golive-readiness" style="color:#16a34a">--%</div>
-          <div class="cockpit-kpi-lbl">Go-Live Gate Sẵn Sàng</div>
-          <div class="cockpit-kpi-sub" id="kpi-golive-sub">0 / 0 dự án đủ chuẩn xuất xưởng</div>
+          <div class="cockpit-kpi-lbl">Đủ chuẩn xuất xưởng</div>
+          <div class="cockpit-kpi-sub" id="kpi-golive-sub">0 / 0 dự án sẵn sàng phát hành</div>
         </div>
       </div>
 
       <div class="cockpit-kpi-card" style="border-left:4px solid #0284c7">
-        <div class="cockpit-kpi-icon" style="background:rgba(2,132,199,0.1); color:#0284c7">📈</div>
+        <div class="cockpit-kpi-icon" style="background:rgba(220,38,38,0.1); color:#0284c7">📈</div>
         <div>
           <div class="cockpit-kpi-val" id="kpi-avg-passrate" style="color:#0284c7">--%</div>
-          <div class="cockpit-kpi-lbl">Tỷ Lệ Đạt Bình Quân (Pass Rate)</div>
+          <div class="cockpit-kpi-lbl">Tỷ lệ kiểm thử đạt bình quân</div>
           <div class="cockpit-kpi-sub" id="kpi-avg-coverage">Bao phủ kiểm thử: --%</div>
         </div>
       </div>
@@ -262,8 +262,8 @@
         <div class="cockpit-kpi-icon" style="background:rgba(220,38,38,0.1); color:#dc2626">🛡️</div>
         <div>
           <div class="cockpit-kpi-val" id="kpi-total-criticals" style="color:#dc2626">0</div>
-          <div class="cockpit-kpi-lbl">Lỗ Hổng Nghiêm Trọng Mở</div>
-          <div class="cockpit-kpi-sub" id="kpi-retest-pending">0 bug đang chờ Tester re-test</div>
+          <div class="cockpit-kpi-lbl">Lỗi nghiêm trọng chưa đóng</div>
+          <div class="cockpit-kpi-sub" id="kpi-retest-pending">0 lỗi đang chờ kiểm tra lại</div>
         </div>
       </div>
     </div>
@@ -276,10 +276,10 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
           <div>
             <h3 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">
-              📊 Đối Soát Tiến Độ Thực Thi & Tỷ Lệ Đạt Giữa Các Dự Án
+              📊 Tiến độ thực hiện và tỷ lệ kiểm thử đạt của các dự án
             </h3>
             <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
-              So sánh tỷ lệ thực thi (Execution Coverage) và tỷ lệ kiểm thử thành công (Pass Rate)
+              So sánh tỷ lệ hoàn thành kiểm thử và tỷ lệ kiểm thử thành công
             </div>
           </div>
         </div>
@@ -291,7 +291,7 @@
       <!-- Right Chart: Health Status Distribution Donut -->
       <div class="card" style="padding:20px">
         <h3 style="margin:0 0 14px 0; font-size:14px; font-weight:800; color:var(--text-primary)">
-          🎯 Cơ Cấu Sức Khỏe Dự Án (ISO 25010)
+          🎯 Phân bổ trạng thái sức khỏe dự án
         </h3>
         <div style="height:200px; position:relative">
           <canvas id="chart-health-donut"></canvas>
@@ -310,19 +310,19 @@
       <div class="card-header" style="justify-content:space-between; flex-wrap:wrap; gap:10px">
         <div>
           <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-            📋 Ma Trận Đối Soát Sức Khỏe Toàn Diện Từng Dự Án (Health Matrix)
+            📋 Bảng tổng hợp sức khỏe chi tiết từng dự án
           </h3>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
-            Bấm vào nút "Vào DA ➔" để chuyển nhanh sang không gian Quản Trị Viên Dự Án (Project Lead) tương ứng
+            Xem chi tiết sức khỏe, nhân sự tham gia và tình trạng lỗi của từng dự án
           </div>
         </div>
         <div style="display:flex; gap:8px">
           <select id="matrix-filter-health" onchange="renderHealthMatrixTable()" style="padding:4px 10px; border-radius:6px; font-size:12px; border:1px solid var(--border)">
             <option value="">Tất cả trạng thái sức khỏe</option>
-            <option value="GREEN">🟢 Xanh (Tốt &ge; 80)</option>
-            <option value="YELLOW">🟡 Vàng (Cần lưu ý 60-79)</option>
-            <option value="RED">🔴 Đỏ (Báo động &lt; 60)</option>
-            <option value="GO">🚀 Đủ điều kiện Go-Live</option>
+            <option value="GREEN">🟢 Xanh (Tốt &ge; 80 điểm)</option>
+            <option value="YELLOW">🟡 Vàng (Cần lưu ý 60-79 điểm)</option>
+            <option value="RED">🔴 Đỏ (Báo động &lt; 60 điểm)</option>
+            <option value="GO">🚀 Đủ chuẩn xuất xưởng</option>
           </select>
         </div>
       </div>
@@ -331,15 +331,15 @@
         <table class="health-matrix-table">
           <thead>
             <tr>
-              <th style="min-width:220px">Dự Án Phần Mềm</th>
-              <th style="width:110px; text-align:center">Phiên Bản</th>
-              <th style="width:150px">Lead Phụ Trách</th>
-              <th style="width:140px; text-align:center">Tiến Độ Thực Thi</th>
-              <th style="width:120px; text-align:center">Pass Rate</th>
-              <th style="width:160px; text-align:center">Lỗi Nghiêm Trọng</th>
-              <th style="width:150px; text-align:center">Sức Khỏe ISO 25010</th>
-              <th style="width:140px; text-align:center">Cổng Go-Live</th>
-              <th style="width:150px; text-align:center">Thao Tác</th>
+              <th style="min-width:220px">Dự án phần mềm</th>
+              <th style="width:110px; text-align:center">Phiên bản</th>
+              <th style="width:150px">Trưởng dự án</th>
+              <th style="width:140px; text-align:center">Tiến độ thực hiện</th>
+              <th style="width:120px; text-align:center">Tỷ lệ đạt</th>
+              <th style="width:160px; text-align:center">Lỗi nghiêm trọng</th>
+              <th style="width:150px; text-align:center">Đánh giá chất lượng</th>
+              <th style="width:140px; text-align:center">Chuẩn xuất xưởng</th>
+              <th style="width:150px; text-align:center">Thao tác</th>
             </tr>
           </thead>
           <tbody id="health-matrix-tbody">
@@ -437,10 +437,10 @@
           <div style="display:flex; align-items:center; gap:10px">
             <span style="font-size:22px">🛡️</span>
             <div>
-              <strong style="font-size:13px">Hệ Thống Đang Vận Hành Ổn Định:</strong> Không phát hiện dự án nào có rủi ro nghiêm trọng hoặc lỗi Blocker tồn đọng.
+              <strong style="font-size:13px">Hệ thống đang vận hành ổn định:</strong> Không phát hiện dự án nào có rủi ro nghiêm trọng hoặc lỗi chặn tiến độ tồn đọng.
             </div>
           </div>
-          <span class="badge" style="background:#166534; color:#fff">STATUS OK</span>
+          <span class="badge" style="background:#166534; color:#fff">HOẠT ĐỘNG TỐT</span>
         `;
         return;
       }
@@ -461,7 +461,7 @@
           </div>
         </div>
         <a href="portfolio.html" class="btn btn-sm" style="background:#dc2626; color:#fff; border:none; font-weight:700">
-          Xử Lý Ngay ➔
+          Xem danh mục ➔
         </a>
       `;
     }
@@ -490,14 +490,14 @@
       tbody.innerHTML = filtered.map(ps => {
         let healthPill = `<span class="health-pill-green">🟢 ${ps.score}/100 Tốt</span>`;
         if (ps.healthStatus === 'WARNING') {
-          healthPill = `<span class="health-pill-yellow">🟡 ${ps.score}/100 Cần Lưu Ý</span>`;
+          healthPill = `<span class="health-pill-yellow">🟡 ${ps.score}/100 Cần lưu ý</span>`;
         } else if (ps.healthStatus === 'CRITICAL') {
-          healthPill = `<span class="health-pill-red">🔴 ${ps.score}/100 Báo Động</span>`;
+          healthPill = `<span class="health-pill-red">🔴 ${ps.score}/100 Báo động</span>`;
         }
 
         const gateBadge = ps.releaseGate === 'GO' 
-          ? `<span class="gate-badge-go">🚀 GO</span>` 
-          : `<span class="gate-badge-nogo">⛔ NO-GO</span>`;
+          ? `<span class="gate-badge-go">🚀 Đạt chuẩn</span>` 
+          : `<span class="gate-badge-nogo">⛔ Chưa đạt</span>`;
 
         return `
           <tr>
@@ -510,17 +510,17 @@
             </td>
             <td>
               <div style="font-weight:600; color:var(--text-secondary)">👤 ${escapeHtml(ps.leadName || 'Chưa gán')}</div>
-              <div style="font-size:11px; color:var(--text-muted)">QA: ${ps.testerCount} • Dev: ${ps.devCount}</div>
+              <div style="font-size:11px; color:var(--text-muted)">Kiểm thử: ${ps.testerCount} • Lập trình: ${ps.devCount}</div>
             </td>
             <td style="text-align:center">
               <div style="font-weight:700">${ps.progressPercent}%</div>
-              <div style="font-size:11px; color:var(--text-muted)">${ps.executed}/${ps.totalTcs} TCs</div>
+              <div style="font-size:11px; color:var(--text-muted)">${ps.executed}/${ps.totalTcs} kịch bản</div>
             </td>
             <td style="text-align:center">
               <div style="font-weight:800; color:${ps.passRatePercent >= 90 ? '#16a34a' : (ps.passRatePercent >= 70 ? '#d97706' : '#dc2626')}">
                 ${ps.passRatePercent}%
               </div>
-              <div style="font-size:11px; color:var(--text-muted)">${ps.passed} Pass</div>
+              <div style="font-size:11px; color:var(--text-muted)">${ps.passed} Đạt</div>
             </td>
             <td style="text-align:center">
               <div>
@@ -529,18 +529,15 @@
                 </span>
               </div>
               <div style="font-size:10.5px; color:#7c3aed">
-                ${ps.fixedAwaitingRetest > 0 ? `(${ps.fixedAwaitingRetest} chờ retest)` : ''}
+                ${ps.fixedAwaitingRetest > 0 ? `(${ps.fixedAwaitingRetest} chờ kiểm tra lại)` : ''}
               </div>
             </td>
             <td style="text-align:center">${healthPill}</td>
             <td style="text-align:center">${gateBadge}</td>
             <td style="text-align:center">
               <div style="display:inline-flex; align-items:center; gap:6px">
-                <button type="button" class="btn btn-primary btn-xs" onclick="enterProjectSpace('${ps.projectId}')" title="Trực tiếp vào không gian dự án này">
-                  👑 Vào DA ➔
-                </button>
-                <a href="../lead/reports.html?prj=${ps.projectId}" class="btn btn-outline btn-xs" title="Xem báo cáo chi tiết">
-                  📈 Báo Cáo
+                <a href="project-detail.html?id=${ps.projectId}" class="btn btn-primary btn-xs" title="Xem tổng quan chi tiết dự án cấp quản trị">
+                  🔍 Xem chi tiết
                 </a>
               </div>
             </td>
@@ -567,13 +564,13 @@
             labels: labels,
             datasets: [
               {
-                label: 'Bao Phủ Kiểm Thử (%)',
+                label: 'Bao phủ kiểm thử (%)',
                 data: coverageData,
                 backgroundColor: 'rgba(37, 99, 235, 0.7)',
                 borderRadius: 4
               },
               {
-                label: 'Tỷ Lệ Đạt - Pass Rate (%)',
+                label: 'Tỷ lệ kiểm thử đạt (%)',
                 data: passRateData,
                 backgroundColor: 'rgba(22, 163, 74, 0.8)',
                 borderRadius: 4
@@ -627,13 +624,7 @@
     }
 
     function enterProjectSpace(projectId) {
-      if (typeof switchProject === 'function') {
-        switchProject(projectId);
-      } else {
-        state.activeProjectId = projectId;
-        saveCoreState();
-      }
-      window.location.href = '../lead/index.html';
+      window.location.href = `project-detail.html?id=${projectId}`;
     }
 
     function exportPortfolioExcel() {
@@ -642,27 +633,28 @@
         return;
       }
       const data = (portfolioData?.projectSummaries || []).map(ps => ({
-        'Mã Dự Án': ps.code || ps.projectId,
-        'Tên Dự Án': ps.name,
-        'Phiên Bản': ps.activeVersion,
-        'Project Lead': ps.leadName,
-        'Tổng Kịch Bản': ps.totalTcs,
-        'Đã Chạy': ps.executed,
-        'Pass (Đạt)': ps.passed,
-        'Fail (Lỗi)': ps.failed,
-        'Tiến Độ (%)': ps.progressPercent,
-        'Pass Rate (%)': ps.passRatePercent,
-        'Lỗi Nghiêm Trọng': ps.openBlockers + ps.openCriticals,
-        'Điểm Sức Khỏe': ps.score,
-        'Phân Loại Sức Khỏe': ps.healthStatus,
-        'Cổng Go-Live': ps.releaseGate
+        'Mã dự án': ps.code || ps.projectId,
+        'Tên dự án': ps.name,
+        'Phiên bản': ps.activeVersion,
+        'Trưởng dự án': ps.leadName,
+        'Tổng kịch bản': ps.totalTcs,
+        'Đã thực hiện': ps.executed,
+        'Đạt (Pass)': ps.passed,
+        'Lỗi (Fail)': ps.failed,
+        'Tiến độ (%)': ps.progressPercent,
+        'Tỷ lệ đạt (%)': ps.passRatePercent,
+        'Lỗi nghiêm trọng': ps.openBlockers + ps.openCriticals,
+        'Điểm chất lượng': ps.score,
+        'Đánh giá chất lượng': ps.healthStatus,
+        'Chuẩn xuất xưởng': ps.releaseGate
       }));
 
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Portfolio_Health");
-      XLSX.writeFile(wb, `BaoCao_SucKhoe_Portfolio_${new Date().toISOString().substring(0,10)}.xlsx`);
-      showToast('✅ Đã xuất báo cáo Portfolio Excel thành công!', 'success');
+      XLSX.utils.book_append_sheet(wb, ws, "ChatLuong_DuAn");
+      XLSX.writeFile(wb, `BaoCao_ChatLuong_CacDuAn_${new Date().toISOString().substring(0,10)}.xlsx`);
+      showToast('✅ Đã xuất báo cáo chất lượng các dự án thành công!', 'success');
+    }
     }
   </script>
 </body>
