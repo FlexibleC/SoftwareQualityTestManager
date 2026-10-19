@@ -1,0 +1,23 @@
+{
+  "name": "software-quality-test-manager",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm (Software Quality & Test Management System)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "serve": "npx serve .",
+    "check": "node --check server.js"
+  },
+  "keywords": [
+    "qa",
+    "test-management",
+    "quality-assurance",
+    "iso-29119",
+    "iso-25010",
+    "supabase",
+    "vercel"
+  ],
+  "author": "Software Quality Team",
+  "license": "MIT"
+}

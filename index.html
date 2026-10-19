@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng Nhập - Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm</title>
+  <meta name="description" content="Cổng đăng nhập Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared/css/base.css" />
+  <style>
+    :root {
+      --qa-brand-primary: #1d4ed8;
+      --qa-brand-hover: #1e40af;
+      --qa-brand-accent: #0ea5e9;
+      --qa-verify-green: #059669;
+
+      --login-card-bg: #ffffff;
+      --login-card-border: #e2e8f0;
+      --login-card-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.03);
+
+      --login-input-bg: #f8fafc;
+      --login-input-border: #cbd5e1;
+      --login-segmented-bg: #f1f5f9;
+
+      /* Precision Grid Pattern Light */
+      --grid-line-color: rgba(203, 213, 225, 0.45);
+      --ambient-glow: radial-gradient(ellipse at 50% -5%, rgba(29, 78, 216, 0.12) 0%, rgba(14, 165, 233, 0.05) 45%, transparent 70%);
+    }
+
+    [data-theme="dark"] {
+      --qa-brand-primary: #2563eb;
+      --qa-brand-hover: #3b82f6;
+      --qa-brand-accent: #38bdf8;
+      --qa-verify-green: #10b981;
+
+      --login-card-bg: #0f172a;
+      --login-card-border: #1e293b;
+      --login-card-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+      --login-input-bg: #090e1a;
+      --login-input-border: #334155;
+      --login-segmented-bg: #0b1222;
+
+      /* Precision Grid Pattern Dark */
+      --grid-line-color: rgba(30, 41, 59, 0.65);
+      --ambient-glow: radial-gradient(ellipse at 50% -5%, rgba(37, 99, 235, 0.22) 0%, rgba(14, 165, 233, 0.08) 50%, transparent 75%);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-app);
+      background-image: 
+        var(--ambient-glow),
+        linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line-color) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      background-position: center top;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text-primary);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Top Corner Theme Switcher */
+    .top-actions {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .theme-toggle-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .theme-toggle-pill:hover {
+      border-color: var(--qa-brand-primary);
+      color: var(--qa-brand-primary);
+      transform: translateY(-1px);
+    }
+
+    /* Centered Login Card */
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      margin: auto;
+    }
+
+    .login-card {
+      background: var(--login-card-bg);
+      border: 1px solid var(--login-card-border);
+      border-radius: 18px;
+      padding: 38px 34px;
+      box-shadow: var(--login-card-shadow);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    /* Brand Header */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+
+    /* Quality Assurance Shield Logo */
+    .brand-logo-wrap {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--qa-brand-primary), var(--qa-brand-accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 10px 20px -5px rgba(29, 78, 216, 0.4);
+    }
+
+    .brand-logo-wrap svg {
+      width: 28px;
+      height: 28px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0 auto 8px;
+      line-height: 1.4;
+      letter-spacing: -0.3px;
+      max-width: 370px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      font-weight: 500;
+    }
+
+    /* Segmented Role Switcher (Pill Tabs) */
+    .segmented-role-control {
+      background: var(--login-segmented-bg);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 3px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-bottom: 24px;
+    }
+
+    .segmented-btn {
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      padding: 8px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .segmented-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .segmented-btn.active {
+      background: var(--bg-card);
+      color: var(--qa-brand-primary);
+      font-weight: 700;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-link {
+      font-size: 12px;
+      color: var(--qa-brand-primary);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .form-link:hover {
+      text-decoration: underline;
+    }
+
+    .input-field-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--login-input-bg);
+      border: 1px solid var(--login-input-border);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .input-field-wrap:focus-within {
+      background: var(--bg-card);
+      border-color: var(--qa-brand-primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+
+    .input-icon-leading {
+      width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .input-icon-leading svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 2;
+    }
+
+    .login-field {
+      flex: 1;
+      height: 42px;
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      font-family: inherit;
+      padding: 0 12px 0 0;
+      box-shadow: none !important;
+    }
+
+    .input-icon-trailing {
+      background: none;
+      border: none;
+      width: 38px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .input-icon-trailing:hover {
+      color: var(--text-primary);
+    }
+    .input-icon-trailing svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 2;
+    }
+
+    /* Meta row (Remember me) */
+    .form-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      font-size: 13px;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      accent-color: var(--qa-brand-primary);
+      cursor: pointer;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      height: 44px;
+      background: linear-gradient(135deg, var(--qa-brand-primary), var(--qa-brand-hover));
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 14px rgba(29, 78, 216, 0.3);
+      font-family: inherit;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, var(--qa-brand-hover), #172554);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(29, 78, 216, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Error Alert */
+    .error-alert {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 500;
+      margin-bottom: 18px;
+      align-items: center;
+      gap: 8px;
+    }
+    [data-theme="dark"] .error-alert {
+      background: rgba(185, 28, 28, 0.15);
+      border-color: rgba(185, 28, 28, 0.3);
+      color: #fca5a5;
+    }
+    .error-alert svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      stroke-width: 2;
+    }
+
+    /* Footer */
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .login-footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Credentials Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .account-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .account-row:hover {
+      border-color: var(--qa-brand-primary);
+    }
+
+    .account-info {
+      font-size: 12.5px;
+    }
+    .account-role {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .account-creds {
+      font-family: monospace;
+      color: var(--text-muted);
+      font-size: 11.5px;
+    }
+
+    .btn-apply-acc {
+      background: var(--qa-brand-primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-apply-acc:hover {
+      background: var(--qa-brand-hover);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Right Theme Action -->
+  <div class="top-actions">
+    <button class="theme-toggle-pill" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">
+      <span id="theme-icon">🌙</span>
+      <span id="theme-label" style="font-size:12px">Giao diện</span>
+    </button>
+  </div>
+
+  <!-- Center Card Area -->
+  <div class="login-container">
+    <div class="login-card">
+      
+      <!-- Brand & Title: Quality Assurance Shield -->
+      <div class="brand-header">
+        <div class="brand-logo-wrap" title="Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm</h1>
+        <p class="brand-subtitle">Cổng Đăng Nhập & Xác Thực Hệ Thống</p>
+      </div>
+
+      <!-- Segmented Role Switcher (4 Tiers: Super Admin, Project Lead, Tester, Dev) -->
+      <div class="segmented-role-control" role="tablist">
+        <button 
+          type="button" 
+          class="segmented-btn active" 
+          id="tab-admin" 
+          onclick="selectRole('admin')"
+          title="Quản trị viên Cấp cao Hệ thống (Super Admin)"
+        >
+          Admin HT
+        </button>
+        <button 
+          type="button" 
+          class="segmented-btn" 
+          id="tab-lead" 
+          onclick="selectRole('lead')"
+          title="Quản trị viên Dự án (Project Lead / PM)"
+        >
+          Quản trị DA
+        </button>
+        <button 
+          type="button" 
+          class="segmented-btn" 
+          id="tab-tester" 
+          onclick="selectRole('tester')"
+          title="Kiểm thử viên (Tester)"
+        >
+          Tester
+        </button>
+        <button 
+          type="button" 
+          class="segmented-btn" 
+          id="tab-dev" 
+          onclick="selectRole('dev')"
+          title="Tài khoản Lập trình viên (Developer)"
+        >
+          Developer
+        </button>
+      </div>
+
+      <!-- Error Alert -->
+      <div class="error-alert" id="login-error-alert" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="login-error-msg">Tài khoản hoặc mật khẩu không chính xác!</span>
+      </div>
+
+      <!-- Authentication Form -->
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        
+        <!-- Username -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="auth-username">Tài khoản</label>
+          </div>
+          <div class="input-field-wrap">
+            <div class="input-icon-leading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="auth-username"
+              class="login-field"
+              placeholder="Tên đăng nhập"
+              value="admin"
+              required
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="auth-password">Mật khẩu</label>
+            <a class="form-link" onclick="openCredentialsModal()">Tài khoản mẫu?</a>
+          </div>
+          <div class="input-field-wrap">
+            <div class="input-icon-leading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <input
+              type="password"
+              id="auth-password"
+              class="login-field"
+              placeholder="Mật khẩu"
+              value="123"
+              required
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="input-icon-trailing"
+              id="pwd-toggle-btn"
+              onclick="togglePasswordVisibility()"
+              title="Hiện/Ẩn mật khẩu"
+            >
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me -->
+        <div class="form-meta">
+          <label class="checkbox-label">
+            <input type="checkbox" id="auth-remember" checked />
+            <span>Ghi nhớ phiên đăng nhập</span>
+          </label>
+        </div>
+
+        <!-- Action Button -->
+        <button type="submit" class="btn-submit" id="btn-submit">
+          <span>Đăng Nhập</span>
+        </button>
+
+      </form>
+
+    </div>
+
+    <!-- Minimal Enterprise Footer -->
+    <footer class="login-footer">
+      <div>Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm • Phiên bản 2.5</div>
+      <div style="margin-top:4px; font-size:11.5px; opacity:0.8">Nền tảng Quản trị & Giám sát Thẩm định Chất lượng</div>
+    </footer>
+  </div>
+
+  <!-- Accounts Modal -->
+  <div class="modal-backdrop" id="creds-modal" onclick="closeCredentialsModal(event)">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px">
+        <h3 style="margin:0; font-size:15px; font-weight:700; color:var(--text-primary)">
+          Danh Sách Tài Khoản Phân Quyền
+        </h3>
+        <button type="button" onclick="closeCredentialsModal()" style="background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-muted)">✕</button>
+      </div>
+
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">🛡️ Quản trị Cấp cao Hệ thống (Super Admin)</div>
+          <div class="account-creds">User: <strong>admin</strong> | Pass: <strong>123</strong></div>
+        </div>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('admin', '123')">Điền</button>
+      </div>
+
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">👑 Quản trị Dự án (Project Lead / PM)</div>
+          <div class="account-creds">User: <strong>lead</strong> | Pass: <strong>123</strong></div>
+        </div>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('lead', '123')">Điền</button>
+      </div>
+
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">🧪 Kiểm thử viên (Tester)</div>
+          <div class="account-creds">User: <strong>tester</strong> | Pass: <strong>123</strong></div>
+        </div>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('tester', '123')">Điền</button>
+      </div>
+
+      <div class="account-row">
+        <div class="account-info">
+          <div class="account-role">💻 Lập trình viên (Developer)</div>
+          <div class="account-creds">User: <strong>dev</strong> | Pass: <strong>123</strong></div>
+        </div>
+        <button type="button" class="btn-apply-acc" onclick="applyAccount('dev', '123')">Điền</button>
+      </div>
+
+      <div style="text-align:right; margin-top:16px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeCredentialsModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Core Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="data/enterprise_projects_manifest.js"></script>
+  <script src="data/smartvms_test_catalog.js"></script>
+  <script src="shared/js/core.js"></script>
+  <script src="shared/js/cloud-sync.js"></script>
+  <script>
+    const ROLE_ACCOUNTS = {
+      admin: { username: 'admin', password: '123' },
+      lead: { username: 'lead', password: '123' },
+      tester: { username: 'tester', password: '123' },
+      dev: { username: 'dev', password: '123' }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+
+      // Check current theme
+      const curTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      updateThemeUI(curTheme);
+
+      // Listen for input changes to sync tabs
+      const userInp = document.getElementById('auth-username');
+      userInp.addEventListener('input', () => {
+        const val = userInp.value.trim().toLowerCase();
+        if (ROLE_ACCOUNTS[val]) {
+          highlightRoleTab(val);
+        } else {
+          highlightRoleTab(null);
+        }
+      });
+    });
+
+    function selectRole(role) {
+      highlightRoleTab(role);
+      const acc = ROLE_ACCOUNTS[role];
+      if (acc) {
+        document.getElementById('auth-username').value = acc.username;
+        document.getElementById('auth-password').value = acc.password;
+      }
+      hideErrorAlert();
+    }
+
+    function highlightRoleTab(role) {
+      document.querySelectorAll('.segmented-btn').forEach(btn => btn.classList.remove('active'));
+      if (role) {
+        const el = document.getElementById(`tab-${role}`);
+        if (el) el.classList.add('active');
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const pwd = document.getElementById('auth-password');
+      const eyeIcon = document.getElementById('eye-icon');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        eyeIcon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+      } else {
+        pwd.type = 'password';
+        eyeIcon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
+      }
+    }
+
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('theme-icon');
+      if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // Override toggleTheme to update local UI icon
+    const originalToggleTheme = window.toggleTheme;
+    window.toggleTheme = function() {
+      if (typeof originalToggleTheme === 'function') {
+        originalToggleTheme();
+      } else {
+        const cur = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('smartvms_theme', next);
+      }
+      const curTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      updateThemeUI(curTheme);
+    };
+
+    function showErrorAlert(msg) {
+      const el = document.getElementById('login-error-alert');
+      const msgEl = document.getElementById('login-error-msg');
+      if (el && msgEl) {
+        msgEl.textContent = msg;
+        el.style.display = 'flex';
+      }
+    }
+
+    function hideErrorAlert() {
+      const el = document.getElementById('login-error-alert');
+      if (el) el.style.display = 'none';
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+
+      if (!username) {
+        showErrorAlert('Vui lòng nhập tên đăng nhập!');
+        return;
+      }
+
+      const allUsers = (state && state.users && state.users.length > 0) ? state.users : DEFAULT_SYSTEM_USERS;
+      const foundUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+
+      if (!foundUser) {
+        showErrorAlert(`Không tìm thấy tài khoản "${username}"!`);
+        return;
+      }
+
+      const validPasswords = ['123', 'admin123', 'tester123', 'dev123'];
+      const isPassValid = !foundUser.password || foundUser.password === password || validPasswords.includes(password);
+
+      if (!isPassValid) {
+        showErrorAlert('Mật khẩu không chính xác!');
+        return;
+      }
+
+      hideErrorAlert();
+      executeLoginFlow(foundUser);
+    }
+
+    function executeLoginFlow(user) {
+      state.currentUser = user;
+      saveCoreState();
+
+      const btn = document.getElementById('btn-submit');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div><span>Đang đăng nhập...</span>';
+      }
+
+      let targetUrl = 'admin/index.html';
+      if (user.role === 'tester') {
+        targetUrl = 'tester/index.html';
+      } else if (user.role === 'developer') {
+        targetUrl = 'dev/index.html';
+      } else if (user.role === 'project_lead' || user.username === 'lead') {
+        targetUrl = 'lead/index.html';
+      } else {
+        targetUrl = 'admin/index.html';
+      }
+
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        const basePath = window.location.pathname.replace(/\/[^\/]*$/, '');
+        targetUrl = (basePath ? basePath + '/' : '/') + targetUrl;
+        targetUrl = targetUrl.replace(/\/+/g, '/');
+      }
+
+      setTimeout(() => {
+        window.location.href = targetUrl;
+      }, 300);
+    }
+
+    function openCredentialsModal() {
+      document.getElementById('creds-modal').classList.add('active');
+    }
+
+    function closeCredentialsModal(e) {
+      document.getElementById('creds-modal').classList.remove('active');
+    }
+
+    function applyAccount(u, p) {
+      document.getElementById('auth-username').value = u;
+      document.getElementById('auth-password').value = p;
+      closeCredentialsModal();
+      highlightRoleTab(u);
+    }
+  </script>
+</body>
+</html>

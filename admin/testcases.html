@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="0; url=../lead/testcases.html" />
+  <title>Chuyển hướng - Kịch Bản Kiểm Thử Thuộc Không Gian Quản Trị Dự Án</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="css/admin-console.css" />
+</head>
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-main); font-family:Inter,sans-serif; margin:0; padding:20px">
+  <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:36px; max-width:520px; text-align:center; box-shadow:var(--shadow-md)">
+    <div style="font-size:42px; margin-bottom:12px">📋</div>
+    <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0 0 8px 0">
+      Nghiệp Vụ Thuộc Không Gian Quản Trị Dự Án
+    </h2>
+    <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin:0 0 20px 0">
+      Thư viện <strong>Kịch bản kiểm thử độc lập</strong> được phân quyền và quản lý trực tiếp bởi Quản Trị Viên Dự Án (Project Lead).
+      Đang tự động chuyển hướng bạn sang Không Gian Dự Án...
+    </p>
+    <a href="../lead/testcases.html" class="btn btn-primary btn-sm">
+      🚀 Vào Thư Viện Kịch Bản Dự Án ➔
+    </a>
+  </div>
+
+  <script>
+    const search = window.location.search || '';
+    window.location.replace('../lead/testcases.html' + search);
+  </script>
+</body>
+</html>

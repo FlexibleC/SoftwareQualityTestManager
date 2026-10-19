@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tái Hiện & Xác Minh Bug - Dev QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/execution.css" />
+</head>
+<body>
+  <!-- Dev Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon">💻</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Lập Trình Viên (Developer)</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="index.html" class="nav-item">🐛 Xử lý lỗi</a>
+          <a href="execution.html" class="nav-item active">🔍 Tái hiện bug</a>
+          <a href="reports.html" class="nav-item">📈 Báo cáo</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile">
+        <div class="vms-user-avatar">D</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Trần Quốc Tuấn</span>
+          <span class="vms-user-role">Lập trình viên (Dev)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')">👑 Sang Admin</button>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')">🧪 Sang Tester</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Execution Layout -->
+  <main class="main-wrapper" style="padding-top:10px">
+    <div class="execute-layout">
+      <!-- Left: Test Case List & Filters -->
+      <div class="execute-list">
+        <div class="execute-list-header">
+          <input type="text" id="exec-search" placeholder="🔍 Tìm kiếm test case..." oninput="filterExecList()" />
+          <select id="exec-filter-module" onchange="filterExecList()"></select>
+          <select id="exec-filter-status" onchange="filterExecList()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Fail" selected>❌ Bị Lỗi (Fail - Ưu tiên Dev)</option>
+            <option value="Blocked">⛔ Bị chặn (Blocked)</option>
+            <option value="Pass">✅ Đã Đạt (Pass)</option>
+            <option value="Not Run">⚪ Chưa chạy</option>
+            <option value="In Progress">⏳ Đang test</option>
+          </select>
+          <select id="exec-filter-priority" onchange="filterExecList()">
+            <option value="">Tất cả mức ưu tiên</option>
+            <option value="P1">🔴 P1 - Rất cao (Critical)</option>
+            <option value="P2">🟠 P2 - Quan trọng (Important)</option>
+            <option value="P3">🟡 P3 - Trung bình (Medium)</option>
+            <option value="P4">🟢 P4 - Thấp (Low)</option>
+          </select>
+        </div>
+        <div class="execute-tc-list" id="exec-tc-list"></div>
+      </div>
+
+      <!-- Right: Execution Detail Console -->
+      <div class="execute-form-wrapper">
+        <div id="exec-detail-card">
+          <div class="exec-empty">
+            <div class="empty-icon">🔍</div>
+            <div>Chọn một kịch bản lỗi từ danh sách bên trái để xem các bước tái hiện, ảnh bằng chứng và cập nhật trạng thái lỗi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Lightbox Modal for Evidence Zoom -->
+  <div class="modal-overlay" id="lightbox-modal" onclick="closeLightbox()">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="max-width:90vw; background:transparent; border:none; box-shadow:none; text-align:center">
+      <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; margin-bottom:8px">
+        <h4 id="lightbox-title" style="margin:0; font-size:14px">Ảnh chụp bằng chứng lỗi</h4>
+        <button onclick="closeLightbox()" style="color:#fff; background:none; border:none; font-size:24px; cursor:pointer">&times;</button>
+      </div>
+      <img id="lightbox-img" src="" alt="Evidence" style="max-width:85vw; max-height:80vh; border-radius:8px; border:2px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,0.5)" />
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
+  <script src="../shared/js/execution.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initExecutionModule();
+      // Check query param e.g. execution.html?tc=TC-AUTH-005
+      const params = new URLSearchParams(window.location.search);
+      const tcParam = params.get('tc');
+      if (tcParam) {
+        selectExecTc(tcParam);
+      }
+    });
+  </script>
+</body>
+</html>

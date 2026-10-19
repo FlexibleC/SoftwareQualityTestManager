@@ -1,0 +1,154 @@
+/* ==========================================================================
+   SMARTVMS QA HUB - TESTCASES REPOSITORY MODULE CSS
+   Fixes table alignment, filter bar, and action buttons in catalog screen
+   ========================================================================== */
+
+.filter-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-group label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.filter-group select,
+.filter-group input {
+  height: 34px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  min-width: 150px;
+}
+
+/* Test Case Data Table */
+.tc-table-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.tc-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12.5px;
+}
+
+.tc-table thead th {
+  height: 40px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tc-table thead th:last-child {
+  border-right: none;
+}
+
+.tc-table tbody tr {
+  min-height: 44px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.12s ease;
+}
+
+.tc-table tbody tr:nth-child(even) {
+  background: rgba(248, 250, 252, 0.7);
+}
+
+[data-theme="dark"] .tc-table tbody tr:nth-child(even) {
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.tc-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.05) !important;
+}
+
+.tc-table tbody td {
+  padding: 8px 8px;
+  vertical-align: middle;
+  border-right: 1px solid var(--border-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.tc-table tbody td:last-child {
+  border-right: none;
+}
+
+.tc-badge-id {
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 11.5px;
+  color: var(--primary);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  display: inline-block;
+  cursor: pointer;
+}
+
+.tc-badge-id:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-tc-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-tc-icon:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.btn-tc-icon.btn-delete:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}

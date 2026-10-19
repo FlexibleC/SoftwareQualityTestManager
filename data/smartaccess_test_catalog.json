@@ -1,0 +1,82 @@
+{
+  "schema": "https://smartvms.local/schemas/test-catalog-v4.json",
+  "title": "SmartAccess — Danh mục Kịch bản Kiểm thử Hệ thống Cửa & Thang máy",
+  "projectId": "PRJ-SMARTACCESS",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "id": "AC01",
+      "name": "Nhận diện Khuôn mặt FaceID & Thẻ từ",
+      "short": "Xác thực"
+    },
+    {
+      "id": "AC02",
+      "name": "Phân quyền Cửa & Khung giờ Ra vào",
+      "short": "Phân quyền"
+    },
+    {
+      "id": "AC03",
+      "name": "Điều khiển Phân tầng Thang máy",
+      "short": "Thang máy"
+    },
+    {
+      "id": "AC04",
+      "name": "Cảnh báo Báo động & Kích hoạt Thoát hiểm PCCC",
+      "short": "PCCC & Cảnh báo"
+    }
+  ],
+  "testCases": [
+    {
+      "id": "TC-ACC-001",
+      "module": "AC01",
+      "priority": "P1",
+      "name": "Xác thực nhận diện khuôn mặt FaceID < 0.3 giây",
+      "platform": "Thiết bị nhận diện FaceID gắn cửa",
+      "testData": "Nhân viên đã đăng ký khuôn mặt trong cơ sở dữ liệu.",
+      "precondition": "Thiết bị FaceID kết nối mạng LAN ổn định.",
+      "steps": [
+        "1. Nhân viên đứng trước camera khoảng cách 0.5m - 1.5m.",
+        "2. Camera tự động bắt điểm khuôn mặt và đối soát vector 512-dim."
+      ],
+      "expected": [
+        "Xác thực thành công trong vòng dưới 300ms, hiển thị tên nhân viên trên màn hình LED.",
+        "Gửi tín hiệu rơ-le 12V mở khóa từ trong 5 giây."
+      ]
+    },
+    {
+      "id": "TC-ACC-002",
+      "module": "AC03",
+      "priority": "P1",
+      "name": "Phân tầng thang máy: Chỉ cho phép chọn tầng được phân quyền",
+      "platform": "Bộ điều khiển Thang máy Relay Controller",
+      "testData": "Thẻ của nhân viên chỉ được cấp quyền Tầng 5 và Tầng 8.",
+      "precondition": "Thang máy đang ở Tầng 1.",
+      "steps": [
+        "1. Nhân viên bước vào thang máy, quẹt thẻ lên đầu đọc RFID.",
+        "2. Bộ điều khiển kích hoạt các relay tương ứng.",
+        "3. Nhân viên nhấn nút Tầng 5 và Tầng 10."
+      ],
+      "expected": [
+        "Nút Tầng 5 sáng đèn và thang máy nhận lệnh di chuyển.",
+        "Nút Tầng 10 bị vô hiệu hóa (không sáng đèn) vì không có quyền."
+      ]
+    },
+    {
+      "id": "TC-ACC-003",
+      "module": "AC04",
+      "priority": "P1",
+      "name": "Tự động mở toang toàn bộ cửa khi có tín hiệu Báo cháy (PCCC)",
+      "platform": "Mạch liên động PCCC & Khóa từ Cửa thoát hiểm",
+      "testData": "Kích hoạt tiếp điểm Dry-Contact từ Trung tâm Báo cháy.",
+      "precondition": "Hệ thống cửa đang khóa bình thường.",
+      "steps": [
+        "1. Kích hoạt tín hiệu báo cháy khẩn cấp.",
+        "2. Bộ điều khiển nhận tín hiệu ngắt nguồn cưỡng bức."
+      ],
+      "expected": [
+        "Toàn bộ khóa từ mở toang ngay lập tức (<100ms) theo cơ chế Fail-Safe (Mất điện là mở).",
+        "Phần mềm bật màn hình đỏ CẢNH BÁO CHÁY KHẨN CẤP và ghi nhận log an toàn."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cài Đặt & Cấu Hình Dự Án - Không Gian Quản Trị Dự Án</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/settings.css" />
+  <link rel="stylesheet" href="css/lead-theme.css" />
+</head>
+<body>
+
+  <!-- Lead Topbar -->
+  <header class="lead-topbar">
+    <div style="display:flex; align-items:center; gap:20px">
+      <a href="index.html" class="lead-brand-wrap">
+        <div class="lead-brand-badge">👑</div>
+        <div>
+          <h2 class="lead-brand-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</h2>
+          <span class="lead-brand-subtitle">Không Gian Quản Trị Viên Dự Án (Project Lead)</span>
+        </div>
+      </a>
+
+      <!-- Navigation Pills -->
+      <nav class="lead-nav-pills" role="navigation">
+        <a href="index.html" class="lead-nav-pill">📊 Tổng quan Dự án</a>
+        <a href="testcases.html" class="lead-nav-pill">📋 Kịch bản Kiểm thử</a>
+        <a href="assignments.html" class="lead-nav-pill">📌 Điều phối & Giao việc</a>
+        <a href="reports.html" class="lead-nav-pill">📈 Báo cáo Chất lượng</a>
+        <a href="settings.html" class="lead-nav-pill active">⚙️ Cài đặt Dự án</a>
+      </nav>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:14px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
+        <div class="vms-user-avatar" style="background:#d97706">L</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên Dự án</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+
+    <!-- Active Project Hero Banner -->
+    <div class="lead-project-hero" id="lead-project-hero">
+      <!-- Populated by lead-context.js -->
+    </div>
+
+    <!-- Header Title -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">
+          ⚙️ Cấu Hình Chuyên Biệt Không Gian Dự Án
+        </h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">
+          Quản lý độc lập Phiên bản phần mềm, Các đợt kiểm thử (Cycles), Phân hệ (Modules) và Nhân sự dự án.
+        </div>
+      </div>
+    </div>
+
+    <!-- Lead Settings Subtabs -->
+    <div class="lead-nav-pills" style="margin-bottom:18px; padding:6px; display:inline-flex; width:100%; box-sizing:border-box">
+      <button type="button" class="lead-nav-pill lead-settings-tab-btn active" data-tab="versions" onclick="LeadSettings.switchTab('versions')" style="cursor:pointer; border:none; background:transparent">
+        📦 1. Phiên Bản Phần Mềm (Versions)
+      </button>
+      <button type="button" class="lead-nav-pill lead-settings-tab-btn" data-tab="cycles" onclick="LeadSettings.switchTab('cycles')" style="cursor:pointer; border:none; background:transparent">
+        🎯 2. Các Đợt Kiểm Thử (Test Cycles)
+      </button>
+      <button type="button" class="lead-nav-pill lead-settings-tab-btn" data-tab="modules" onclick="LeadSettings.switchTab('modules')" style="cursor:pointer; border:none; background:transparent">
+        📁 3. Phân Hệ Nghiệp Vụ (Modules)
+      </button>
+      <button type="button" class="lead-nav-pill lead-settings-tab-btn" data-tab="roster" onclick="LeadSettings.switchTab('roster')" style="cursor:pointer; border:none; background:transparent">
+        👥 4. Đội Ngũ Nhân Sự Dự Án
+      </button>
+    </div>
+
+    <!-- PANE 1: VERSIONS -->
+    <section class="lead-settings-tab-pane active" id="lead-pane-versions">
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              📦 Danh Sách Phiên Bản Phần Mềm Của Dự Án
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Quản lý lộ trình phiên bản phát hành và kích hoạt phiên bản làm việc hiện hành.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.openAddVersionModal()">
+            ➕ Thêm Phiên Bản Mới
+          </button>
+        </div>
+
+        <table class="asg-tc-table" style="table-layout:auto; width:100%">
+          <thead>
+            <tr>
+              <th style="width:120px">Phiên Bản</th>
+              <th style="width:240px">Nhãn Hiển Thị</th>
+              <th style="width:140px; text-align:center">Trạng Thái</th>
+              <th style="width:140px; text-align:center">Hạn Mục Tiêu</th>
+              <th>Ghi Chú Phát Hành / Changelog</th>
+              <th style="width:130px; text-align:center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="lead-versions-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PANE 2: TEST CYCLES -->
+    <section class="lead-settings-tab-pane" id="lead-pane-cycles" style="display:none">
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              🎯 Quản Lý Các Đợt / Vòng Kiểm Thử (Test Cycles)
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Cấu hình các đợt kiểm thử độc lập (Đợt 1 Khảo sát, Đợt 2 Hồi quy & Re-test, Đợt 3 Nghiệm thu UAT).
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.openAddCycleModal()">
+            ➕ Thêm Đợt Kiểm Thử Mới
+          </button>
+        </div>
+
+        <table class="asg-tc-table" style="table-layout:auto; width:100%">
+          <thead>
+            <tr>
+              <th style="width:110px; text-align:center">Mã Đợt</th>
+              <th style="width:280px">Tên Đợt Kiểm Thử & Mục Tiêu</th>
+              <th style="width:100px; text-align:center">Phiên Bản</th>
+              <th style="width:130px; text-align:center">Loại Đợt Test</th>
+              <th style="width:120px; text-align:center">Phạm Vi</th>
+              <th style="width:180px; text-align:center">Thời Gian Kế Hoạch</th>
+              <th style="width:120px; text-align:center">Trạng Thái</th>
+              <th style="width:140px; text-align:center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="lead-cycles-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PANE 3: MODULES -->
+    <section class="lead-settings-tab-pane" id="lead-pane-modules" style="display:none">
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              📁 Danh Mục Phân Hệ Nghiệp Vụ (Modules) Dự Án
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Cấu trúc cây phân hệ chuyên biệt của sản phẩm phần mềm này.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.openAddModuleModal()">
+            ➕ Thêm Phân Hệ Mới
+          </button>
+        </div>
+
+        <table class="asg-tc-table" style="table-layout:auto; width:100%">
+          <thead>
+            <tr>
+              <th style="width:110px">Mã Module</th>
+              <th style="width:260px">Tên Phân Hệ Nghiệp Vụ</th>
+              <th>Mô Tả Chức Năng</th>
+              <th style="width:150px; text-align:center">Số Lượng Kịch Bản</th>
+              <th style="width:110px; text-align:center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="lead-modules-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PANE 4: TEAM ROSTER -->
+    <section class="lead-settings-tab-pane" id="lead-pane-roster" style="display:none">
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              👥 Đội Ngũ Kỹ Sư Phụ Trách Không Gian Dự Án
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Danh sách Kiểm thử viên (Tester) và Lập trình viên (Developer) được Super Admin phân bổ vào dự án.
+            </div>
+          </div>
+          <a href="../admin/index.html" class="btn btn-outline btn-sm" title="Liên hệ Super Admin trên Cổng Quản Trị Hệ Thống">
+            🛡️ Yêu Cầu Super Admin Cấp Thêm
+          </a>
+        </div>
+
+        <table class="asg-tc-table" style="table-layout:auto; width:100%">
+          <thead>
+            <tr>
+              <th style="width:50px; text-align:center">#</th>
+              <th style="width:220px">Họ Tên & Tài Khoản</th>
+              <th style="width:220px">Email Liên Hệ</th>
+              <th style="width:180px; text-align:center">Vai Trò Trong Dự Án</th>
+              <th>Nhiệm Vụ Trọng Tâm</th>
+              <th style="width:130px; text-align:center">Trạng Thái</th>
+            </tr>
+          </thead>
+          <tbody id="lead-roster-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Thêm Phiên Bản -->
+  <div class="modal" id="modal-version-form">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ➕ Thêm Phiên Bản Phần Mềm Mới
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-version-form')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã Phiên Bản (*)</label>
+            <input type="text" id="vf-tag" class="form-control" placeholder="VD: v2.1" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Nhãn Hiển Thị</label>
+            <input type="text" id="vf-label" class="form-control" placeholder="Bản nâng cấp bảo mật..." />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng Thái</label>
+            <select id="vf-status" class="form-control">
+              <option value="ACTIVE" selected>Đang phát hành</option>
+              <option value="PLANNED">Kế hoạch</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn Mục Tiêu</label>
+            <input type="date" id="vf-date" class="form-control" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi Chú Phát Hành / Changelog</label>
+          <textarea id="vf-changelog" class="form-control" rows="3" placeholder="Mô tả tóm tắt tính năng mới..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-version-form')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.confirmAddVersion()">💾 Thêm Phiên Bản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm/Sửa Đợt Kiểm Thử (Test Cycle) -->
+  <div class="modal" id="modal-cycle-form">
+    <div class="modal-box" style="max-width:580px">
+      <div class="modal-header">
+        <h3 id="modal-cycle-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ➕ Thêm Đợt Kiểm Thử Mới
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-cycle-form')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <input type="hidden" id="cf-id" />
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã Đợt (Code) (*)</label>
+            <input type="text" id="cf-code" class="form-control" placeholder="ROUND-2 hoặc CYC-02" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Thuộc Phiên Bản (*)</label>
+            <select id="cf-version" class="form-control"></select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Tên Đợt Kiểm Thử (*)</label>
+          <input type="text" id="cf-name" class="form-control" placeholder="Đợt 2 — Re-test sửa lỗi & Kiểm thử Hồi quy" required />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Loại Kiểm Thử</label>
+            <select id="cf-suite" class="form-control">
+              <option value="REGRESSION" selected>🔄 Regression (Kiểm thử Hồi quy)</option>
+              <option value="SMOKE">💨 Smoke Test (Kiểm thử nhanh / Khảo sát)</option>
+              <option value="SANITY">🧪 Sanity Test (Kiểm tra sửa lỗi)</option>
+              <option value="PERF_STRESS">⚡ Performance & Stress (Tải cao điểm)</option>
+              <option value="SECURITY_FRAUD">🛡️ Security & Fraud (An ninh bảo mật)</option>
+              <option value="ACCEPTANCE_UAT">🏆 Acceptance / UAT (Nghiệm thu Go-Live)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng Thái Đợt Test</label>
+            <select id="cf-status" class="form-control">
+              <option value="ACTIVE" selected>🟢 ACTIVE (Đang diễn ra)</option>
+              <option value="PLANNED">🟡 PLANNED (Lập kế hoạch)</option>
+              <option value="CLOSED">⚪ CLOSED (Đã đóng / Kết thúc)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Ngày Bắt Đầu</label>
+            <input type="date" id="cf-start-date" class="form-control" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn Kết Thúc Kế Hoạch</label>
+            <input type="date" id="cf-end-date" class="form-control" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Mục Tiêu & Phạm Vi Đợt Test</label>
+          <textarea id="cf-description" class="form-control" rows="3" placeholder="Mô tả phạm vi nghiệm thu, các kịch bản hoặc phân hệ trọng tâm cần retest..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-form')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.confirmSaveCycle()">💾 Lưu Đợt Kiểm Thử</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm Phân Hệ -->
+  <div class="modal" id="modal-add-module">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ➕ Thêm Phân Hệ Nghiệp Vụ Mới
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-add-module')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Mã Phân Hệ (*)</label>
+          <input type="text" id="new-mod-id" class="form-control" placeholder="VD: M13" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Tên Phân Hệ (*)</label>
+          <input type="text" id="new-mod-name" class="form-control" placeholder="VD: Tích hợp Cổng Thanh toán Điện tử" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Mô Tả Chi Tiết</label>
+          <textarea id="new-mod-desc" class="form-control" rows="3" placeholder="Mô tả chức năng nghiệp vụ của phân hệ..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-add-module')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.confirmAddModule()">💾 Lưu Phân Hệ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
+
+  <!-- Modular Lead Scripts -->
+  <script src="js/lead-context.js"></script>
+  <script src="js/lead-settings.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+      LeadContext.init();
+      LeadSettings.init();
+    });
+  </script>
+</body>
+</html>

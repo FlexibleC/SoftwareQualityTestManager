@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "name": "smartvms-test-manager",
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/admin/", "destination": "/admin/index.html" },
+    { "source": "/tester", "destination": "/tester/index.html" },
+    { "source": "/tester/", "destination": "/tester/index.html" },
+    { "source": "/dev", "destination": "/dev/index.html" },
+    { "source": "/dev/", "destination": "/dev/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ]
+}

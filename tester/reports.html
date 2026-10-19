@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo Cáo Tiến Độ - Tester QA Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/reports.css" />
+  <link rel="stylesheet" href="../shared/css/adhoc.css" />
+</head>
+<body>
+  <!-- Tester Topbar -->
+  <header class="vms-topbar">
+    <div class="vms-topbar-left">
+      <a href="index.html" class="vms-brand">
+        <div class="vms-brand-icon">🧪</div>
+        <div class="vms-brand-text">
+          <span class="vms-title">SmartVMS QA Hub</span>
+          <span class="vms-subtitle">Phân Hệ Kiểm Thử Viên (Tester)</span>
+        </div>
+      </a>
+      <nav class="vms-nav-container">
+        <div class="vms-nav-pills">
+          <a href="index.html" class="nav-item">📝 Việc của tôi</a>
+          <a href="execution.html" class="nav-item">▶️ Thực thi</a>
+          <a href="history.html" class="nav-item">🕒 Lịch sử & Phiên test</a>
+          <a href="reports.html" class="nav-item active">📈 Báo cáo cá nhân</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="vms-topbar-right">
+      <button type="button" class="btn-adhoc-trigger" onclick="openAdhocDefectModal()" title="Báo cáo lỗi phát sinh không có trong Test Case">🐞 Báo Lỗi Ngoài Kịch Bản</button>
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="vms-user-profile">
+        <div class="vms-user-avatar">T</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role">Kiểm thử viên (Tester)</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')">👑 Sang Admin</button>
+      <button class="btn btn-outline btn-xs" onclick="switchRole('dev')">💻 Sang Dev</button>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <main class="main-wrapper" id="reports-main-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+      <div>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📈 Báo Cáo Tiến Độ & Chất Lượng Kiểm Thử Cá Nhân</h2>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tổng hợp khối lượng công việc, tỷ lệ Đạt (Pass Rate) và lỗi do bạn phát hiện</div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button type="button" class="btn btn-outline" style="background:rgba(220,38,38,0.1); border-color:#dc2626; color:#dc2626; font-weight:700" onclick="deleteSkippedTestCases()" title="Xóa bỏ vĩnh viễn 55 ca kiểm thử Bỏ qua (Skip) không còn phù hợp để tối ưu tỷ lệ Đạt (Pass Rate) chuẩn hóa">🗑️ Xóa Bỏ 55 Ca Bỏ Qua (Skip)</button>
+        <button type="button" class="btn btn-outline" onclick="exportCatalogToExcel()" title="Xuất toàn bộ kịch bản và kết quả kiểm thử sang Excel">📊 Xuất Excel (.xlsx)</button>
+        <button type="button" class="btn btn-outline" onclick="printReport()">🖨️ In Báo Cáo</button>
+        <button type="button" class="btn btn-primary" onclick="exportReportHtml()">⬇️ Xuất File Báo Cáo (HTML)</button>
+      </div>
+    </div>
+
+    <!-- 6 KPI Metric Cards Grid -->
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">📦</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-total">0</div>
+          <div class="stat-label">Tổng số kịch bản</div>
+        </div>
+      </div>
+      <div class="stat-card stat-pass">
+        <div class="stat-icon">✅</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-pass">0</div>
+          <div class="stat-label">Đạt (Pass)</div>
+        </div>
+      </div>
+      <div class="stat-card stat-fail">
+        <div class="stat-icon">❌</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-fail">0</div>
+          <div class="stat-label">Lỗi (Fail)</div>
+        </div>
+      </div>
+      <div class="stat-card stat-skip">
+        <div class="stat-icon">⏭</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-skip">0</div>
+          <div class="stat-label">Bỏ qua (Skip)</div>
+        </div>
+      </div>
+      <div class="stat-card stat-rate">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-rate">0%</div>
+          <div class="stat-label">Tỷ lệ Đạt (Pass Rate)</div>
+        </div>
+      </div>
+      <div class="stat-card stat-wip">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-body">
+          <div class="stat-value" id="kpi-wip">0</div>
+          <div class="stat-label">Chưa chạy / Đang test</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Container -->
+    <div class="charts-container">
+      <div class="chart-card">
+        <div class="chart-title">📊 Tỷ Lệ Trạng Thái Kiểm Thử Toàn Dự Án</div>
+        <div class="chart-wrapper">
+          <canvas id="chart-status-doughnut"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📈 Phân Bổ Kết Quả Kiểm Thử Theo 12 Phân Hệ</div>
+        <div class="chart-wrapper">
+          <canvas id="chart-module-bar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Subtabs Navigation -->
+    <div class="analytics-tabs-nav">
+      <button type="button" class="analytics-tab-btn active" data-subtab="projects" onclick="switchAnalyticsTab('projects')">🏢 So Sánh Các Dự Án</button>
+      <button type="button" class="analytics-tab-btn" data-subtab="testers" onclick="switchAnalyticsTab('testers')">👥 Hiệu Suất Kiểm Thử</button>
+      <button type="button" class="analytics-tab-btn" data-subtab="defects" onclick="switchAnalyticsTab('defects')">🐛 Danh Sách Lỗi Cần Xử Lý</button>
+    </div>
+
+    <!-- Subtab 1: Projects Matrix -->
+    <div class="analytics-subtab-pane active" id="pane-projects">
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="border-bottom:1px solid var(--border)">
+          <div style="font-weight:700; font-size:13px; color:var(--text-primary)">Bảng Tổng Hợp Kiểm Thử Đa Dự Án</div>
+        </div>
+        <div class="table-responsive">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Mã Dự Án</th>
+                <th>Tên Dự Án</th>
+                <th style="text-align:center">Tổng Kịch Bản</th>
+                <th style="text-align:center">Đạt</th>
+                <th style="text-align:center">Lỗi</th>
+                <th style="text-align:center">Chưa Chạy</th>
+                <th style="text-align:center">Tỷ Lệ Đạt</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-projects-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtab 2: Testers Performance -->
+    <div class="analytics-subtab-pane" id="pane-testers">
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="border-bottom:1px solid var(--border)">
+          <div style="font-weight:700; font-size:13px; color:var(--text-primary)">Thống Kê Tiến Độ Nhân Sự Kiểm Thử</div>
+        </div>
+        <div class="table-responsive">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Kiểm Thử Viên</th>
+                <th style="text-align:center">Được Giao</th>
+                <th style="text-align:center">Đã Thực Hiện</th>
+                <th style="text-align:center">Đạt</th>
+                <th style="text-align:center">Lỗi Phát Hiện</th>
+                <th style="text-align:center">Tiến Độ Hoàn Thành</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-testers-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtab 3: Open Defects -->
+    <div class="analytics-subtab-pane" id="pane-defects">
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="border-bottom:1px solid var(--border)">
+          <div style="font-weight:700; font-size:13px; color:var(--text-primary)">Danh Sách Lỗi (Defects) Đang Mở</div>
+        </div>
+        <div class="table-responsive">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Mã Kịch Bản</th>
+                <th>Tiêu Đề</th>
+                <th>Lý Do Lỗi</th>
+                <th style="text-align:center">Mức Nghiêm Trọng</th>
+                <th style="text-align:center">Trạng Thái Lỗi</th>
+                <th>Dev Phụ Trách</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-defects-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js?v=20261014_scoped"></script>
+  <script src="../data/smartvms_test_catalog.js?v=20261014_scoped"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+  <script src="../shared/js/vendor/exceljs.min.js"></script>
+  <script src="../shared/js/core.js?v=20261014_scoped"></script>
+  <script src="../shared/js/excel-importer.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
+  <script src="../shared/js/adhoc-defect.js?v=20261014_scoped"></script>
+  <script src="../shared/js/reports.js?v=20261014_scoped"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initReportsModule();
+    });
+  </script>
+</body>
+</html>
