@@ -1,20 +1,21 @@
 @echo off
 chcp 65001 >nul
-title SmartVMS Test Manager - Web Server Mang LAN
+title Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm - Web Server Mạng LAN
 color 0A
 
 echo ================================================================
-echo   SMARTVMS TEST MANAGER - KHOI DONG HE THONG KIEM THU MANG LAN
+echo   HỆ THỐNG KIỂM THỬ & QUẢN LÝ CHẤT LƯỢNG PHẦN MỀM
+echo   KHỞI ĐỘNG MÁY CHỦ KIỂM THỬ MẠNG LAN / NỘI BỘ (CỔNG 8080)
 echo ================================================================
 echo.
-echo Dang khoi chay may chu Node.js tren cong 8080...
-echo Cho phep tat ca cac may tinh tram gac va dien thoai trong mang LAN truy cap.
+echo Đang khởi chạy máy chủ Node.js trên cổng 8080...
+echo Cho phép tất cả các máy tính trạm và thiết bị trong mạng LAN truy cập.
 echo.
 
-:: Mo trinh duyet sau 2 giay
+:: Mở trình duyệt sau 2 giây
 start "" cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:8080"
 
-:: Chay may chu
+:: Chạy máy chủ
 node "%~dp0server.js"
 
 pause

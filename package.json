@@ -1,19 +1,23 @@
 {
-  "name": "smartvms-test-manager",
+  "name": "software-quality-test-manager",
   "version": "3.0.0",
   "private": true,
-  "description": "SmartVMS Test Manager — Online Testing & QA Platform with Supabase Realtime & Vercel",
+  "description": "Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm (Software Quality & Test Management System)",
+  "main": "server.js",
   "scripts": {
-    "start": "npx serve .",
-    "test": "node --check app.js"
+    "start": "node server.js",
+    "serve": "npx serve .",
+    "check": "node --check server.js"
   },
   "keywords": [
-    "smartvms",
     "qa",
-    "test-manager",
+    "test-management",
+    "quality-assurance",
+    "iso-29119",
+    "iso-25010",
     "supabase",
     "vercel"
   ],
-  "author": "SmartVMS Team",
+  "author": "Software Quality Team",
   "license": "MIT"
 }

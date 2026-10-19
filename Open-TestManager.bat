@@ -1,21 +1,22 @@
 @echo off
 chcp 65001 >nul
-title SmartVMS Test Manager - Cổng Khởi Động
+title Hệ Thống Kiểm Thử & Quản Lý Chất Lượng Phần Mềm
 color 0B
 
 echo ================================================================
-echo   HỆ THỐNG QUẢN LÝ & ĐÁNH GIÁ CHẤT LƯỢNG KIỂM THỬ SMARTVMS
+echo   HỆ THỐNG KIỂM THỬ & QUẢN LÝ CHẤT LƯỢNG PHẦN MỀM
+echo   (Software Quality & Test Management System — SQTM)
 echo ================================================================
 echo.
 echo Vui lòng chọn môi trường bạn muốn truy cập:
 echo.
-echo   [1] ONLINE INTERNET (Khuyên dùng - Truy cập mọi thiết bị, Realtime Cloud)
+echo   [1] ONLINE CLOUD (Truy cập mọi nơi, Realtime Cloud Supabase)
 echo       👉 https://smartvms-test-manager.vercel.app
 echo.
 echo   [2] MẠNG NỘI BỘ LAN (Khởi động Web Server LAN cổng 8080)
-echo       👉 Dùng cho các máy tính trạm gác trong mạng nội bộ cơ quan
+echo       👉 Dùng cho các máy tính trạm trong mạng nội bộ cơ quan
 echo.
-echo   [3] CỤC BỘ OFFLINE (Mở trực tiếp file HTML trên máy này)
+echo   [3] CỤC BỘ TRÊN MÁY NÀY (Mở trực tiếp tệp HTML cục bộ)
 echo.
 set /p opt="Nhập lựa chọn của bạn [1, 2 hoặc 3, mặc định là 1]: "
 
@@ -37,16 +38,17 @@ goto end
 
 :local
 echo.
-echo Đang mở trực tiếp file cục bộ...
+echo Đang mở trực tiếp tệp cục bộ...
 start "" "%~dp0index.html"
 goto end
 
 :end
 echo.
-echo Tài khoản sử dụng:
-echo - Quản lý (QA Lead):  admin  / 123
-echo - Người kiểm thử:      tester / 123
-echo - Lập trình viên:     dev    / 123
+echo Danh sách tài khoản mẫu mặc định:
+echo - Quản trị viên Cấp cao (Super Admin): admin  / 123
+echo - Quản trị viên Dự án (Project Lead): lead   / 123
+echo - Kiểm thử viên (Tester):             tester / 123
+echo - Kỹ sư Lập trình (Developer):        dev    / 123
 echo.
 timeout /t 3 >nul
 exit
