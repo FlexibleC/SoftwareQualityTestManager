@@ -465,8 +465,9 @@
 
       // Go-Live readiness
       const readyPercent = p.totalProjects > 0 ? Math.round((p.readyToGoLiveCount / p.totalProjects) * 100) : 0;
+      const inProgressCount = p.totalProjects - p.readyToGoLiveCount;
       document.getElementById('kpi-golive-readiness').textContent = `${readyPercent}%`;
-      document.getElementById('kpi-golive-sub').textContent = `${p.readyToGoLiveCount} / ${p.totalProjects} dự án đủ chuẩn xuất xưởng`;
+      document.getElementById('kpi-golive-sub').textContent = `${p.readyToGoLiveCount} / ${p.totalProjects} dự án đạt chuẩn (${inProgressCount} đang thiết lập/kiểm thử)`;
 
       // Pass Rate & Coverage
       document.getElementById('kpi-avg-passrate').textContent = `${p.avgPassRate}%`;
@@ -546,15 +547,22 @@
 
       tbody.innerHTML = filtered.map(ps => {
         let healthPill = `<span class="health-pill-green">🟢 ${ps.score}/100 Tốt</span>`;
-        if (ps.healthStatus === 'WARNING') {
+        if (ps.totalTcs === 0 || ps.executed === 0) {
+          healthPill = `<span class="health-pill-green" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0">🟢 ${ps.score}/100 Khởi tạo</span>`;
+        } else if (ps.healthStatus === 'WARNING') {
           healthPill = `<span class="health-pill-yellow">🟡 ${ps.score}/100 Cần lưu ý</span>`;
         } else if (ps.healthStatus === 'CRITICAL') {
           healthPill = `<span class="health-pill-red">🔴 ${ps.score}/100 Báo động</span>`;
         }
 
-        const gateBadge = ps.releaseGate === 'GO' 
-          ? `<span class="gate-badge-go">🚀 Đạt chuẩn</span>` 
-          : `<span class="gate-badge-nogo">⛔ Chưa đạt</span>`;
+        let gateBadge = `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700">⏳ Đang kiểm thử</span>`;
+        if (ps.releaseGate === 'GO') {
+          gateBadge = `<span class="gate-badge-go">🚀 Đạt chuẩn</span>`;
+        } else if (ps.releaseGate === 'NO_GO') {
+          gateBadge = `<span class="gate-badge-nogo">⛔ Chưa đạt</span>`;
+        } else if (ps.releaseGate === 'SETUP' || ps.totalTcs === 0) {
+          gateBadge = `<span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:700">📝 Đang thiết lập</span>`;
+        }
 
         return `
           <tr>

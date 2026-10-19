@@ -81,54 +81,65 @@ const AdminAnalytics = {
     // THUẬT TOÁN ĐÁNH GIÁ SỨC KHỎE (HEALTH SCORE)
     let healthStatus = 'GOOD'; // 'GOOD' (🟢) | 'WARNING' (🟡) | 'CRITICAL' (🔴)
     let healthReasons = [];
+    let score = 100;
 
+    // 1. Nếu dự án mới khởi tạo, chưa có kịch bản hoặc chưa chạy test
     if (totalTcs === 0) {
-      healthStatus = 'WARNING';
-      healthReasons.push('Chưa nạp kịch bản kiểm thử nào (0 TCs).');
-    } else if (!hasTester) {
-      healthStatus = 'CRITICAL';
-      healthReasons.push('Chưa được Super Admin phân bổ Tester vào dự án.');
-    } else if (openBlockers > 0) {
-      healthStatus = 'CRITICAL';
-      healthReasons.push(`Có ${openBlockers} lỗi Blocker nghiêm trọng đang chặn kiểm thử.`);
-    } else if (openCriticals > 1) {
-      healthStatus = 'CRITICAL';
-      healthReasons.push(`Có ${openCriticals} lỗi Critical chưa được giải quyết.`);
-    } else if (executed > 0 && (failed / executed) > 0.20) {
-      healthStatus = 'CRITICAL';
-      healthReasons.push(`Tỷ lệ lỗi quá cao (${Math.round((failed / executed) * 100)}% thất bại).`);
-    } else if (openCriticals === 1 || openMajors > 2) {
-      healthStatus = 'WARNING';
-      healthReasons.push('Còn lỗi Critical hoặc nhiều lỗi Major chưa đóng.');
-    } else if (progressPercent < 50 && totalTcs > 20) {
-      healthStatus = 'WARNING';
-      healthReasons.push(`Tiến độ thực thi còn chậm (${progressPercent}%).`);
-    } else if (passRatePercent < 85 && executed > 0) {
-      healthStatus = 'WARNING';
-      healthReasons.push(`Tỷ lệ đạt chưa đạt chuẩn 85% (${passRatePercent}% Pass).`);
-    } else {
+      if (!hasTester) {
+        healthStatus = 'WARNING';
+        score = 80;
+        healthReasons.push('Dự án mới khởi tạo, cần phân bổ thêm Tester.');
+      } else {
+        healthStatus = 'GOOD';
+        score = 100;
+        healthReasons.push('Dự án mới khởi tạo, nhân sự đã sẵn sàng, đang trong giai đoạn thiết lập kịch bản.');
+      }
+    } else if (executed === 0) {
       healthStatus = 'GOOD';
-      healthReasons.push('Chất lượng kiểm thử ổn định, không có lỗi nghiêm trọng.');
+      score = 100;
+      healthReasons.push(`Đã nạp ${totalTcs} kịch bản kiểm thử, đang chuẩn bị thực thi đợt test.`);
+    } else {
+      // 2. Dự án đã chạy kiểm thử -> tính toán theo kết quả thực tế
+      if (openBlockers > 0) {
+        healthStatus = 'CRITICAL';
+        healthReasons.push(`Có ${openBlockers} lỗi Blocker nghiêm trọng đang chặn kiểm thử.`);
+      } else if (openCriticals > 1) {
+        healthStatus = 'CRITICAL';
+        healthReasons.push(`Có ${openCriticals} lỗi Critical chưa được giải quyết.`);
+      } else if (executed > 0 && (failed / executed) > 0.25) {
+        healthStatus = 'CRITICAL';
+        healthReasons.push(`Tỷ lệ lỗi cao (${Math.round((failed / executed) * 100)}% thất bại).`);
+      } else if (openCriticals === 1 || openMajors > 2) {
+        healthStatus = 'WARNING';
+        healthReasons.push('Còn lỗi Critical hoặc nhiều lỗi Major chưa đóng.');
+      } else if (passRatePercent < 85 && executed > 0) {
+        healthStatus = 'WARNING';
+        healthReasons.push(`Tỷ lệ đạt chưa đạt chuẩn 85% (${passRatePercent}% Pass).`);
+      } else {
+        healthStatus = 'GOOD';
+        healthReasons.push('Chất lượng kiểm thử ổn định, không có lỗi nghiêm trọng.');
+      }
+
+      // Tính điểm chất lượng thực tế
+      let rawScore = passRatePercent;
+      rawScore -= (openBlockers * 20);
+      rawScore -= (openCriticals * 10);
+      rawScore -= (openMajors * 2);
+      score = Math.max(0, Math.min(100, Math.round(rawScore)));
+      if (healthStatus === 'GOOD' && score < 80) score = 80;
+      if (healthStatus === 'CRITICAL' && score > 59) score = 59;
     }
 
     // CỔNG ĐÁNH GIÁ PHÁT HÀNH (RELEASE READINESS GATE)
-    let releaseGate = 'IN_PROGRESS'; // 'GO' | 'NO_GO' | 'IN_PROGRESS'
-    if (totalTcs > 0 && progressPercent >= 90 && passRatePercent >= 90 && openBlockers === 0 && openCriticals === 0) {
+    let releaseGate = 'SETUP'; // 'GO' | 'NO_GO' | 'IN_PROGRESS' | 'SETUP'
+    if (totalTcs === 0) {
+      releaseGate = 'SETUP';
+    } else if (totalTcs > 0 && progressPercent >= 90 && passRatePercent >= 90 && openBlockers === 0 && openCriticals === 0) {
       releaseGate = 'GO';
-    } else if (openBlockers > 0 || (executed > 10 && passRatePercent < 75)) {
+    } else if (openBlockers > 0 || (executed >= 5 && passRatePercent < 70)) {
       releaseGate = 'NO_GO';
     } else {
       releaseGate = 'IN_PROGRESS';
-    }
-
-    // TÍNH ĐIỂM SỨC KHỎE (HEALTH SCORE / 100)
-    let score = 100;
-    if (healthStatus === 'CRITICAL') {
-      score = Math.max(25, Math.min(59, Math.round((passRatePercent || 0) * 0.5)));
-    } else if (healthStatus === 'WARNING') {
-      score = Math.max(60, Math.min(79, Math.round(passRatePercent || 70)));
-    } else {
-      score = Math.max(80, Math.min(100, passRatePercent || 95));
     }
 
     const goLiveGate = {
