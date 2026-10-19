@@ -1,6 +1,7 @@
 /**
  * LEAD MODULE: PROJECT CONTEXT & COMPACT NAVIGATION (TẦNG 2)
  * Quản trị ngữ cảnh làm việc khép kín của từng dự án
+ * Thiết kế 2 dải chuẩn Enterprise: Không gian thoáng đãng, không bị co cụm chữ
  */
 
 const LeadContext = {
@@ -68,7 +69,7 @@ const LeadContext = {
   },
 
   /**
-   * Render Thanh điều hướng dự án tinh gọn (Compact Project Navigation Bar)
+   * Render Thanh ngữ cảnh dự án 2 dải đẳng cấp Enterprise
    */
   renderCompactProjectBar() {
     const container = document.getElementById('lead-compact-bar') || document.getElementById('lead-project-hero');
@@ -78,11 +79,12 @@ const LeadContext = {
     const projects = typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects();
 
     if (!p) {
+      container.className = 'lead-project-scope-header';
       container.innerHTML = `
-        <div style="padding:16px 24px; display:flex; align-items:center; justify-content:space-between">
-          <div style="display:flex; align-items:center; gap:12px">
+        <div class="lead-scope-inner">
+          <div class="lead-scope-left">
             <a href="index.html" class="btn-back-hub">⬅ Về danh mục dự án</a>
-            <span style="color:var(--text-muted); font-size:13px">Chưa chọn dự án nào</span>
+            <span style="color:var(--text-muted); font-size:13px; font-weight:600">Chưa chọn dự án nào</span>
           </div>
         </div>
       `;
@@ -91,67 +93,72 @@ const LeadContext = {
 
     const tId = encodeURIComponent(p.id);
 
-    container.className = 'lead-compact-bar';
+    container.className = '';
     container.innerHTML = `
-      <div class="lead-compact-bar-inner">
-        <!-- Vùng bên trái: Nút quay lại danh mục + Tên dự án -->
-        <div class="lead-compact-left">
-          <a href="index.html" class="btn-back-hub" title="Quay về Trung tâm điều hành danh mục dự án">
-            <span>⬅</span>
-            <span>Danh mục dự án</span>
-          </a>
+      <!-- Dải 1: Định danh dự án & Điều hướng cấp cao -->
+      <div class="lead-project-scope-header">
+        <div class="lead-scope-inner">
+          <div class="lead-scope-left">
+            <a href="index.html" class="btn-back-hub" title="Quay về Trung tâm điều hành danh mục dự án">
+              <span>⬅</span>
+              <span>Danh mục dự án</span>
+            </a>
 
-          <div class="lead-compact-breadcrumb">
-            <div class="lead-compact-cube">
+            <div class="lead-scope-divider"></div>
+
+            <div class="lead-scope-cube">
               ${(p.code || 'PRJ').substring(0, 3)}
             </div>
-            <div class="lead-compact-title-wrap">
-              <h2 class="lead-compact-title">${escapeHtml(p.name)}</h2>
-              <div class="lead-compact-meta">
-                <span>Mã: <strong>${escapeHtml(p.code || 'PRJ')}</strong></span>
-                <span>•</span>
-                <span class="badge badge-info" style="font-size:10.5px">Phiên bản: ${escapeHtml(p.activeVersion || 'v1.0')}</span>
+
+            <div class="lead-scope-info">
+              <div class="lead-scope-title-row">
+                <h2 class="lead-scope-title">${escapeHtml(p.name)}</h2>
+                <span class="badge badge-info" style="font-size:11px; font-weight:800">Mã: ${escapeHtml(p.code || 'PRJ')}</span>
+                <span class="badge badge-pass" style="font-size:11px; font-weight:800">Phiên bản: ${escapeHtml(p.activeVersion || 'v1.0')}</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Vùng giữa: 5 Tabs phân hệ khép kín của dự án -->
-        <nav class="lead-project-tabs" role="navigation">
-          <a href="project.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'project' ? 'active' : ''}">
-            <span>📊</span>
-            <span>Tổng quan</span>
-          </a>
-          <a href="testcases.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'testcases' ? 'active' : ''}">
-            <span>📋</span>
-            <span>Kịch bản kiểm thử</span>
-          </a>
-          <a href="assignments.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'assignments' ? 'active' : ''}">
-            <span>📌</span>
-            <span>Điều phối & giao việc</span>
-          </a>
-          <a href="reports.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'reports' ? 'active' : ''}">
-            <span>📈</span>
-            <span>Báo cáo chất lượng</span>
-          </a>
-          <a href="settings.html?projectId=${tId}" class="lead-project-tab ${this.activeTab === 'settings' ? 'active' : ''}">
-            <span>⚙️</span>
-            <span>Cài đặt dự án</span>
-          </a>
-        </nav>
-
-        <!-- Vùng bên phải: Dropdown đổi nhanh sang dự án khác -->
-        <div class="lead-quick-switcher">
-          <span style="font-size:12px; color:var(--text-muted); font-weight:700">Đổi DA:</span>
-          <select class="lead-quick-select" onchange="LeadContext.switchProject(this.value)">
-            ${projects.map(proj => `
-              <option value="${proj.id}" ${proj.id === p.id ? 'selected' : ''}>
-                [${proj.code}] ${proj.name}
-              </option>
-            `).join('')}
-          </select>
+          <div class="lead-scope-right">
+            <div class="lead-switcher-wrap">
+              <span class="lead-switcher-lbl">Đổi dự án khác:</span>
+              <select class="lead-quick-select" onchange="LeadContext.switchProject(this.value)">
+                ${projects.map(proj => `
+                  <option value="${proj.id}" ${proj.id === p.id ? 'selected' : ''}>
+                    [${proj.code}] ${proj.name}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Dải 2: 5 Tab phân hệ khép kín nội bộ dự án -->
+      <nav class="lead-project-subnav" role="navigation">
+        <div class="lead-subnav-inner">
+          <a href="project.html?projectId=${tId}" class="lead-subnav-tab ${this.activeTab === 'project' ? 'active' : ''}">
+            <span style="font-size:15px">📊</span>
+            <span>Tổng quan dự án</span>
+          </a>
+          <a href="testcases.html?projectId=${tId}" class="lead-subnav-tab ${this.activeTab === 'testcases' ? 'active' : ''}">
+            <span style="font-size:15px">📋</span>
+            <span>Kịch bản kiểm thử</span>
+          </a>
+          <a href="assignments.html?projectId=${tId}" class="lead-subnav-tab ${this.activeTab === 'assignments' ? 'active' : ''}">
+            <span style="font-size:15px">📌</span>
+            <span>Kế hoạch & Giao việc</span>
+          </a>
+          <a href="reports.html?projectId=${tId}" class="lead-subnav-tab ${this.activeTab === 'reports' ? 'active' : ''}">
+            <span style="font-size:15px">📈</span>
+            <span>Báo cáo chất lượng</span>
+          </a>
+          <a href="settings.html?projectId=${tId}" class="lead-subnav-tab ${this.activeTab === 'settings' ? 'active' : ''}">
+            <span style="font-size:15px">⚙️</span>
+            <span>Cài đặt dự án</span>
+          </a>
+        </div>
+      </nav>
     `;
   },
 

@@ -1,16 +1,16 @@
 /**
  * PROJECT LEAD WORKSPACE STYLES (lead-theme.css)
  * Hệ thống giao diện phân tầng chuyên biệt dành cho Quản Trị Viên Dự Án (Project Lead)
- * Tuân thủ chuẩn Enterprise: Portfolio Hub (Đa dự án) & Dedicated Project Workspace (Đơn dự án)
+ * Thiết kế chuẩn mực Enterprise: Độ tương phản cao, nút bấm to rõ ràng, không gian thoáng đãng
  */
 
-/* ==================== PROJECT LEAD TOPBAR ==================== */
+/* ==================== 1. GLOBAL TOPBAR ==================== */
 .lead-topbar {
   background: #0f172a;
   border-bottom: 2px solid #1e293b;
   color: #ffffff;
   padding: 0 24px;
-  height: 62px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -28,17 +28,17 @@
 }
 
 .lead-brand-badge {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   background: linear-gradient(135deg, #d97706, #b45309);
   color: #ffffff;
-  font-size: 20px;
+  font-size: 19px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.35);
   flex-shrink: 0;
 }
 
@@ -54,49 +54,46 @@
   font-size: 11px;
   color: #f59e0b;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   display: block;
+  margin-top: 2px;
 }
 
-/* ==================== TẦNG 2: COMPACT PROJECT NAVIGATION BAR ==================== */
-.lead-compact-bar {
+/* ==================== 2. TẦNG 2: THANH NGỮ CẢNH DỰ ÁN (2 DẢI CHUYÊN NGHIỆP) ==================== */
+/* Dải 1: Project Identity & Actions Header */
+.lead-project-scope-header {
   background: var(--bg-card);
-  border-bottom: 2px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 62px;
-  z-index: 40;
-  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
 }
 
-.lead-compact-bar-inner {
+.lead-scope-inner {
   max-width: 1440px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
-.lead-compact-left {
+.lead-scope-left {
   display: flex;
   align-items: center;
   gap: 14px;
-  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .btn-back-hub {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 9px 16px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary);
-  background: var(--bg-surface);
-  border: 1.5px solid var(--border);
+  color: #1d4ed8;
+  background: rgba(29, 78, 216, 0.08);
+  border: 1.5px solid rgba(29, 78, 216, 0.25);
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -104,66 +101,104 @@
 }
 
 .btn-back-hub:hover {
-  background: var(--primary-subtle);
-  border-color: var(--primary);
-  color: var(--primary);
+  background: #1d4ed8;
+  color: #ffffff !important;
+  border-color: #1d4ed8;
   transform: translateX(-2px);
+  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25);
 }
 
-.lead-compact-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+.lead-scope-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
 }
 
-.lead-compact-cube {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #2563eb, #0284c7);
+.lead-scope-cube {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
   color: #ffffff;
-  font-size: 12.5px;
+  font-size: 15px;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25);
 }
 
-.lead-compact-title-wrap {
-  min-width: 0;
+.lead-scope-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.lead-compact-title {
-  font-size: 15px;
+.lead-scope-title {
+  font-size: 17px;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
-.lead-compact-meta {
-  font-size: 11.5px;
-  color: var(--text-muted);
+.lead-scope-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lead-switcher-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Tabs điều hướng nội bộ trong không gian dự án */
-.lead-project-tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 100%;
+.lead-switcher-lbl {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
-.lead-project-tab {
+.lead-quick-select {
+  height: 38px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 12px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Dải 2: Subnav Tabs Bar */
+.lead-project-subnav {
+  background: var(--bg-surface);
+  border-bottom: 2px solid var(--border);
+  padding: 0 24px;
+  position: sticky;
+  top: 60px;
+  z-index: 40;
+}
+
+.lead-subnav-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  overflow-x: auto;
+}
+
+.lead-subnav-tab {
   height: 100%;
-  padding: 0 16px;
+  padding: 0 18px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -176,39 +211,148 @@
   white-space: nowrap;
 }
 
-.lead-project-tab:hover {
+.lead-subnav-tab:hover {
   color: var(--text-primary);
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.03);
 }
 
-.lead-project-tab.active {
-  color: #2563eb;
+.lead-subnav-tab.active {
+  color: #1d4ed8;
   font-weight: 800;
-  border-bottom-color: #2563eb;
-  background: rgba(37, 99, 235, 0.04);
+  border-bottom-color: #1d4ed8;
+  background: rgba(29, 78, 216, 0.05);
 }
 
-.lead-quick-switcher {
+/* ==================== 3. PROJECT KPI METRIC CARDS (FIX LỖI CO DÚM) ==================== */
+.lead-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .lead-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .lead-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lead-kpi-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 84px;
+}
+
+.lead-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.lead-kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.lead-kpi-val {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.lead-kpi-lbl {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* ==================== 4. TEST CYCLES PROGRESS & ROSTER CARDS ==================== */
+.cycle-track-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.cycle-track-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
-.lead-quick-select {
-  height: 36px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--bg-surface);
+.cycle-track-title {
+  font-size: 14.5px;
+  font-weight: 800;
   color: var(--text-primary);
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 0 10px;
-  outline: none;
-  font-family: inherit;
-  cursor: pointer;
 }
 
-/* ==================== TẦNG 1: PORTFOLIO HUB (ĐA DỰ ÁN) ==================== */
+.progress-bar-wrap {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-body);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  display: flex;
+  margin: 10px 0;
+}
+
+.progress-pass {
+  background: #16a34a;
+  height: 100%;
+}
+.progress-fail {
+  background: #dc2626;
+  height: 100%;
+}
+.progress-untested {
+  background: #cbd5e1;
+  height: 100%;
+}
+
+.tester-roster-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s ease;
+}
+
+.tester-roster-card:hover {
+  border-color: #2563eb;
+  background: var(--bg-card);
+}
+
+.user-avatar-circle {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ==================== 5. TẦNG 1: PORTFOLIO HUB (ĐA DỰ ÁN) ==================== */
 .lead-portfolio-header-strip {
   background: var(--bg-card);
   border: 1.5px solid var(--border);
@@ -220,7 +364,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 20px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .lead-portfolio-heading {
@@ -255,13 +399,13 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .lead-portfolio-kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
 }
 
 .lead-portfolio-kpi-icon {
@@ -306,9 +450,8 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 18px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.25s ease;
-  position: relative;
 }
 
 .lead-portfolio-card:hover {
@@ -362,11 +505,6 @@
   flex-wrap: wrap;
 }
 
-/* Thước đo tiến độ thẻ dự án */
-.lead-portfolio-progress-wrap {
-  margin: 8px 0;
-}
-
 .lead-portfolio-progress-bar {
   height: 10px;
   border-radius: 999px;
@@ -404,7 +542,7 @@
   margin-top: 2px;
 }
 
-/* Nút hành động vào không gian dự án - TO, RÕ RÀNG, TƯƠNG PHẢN CAO */
+/* NÚT VÀO KHÔNG GIAN DỰ ÁN - TO, RÕ RÀNG, TƯƠNG PHẢN CAO */
 .btn-enter-workspace {
   display: flex;
   align-items: center;
@@ -430,13 +568,13 @@
   box-shadow: 0 6px 16px rgba(29, 78, 216, 0.4);
 }
 
-/* Bảng đối soát đa dự án (Comparison Matrix Table) */
+/* Bảng đối soát đa dự án */
 .lead-matrix-card {
   background: var(--bg-card);
   border: 1.5px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   margin-bottom: 28px;
 }
 
@@ -469,7 +607,7 @@
   background: rgba(37, 99, 235, 0.02);
 }
 
-/* Nút bấm chuẩn hóa độ tương phản cao */
+/* Nút bấm hành động chung */
 .btn-lead-action {
   display: inline-flex;
   align-items: center;
@@ -489,6 +627,7 @@
   border: 1px solid #1e40af;
   box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2);
 }
+
 .btn-lead-primary:hover {
   background: #1e40af;
   box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
@@ -499,8 +638,9 @@
   color: var(--text-primary);
   border: 1.5px solid var(--border);
 }
+
 .btn-lead-outline:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-subtle);
+  border-color: #2563eb;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.05);
 }
