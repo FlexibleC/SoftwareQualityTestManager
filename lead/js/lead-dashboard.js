@@ -8,6 +8,7 @@ const LeadDashboard = {
     this.renderKpis();
     this.renderActiveCycles();
     this.renderProjectRoster();
+    this.renderDevPipeline();
   },
 
   renderKpis() {
@@ -153,5 +154,111 @@ const LeadDashboard = {
         </div>
       `;
     }).join('');
+  },
+
+  renderDevPipeline() {
+    const p = getActiveProject();
+    if (!p) return;
+
+    const defects = (typeof getProjectDefects === 'function') 
+      ? getProjectDefects(p.id) 
+      : [];
+
+    let newCount = 0;
+    let wipCount = 0;
+    let reopenedCount = 0;
+    let fixedCount = 0;
+    let closedCount = 0;
+
+    defects.forEach(d => {
+      if (d.defectStatus === 'New') newCount++;
+      else if (d.defectStatus === 'In Progress') wipCount++;
+      else if (d.defectStatus === 'Reopened') reopenedCount++;
+      else if (d.defectStatus === 'Fixed' || d.defectStatus === 'Resolved') fixedCount++;
+      else if (d.defectStatus === 'Closed') closedCount++;
+      else newCount++;
+    });
+
+    const total = defects.length;
+    const resolvedTotal = fixedCount + closedCount;
+    const fixRate = total > 0 ? Math.round((resolvedTotal / total) * 100) : 100;
+
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    setVal('lead-dev-kpi-new', newCount);
+    setVal('lead-dev-kpi-wip', wipCount);
+    setVal('lead-dev-kpi-reopened', reopenedCount);
+    setVal('lead-dev-kpi-fixed', fixedCount);
+    setVal('lead-dev-kpi-closed', closedCount);
+    setVal('lead-dev-kpi-fixrate', `${fixRate}%`);
+
+    const descEl = document.getElementById('lead-dev-pipeline-desc');
+    if (descEl) {
+      descEl.textContent = `${resolvedTotal} / ${total} lỗi đã được giải quyết (${fixRate}%)`;
+    }
+
+    if (total > 0) {
+      const setWidth = (id, count) => {
+        const el = document.getElementById(id);
+        if (el) el.style.width = `${((count / total) * 100).toFixed(1)}%`;
+      };
+      setWidth('lead-pipe-closed', closedCount);
+      setWidth('lead-pipe-fixed', fixedCount);
+      setWidth('lead-pipe-wip', wipCount);
+      setWidth('lead-pipe-reopened', reopenedCount);
+      setWidth('lead-pipe-new', newCount);
+    }
+
+    const hotContainer = document.getElementById('lead-dev-hot-defects');
+    if (!hotContainer) return;
+
+    if (total === 0) {
+      hotContainer.innerHTML = `
+        <div style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px; background:var(--bg-body); border-radius:6px">
+          🎉 Tuyệt vời! Hiện tại dự án không có lỗi nào chưa được xử lý.
+        </div>
+      `;
+      return;
+    }
+
+    // Ưu tiên hiển thị lỗi Reopened, Critical và New
+    const priorityDefects = [...defects].sort((a, b) => {
+      const score = d => (d.defectStatus === 'Reopened' ? 4 : (d.severity === 'Critical' ? 3 : (d.defectStatus === 'New' ? 2 : 1)));
+      return score(b) - score(a);
+    }).slice(0, 5);
+
+    hotContainer.innerHTML = `
+      <div style="font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:8px">
+        🔥 Các lỗi trọng yếu cần chú ý & đôn đốc xử lý:
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px">
+        ${priorityDefects.map(d => {
+          let stColor = '#dc2626';
+          let stText = 'New';
+          if (d.defectStatus === 'In Progress') { stColor = '#f59e0b'; stText = 'Đang sửa'; }
+          else if (d.defectStatus === 'Reopened') { stColor = '#b91c1c'; stText = '⚠️ Reopened'; }
+          else if (d.defectStatus === 'Fixed') { stColor = '#7c3aed'; stText = 'Chờ Re-test'; }
+          else if (d.defectStatus === 'Closed') { stColor = '#16a34a'; stText = 'Closed'; }
+
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:6px; font-size:12px">
+              <div style="display:flex; align-items:center; gap:8px">
+                <strong style="color:var(--primary); font-family:monospace">[${escapeHtml(d.tcId)}]</strong>
+                <span style="font-weight:600; color:var(--text-primary)">${escapeHtml(d.tcTitle)}</span>
+                <span style="font-size:10.5px; padding:1px 6px; border-radius:4px; font-weight:700; background:rgba(220,38,38,0.1); color:#dc2626">${escapeHtml(d.severity)}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px">
+                <span style="font-size:11px; color:var(--text-muted)">Gán: <strong>${escapeHtml(d.assignedDev || 'Chưa gán')}</strong></span>
+                <span style="font-weight:700; color:${stColor}; font-size:11px">${stText}</span>
+                <a href="../dev/index.html" class="btn btn-outline btn-xs" style="padding:2px 8px; font-size:10.5px">Chi tiết ➔</a>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
   }
 };

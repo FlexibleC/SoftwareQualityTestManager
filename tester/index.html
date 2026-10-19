@@ -463,6 +463,13 @@
             <div class="stat-label">Bị chặn (Blocked)</div>
           </div>
         </div>
+        <div class="stat-card" style="border-left:4px solid #8b5cf6; cursor:pointer" onclick="filterByRetestQuickly()" title="Bấm để lọc nhanh các bài cần Re-test">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-body">
+            <div class="stat-value" id="my-kpi-retest" style="color:#7c3aed">0</div>
+            <div class="stat-label">Cần Re-test (Dev xong)</div>
+          </div>
+        </div>
         <div class="stat-card stat-skip">
           <div class="stat-icon">⏳</div>
           <div class="stat-body">
@@ -470,6 +477,15 @@
             <div class="stat-label">Chưa chạy / Đang làm</div>
           </div>
         </div>
+      </div>
+
+      <!-- Retest Alert Banner -->
+      <div id="tester-retest-alert" style="display:none; margin-bottom:12px; padding:10px 16px; border-radius:8px; background:#faf5ff; border:1px solid #d8b4fe; color:#6b21a8; font-size:12.5px; align-items:center; justify-content:space-between; gap:10px">
+        <div style="display:flex; align-items:center; gap:8px">
+          <span style="font-size:18px">🔔</span>
+          <span><strong>Có <span id="retest-alert-count">0</span> bài kiểm thử</strong> đã được Developer sửa xong và đang chờ bạn Re-test nghiệm thu!</span>
+        </div>
+        <button type="button" class="btn btn-sm" style="background:#7c3aed; color:#fff; border:none; font-weight:700" onclick="filterByRetestQuickly()">🔍 Xem các bài cần Re-test ngay</button>
       </div>
 
       <!-- Filters Ribbon -->
@@ -494,6 +510,7 @@
           <label>Trạng thái thực thi</label>
           <select id="filter-status" onchange="renderMyTasks()">
             <option value="">Tất cả trạng thái</option>
+            <option value="RETEST" style="font-weight:bold; color:#7c3aed">🔄 Cần Re-test (Dev Đã Sửa Xong)</option>
             <option value="Not Run">⚪ Chưa chạy</option>
             <option value="WIP">⏳ Đang thực hiện (WIP)</option>
             <option value="PASSED">✅ Đã Đạt (Pass)</option>
@@ -1039,6 +1056,14 @@
       renderMyTasks();
     }
 
+    function filterByRetestQuickly() {
+      const st = document.getElementById('filter-status');
+      if (st) {
+        st.value = 'RETEST';
+        renderMyTasks();
+      }
+    }
+
     function renderMyTasks() {
       const tbody = document.getElementById('my-tasks-tbody');
       if (!tbody) return;
@@ -1082,14 +1107,21 @@
       let failCount = 0;
       let blockedCount = 0;
       let pendingCount = 0;
+      let retestCount = 0;
 
       myAsgs.forEach(a => {
-        const res = state.results ? state.results[a.tcId] : null;
+        const res = (typeof getResultForTc === 'function')
+          ? getResultForTc(a.tcId, state.activeProjectId)
+          : (state.results ? state.results[a.tcId] : null);
         const curStatus = ((res ? res.status : a.status) || 'Not Run').toUpperCase();
         if (curStatus === 'PASS' || curStatus === 'PASSED') passCount++;
         else if (curStatus === 'FAIL' || curStatus === 'FAILED') failCount++;
         else if (curStatus === 'BLOCKED') blockedCount++;
         else pendingCount++;
+
+        if (res && (res.defectStatus === 'Fixed' || res.defectStatus === 'Resolved')) {
+          retestCount++;
+        }
       });
 
       document.getElementById('my-kpi-total').textContent = totalCount;
@@ -1098,12 +1130,24 @@
       if (document.getElementById('my-kpi-blocked')) {
         document.getElementById('my-kpi-blocked').textContent = blockedCount;
       }
+      if (document.getElementById('my-kpi-retest')) {
+        document.getElementById('my-kpi-retest').textContent = retestCount;
+      }
       document.getElementById('my-kpi-pending').textContent = pendingCount;
+
+      const alertBanner = document.getElementById('tester-retest-alert');
+      const alertCount = document.getElementById('retest-alert-count');
+      if (alertBanner && alertCount) {
+        alertCount.textContent = retestCount;
+        alertBanner.style.display = retestCount > 0 ? 'flex' : 'none';
+      }
 
       // Filter list
       const filtered = myAsgs.filter(a => {
         const tc = tcMap[a.tcId] || { title: a.tcId, module: a.module, priority: a.priority, type: 'Chức năng' };
-        const res = state.results ? state.results[a.tcId] : null;
+        const res = (typeof getResultForTc === 'function')
+          ? getResultForTc(a.tcId, state.activeProjectId)
+          : (state.results ? state.results[a.tcId] : null);
         const curStatus = (res ? res.status : (a.status || 'Not Run')).toUpperCase();
 
         if (modVal && a.module !== modVal && tc.module !== modVal) return false;
@@ -1113,13 +1157,17 @@
         }
         if (prioVal && a.priority !== prioVal && tc.priority !== prioVal) return false;
         if (stVal) {
-          const s = curStatus;
-          if (stVal === 'PASSED' && s !== 'PASS' && s !== 'PASSED') return false;
-          if (stVal === 'FAILED' && s !== 'FAIL' && s !== 'FAILED') return false;
-          if (stVal === 'BLOCKED' && s !== 'BLOCKED') return false;
-          if (stVal === 'WIP' && s !== 'WIP' && s !== 'IN PROGRESS') return false;
-          if (stVal === 'Not Run' && s !== 'NOT RUN' && s !== 'NEW') return false;
-          if (stVal === 'SKIP' && s !== 'SKIP') return false;
+          if (stVal === 'RETEST') {
+            if (!res || (res.defectStatus !== 'Fixed' && res.defectStatus !== 'Resolved')) return false;
+          } else {
+            const s = curStatus;
+            if (stVal === 'PASSED' && s !== 'PASS' && s !== 'PASSED') return false;
+            if (stVal === 'FAILED' && s !== 'FAIL' && s !== 'FAILED') return false;
+            if (stVal === 'BLOCKED' && s !== 'BLOCKED') return false;
+            if (stVal === 'WIP' && s !== 'WIP' && s !== 'IN PROGRESS') return false;
+            if (stVal === 'Not Run' && s !== 'NOT RUN' && s !== 'NEW') return false;
+            if (stVal === 'SKIP' && s !== 'SKIP') return false;
+          }
         }
         if (kw) {
           const matchId = a.tcId.toLowerCase().includes(kw);
@@ -1138,9 +1186,19 @@
 
       tbody.innerHTML = filtered.map(a => {
         const tc = tcMap[a.tcId] || { title: a.tcId, name: a.tcId, module: a.module || 'M01', priority: a.priority || 'P2', type: 'Chức năng' };
-        const res = state.results ? state.results[a.tcId] : null;
+        const res = (typeof getResultForTc === 'function')
+          ? getResultForTc(a.tcId, state.activeProjectId)
+          : (state.results ? state.results[a.tcId] : null);
         const curStatus = res ? res.status : (a.status || 'Not Run');
         const badgeHtml = statusBadge(curStatus);
+        const isRetestNeeded = res && (res.defectStatus === 'Fixed' || res.defectStatus === 'Resolved');
+
+        const statusColumnHtml = isRetestNeeded
+          ? `<div style="display:flex; flex-direction:column; align-items:center; gap:3px">
+              ${badgeHtml}
+              <span class="badge" style="background:#f3e8ff; color:#7c3aed; border:1px solid #c084fc; font-weight:800; font-size:10px" title="Dev đã sửa xong: ${escapeHtml(res.assignedDev || '')} (Bản vá: ${escapeHtml(res.fixVersion || 'Mới')})">🔄 Dev Đã Sửa</span>
+            </div>`
+          : badgeHtml;
 
         const dateRange = (a.startDate && a.dueDate) ? `${a.startDate} → ${a.dueDate}` : (a.dueDate || 'Chưa đặt');
         const prioBadge = renderCompactPriorityBadge(tc.priority || a.priority);
@@ -1149,8 +1207,12 @@
           ? `<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-size:10.5px" title="${escapeHtml(cycleObj.name)}">🎯 ${escapeHtml(cycleObj.code || cycleObj.name)}</span>` 
           : '<span class="badge badge-nr">Đợt 1</span>';
 
+        const actionBtnHtml = isRetestNeeded
+          ? `<a href="execution.html?tc=${a.tcId}" class="task-run-btn" style="background:#7c3aed" title="Dev đã sửa xong, vào Re-test nghiệm thu">🔄 Re-test</a>`
+          : `<a href="execution.html?tc=${a.tcId}" class="task-run-btn" title="Chạy kịch bản này">▶️ Test</a>`;
+
         return `
-          <tr>
+          <tr ${isRetestNeeded ? 'style="background:rgba(124, 58, 237, 0.03)"' : ''}>
             <td style="width:110px"><span class="tc-badge-id" onclick="viewMyTaskDetail('${a.tcId}')" title="Xem chi tiết">[${a.tcId}]</span></td>
             <td style="width:75px; text-align:center"><span class="tc-badge-id">[${a.module || tc.module || 'M01'}]</span></td>
             <td><div class="tc-title-cell" title="${escapeHtml(tc.title || tc.name || '')}">${escapeHtml(tc.title || tc.name || '')}</div></td>
@@ -1158,10 +1220,10 @@
             <td style="width:75px; text-align:center">${prioBadge}</td>
             <td style="width:125px; text-align:center">${getTestTypeBadge(tc.type)}</td>
             <td style="width:145px; text-align:center; font-size:11.5px; color:var(--text-muted)">${dateRange}</td>
-            <td style="width:115px; text-align:center">${badgeHtml}</td>
+            <td style="width:115px; text-align:center">${statusColumnHtml}</td>
             <td style="width:110px; text-align:center">
               <div style="display:inline-flex; align-items:center; gap:6px">
-                <a href="execution.html?tc=${a.tcId}" class="task-run-btn" title="Chạy kịch bản này">▶️ Test</a>
+                ${actionBtnHtml}
                 <button type="button" class="btn btn-outline btn-xs" onclick="viewMyTaskDetail('${a.tcId}')" title="Xem chi tiết">🔍</button>
               </div>
             </td>

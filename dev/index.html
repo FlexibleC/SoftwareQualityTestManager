@@ -120,24 +120,31 @@
 
     <!-- Dev KPI Grid -->
     <div class="dev-kpi-grid">
-      <div class="dev-kpi-card" style="border-left:4px solid #dc2626">
+      <div class="dev-kpi-card" style="border-left:4px solid #dc2626; cursor:pointer" onclick="filterDevStatus('New')">
         <div class="dev-kpi-icon">🔴</div>
         <div>
           <div class="dev-kpi-val" id="dev-kpi-new" style="color:#dc2626">0</div>
           <div class="dev-kpi-lbl">Lỗi Mới Cần Xử Lý</div>
         </div>
       </div>
-      <div class="dev-kpi-card" style="border-left:4px solid #f59e0b">
+      <div class="dev-kpi-card" style="border-left:4px solid #f59e0b; cursor:pointer" onclick="filterDevStatus('In Progress')">
         <div class="dev-kpi-icon">🟡</div>
         <div>
           <div class="dev-kpi-val" id="dev-kpi-wip" style="color:#f59e0b">0</div>
           <div class="dev-kpi-lbl">Đang Sửa (In Progress)</div>
         </div>
       </div>
-      <div class="dev-kpi-card" style="border-left:4px solid #16a34a">
-        <div class="dev-kpi-icon">🟢</div>
+      <div class="dev-kpi-card" style="border-left:4px solid #b91c1c; cursor:pointer" onclick="filterDevStatus('Reopened')">
+        <div class="dev-kpi-icon">🔥</div>
         <div>
-          <div class="dev-kpi-val" id="dev-kpi-fixed" style="color:#16a34a">0</div>
+          <div class="dev-kpi-val" id="dev-kpi-reopened" style="color:#b91c1c">0</div>
+          <div class="dev-kpi-lbl">Lỗi Tái Phát (Reopened)</div>
+        </div>
+      </div>
+      <div class="dev-kpi-card" style="border-left:4px solid #8b5cf6; cursor:pointer" onclick="filterDevStatus('Fixed')">
+        <div class="dev-kpi-icon">🔄</div>
+        <div>
+          <div class="dev-kpi-val" id="dev-kpi-fixed" style="color:#7c3aed">0</div>
           <div class="dev-kpi-lbl">Đã Fix (Chờ Re-test)</div>
         </div>
       </div>
@@ -158,7 +165,8 @@
           <option value="">Tất cả trạng thái</option>
           <option value="New">🔴 Lỗi mới (New)</option>
           <option value="In Progress">🟡 Đang xử lý (In Progress)</option>
-          <option value="Fixed">🟢 Đã khắc phục (Fixed)</option>
+          <option value="Reopened">🔥 Lỗi tái phát (Reopened)</option>
+          <option value="Fixed">🔄 Đã khắc phục (Chờ Re-test)</option>
           <option value="Closed">🏁 Đã đóng (Closed)</option>
         </select>
       </div>
@@ -298,6 +306,14 @@
       });
     }
 
+    function filterDevStatus(st) {
+      const sel = document.getElementById('dev-filter-status');
+      if (sel) {
+        sel.value = st || '';
+        renderDefectList();
+      }
+    }
+
     function resetDevFilters() {
       document.getElementById('dev-filter-status').value = '';
       document.getElementById('dev-filter-severity').value = '';
@@ -306,6 +322,9 @@
     }
 
     function getDefectsList() {
+      if (typeof getProjectDefects === 'function') {
+        return getProjectDefects(state.activeProjectId);
+      }
       const allTcs = getAllTcs();
       const tcMap = {};
       allTcs.forEach(t => { tcMap[t.id] = t; });
@@ -313,18 +332,21 @@
       const defects = [];
       Object.keys(state.results || {}).forEach(tcId => {
         const res = state.results[tcId];
-        if (res && (res.status === 'Fail' || res.status === 'FAILED' || res.failReason)) {
+        if (res && (res.status === 'Fail' || res.status === 'FAILED' || res.failReason || (res.defectStatus && res.defectStatus !== 'None'))) {
           const tc = tcMap[tcId] || { title: tcId, module: 'M01', priority: 'P2' };
           defects.push({
             tcId: tcId,
             module: tc.module || 'M01',
-            tcTitle: tc.title,
+            tcTitle: tc.title || tc.name || tcId,
             failReason: res.failReason || 'Phát hiện lỗi khi thực thi kịch bản kiểm thử',
             severity: res.severity || 'Critical',
             defectStatus: res.defectStatus || 'New',
-            tester: res.tester || 'Nguyễn Văn Nam (Tester)',
+            tester: res.tester || 'Kiểm thử viên',
             runAt: res.runAt,
-            devNotes: res.devNotes || ''
+            devNotes: res.devNotes || '',
+            fixVersion: res.fixVersion || '',
+            commitHash: res.commitHash || '',
+            rca: res.rca || ''
           });
         }
       });
@@ -340,15 +362,20 @@
       // Calculate KPI
       let newCount = 0;
       let wipCount = 0;
+      let reopenedCount = 0;
       let fixedCount = 0;
       defects.forEach(d => {
         if (d.defectStatus === 'New') newCount++;
         else if (d.defectStatus === 'In Progress') wipCount++;
-        else if (d.defectStatus === 'Fixed') fixedCount++;
+        else if (d.defectStatus === 'Reopened') reopenedCount++;
+        else if (d.defectStatus === 'Fixed' || d.defectStatus === 'Resolved') fixedCount++;
       });
 
       document.getElementById('dev-kpi-new').textContent = newCount;
       document.getElementById('dev-kpi-wip').textContent = wipCount;
+      if (document.getElementById('dev-kpi-reopened')) {
+        document.getElementById('dev-kpi-reopened').textContent = reopenedCount;
+      }
       document.getElementById('dev-kpi-fixed').textContent = fixedCount;
       document.getElementById('dev-kpi-total').textContent = defects.length;
 
@@ -357,12 +384,18 @@
       const kw = (document.getElementById('dev-filter-search')?.value || '').trim().toLowerCase();
 
       const filtered = defects.filter(d => {
-        if (stVal && d.defectStatus !== stVal) return false;
+        if (stVal) {
+          if (stVal === 'Fixed') {
+            if (d.defectStatus !== 'Fixed' && d.defectStatus !== 'Resolved') return false;
+          } else if (d.defectStatus !== stVal) {
+            return false;
+          }
+        }
         if (sevVal && d.severity !== sevVal) return false;
         if (kw) {
-          const m1 = d.tcId.toLowerCase().includes(kw);
-          const m2 = d.tcTitle.toLowerCase().includes(kw);
-          const m3 = d.failReason.toLowerCase().includes(kw);
+          const m1 = (d.tcId || '').toLowerCase().includes(kw);
+          const m2 = (d.tcTitle || '').toLowerCase().includes(kw);
+          const m3 = (d.failReason || '').toLowerCase().includes(kw);
           if (!m1 && !m2 && !m3) return false;
         }
         return true;
@@ -371,7 +404,7 @@
       document.getElementById('defect-count').textContent = filtered.length;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted)">Không có lỗi nào phù hợp với bộ lọc hiện tại.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted)">Không có lỗi nào phù hợp với bộ lọc hiện tại của dự án này.</td></tr>`;
         return;
       }
 
@@ -384,24 +417,27 @@
         let stBadge = '<span class="tc-badge" style="background:#fee2e2; color:#dc2626">🔴 New</span>';
         if (d.defectStatus === 'In Progress') {
           stBadge = '<span class="tc-badge" style="background:#fef3c7; color:#d97706">🟡 Đang sửa</span>';
-        } else if (d.defectStatus === 'Fixed') {
-          stBadge = '<span class="tc-badge" style="background:#dcfce7; color:#15803d">🟢 Đã fix</span>';
+        } else if (d.defectStatus === 'Reopened') {
+          stBadge = '<span class="tc-badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #ef4444; font-weight:800">🔥 Reopened</span>';
+        } else if (d.defectStatus === 'Fixed' || d.defectStatus === 'Resolved') {
+          stBadge = '<span class="tc-badge" style="background:#f3e8ff; color:#7c3aed; border:1px solid #c084fc; font-weight:800">🔄 Đã fix (Chờ Re-test)</span>';
         } else if (d.defectStatus === 'Closed') {
           stBadge = '<span class="tc-badge" style="background:#f1f5f9; color:#475569">🏁 Đã đóng</span>';
         }
 
         return `
-          <tr>
-            <td><strong style="color:var(--primary); font-family:monospace; font-size:12px">${d.tcId}</strong></td>
-            <td><span class="tc-badge" style="background:#e0e7ff; color:#3730a3; font-weight:700">${d.module}</span></td>
+          <tr ${d.defectStatus === 'Reopened' ? 'style="background:rgba(239, 68, 68, 0.04)"' : ''}>
+            <td><strong style="color:var(--primary); font-family:monospace; font-size:12px">${escapeHtml(d.tcId)}</strong></td>
+            <td><span class="tc-badge" style="background:#e0e7ff; color:#3730a3; font-weight:700">${escapeHtml(d.module)}</span></td>
             <td>
-              <div style="font-weight:700; color:var(--text-primary); font-size:12px">${d.tcTitle}</div>
-              <div style="font-size:11px; color:#dc2626; margin-top:2px; line-height:1.4"><strong>Lỗi:</strong> ${d.failReason}</div>
-              ${d.devNotes ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px"><em>Ghi chú fix: ${d.devNotes}</em></div>` : ''}
+              <div style="font-weight:700; color:var(--text-primary); font-size:12px">${escapeHtml(d.tcTitle)}</div>
+              <div style="font-size:11px; color:#dc2626; margin-top:2px; line-height:1.4"><strong>Lỗi:</strong> ${escapeHtml(d.failReason)}</div>
+              ${d.fixVersion ? `<div style="font-size:11px; color:#7c3aed; margin-top:2px"><strong>Bản vá:</strong> ${escapeHtml(d.fixVersion)} ${d.commitHash ? `(${escapeHtml(d.commitHash)})` : ''}</div>` : ''}
+              ${d.devNotes ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px"><em>Ghi chú fix: ${escapeHtml(d.devNotes)}</em></div>` : ''}
             </td>
-            <td style="text-align:center"><span class="severity-badge ${sevClass}">${d.severity}</span></td>
+            <td style="text-align:center"><span class="severity-badge ${sevClass}">${escapeHtml(d.severity)}</span></td>
             <td style="text-align:center">${stBadge}</td>
-            <td style="font-size:12px">${d.tester}</td>
+            <td style="font-size:12px">${escapeHtml(d.tester)}</td>
             <td style="text-align:center">
               <div style="display:inline-flex; align-items:center; gap:6px">
                 <a href="execution.html?tc=${d.tcId}" class="btn btn-outline btn-xs" title="Tái hiện bug">🔍 Tái Hiện</a>
@@ -414,8 +450,13 @@
     }
 
     function openBugStatusModal(tcId) {
-      const res = state.results[tcId];
-      if (!res) return;
+      const res = (typeof getResultForTc === 'function') 
+        ? getResultForTc(tcId, state.activeProjectId) 
+        : (state.results ? state.results[tcId] : null);
+      if (!res) {
+        showToast('⚠️ Không tìm thấy bản ghi kết quả của kịch bản này!', 'error');
+        return;
+      }
       document.getElementById('bug-modal-tcid').value = tcId;
       document.getElementById('modal-bug-title').textContent = `Cập Nhật Trạng Thái: [${tcId}]`;
       document.getElementById('bug-modal-status').value = res.defectStatus || 'New';
@@ -436,34 +477,62 @@
       const rca = document.getElementById('bug-modal-rca-desc').value.trim();
       const notes = document.getElementById('bug-modal-notes').value.trim();
 
-      if (!tcId || !state.results[tcId]) return;
+      const res = (typeof getResultForTc === 'function')
+        ? getResultForTc(tcId, state.activeProjectId)
+        : (state.results ? state.results[tcId] : null);
+      if (!tcId || !res) return;
 
-      state.results[tcId].defectStatus = status;
-      state.results[tcId].fixVersion = fixVersion;
-      state.results[tcId].defectCategory = defectCategory;
-      state.results[tcId].commitHash = commitHash;
-      state.results[tcId].rca = rca;
-      state.results[tcId].devNotes = notes;
+      // Validation khi bàn giao sang Tester
+      if (status === 'Fixed' || status === 'Resolved') {
+        if (!fixVersion) {
+          showToast('⚠️ Vui lòng nhập Phiên bản vá lỗi (Fix Version)!', 'error');
+          document.getElementById('bug-modal-fix-version')?.focus();
+          return;
+        }
+        if (!commitHash) {
+          showToast('⚠️ Vui lòng nhập Mã Commit Git hoặc Pull Request để đối soát!', 'error');
+          document.getElementById('bug-modal-commit')?.focus();
+          return;
+        }
+      }
+
+      res.defectStatus = status;
+      res.fixVersion = fixVersion;
+      res.defectCategory = defectCategory;
+      res.commitHash = commitHash;
+      res.rca = rca;
+      res.devNotes = notes;
       
       // If Dev marks as Resolved/Fixed, add automatic audit comment
       if (status === 'Resolved' || status === 'Fixed') {
+        if (!state.comments) state.comments = {};
         if (!state.comments[tcId]) state.comments[tcId] = [];
         state.comments[tcId].push({
           author: getCurrentUser().name,
           role: 'Developer',
-          text: `🔧 [Dev Resolution]: Đã khắc phục lỗi trên bản vá ${fixVersion}${commitHash ? ` (${commitHash})` : ''}. RCA: ${rca || 'Đã sửa code logic'}. Ghi chú: ${notes || 'Chờ Tester retest.'}`,
+          text: `🔧 [Dev Resolution]: Đã khắc phục lỗi trên bản vá ${fixVersion}${commitHash ? ` (${commitHash})` : ''}. RCA: ${rca || 'Đã sửa code logic'}. Ghi chú: ${notes || 'Chờ Tester re-test.'}`,
           time: new Date().toISOString()
         });
       }
 
+      if (typeof setResultForTc === 'function') {
+        setResultForTc(tcId, res, state.activeProjectId);
+      } else {
+        state.results[tcId] = res;
+      }
       saveCoreState();
+
       if (typeof window.syncResultToCloud === 'function') {
         window.syncResultToCloud(tcId);
       }
 
       closeModal('modal-bug-status');
       renderDefectList();
-      showToast(`✅ Đã cập nhật bản vá cho [${tcId}] thành công!`, 'success');
+      if (status === 'Fixed' || status === 'Resolved') {
+        showToast(`🔄 Đã chuyển [${tcId}] sang [Fixed] và bàn giao sang Bàn làm việc của Tester để Re-test!`, 'success');
+      } else {
+        showToast(`✅ Đã cập nhật trạng thái lỗi [${tcId}] thành công!`, 'success');
+      }
     }
   </script>
 </body>

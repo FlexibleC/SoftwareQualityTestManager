@@ -756,14 +756,30 @@ function saveExecResult(tcId, andNext = false) {
 
   const user = getCurrentUser();
 
+  const prevResult = (typeof getResultForTc === 'function') 
+    ? getResultForTc(tcId, state.activeProjectId) 
+    : (state.results ? state.results[tcId] : null);
+  const prevDefectStatus = prevResult?.defectStatus || 'None';
+
   let finalDefectStatus = 'None';
+  let defectToastMsg = '';
+
   if (execDraftStatus === 'Fail') {
-    finalDefectStatus = state.results[tcId]?.defectStatus || 'New';
-    if (finalDefectStatus === 'None') finalDefectStatus = 'New';
+    if (prevDefectStatus === 'Fixed' || prevDefectStatus === 'Resolved') {
+      finalDefectStatus = 'Reopened';
+      defectToastMsg = `⚠️ Re-test Thất bại! Lỗi [${tcId}] chưa được khắc phục triệt để và đã tự động mở lại [Reopened]`;
+    } else {
+      finalDefectStatus = (prevDefectStatus && prevDefectStatus !== 'None') ? prevDefectStatus : 'New';
+    }
   } else if (execDraftStatus === 'Blocked') {
     finalDefectStatus = 'Blocked';
   } else if (execDraftStatus === 'Pass') {
-    finalDefectStatus = (state.results[tcId]?.defectStatus === 'Resolved') ? 'Closed' : 'None';
+    if (['Fixed', 'Resolved', 'Reopened', 'Open', 'New', 'In Progress'].includes(prevDefectStatus)) {
+      finalDefectStatus = 'Closed';
+      defectToastMsg = `🎉 Re-test Thành công! Lỗi [${tcId}] đã được nghiệm thu và chính thức chuyển sang [Closed]`;
+    } else {
+      finalDefectStatus = 'None';
+    }
   }
 
   const skipReason = (document.getElementById('quick-skip-reason')?.value || '').trim();
@@ -785,10 +801,15 @@ function saveExecResult(tcId, andNext = false) {
     assignedDev: (execDraftStatus === 'Fail' || execDraftStatus === 'Blocked') ? assignedDev : '',
     defectStatus: finalDefectStatus,
     cycleId: curCycle ? curCycle.id : 'CYC-GENERIC',
-    cycleName: curCycle ? curCycle.name : 'Đợt kiểm thử tổng thể'
+    cycleName: curCycle ? curCycle.name : 'Đợt kiểm thử tổng thể',
+    projectId: state.activeProjectId || ''
   };
 
-  state.results[tcId] = resultRecord;
+  if (typeof setResultForTc === 'function') {
+    setResultForTc(tcId, resultRecord, state.activeProjectId);
+  } else {
+    state.results[tcId] = resultRecord;
+  }
 
   // Lưu riêng biệt theo Đợt kiểm thử (ISO 29119-3 Multi-Cycle Architecture)
   if (curCycle) {
@@ -833,7 +854,11 @@ function saveExecResult(tcId, andNext = false) {
   if (typeof window.syncResultToCloud === 'function') {
     window.syncResultToCloud(tcId);
   }
-  showToast(`✅ Đã lưu kết quả [${tcId}] vào ${curCycle?.name || 'Đợt kiểm thử'}: ${execDraftStatus}`, 'success');
+  if (defectToastMsg) {
+    showToast(defectToastMsg, finalDefectStatus === 'Closed' ? 'success' : 'warning');
+  } else {
+    showToast(`✅ Đã lưu kết quả [${tcId}] vào ${curCycle?.name || 'Đợt kiểm thử'}: ${execDraftStatus}`, 'success');
+  }
 
   // Update left list
   filterExecList();
