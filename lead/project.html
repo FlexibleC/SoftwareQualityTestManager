@@ -1437,10 +1437,25 @@
   <script src="js/lead-dashboard.js?v=3.1.0"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       initCoreState();
-      LeadContext.init('project');
-      LeadDashboard.init();
+      if (window.LeadContext) LeadContext.init('project');
+      if (window.LeadDashboard) LeadDashboard.init();
+
+      window.addEventListener('sqtm:projects-updated', () => {
+        if (window.LeadContext) LeadContext.init('project');
+        if (window.LeadDashboard) LeadDashboard.init();
+      });
+      window.addEventListener('smartvms:cloud-synced', () => {
+        if (window.LeadContext) LeadContext.init('project');
+        if (window.LeadDashboard) LeadDashboard.init();
+      });
+
+      if (typeof window.initCloudSync === 'function') {
+        await window.initCloudSync(true);
+        if (window.LeadContext) LeadContext.init('project');
+        if (window.LeadDashboard) LeadDashboard.init();
+      }
     });
   </script>
 </body>

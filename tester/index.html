@@ -230,8 +230,29 @@
   <script src="js/tester-context.js"></script>
   <script src="js/tester-portfolio.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      TesterPortfolio.init();
+    document.addEventListener('DOMContentLoaded', async () => {
+      initCoreState();
+      if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
+        TesterPortfolio.init();
+      }
+
+      window.addEventListener('sqtm:projects-updated', () => {
+        if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
+          TesterPortfolio.init();
+        }
+      });
+      window.addEventListener('smartvms:cloud-synced', () => {
+        if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
+          TesterPortfolio.init();
+        }
+      });
+
+      if (typeof window.initCloudSync === 'function') {
+        await window.initCloudSync(true);
+        if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
+          TesterPortfolio.init();
+        }
+      }
     });
   </script>
 </body>

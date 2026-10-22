@@ -246,6 +246,9 @@ const AdminPortfolio = {
     state.projects.push(newProject);
     state.activeProjectId = newProject.id;
     saveCoreState();
+    if (typeof window.pushProjectsToCloud === 'function') {
+      window.pushProjectsToCloud(state.projects);
+    }
 
     this.closeCreateProjectModal();
     this.init();
@@ -263,7 +266,7 @@ const AdminPortfolio = {
     document.getElementById('edit-prj-name').value = p.name || '';
     document.getElementById('edit-prj-code').value = p.code || '';
     document.getElementById('edit-prj-desc').value = p.desc || '';
-    document.getElementById('edit-prj-version').value = p.activeVersion || 'v1.0';
+    document.getElementById('edit-prj-version').value = p.activeVersion || '';
     document.getElementById('edit-prj-status').value = p.status || 'ACTIVE';
 
     document.getElementById('modal-edit-project')?.classList.add('active');
@@ -286,8 +289,16 @@ const AdminPortfolio = {
     p.status = document.getElementById('edit-prj-status').value;
 
     saveCoreState();
+    if (typeof window.pushProjectsToCloud === 'function') {
+      window.pushProjectsToCloud(state.projects);
+    }
     this.closeEditProjectModal();
     this.init();
     showToast(`✅ Cập nhật thông tin dự án "${p.name}" thành công!`, 'success');
   }
 };
+
+// Export toàn cục
+if (typeof window !== 'undefined') {
+  window.AdminPortfolio = AdminPortfolio;
+}

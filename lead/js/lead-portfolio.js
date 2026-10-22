@@ -401,3 +401,8 @@ const LeadPortfolio = {
     `;
   }
 };
+
+// Export toàn cục để Cloud-Sync và Realtime có thể gọi re-render
+if (typeof window !== 'undefined') {
+  window.LeadPortfolio = LeadPortfolio;
+}

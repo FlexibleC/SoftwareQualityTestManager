@@ -143,8 +143,29 @@
   <script src="js/dev-context.js"></script>
   <script src="js/dev-portfolio.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      DevPortfolio.init();
+    document.addEventListener('DOMContentLoaded', async () => {
+      initCoreState();
+      if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
+        DevPortfolio.init();
+      }
+
+      window.addEventListener('sqtm:projects-updated', () => {
+        if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
+          DevPortfolio.init();
+        }
+      });
+      window.addEventListener('smartvms:cloud-synced', () => {
+        if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
+          DevPortfolio.init();
+        }
+      });
+
+      if (typeof window.initCloudSync === 'function') {
+        await window.initCloudSync(true);
+        if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
+          DevPortfolio.init();
+        }
+      }
     });
   </script>
 </body>

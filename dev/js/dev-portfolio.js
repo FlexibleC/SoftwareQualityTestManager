@@ -297,3 +297,7 @@ const DevPortfolio = {
     `;
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.DevPortfolio = DevPortfolio;
+}

@@ -145,9 +145,31 @@
   <script src="js/lead-portfolio.js?v=3.1.0"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       initCoreState();
-      LeadPortfolio.init();
+      if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
+        LeadPortfolio.init();
+      }
+
+      // Lắng nghe sự kiện đồng bộ từ Cloud để re-render ngay lập tức khi kéo xong dữ liệu
+      window.addEventListener('sqtm:projects-updated', () => {
+        if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
+          LeadPortfolio.init();
+        }
+      });
+      window.addEventListener('smartvms:cloud-synced', () => {
+        if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
+          LeadPortfolio.init();
+        }
+      });
+
+      // Tự động kéo dữ liệu Cloud mới nhất về ngay khi mở trang
+      if (typeof window.initCloudSync === 'function') {
+        await window.initCloudSync(true);
+        if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
+          LeadPortfolio.init();
+        }
+      }
     });
   </script>
 </body>

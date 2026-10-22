@@ -2482,9 +2482,15 @@ function getHierarchyContext() {
 }
 
 if (typeof window !== 'undefined') {
+  window.state = state;
   window.syncUserProjectsWithMembers = syncUserProjectsWithMembers;
   window.getAllUsers = getAllUsers;
   window.getUsers = getUsers;
+  window.getCurrentUser = getCurrentUser;
+  window.getAllProjects = getAllProjects;
+  window.getLeaderProjects = getLeaderProjects;
+  window.getAccessibleProjects = getAccessibleProjects;
+  window.initCoreState = initCoreState;
   window.assignStaffToProject = assignStaffToProject;
   window.saveCoreState = saveCoreState;
   window.getTestCyclesForProject = getTestCyclesForProject;
