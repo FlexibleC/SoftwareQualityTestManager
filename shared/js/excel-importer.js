@@ -743,7 +743,8 @@
 
   // Helper gửi catalog lên server LAN nội bộ
   function saveCatalogToLanServer(tcs) {
-    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    const canSyncLan = typeof window.isLanServerAvailable === 'function' ? window.isLanServerAvailable() : false;
+    if (canSyncLan) {
       fetch('/api/catalog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -837,7 +838,8 @@
 
     // Gửi catalog rỗng lên server LAN nếu đang chạy
     saveCatalogToLanServer([]);
-    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    const canSyncLan = typeof window.isLanServerAvailable === 'function' ? window.isLanServerAvailable() : false;
+    if (canSyncLan) {
       fetch('/api/sync', { method: 'DELETE' }).catch(() => {});
     }
 

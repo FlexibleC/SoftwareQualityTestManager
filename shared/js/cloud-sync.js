@@ -865,7 +865,8 @@
     const payload = mapLocalRecordToCloud(tcId, r);
 
     // Đồng bộ tức thì tới máy chủ LAN nếu đang chạy web server nội bộ
-    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    const canSyncLan = typeof window.isLanServerAvailable === 'function' ? window.isLanServerAvailable() : false;
+    if (canSyncLan) {
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
