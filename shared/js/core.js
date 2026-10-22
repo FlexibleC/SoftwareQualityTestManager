@@ -2143,27 +2143,53 @@ function deleteProjectVersion(projId, versionTag) {
   if (!p.versions || p.versions.length === 0) {
     throw new Error('Dự án không có phiên bản nào để xóa!');
   }
-  const idx = p.versions.findIndex(v => (v.version || v) === versionTag);
+  const normTag = (versionTag || '').trim().toLowerCase();
+  const idx = p.versions.findIndex(v => ((v.version || v) || '').trim().toLowerCase() === normTag);
   if (idx === -1) {
     throw new Error(`Không tìm thấy phiên bản "${versionTag}" trong dự án!`);
   }
   const removed = p.versions.splice(idx, 1)[0];
 
-  // Dọn dẹp kịch bản kiểm thử gắn với phiên bản này
+  // Dọn dẹp kịch bản kiểm thử gắn với phiên bản này (so khớp không phân biệt hoa thường)
   if (Array.isArray(p.testCases)) {
-    p.testCases = p.testCases.filter(tc => tc.version !== versionTag);
+    p.testCases = p.testCases.filter(tc => ((tc.version || '')).trim().toLowerCase() !== normTag);
   }
 
   // Dọn dẹp các đợt kiểm thử gắn với phiên bản này
   if (Array.isArray(p.testCycles)) {
-    p.testCycles = p.testCycles.filter(c => c.version !== versionTag);
+    p.testCycles = p.testCycles.filter(c => ((c.version || '')).trim().toLowerCase() !== normTag);
   }
   if (Array.isArray(state.testCycles)) {
-    state.testCycles = state.testCycles.filter(c => !(c.projectId === projId && c.version === versionTag));
+    state.testCycles = state.testCycles.filter(c => !(c.projectId === projId && ((c.version || '')).trim().toLowerCase() === normTag));
+  }
+
+  // Nếu dự án đã xóa hết toàn bộ các phiên bản (p.versions.length === 0)
+  // Toàn bộ kịch bản, phân hệ, đợt test tồn đọng mồ côi phải được xóa sạch hoàn toàn!
+  if (p.versions.length === 0) {
+    p.testCases = [];
+    p.modules = [];
+    p.testCycles = [];
+    p.activeVersion = '';
+  } else {
+    // Dọn dẹp các test case mồ côi không thuộc bất kỳ phiên bản nào còn tồn tại
+    const validVerSet = new Set(p.versions.map(v => ((v.version || v) || '').trim().toLowerCase()));
+    if (Array.isArray(p.testCases)) {
+      p.testCases = p.testCases.filter(tc => validVerSet.has(((tc.version || '')).trim().toLowerCase()));
+    }
+    // Dọn dẹp phân hệ mồ côi không còn phiên bản nào
+    if (Array.isArray(p.modules)) {
+      p.modules = p.modules.filter(m => {
+        if (!m.versions || !Array.isArray(m.versions) || m.versions.length === 0) {
+          return (p.testCases || []).some(tc => (tc.module === m.id || tc.module === m.name || tc.moduleName === m.name));
+        }
+        m.versions = m.versions.filter(v => validVerSet.has(((v.version || v) || '').trim().toLowerCase()));
+        return m.versions.length > 0;
+      });
+    }
   }
 
   // Nếu phiên bản bị xóa là phiên bản hiện hành (activeVersion), chuyển sang phiên bản còn lại hoặc rỗng
-  if (p.activeVersion === versionTag) {
+  if (((p.activeVersion || '')).trim().toLowerCase() === normTag || !p.activeVersion) {
     p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
     if (state.activeProjectId === projId) {
       state.activeVersion = p.activeVersion;

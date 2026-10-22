@@ -39,7 +39,13 @@ const LeadDashboard = {
   calculateProjectHealth(p) {
     if (!p) return null;
     const versions = typeof getProjectVersions === 'function' ? getProjectVersions(p.id) : (p.versions || []);
-    const allTcs = p.testCases || [];
+    
+    // Nếu dự án chưa có phiên bản nào, cô lập và đảm bảo kịch bản kiểm thử là 0
+    let allTcs = [];
+    if (versions.length > 0) {
+      const validVerSet = new Set(versions.map(v => ((v.version || v) || '').trim().toLowerCase()));
+      allTcs = (p.testCases || []).filter(tc => validVerSet.has(((tc.version || '')).trim().toLowerCase()));
+    }
     const totalTcs = allTcs.length;
     const results = state.results || {};
     const defects = (typeof getProjectDefects === 'function') ? getProjectDefects(p.id) : [];
@@ -55,12 +61,40 @@ const LeadDashboard = {
     const allCycles = Array.from(uniqueCyclesMap.values());
     const activeCycles = allCycles.filter(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS');
 
-    // Modules
-    const moduleSet = new Set();
-    allTcs.forEach(tc => { if (tc.module) moduleSet.add(tc.module); });
-    (p.modules || []).forEach(m => moduleSet.add(m.name || m));
-    const modulesCount = moduleSet.size;
-    const modulesSample = Array.from(moduleSet).slice(0, 3).join(', ') + (moduleSet.size > 3 ? '...' : '');
+    // Modules: Tính toán chính xác danh sách phân hệ từ kịch bản hoặc cấu hình dự án (tránh đếm trùng mã và tên)
+    const moduleMap = new Map();
+    if (versions.length > 0) {
+      // 1. Nạp từ cấu hình modules của dự án nếu có
+      (p.modules || []).forEach(m => {
+        const id = typeof m === 'object' ? (m.id || m.code || m.name) : m;
+        const name = typeof m === 'object' ? (m.name || m.id) : m;
+        if (id) {
+          const key = String(id).trim().toUpperCase();
+          moduleMap.set(key, name);
+        }
+      });
+      // 2. Bổ sung từ danh sách kịch bản kiểm thử
+      allTcs.forEach(tc => {
+        if (tc.module) {
+          const rawMod = String(tc.module).trim();
+          const key = rawMod.toUpperCase();
+          let matchedKey = null;
+          for (const existingKey of moduleMap.keys()) {
+            if (existingKey === key || existingKey.startsWith(key + ' ') || existingKey.startsWith(key + '-') || key.startsWith(existingKey + ' ') || key.startsWith(existingKey + '-')) {
+              matchedKey = existingKey;
+              break;
+            }
+          }
+          if (!matchedKey) {
+            moduleMap.set(key, tc.moduleName || tc.module);
+          }
+        }
+      });
+    }
+    const modulesCount = moduleMap.size;
+    const modulesSample = moduleMap.size > 0 
+      ? Array.from(moduleMap.values()).slice(0, 3).join(', ') + (moduleMap.size > 3 ? '...' : '')
+      : 'Chưa thiết lập phân hệ';
 
     // Roster breakdown
     let leadCount = 0, testerCount = 0, devCount = 0;
@@ -157,7 +191,6 @@ const LeadDashboard = {
     const qgPassed = qgPassOk && qgP1Ok && qgP2Ok;
 
     // Score calculation
-    // Score calculation
     let score = 100;
     const passGap = totalTcs > 0 ? Math.max(0, minPass - passRate) : 0;
     if (totalTcs > 0) {
@@ -174,9 +207,10 @@ const LeadDashboard = {
     let verdictDesc = 'Đủ điều kiện phát hành. Mọi chỉ số kỹ thuật đều đạt chuẩn.';
 
     if (totalTcs === 0) {
+      score = '--';
       statusLabel = '⚪ Khởi tạo dự án';
       statusColor = '#64748b';
-      verdictDesc = 'Dự án mới khởi tạo, chưa nạp kịch bản kiểm thử. Sẵn sàng cấu hình phân hệ và nạp kịch bản.';
+      verdictDesc = 'Dự án mới khởi tạo hoặc chưa có kịch bản kiểm thử. Sẵn sàng cấu hình phân hệ và nạp kịch bản.';
     } else if (score < 70 || p1Bugs > 0) {
       statusLabel = '🔴 Báo động đỏ';
       statusColor = '#dc2626';
@@ -1283,10 +1317,11 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
     if (!p) return;
 
     // Đếm số kịch bản và đợt test chịu ảnh hưởng
-    const affectedTcs = (p.testCases || []).filter(tc => tc.version === versionStr).length;
+    const normVer = (versionStr || '').trim().toLowerCase();
+    const affectedTcs = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() === normVer).length;
     const affectedCycles = (typeof getTestCyclesForProject === 'function' 
       ? getTestCyclesForProject(p.id, versionStr) 
-      : (p.testCycles || []).filter(c => c.version === versionStr)).length;
+      : (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() === normVer)).length;
 
     let confirmMsg = `Bạn có chắc chắn muốn xóa phiên bản [${versionStr}] khỏi dự án "${p.name}"?`;
     if (affectedTcs > 0 || affectedCycles > 0) {
@@ -1300,13 +1335,18 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
       if (typeof deleteProjectVersion === 'function') {
         deleteProjectVersion(p.id, versionStr);
       } else {
-        p.versions = (p.versions || []).filter(v => (v.version || v) !== versionStr);
-        p.testCases = (p.testCases || []).filter(tc => tc.version !== versionStr);
-        p.testCycles = (p.testCycles || []).filter(c => c.version !== versionStr);
+        p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
+        p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
+        p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
         if (state.testCycles) {
-          state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && c.version === versionStr));
+          state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
         }
-        if (p.activeVersion === versionStr) {
+        if (p.versions.length === 0) {
+          p.testCases = [];
+          p.modules = [];
+          p.testCycles = [];
+          p.activeVersion = '';
+        } else if (((p.activeVersion || '')).trim().toLowerCase() === normVer) {
           p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
           state.activeVersion = p.activeVersion;
         }

@@ -81,11 +81,13 @@ function renderProjectsTab() {
 
   grid.innerHTML = projects.map(p => {
     const isCurrent = activePrj && p.id === activePrj.id;
-    const tcCount = (p.testCases || []).length;
-    const modCount = (p.modules || []).length;
-    const verCount = (p.versions || []).length;
+    const versions = p.versions || [];
+    const validVerSet = new Set(versions.map(v => ((v.version || v) || '').trim().toLowerCase()));
+    const tcCount = versions.length === 0 ? 0 : (p.testCases || []).filter(tc => validVerSet.has(((tc.version || '')).trim().toLowerCase())).length;
+    const modCount = versions.length === 0 ? 0 : (p.modules || []).length;
+    const verCount = versions.length;
     const cycleCount = getTestCyclesForProject(p.id).length;
-    const activeVer = p.activeVersion || (p.versions && p.versions[0]?.version) || 'v1.0';
+    const activeVer = p.activeVersion || (versions[0]?.version) || '';
 
     // Calculate pass rate from results
     const results = state.results || {};

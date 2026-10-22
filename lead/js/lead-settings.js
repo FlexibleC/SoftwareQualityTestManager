@@ -106,10 +106,19 @@ const LeadSettings = {
     if (typeof deleteProjectVersion === 'function') {
       deleteProjectVersion(p.id, ver);
     } else {
-      p.versions = (p.versions || []).filter(v => (v.version || v) !== ver);
-      p.testCases = (p.testCases || []).filter(tc => tc.version !== ver);
-      p.testCycles = (p.testCycles || []).filter(c => c.version !== ver);
-      if (p.activeVersion === ver) {
+      const normVer = (ver || '').trim().toLowerCase();
+      p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
+      p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
+      p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
+      if (state.testCycles) {
+        state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
+      }
+      if (p.versions.length === 0) {
+        p.testCases = [];
+        p.modules = [];
+        p.testCycles = [];
+        p.activeVersion = '';
+      } else if (((p.activeVersion || '')).trim().toLowerCase() === normVer) {
         p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
       }
       saveCoreState();
