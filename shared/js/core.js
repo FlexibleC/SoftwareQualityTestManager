@@ -1424,11 +1424,11 @@ function saveCycleScope(cycleId, scopeTcIds, scopeType = 'CUSTOM') {
 function getProjectVersions(projectId) {
   const pId = projectId || state.activeProjectId;
   const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
-  if (!p) return [{ version: 'v1.0', label: 'Bản phát hành chuẩn v1.0', status: 'ACTIVE' }];
-  if (Array.isArray(p.versions) && p.versions.length > 0) {
+  if (!p) return [];
+  if (Array.isArray(p.versions)) {
     return p.versions;
   }
-  return [{ version: p.activeVersion || 'v1.0', label: (p.activeVersion || 'v1.0') + ' (Chuẩn)', status: 'ACTIVE' }];
+  return [];
 }
 
 /**
@@ -1876,7 +1876,7 @@ function addProject(projData) {
   if (state.projects.some(p => p.id === projId || p.code === code)) {
     throw new Error(`Mã dự án "${code}" đã tồn tại trên hệ thống!`);
   }
-  const initVer = projData.activeVersion || 'v1.0';
+  const initVer = (projData.activeVersion || '').trim();
   const leadUn = projData.leadUsername || projData.lead || 'lead';
   const leadObj = (state.users || []).find(u => u.username === leadUn);
   const devObj = (state.users || []).find(u => u.username === 'dev');
@@ -1913,7 +1913,7 @@ function addProject(projData) {
     leadUsername: leadUn,
     standards: projData.standards || ['ISO/IEC 25010', 'ISO/IEC/IEEE 29119'],
     activeVersion: initVer,
-    versions: [
+    versions: initVer ? [
       {
         version: initVer,
         label: `${initVer}`,
@@ -1921,7 +1921,7 @@ function addProject(projData) {
         targetDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
         changelog: 'Phiên bản khởi tạo ban đầu'
       }
-    ],
+    ] : [],
     modules: [],
     testCases: [],
     members: defaultMembers

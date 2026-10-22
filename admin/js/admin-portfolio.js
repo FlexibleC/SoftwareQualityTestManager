@@ -203,7 +203,7 @@ const AdminPortfolio = {
     const name = document.getElementById('new-prj-name').value.trim();
     const code = document.getElementById('new-prj-code').value.trim().toUpperCase();
     const desc = document.getElementById('new-prj-desc').value.trim();
-    const version = document.getElementById('new-prj-version').value.trim() || 'v1.0';
+    const version = (document.getElementById('new-prj-version')?.value || '').trim();
 
     if (!name || !code) {
       showToast('⚠️ Vui lòng nhập đầy đủ Tên dự án và Mã dự án!', 'warning');
@@ -223,10 +223,10 @@ const AdminPortfolio = {
       code,
       name,
       desc,
-      activeVersion: version,
-      versions: [
+      activeVersion: version || '',
+      versions: version ? [
         { code: version, label: `${version} - Khởi tạo`, isCurrent: true, targetDate: '', changelog: 'Phiên bản ban đầu' }
-      ],
+      ] : [],
       modules: [],
       testCases: [],
       testCycles: [],

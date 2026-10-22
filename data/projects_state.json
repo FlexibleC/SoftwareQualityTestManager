@@ -14,16 +14,8 @@
         "ISO/IEC 25010",
         "ISO/IEC/IEEE 29119"
       ],
-      "activeVersion": "v1.0",
-      "versions": [
-        {
-          "version": "v1.0",
-          "label": "v1.0",
-          "status": "IN_QA",
-          "targetDate": "2026-11-21",
-          "changelog": "Phiên bản khởi tạo ban đầu"
-        }
-      ],
+      "activeVersion": "",
+      "versions": [],
       "modules": [],
       "testCases": [],
       "members": [
@@ -66,16 +58,8 @@
         "ISO/IEC 25010",
         "ISO/IEC/IEEE 29119"
       ],
-      "activeVersion": "v1.0",
-      "versions": [
-        {
-          "version": "v1.0",
-          "label": "v1.0",
-          "status": "IN_QA",
-          "targetDate": "2026-11-20",
-          "changelog": "Phiên bản khởi tạo ban đầu"
-        }
-      ],
+      "activeVersion": "",
+      "versions": [],
       "modules": [],
       "testCases": [],
       "members": [

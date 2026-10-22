@@ -219,7 +219,7 @@ const LeadDashboard = {
         levelLabel: 'ℹ️ Khởi tạo',
         color: '#3b82f6',
         title: 'Dự án sẵn sàng thiết lập',
-        metric: `${members.length} nhân sự • ${versions.length} phiên bản • Vui lòng nạp kịch bản kiểm thử`,
+        metric: `${members.length} nhân sự • ${versions.length > 0 ? versions.length + ' phiên bản' : 'Chưa có phiên bản'} • Vui lòng nạp kịch bản kiểm thử`,
         buttonText: '👉 Nạp kịch bản kiểm thử ➔',
         buttonAction: `LeadDashboard.switchMainTab('versions')`
       });
@@ -331,7 +331,9 @@ const LeadDashboard = {
 
     // 1. KHỐI 1: HỒ SƠ QUY MÔ
     setEl('scale-val-versions', `${h.totalVersions} phiên bản`);
-    setEl('scale-sub-versions', `${h.activeVersionsCount} Active • ${h.planVersionsCount} Kế hoạch/Phát triển`);
+    setEl('scale-sub-versions', h.totalVersions > 0 
+      ? `${h.activeVersionsCount} Active • ${h.planVersionsCount} Kế hoạch/Phát triển` 
+      : 'Chưa thiết lập phiên bản');
 
     setEl('scale-val-tcs', `${h.totalTcs} bài`);
     setEl('scale-sub-tcs', `P1: ${h.p1Tcs} • P2: ${h.p2Tcs} • P3+: ${h.p3PlusTcs}`);

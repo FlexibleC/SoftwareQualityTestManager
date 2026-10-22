@@ -1216,7 +1216,7 @@ function confirmSaveProject() {
   const desc = getVal('pf-desc');
   const leadSelect = document.getElementById('pf-lead-select');
   const lead = leadSelect ? leadSelect.value : (getVal('pf-lead') || 'lead');
-  const activeVersion = getVal('pf-version') || 'v1.0';
+  const activeVersion = getVal('pf-version') || '';
   const rawStandards = getVal('pf-standards');
   const standards = rawStandards ? rawStandards.split(',').map(s => s.trim()).filter(Boolean) : ['ISO/IEC 25010'];
 

@@ -102,8 +102,8 @@ const LeadContext = {
       state.activeProjectId = p.id;
     }
 
-    const curVer = ctx?.version || p?.activeVersion || 'v1.0';
-    const versions = ctx?.versions || (typeof getProjectVersions === 'function' ? getProjectVersions(p?.id) : []);
+    const versions = ctx?.versions || (typeof getProjectVersions === 'function' ? getProjectVersions(p?.id) : (p?.versions || []));
+    const curVer = ctx?.version || p?.activeVersion || (versions[0]?.version) || '';
     const curCycle = ctx?.cycle || (typeof getActiveCycle === 'function' ? getActiveCycle(p?.id, curVer) : null);
     const cycles = ctx?.cycles || (typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p?.id, curVer) : []);
 
@@ -171,10 +171,10 @@ const LeadContext = {
 
             <!-- TẦNG 2: PHIÊN BẢN -->
             <div class="lead-bc-item" id="bc-item-version">
-              <a href="version.html${baseQuery}${vParam}" class="lead-bc-btn ${ctx?.tier === 2 ? 'active-tier' : ''}" title="Tầng 2: Không gian phiên bản — ${escapeHtml(curVer)}">
+              <a href="${versions.length > 0 ? `version.html${baseQuery}${vParam}` : `project.html${baseQuery}&tab=versions`}" class="lead-bc-btn ${ctx?.tier === 2 ? 'active-tier' : ''}" title="${curVer ? `Tầng 2: Không gian phiên bản — ${escapeHtml(curVer)}` : 'Chưa thiết lập phiên bản'}">
                 <span>📦</span>
-                <span>${escapeHtml(curVer)}</span>
-                <span class="lead-bc-arrow" onclick="event.preventDefault(); LeadContext.toggleBcMenu('version')">▾</span>
+                <span>${curVer ? escapeHtml(curVer) : 'Chưa có phiên bản'}</span>
+                ${versions.length > 1 ? `<span class="lead-bc-arrow" onclick="event.preventDefault(); LeadContext.toggleBcMenu('version')">▾</span>` : ''}
               </a>
               <div class="lead-bc-menu" id="bc-menu-version">
                 <div style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; padding:4px 8px">Đổi phiên bản phần mềm</div>
