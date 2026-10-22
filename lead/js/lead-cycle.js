@@ -868,12 +868,42 @@ const LeadCycle = {
     }
   },
 
+  // Lấy danh sách kiểm thử viên thực tế được phân bổ cho đợt kiểm thử này
+  // Căn cứ vào cấu hình nhân sự đã giao ở Không gian Phiên bản / Kịch bản test
+  getCycleParticipants() {
+    const c = this.getCurrentCycle();
+    const allUsers = typeof getUsers === 'function' ? getUsers() : (state.users || DEFAULT_SYSTEM_USERS);
+
+    // 1. Nếu đợt kiểm thử đã được cấu hình danh sách nhân sự tham gia:
+    if (c && Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0) {
+      const set = new Set(c.assignedTesters);
+      const matched = allUsers.filter(u => set.has(u.username) && u.status !== 'LOCKED');
+      if (matched.length > 0) return matched;
+    }
+    if (c && Array.isArray(c.testerUsernames) && c.testerUsernames.length > 0) {
+      const set = new Set(c.testerUsernames);
+      const matched = allUsers.filter(u => set.has(u.username) && u.status !== 'LOCKED');
+      if (matched.length > 0) return matched;
+    }
+
+    // 2. Fallback: Lấy các kiểm thử viên thuộc dự án
+    const p = this.getCurrentProject();
+    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p?.id) : (p?.members || []);
+    const memberTesters = members.filter(m => m.projectRole === 'tester');
+    if (memberTesters.length > 0) {
+      const pSet = new Set(memberTesters.map(m => m.username));
+      const matched = allUsers.filter(u => pSet.has(u.username) && u.status !== 'LOCKED');
+      if (matched.length > 0) return matched;
+    }
+
+    // 3. Fallback: Testers hệ thống
+    return allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
+  },
+
   populateQuickDispatchTesters() {
     const selectEl = document.getElementById('c-quick-tester-select');
     if (!selectEl) return;
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     const currentVal = selectEl.value;
     selectEl.innerHTML = `<option value="">-- Chọn kỹ sư phụ trách --</option>` +
@@ -1009,9 +1039,7 @@ const LeadCycle = {
     const unassignedTcs = Math.max(0, totalTcs - assignedTcs);
     const assignPct = totalTcs > 0 ? Math.round((assignedTcs / totalTcs) * 100) : 0;
 
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     const totalEl = document.getElementById('c-alloc-total-tcs');
     if (totalEl) totalEl.textContent = `${totalTcs} bài`;
@@ -1515,9 +1543,7 @@ const LeadCycle = {
     const countEl = document.getElementById('mb-selected-count');
     if (countEl) countEl.textContent = targetIds.size;
 
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     const checklistEl = document.getElementById('mb-testers-checklist');
     if (checklistEl) {
@@ -1642,9 +1668,7 @@ const LeadCycle = {
     const assignments = (state.assignments || []).filter(a => a.projectId === this.projectId && (!a.cycleId || a.cycleId === this.cycleId));
     const asgTcIds = new Set(assignments.map(a => a.tcId));
 
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     const totalEl = document.getElementById('mmm-total-modules-count');
     if (totalEl) totalEl.textContent = modules.length;
@@ -1982,9 +2006,7 @@ const LeadCycle = {
     const asgTcIds = new Set(assignments.map(a => a.tcId));
     const unassigned = cycleTcs.filter(t => !asgTcIds.has(t.id));
 
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     if (testers.length === 0) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:#dc2626">Dự án chưa có kiểm thử viên nào!</td></tr>`;
@@ -2083,9 +2105,7 @@ const LeadCycle = {
       return;
     }
 
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     if (testers.length === 0) {
       showToast('⚠️ Dự án chưa có kỹ sư kiểm thử nào!', 'error');
@@ -2238,9 +2258,7 @@ const LeadCycle = {
 
     const p = getActiveProject();
     const cycleTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(this.cycleId) : [];
-    const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-    let testers = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-    if (testers.length === 0) testers = allUsers.filter(u => u.status !== 'LOCKED');
+    const testers = this.getCycleParticipants();
 
     const assignments = (state.assignments || []).filter(a => a.projectId === this.projectId && (!a.cycleId || a.cycleId === this.cycleId));
     const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p?.id) : [];
@@ -2826,9 +2844,7 @@ const LeadCycle = {
     // 2. Điền form thêm kỹ sư mới
     const testerSelect = document.getElementById('mtc-new-tester-select');
     if (testerSelect) {
-      const allUsers = typeof getUsers === 'function' ? getUsers() : [];
-      let activeTesters = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
-      if (activeTesters.length === 0) activeTesters = allUsers.filter(u => u.status !== 'LOCKED');
+      const activeTesters = this.getCycleParticipants();
       
       const allAsgs = (state.assignments || []).filter(a => a.projectId === this.projectId && (!a.cycleId || a.cycleId === this.cycleId));
       testerSelect.innerHTML = activeTesters.map(u => {

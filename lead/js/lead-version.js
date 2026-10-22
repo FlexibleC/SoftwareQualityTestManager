@@ -348,7 +348,7 @@ const LeadVersion = {
                   <a href="cycle.html?${baseLink}" class="btn btn-primary btn-xs" style="font-weight:700">
                     🚀 Tác chiến
                   </a>
-                  <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.goToStaffingForCycle('${c.id}')" title="Phân bổ nhân sự cho đợt này">
+                  <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleStaffingModal('${c.id}')" title="Phân bổ nhân sự cho đợt này">
                     👥 Nhân sự
                   </button>
                   <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleScopeModal('${c.id}')" title="Cấu hình kịch bản">
@@ -621,7 +621,7 @@ const LeadVersion = {
                   <span>➔</span>
                 </a>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px">
-                  <button type="button" class="btn btn-outline btn-xs" style="text-align:center; padding:7px 4px; font-weight:700" onclick="LeadVersion.goToStaffingForCycle('${cyc.id}')" title="Phân bổ kỹ sư cho đợt kiểm thử">
+                  <button type="button" class="btn btn-outline btn-xs" style="text-align:center; padding:7px 4px; font-weight:700" onclick="LeadVersion.openCycleStaffingModal('${cyc.id}')" title="Phân bổ kỹ sư cho đợt kiểm thử">
                     👥 Nhân sự
                   </button>
                   <button type="button" class="btn btn-outline btn-xs" style="text-align:center; padding:7px 4px; font-weight:700; color:var(--primary)" onclick="LeadVersion.openCycleScopeModal('${cyc.id}')" title="Cấu hình danh mục kịch bản">
@@ -704,7 +704,7 @@ const LeadVersion = {
           <td style="text-align:center">
             <div style="display:flex; align-items:center; justify-content:center; gap:6px">
               <a href="cycle.html?${baseLink}" class="btn btn-primary btn-xs" title="Vào tác chiến đợt kiểm thử">🚀 Tác chiến</a>
-              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.goToStaffingForCycle('${c.id}')" title="Phân bổ nhân sự">👥</button>
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleStaffingModal('${c.id}')" title="Phân bổ nhân sự">👥</button>
               <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleScopeModal('${c.id}')" title="Cấu hình phạm vi">🎯</button>
               <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCloneCycleModal('${c.id}')" title="Nhân bản">📑</button>
               <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openEditCycleModal('${c.id}')" title="Sửa">✏️</button>
@@ -1878,6 +1878,77 @@ const LeadVersion = {
     this.renderVersionRoster();
   },
 
+  getProjectTestersList() {
+    const p = getActiveProject();
+    const allUsers = typeof getUsers === 'function' ? getUsers() : (state.users || DEFAULT_SYSTEM_USERS);
+    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p?.id) : (p?.members || []);
+    const memberTesters = members.filter(m => m.projectRole === 'tester');
+    if (memberTesters.length > 0) {
+      const set = new Set(memberTesters.map(m => m.username));
+      const list = allUsers.filter(u => set.has(u.username) && u.status !== 'LOCKED');
+      if (list.length > 0) return list;
+    }
+    // Fallback nếu project.members chưa có role tester: lấy testers hệ thống
+    return allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
+  },
+
+  renderFormTestersCheckboxes(selectedUsernames = []) {
+    const container = document.getElementById('cf-testers-list');
+    if (!container) return;
+    const testers = this.getProjectTestersList();
+    const selSet = new Set(selectedUsernames);
+
+    if (testers.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:12px">Chưa có kiểm thử viên nào trong dự án.</div>`;
+      this.updateFormTestersBadge();
+      return;
+    }
+
+    container.innerHTML = testers.map(u => {
+      const isChecked = selSet.has(u.username);
+      return `
+        <label style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:6px; background:${isChecked ? 'rgba(37,99,235,0.06)' : 'transparent'}; cursor:pointer; font-size:12.5px; transition:all 0.15s ease">
+          <input type="checkbox" class="cf-tester-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onFormTesterCheckboxChange()" style="width:16px; height:16px; cursor:pointer" />
+          <div style="width:24px; height:24px; border-radius:50%; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px">
+            ${(u.name || u.username).slice(0, 1).toUpperCase()}
+          </div>
+          <div style="flex:1">
+            <strong>${escapeHtml(u.name || u.username)}</strong>
+            <span style="color:var(--text-muted); font-size:11px">(@${escapeHtml(u.username)})</span>
+          </div>
+          <span class="badge badge-outline" style="font-size:10px">${escapeHtml((u.roleTitle || 'Tester').replace(/\s*\([^)]*\)/g, ''))}</span>
+        </label>
+      `;
+    }).join('');
+    this.updateFormTestersBadge();
+  },
+
+  onFormTesterCheckboxChange() {
+    this.updateFormTestersBadge();
+  },
+
+  updateFormTestersBadge() {
+    const checkboxes = document.querySelectorAll('.cf-tester-checkbox');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const badge = document.getElementById('cf-testers-count-badge');
+    if (badge) badge.textContent = `${checked.length} đã chọn`;
+  },
+
+  toggleAllFormTesters(select) {
+    const checkboxes = document.querySelectorAll('.cf-tester-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = select;
+      const lbl = cb.closest('label');
+      if (lbl) lbl.style.background = select ? 'rgba(37,99,235,0.06)' : 'transparent';
+    });
+    this.updateFormTestersBadge();
+  },
+
+  getSelectedFormTesters() {
+    const checkboxes = document.querySelectorAll('.cf-tester-checkbox');
+    return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+  },
+
   // ==================== MODAL ĐỢT TEST (FORM & SCOPE) ====================
   openAddCycleModal() {
     const p = getActiveProject();
@@ -1894,6 +1965,10 @@ const LeadVersion = {
     document.getElementById('cf-version').value = this.currentVersion;
     const dispEl = document.getElementById('cf-version-display');
     if (dispEl) dispEl.textContent = this.currentVersion;
+
+    // Mặc định chọn tất cả kiểm thử viên dự án khi tạo mới
+    const testers = this.getProjectTestersList();
+    this.renderFormTestersCheckboxes(testers.map(u => u.username));
 
     document.getElementById('modal-cycle-title').textContent = `➕ Thêm Đợt Kiểm Thử Cho Phiên Bản ${this.currentVersion}`;
     openModal('modal-cycle-form');
@@ -1919,6 +1994,12 @@ const LeadVersion = {
     const dispEl = document.getElementById('cf-version-display');
     if (dispEl) dispEl.textContent = c.version || this.currentVersion;
 
+    // Đổ danh sách kiểm thử viên đã phân bổ
+    const currentAssigned = Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0
+      ? c.assignedTesters
+      : (Array.isArray(c.testerUsernames) && c.testerUsernames.length > 0 ? c.testerUsernames : this.getProjectTestersList().map(u => u.username));
+    this.renderFormTestersCheckboxes(currentAssigned);
+
     document.getElementById('modal-cycle-title').textContent = `✏️ Chỉnh Sửa Đợt Kiểm Thử: ${c.code || c.id}`;
     openModal('modal-cycle-form');
   },
@@ -1936,6 +2017,7 @@ const LeadVersion = {
     const startDate = document.getElementById('cf-start-date').value;
     const endDate = document.getElementById('cf-end-date').value;
     const description = (document.getElementById('cf-description').value || '').trim();
+    const assignedTesters = this.getSelectedFormTesters();
 
     if (!code || !name) {
       showToast('⚠️ Vui lòng nhập Mã và Tên đợt kiểm thử!', 'error');
@@ -1956,6 +2038,8 @@ const LeadVersion = {
         c.startDate = startDate;
         c.endDate = endDate;
         c.description = description;
+        c.assignedTesters = assignedTesters;
+        c.testerUsernames = assignedTesters;
       }
       const cs = state.testCycles.find(x => x.id === id);
       if (cs) {
@@ -1967,6 +2051,8 @@ const LeadVersion = {
         cs.startDate = startDate;
         cs.endDate = endDate;
         cs.description = description;
+        cs.assignedTesters = assignedTesters;
+        cs.testerUsernames = assignedTesters;
       }
       showToast(`✅ Đã cập nhật đợt kiểm thử [${code}]!`, 'success');
     } else {
@@ -1984,7 +2070,9 @@ const LeadVersion = {
         startDate,
         endDate,
         description,
-        scopeTcIds: []
+        scopeTcIds: [],
+        assignedTesters,
+        testerUsernames: assignedTesters
       };
       p.testCycles.push(newCycleObj);
       state.testCycles.push(newCycleObj);
@@ -1992,11 +2080,145 @@ const LeadVersion = {
     }
 
     saveCoreState();
+    if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+      window.pushCyclesToCloud(state.testCycles);
+    }
     closeModal('modal-cycle-form');
     this.renderCycleCards();
     this.renderCyclesMatrix();
     this.renderVersionOverview();
-    LeadContext.renderCompactProjectBar();
+    if (typeof LeadContext !== 'undefined' && LeadContext.renderCompactProjectBar) {
+      LeadContext.renderCompactProjectBar();
+    }
+  },
+
+  // ==================== DEDICATED CYCLE STAFFING MODAL ====================
+  openCycleStaffingModal(cycleId) {
+    const p = getActiveProject();
+    if (!p) return;
+
+    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
+    const c = cycles.find(x => x.id === cycleId) || (typeof getCycleById === 'function' ? getCycleById(cycleId) : null);
+    if (!c) {
+      showToast('⚠️ Không tìm thấy đợt kiểm thử!', 'error');
+      return;
+    }
+
+    this.activeStaffingCycleId = cycleId;
+
+    const cycleIdInput = document.getElementById('mcs-staff-cycle-id');
+    if (cycleIdInput) cycleIdInput.value = cycleId;
+
+    const titleEl = document.getElementById('mcs-staff-title');
+    if (titleEl) titleEl.textContent = `👥 Phân Bổ Nhân Sự Đợt: ${c.name} (${c.code || c.id})`;
+
+    const subEl = document.getElementById('mcs-staff-subtitle');
+    if (subEl) subEl.textContent = `Chỉ định danh sách kỹ sư kiểm thử tham gia [${c.name}]. Sau khi lưu, kịch bản test sẽ được căn cứ điều phối cho các kỹ sư này.`;
+
+    const nameEl = document.getElementById('mcs-staff-cycle-name');
+    if (nameEl) nameEl.textContent = `${c.name} (${c.code || c.id})`;
+
+    const testers = this.getProjectTestersList();
+    const container = document.getElementById('mcs-staff-testers-list');
+    
+    // Đọc danh sách đã phân bổ hiện tại của đợt này
+    let currentAssigned = Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0 
+      ? c.assignedTesters 
+      : (Array.isArray(c.testerUsernames) ? c.testerUsernames : []);
+    
+    // Nếu chưa từng cấu hình riêng, mặc định chọn toàn bộ tester trong dự án
+    if (currentAssigned.length === 0) {
+      currentAssigned = testers.map(u => u.username);
+    }
+    const selSet = new Set(currentAssigned);
+
+    if (container) {
+      if (testers.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:18px; color:var(--text-muted); font-size:13px">Chưa có kiểm thử viên nào trong dự án. Vui lòng thêm nhân sự vào dự án tại cổng Admin.</div>`;
+      } else {
+        container.innerHTML = testers.map(u => {
+          const isChecked = selSet.has(u.username);
+          // Đếm số bài đã giao trong đợt này nếu có
+          const userAsgs = (state.assignments || []).filter(a => a.cycleId === cycleId && (a.assigneeUsername === u.username || a.username === u.username));
+          return `
+            <label style="display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:10px; border:1px solid ${isChecked ? 'rgba(37,99,235,0.3)' : 'var(--border)'}; background:${isChecked ? 'rgba(37,99,235,0.04)' : 'var(--bg-card)'}; cursor:pointer; transition:all 0.15s ease">
+              <input type="checkbox" class="mcs-staff-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onStaffCheckboxChange(this)" style="width:18px; height:18px; cursor:pointer" />
+              <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0">
+                ${(u.name || u.username).slice(0, 1).toUpperCase()}
+              </div>
+              <div style="flex:1">
+                <div style="font-size:13px; font-weight:700; color:var(--text-primary)">
+                  ${escapeHtml(u.name || u.username)}
+                  <span style="font-weight:400; color:var(--text-muted); font-size:11.5px">(@${escapeHtml(u.username)})</span>
+                </div>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+                  ${escapeHtml(u.roleTitle || 'Kiểm thử viên')} • Email: ${escapeHtml(u.email || 'N/A')}
+                </div>
+              </div>
+              <div style="text-align:right">
+                <span class="badge ${isChecked ? 'badge-pass' : 'badge-outline'}" style="font-size:11px">
+                  ${isChecked ? '✅ Tham gia đợt' : '⚪ Không tham gia'}
+                </span>
+                ${userAsgs.length > 0 ? `<div style="font-size:10.5px; color:#2563eb; font-weight:700; margin-top:3px">Đã giao ${userAsgs.length} bài</div>` : ''}
+              </div>
+            </label>
+          `;
+        }).join('');
+      }
+    }
+
+    this.updateStaffSummaryBadge();
+    openModal('modal-cycle-staffing');
+  },
+
+  onStaffCheckboxChange(cb) {
+    const lbl = cb.closest('label');
+    if (lbl) {
+      lbl.style.border = cb.checked ? '1px solid rgba(37,99,235,0.3)' : '1px solid var(--border)';
+      lbl.style.background = cb.checked ? 'rgba(37,99,235,0.04)' : 'var(--bg-card)';
+      const badge = lbl.querySelector('.badge');
+      if (badge) {
+        badge.className = `badge ${cb.checked ? 'badge-pass' : 'badge-outline'}`;
+        badge.textContent = cb.checked ? '✅ Tham gia đợt' : '⚪ Không tham gia';
+      }
+    }
+    this.updateStaffSummaryBadge();
+  },
+
+  updateStaffSummaryBadge() {
+    const cbs = document.querySelectorAll('.mcs-staff-checkbox');
+    const checked = Array.from(cbs).filter(cb => cb.checked);
+    const summary = document.getElementById('mcs-staff-selected-summary');
+    if (summary) summary.textContent = `Đã chọn ${checked.length} kỹ sư tham gia đợt này`;
+  },
+
+  toggleAllStaffModalTesters(select) {
+    const cbs = document.querySelectorAll('.mcs-staff-checkbox');
+    cbs.forEach(cb => {
+      cb.checked = select;
+      this.onStaffCheckboxChange(cb);
+    });
+  },
+
+  confirmSaveCycleStaffing() {
+    const cycleId = this.activeStaffingCycleId || document.getElementById('mcs-staff-cycle-id')?.value;
+    if (!cycleId) return;
+
+    const cbs = document.querySelectorAll('.mcs-staff-checkbox');
+    const selectedTesters = Array.from(cbs).filter(cb => cb.checked).map(cb => cb.value);
+
+    if (typeof saveCycleStaffing === 'function') {
+      saveCycleStaffing(cycleId, selectedTesters);
+    }
+
+    closeModal('modal-cycle-staffing');
+    showToast(`✅ Đã phân bổ ${selectedTesters.length} kiểm thử viên tham gia đợt kiểm thử!`, 'success');
+    this.renderCycleCards();
+    this.renderCyclesMatrix();
+    this.renderVersionOverview();
+    if (typeof LeadContext !== 'undefined' && LeadContext.renderCompactProjectBar) {
+      LeadContext.renderCompactProjectBar();
+    }
   },
 
   deleteCycle(cycleId) {

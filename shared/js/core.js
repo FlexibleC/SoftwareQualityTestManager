@@ -1466,6 +1466,52 @@ function saveCycleScope(cycleId, scopeTcIds, scopeType = 'CUSTOM') {
 }
 
 /**
+ * Lưu cấu hình Phân bổ Nhân sự (Kiểm thử viên) cho Đợt test (Save Cycle Staffing Allocation)
+ * Tuân thủ nguyên tắc: Cấu hình nhân sự tham gia đợt kiểm thử tại Không gian Phiên bản / Kịch bản,
+ * sau đó tại Đợt kiểm thử sẽ căn cứ vào danh sách nhân sự này để phân bổ testcase.
+ */
+function saveCycleStaffing(cycleId, assignedTesters) {
+  if (!cycleId) return false;
+
+  const validTesters = Array.from(new Set(Array.isArray(assignedTesters) ? assignedTesters.filter(Boolean) : []));
+
+  // 1. Cập nhật trong state.testCycles
+  if (!state.testCycles) state.testCycles = [];
+  let cState = state.testCycles.find(x => x.id === cycleId);
+  if (cState) {
+    cState.assignedTesters = validTesters;
+    cState.testerUsernames = validTesters;
+  }
+
+  // 2. Cập nhật trong project.testCycles
+  const p = getActiveProject();
+  if (p) {
+    if (!p.testCycles) p.testCycles = [];
+    let cProj = p.testCycles.find(x => x.id === cycleId);
+    if (cProj) {
+      cProj.assignedTesters = validTesters;
+      cProj.testerUsernames = validTesters;
+    } else if (cState) {
+      p.testCycles.push(JSON.parse(JSON.stringify(cState)));
+    }
+  }
+
+  saveCoreState();
+  if (typeof syncProjectsToLanServer === 'function') {
+    syncProjectsToLanServer();
+  }
+  if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+    window.pushCyclesToCloud(state.testCycles);
+  }
+
+  window.dispatchEvent(new CustomEvent('cycle-staffing-updated', {
+    detail: { cycleId, testers: validTesters, count: validTesters.length }
+  }));
+
+  return true;
+}
+
+/**
  * Lấy danh sách các Phiên bản của Dự án
  */
 function getProjectVersions(projectId) {
@@ -1605,8 +1651,12 @@ function getCycleMetrics(cycleId) {
   const assignedCount = scopeTcs.filter(tc => assignedTcIds.has(tc.id)).length;
   const assignedRate = totalTcs > 0 ? Math.round((assignedCount / totalTcs) * 100) : 0;
 
-  // Tester usernames
-  const assignees = Array.from(new Set(asgs.map(a => a.username || a.assignee).filter(Boolean)));
+  // Tester usernames đã được giao bài thực tế
+  const assigneesWithWork = Array.from(new Set(asgs.map(a => a.username || a.assignee).filter(Boolean)));
+  // Tester được phân bổ tham gia đợt (từ cấu hình đợt test)
+  const assignedTesters = (Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0)
+    ? c.assignedTesters
+    : (Array.isArray(c.testerUsernames) && c.testerUsernames.length > 0 ? c.testerUsernames : assigneesWithWork);
 
   let passCount = 0;
   let failCount = 0;
@@ -1632,7 +1682,10 @@ function getCycleMetrics(cycleId) {
     totalTcs,
     assignedCount,
     assignedRate,
-    assignees,
+    assignees: assignedTesters,
+    activeAssignees: assigneesWithWork,
+    assignedTesters,
+    assignedTestersCount: assignedTesters.length,
     passCount,
     failCount,
     blockedCount,
@@ -1721,6 +1774,10 @@ function addTestCycle(cycleData) {
   const code = cycleData.code || `ROUND-${nextSeq}`;
   const id = `CYC-${pId.replace('PRJ-', '')}-${String(nextSeq).padStart(2, '0')}`;
   
+  const assignedTesters = Array.isArray(cycleData.assignedTesters)
+    ? Array.from(new Set(cycleData.assignedTesters.filter(Boolean)))
+    : (Array.isArray(cycleData.testerUsernames) ? Array.from(new Set(cycleData.testerUsernames.filter(Boolean))) : []);
+
   const newCycle = {
     id,
     projectId: pId,
@@ -1731,12 +1788,17 @@ function addTestCycle(cycleData) {
     endDate: cycleData.endDate || new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
     status: cycleData.status || 'ACTIVE',
     targetSuite: cycleData.targetSuite || 'REGRESSION',
-    description: cycleData.description || 'Đợt kiểm thử mới tạo'
+    description: cycleData.description || 'Đợt kiểm thử mới tạo',
+    assignedTesters,
+    testerUsernames: assignedTesters
   };
   
   state.testCycles.push(newCycle);
   state.activeCycleId = newCycle.id;
   saveCoreState();
+  if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+    window.pushCyclesToCloud(state.testCycles);
+  }
   return newCycle;
 }
 
@@ -1753,8 +1815,16 @@ function updateTestCycle(cycleId, updatedData) {
   if (updatedData.status !== undefined) cycle.status = updatedData.status;
   if (updatedData.targetSuite !== undefined) cycle.targetSuite = updatedData.targetSuite;
   if (updatedData.description !== undefined) cycle.description = updatedData.description.trim();
+  if (updatedData.assignedTesters !== undefined) {
+    const list = Array.isArray(updatedData.assignedTesters) ? Array.from(new Set(updatedData.assignedTesters.filter(Boolean))) : [];
+    cycle.assignedTesters = list;
+    cycle.testerUsernames = list;
+  }
 
   saveCoreState();
+  if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+    window.pushCyclesToCloud(state.testCycles);
+  }
   return cycle;
 }
 
@@ -2671,6 +2741,7 @@ if (typeof window !== 'undefined') {
   window.getTestCasesForCycle = getTestCasesForCycle;
   window.getTestCasesForVersion = getTestCasesForVersion;
   window.saveCycleScope = saveCycleScope;
+  window.saveCycleStaffing = saveCycleStaffing;
   window.addProjectVersion = addProjectVersion;
   window.deleteProjectVersion = deleteProjectVersion;
   window.getProjectVersions = getProjectVersions;

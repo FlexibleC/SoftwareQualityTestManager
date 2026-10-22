@@ -455,7 +455,7 @@
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
           <span style="font-size:12px; font-weight:800; color:var(--text-muted)">⚡ Thao tác phân công nhanh:</span>
           
-          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openAssignTesterToCycleModal()">
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openCycleStaffingModal(document.getElementById('v-roster-cycle-select')?.value || LeadVersion.activeRosterCycleId)">
             ➕ Chỉ định kiểm thử viên vào đợt này
           </button>
           
@@ -976,12 +976,98 @@
 
         <div>
           <label class="form-label" style="font-weight:700">Mục tiêu và phạm vi đợt kiểm thử</label>
-          <textarea id="cf-description" class="form-control" rows="3" placeholder="Mô tả phạm vi nghiệm thu, các kịch bản hoặc phân hệ trọng tâm cần kiểm thử trong đợt này..."></textarea>
+          <textarea id="cf-description" class="form-control" rows="2" placeholder="Mô tả phạm vi nghiệm thu, các kịch bản hoặc phân hệ trọng tâm cần kiểm thử trong đợt này..."></textarea>
+        </div>
+
+        <!-- Mục chọn nhân sự kiểm thử viên tham gia đợt kiểm thử -->
+        <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:2px">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+            <label class="form-label" style="font-weight:800; color:var(--text-primary); margin:0; font-size:12.5px">
+              👥 Nhân sự kiểm thử viên tham gia đợt này
+            </label>
+            <div style="display:flex; align-items:center; gap:8px">
+              <span id="cf-testers-count-badge" class="badge badge-info" style="font-size:10px">0 đã chọn</span>
+              <a href="javascript:void(0)" onclick="LeadVersion.toggleAllFormTesters(true)" style="font-size:11px; text-decoration:none; font-weight:700; color:#2563eb">Chọn tất cả</a>
+              <span style="color:var(--text-muted); font-size:11px">•</span>
+              <a href="javascript:void(0)" onclick="LeadVersion.toggleAllFormTesters(false)" style="font-size:11px; text-decoration:none; color:var(--text-muted)">Bỏ chọn</a>
+            </div>
+          </div>
+          <div id="cf-testers-list" style="max-height:160px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 12px; background:var(--bg-surface); display:flex; flex-direction:column; gap:6px">
+            <!-- Populated dynamically with project testers -->
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:5px; line-height:1.4">
+            💡 Kịch bản kiểm thử của đợt này sẽ được căn cứ và điều phối cho các kỹ sư được chọn ở trên.
+          </div>
         </div>
       </div>
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-form')">Hủy</button>
         <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmSaveCycle()">💾 Lưu đợt kiểm thử</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1.5: Phân bổ nhân sự chuyên biệt cho Đợt kiểm thử (Cycle Staffing Workstation) -->
+  <div class="modal" id="modal-cycle-staffing">
+    <div class="modal-box" style="max-width:640px; padding:0; overflow:hidden">
+      <div class="modal-header" style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0">
+            👥
+          </div>
+          <div>
+            <h3 id="mcs-staff-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+              Phân bổ nhân sự kiểm thử cho đợt
+            </h3>
+            <div id="mcs-staff-subtitle" style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Chọn các kiểm thử viên tham gia thực thi đợt kiểm thử này.
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-cycle-staffing')">✕</button>
+      </div>
+      
+      <div class="modal-body" style="padding:16px 20px; display:flex; flex-direction:column; gap:12px">
+        <input type="hidden" id="mcs-staff-cycle-id" />
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--bg-surface); border-radius:8px; border:1px solid var(--border)">
+          <div>
+            <span style="font-size:11.5px; color:var(--text-muted); font-weight:700">ĐỢT KIỂM THỬ:</span>
+            <strong id="mcs-staff-cycle-name" style="font-size:13px; color:#2563eb; margin-left:6px">--</strong>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.toggleAllStaffModalTesters(true)">
+              ✅ Chọn tất cả
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.toggleAllStaffModalTesters(false)">
+              ❌ Bỏ chọn tất cả
+            </button>
+          </div>
+        </div>
+
+        <div style="font-size:12px; font-weight:700; color:var(--text-primary)">
+          Danh sách kiểm thử viên trong dự án:
+        </div>
+
+        <div id="mcs-staff-testers-list" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div style="padding:10px 14px; background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.2); border-radius:8px; font-size:12px; color:var(--text-primary); line-height:1.4">
+          ℹ️ <strong>Nguyên tắc phân bổ:</strong> Sau khi xác nhận phân bổ nhân sự cho đợt này, tại màn hình tác chiến hệ thống sẽ chỉ căn cứ vào danh sách kỹ sư được chọn để phân bổ testcase (chia đều tải trọng, phân bổ theo phân hệ).
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding:12px 20px; background:var(--bg-card); border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+        <span id="mcs-staff-selected-summary" style="font-size:12px; font-weight:700; color:#2563eb">
+          Đã chọn 0 kỹ sư
+        </span>
+        <div style="display:flex; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-staffing')">Hủy bỏ</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmSaveCycleStaffing()" style="font-weight:800">
+            💾 Lưu phân bổ nhân sự
+          </button>
+        </div>
       </div>
     </div>
   </div>
