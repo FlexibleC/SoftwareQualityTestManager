@@ -1570,7 +1570,21 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[firstSheetName];
-          const rows = XLSX.utils.sheet_to_json(sheet);
+
+          // 1. Tự động tìm hàng tiêu đề thực sự (bỏ qua banner tiêu đề lớn ở các hàng đầu)
+          const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          let headerRowIndex = aoa.findIndex(r => {
+            if (!Array.isArray(r) || r.length < 3) return false;
+            const hasId = r.some(c => /^(STT|Mã\s*(Test\s*Case|TC|Kịch\s*bản|Bài)|ID)$/i.test(String(c).trim()) || /Mã\s*Test\s*Case/i.test(String(c)));
+            const hasTitle = r.some(c => /Tiêu\s*đề|Tên\s*kịch\s*bản|Tên\s*bài|Title/i.test(String(c)));
+            return hasId && hasTitle;
+          });
+          if (headerRowIndex === -1) {
+            headerRowIndex = aoa.findIndex(r => Array.isArray(r) && r.some(c => /Mã|ID|Phân\s*hệ|Module/i.test(String(c))));
+          }
+          if (headerRowIndex === -1) headerRowIndex = 0;
+
+          const rows = XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex, defval: '' });
 
           if (!rows || rows.length === 0) {
             previewBox.style.display = 'block';
@@ -1579,21 +1593,70 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
             return;
           }
 
-          this.importedTcs = rows.map((r, idx) => {
-            const id = r['Mã kịch bản'] || r['Mã bài'] || r['Mã'] || r['ID'] || r['id'] || `TC-IMP-${idx + 1}`;
-            const module = r['Phân hệ'] || r['Module'] || r['Mã phân hệ'] || r['module'] || 'M01';
-            const title = r['Tên kịch bản'] || r['Tiêu đề'] || r['Tên bài'] || r['Title'] || r['title'] || `Kịch bản kiểm thử ${idx + 1}`;
-            const priority = r['Mức ưu tiên'] || r['Ưu tiên'] || r['Priority'] || r['priority'] || 'P2';
-            const steps = r['Các bước thực hiện'] || r['Các bước'] || r['Steps'] || r['steps'] || '';
-            const expected = r['Kết quả mong đợi'] || r['Kết quả'] || r['Expected'] || r['expected'] || '';
-            const type = r['Loại kiểm thử'] || r['Loại'] || r['Type'] || 'Chức năng';
-            const suite = r['Suite'] || r['Loại suite'] || 'REGRESSION';
-            return { id, module, title, priority, steps, expected, type, suite };
+          const MODULE_NAMES = {
+            'M01': 'M01 - Xác thực & Quản lý Ca trực',
+            'M02': 'M02 - Check-in Khách Đơn & Cấp Thẻ',
+            'M03': 'M03 - Khách Đoàn & Lưu Trú Qua Đêm',
+            'M04': 'M04 - Check-out & Thu Hồi Thẻ Mất',
+            'M05': 'M05 - Giao Diện Trực Ban & Tra Cứu',
+            'M06': 'M06 - Chi Tiết Lượt Khách & Timeline',
+            'M07': 'M07 - Sổ Sách Ngoại Lệ (DataEntry)',
+            'M08': 'M08 - Quản Trị Admin & Giám Sát',
+            'M09': 'M09 - Trung Tâm Báo Cáo & Thống Kê',
+            'M10': 'M10 - Cấu Hình Hệ Thống & CSDL',
+            'M11': 'M11 - Thiết Bị Ngoại Vi & Phần Cứng',
+            'M12': 'M12 - Dịch Vụ Nền Tảng & Chịu Lỗi'
+          };
+
+          const parsedList = [];
+          rows.forEach((r, idx) => {
+            const id = String(r['Mã Test Case'] || r['Mã Test Case (*)'] || r['Mã kịch bản'] || r['Mã bài'] || r['Mã TC'] || r['Mã'] || r['ID'] || r['id'] || r['tc_id'] || '').trim();
+            const title = String(r['Tiêu đề kịch bản'] || r['Tiêu đề kịch bản (*)'] || r['Tên kịch bản'] || r['Tiêu đề'] || r['Tên bài'] || r['Title'] || r['title'] || r['name'] || '').trim();
+            if (!id && !title) return;
+
+            const finalId = id || `TC-IMP-${idx + 1}`;
+            const finalTitle = title || `Kịch bản kiểm thử ${idx + 1}`;
+
+            let rawMod = String(r['Phân hệ (Module) (*)'] || r['Phân hệ (*)'] || r['Phân hệ'] || r['Module'] || r['Mã phân hệ'] || r['module'] || 'M01').trim();
+            const modMatch = rawMod.match(/M\d+/i);
+            const module = modMatch ? modMatch[0].toUpperCase() : (rawMod || 'M01');
+            const moduleName = MODULE_NAMES[module] || rawMod || `Phân hệ ${module}`;
+
+            let rawPrio = String(r['Mức ưu tiên'] || r['Ưu tiên'] || r['Priority'] || r['priority'] || 'P2').trim();
+            const pMatch = rawPrio.match(/P[1-4]/i);
+            const priority = pMatch ? pMatch[0].toUpperCase() : 'P2';
+
+            const steps = String(r['Quy trình các bước (Test Steps)'] || r['Các bước thực hiện'] || r['Các bước'] || r['Steps'] || r['steps'] || '').trim();
+            const expected = String(r['Kết quả kỳ vọng (Expected Results)'] || r['Kết quả mong đợi'] || r['Kết quả'] || r['Expected'] || r['expected'] || '').trim();
+            const type = String(r['Loại kiểm thử'] || r['Loại'] || r['Type'] || 'Chức năng').trim();
+            const suite = String(r['Bộ kịch bản'] || r['Suite'] || r['Loại suite'] || 'REGRESSION').trim();
+            const platform = String(r['Nền tảng'] || r['Platform'] || 'Giao diện Web Trực ban').trim();
+            const precondition = String(r['Điều kiện tiên quyết (Preconditions)'] || r['Điều kiện tiên quyết'] || r['Tiền điều kiện'] || '').trim();
+            const testData = String(r['Dữ liệu kiểm thử (Test Data)'] || r['Dữ liệu kiểm thử'] || r['Dữ liệu'] || '').trim();
+            const notes = String(r['Ghi chú kỹ thuật'] || r['Ghi chú'] || '').trim();
+
+            parsedList.push({
+              id: finalId,
+              title: finalTitle,
+              name: finalTitle,
+              module,
+              moduleName,
+              priority,
+              steps,
+              expected,
+              type,
+              suite,
+              platform,
+              precondition,
+              testData,
+              notes
+            });
           });
 
+          this.importedTcs = parsedList;
           const mods = new Set(this.importedTcs.map(t => t.module));
           previewBox.style.display = 'block';
-          previewContent.innerHTML = `✅ Đã phân tích bảng tính: <strong>${this.importedTcs.length}</strong> kịch bản thuộc <strong>${mods.size}</strong> phân hệ. Sẵn sàng tạo phiên bản!`;
+          previewContent.innerHTML = `✅ Đã phân tích bảng tính: <strong>${this.importedTcs.length}</strong> kịch bản thuộc <strong>${mods.size}</strong> phân hệ (${Array.from(mods).sort().join(', ')}). Sẵn sàng tạo phiên bản!`;
           submitBtn.disabled = false;
         } catch (err) {
           previewBox.style.display = 'block';
@@ -1647,7 +1710,7 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
       if (tc.module && !existingModIds.has(tc.module)) {
         p.modules.push({
           id: tc.module,
-          name: `Phân hệ ${tc.module}`,
+          name: tc.moduleName || `Phân hệ ${tc.module}`,
           desc: `Tự động trích xuất từ kịch bản phiên bản ${version.trim()}`,
           versions: [version.trim()]
         });
@@ -1657,6 +1720,9 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
         if (foundMod) {
           if (!Array.isArray(foundMod.versions)) foundMod.versions = [];
           if (!foundMod.versions.includes(version.trim())) foundMod.versions.push(version.trim());
+          if (tc.moduleName && (!foundMod.name || foundMod.name.startsWith('Phân hệ M'))) {
+            foundMod.name = tc.moduleName;
+          }
         }
       }
     });
