@@ -930,9 +930,14 @@
           </label>
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-version-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmSaveVersion()">💾 Lưu phiên bản</button>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+        <button type="button" id="btn-vf-delete" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:rgba(220,38,38,0.4); font-weight:700; display:none" onclick="LeadDashboard.deleteFromModal()">
+          🗑️ Xóa phiên bản này
+        </button>
+        <div style="display:flex; gap:8px; margin-left:auto">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-version-form')">Hủy</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmSaveVersion()">💾 Lưu phiên bản</button>
+        </div>
       </div>
     </div>
   </div>

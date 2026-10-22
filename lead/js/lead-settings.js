@@ -82,15 +82,45 @@ const LeadSettings = {
           <td style="text-align:center; font-size:12px; color:var(--text-muted)">${v.targetDate || 'Chưa đặt'}</td>
           <td style="font-size:12px; color:var(--text-secondary)">${v.changelog || 'Chưa có ghi chú'}</td>
           <td style="text-align:center">
-            ${!isActive ? `
-              <button type="button" class="btn btn-outline btn-xs" onclick="LeadSettings.activateVersion('${v.version}')" title="Kích hoạt phiên bản này cho dự án">
-                ⚡ Kích hoạt
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px">
+              ${!isActive ? `
+                <button type="button" class="btn btn-outline btn-xs" onclick="LeadSettings.activateVersion('${v.version}')" title="Kích hoạt phiên bản này cho dự án">
+                  ⚡ Kích hoạt
+                </button>
+              ` : '<span style="font-size:11px; color:#16a34a; font-weight:700">✓ Đang dùng</span>'}
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadSettings.deleteVersion('${v.version}')" style="color:#dc2626; border-color:rgba(220,38,38,0.3)" title="Xóa phiên bản này">
+                🗑️
               </button>
-            ` : '<span style="font-size:11px; color:#16a34a; font-weight:700">✓ Đang dùng</span>'}
+            </div>
           </td>
         </tr>
       `;
     }).join('');
+  },
+
+  deleteVersion(ver) {
+    const p = getActiveProject();
+    if (!p) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa phiên bản [${ver}] khỏi dự án? Thao tác này không thể hoàn tác!`)) return;
+
+    if (typeof deleteProjectVersion === 'function') {
+      deleteProjectVersion(p.id, ver);
+    } else {
+      p.versions = (p.versions || []).filter(v => (v.version || v) !== ver);
+      p.testCases = (p.testCases || []).filter(tc => tc.version !== ver);
+      p.testCycles = (p.testCycles || []).filter(c => c.version !== ver);
+      if (p.activeVersion === ver) {
+        p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
+      }
+      saveCoreState();
+      if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
+      if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+    }
+
+    showToast(`🗑️ Đã xóa phiên bản [${ver}]!`, 'success');
+    this.renderVersions();
+    this.renderCycles();
+    if (window.LeadContext) LeadContext.renderCompactProjectBar();
   },
 
   openAddVersionModal() {

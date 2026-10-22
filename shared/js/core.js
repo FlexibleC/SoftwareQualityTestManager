@@ -2108,6 +2108,49 @@ function setProjectActiveVersion(projId, versionTag) {
   return p;
 }
 
+function deleteProjectVersion(projId, versionTag) {
+  const p = (state.projects || []).find(x => x.id === projId);
+  if (!p) throw new Error('Không tìm thấy dự án!');
+  if (!p.versions || p.versions.length === 0) {
+    throw new Error('Dự án không có phiên bản nào để xóa!');
+  }
+  const idx = p.versions.findIndex(v => (v.version || v) === versionTag);
+  if (idx === -1) {
+    throw new Error(`Không tìm thấy phiên bản "${versionTag}" trong dự án!`);
+  }
+  const removed = p.versions.splice(idx, 1)[0];
+
+  // Dọn dẹp kịch bản kiểm thử gắn với phiên bản này
+  if (Array.isArray(p.testCases)) {
+    p.testCases = p.testCases.filter(tc => tc.version !== versionTag);
+  }
+
+  // Dọn dẹp các đợt kiểm thử gắn với phiên bản này
+  if (Array.isArray(p.testCycles)) {
+    p.testCycles = p.testCycles.filter(c => c.version !== versionTag);
+  }
+  if (Array.isArray(state.testCycles)) {
+    state.testCycles = state.testCycles.filter(c => !(c.projectId === projId && c.version === versionTag));
+  }
+
+  // Nếu phiên bản bị xóa là phiên bản hiện hành (activeVersion), chuyển sang phiên bản còn lại hoặc rỗng
+  if (p.activeVersion === versionTag) {
+    p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
+    if (state.activeProjectId === projId) {
+      state.activeVersion = p.activeVersion;
+    }
+  }
+
+  saveCoreState();
+  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+    window.pushProjectsToCloud(state.projects);
+  }
+  if (window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+    window.pushCyclesToCloud(state.testCycles);
+  }
+  return removed;
+}
+
 // ================================================================
 // USER MANAGEMENT & ROLE FUNCTIONS
 // ================================================================
@@ -2499,6 +2542,8 @@ if (typeof window !== 'undefined') {
   window.getTestCasesForCycle = getTestCasesForCycle;
   window.getTestCasesForVersion = getTestCasesForVersion;
   window.saveCycleScope = saveCycleScope;
+  window.addProjectVersion = addProjectVersion;
+  window.deleteProjectVersion = deleteProjectVersion;
   window.getProjectVersions = getProjectVersions;
   window.getVersionMetrics = getVersionMetrics;
   window.getCycleMetrics = getCycleMetrics;

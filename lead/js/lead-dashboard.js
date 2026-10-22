@@ -726,6 +726,9 @@ const LeadDashboard = {
                   ★ Đặt hiện hành
                 </button>
               ` : ''}
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadDashboard.deleteVersion('${escapeHtml(vStr)}')" style="color:#dc2626; border-color:rgba(220,38,38,0.35)" title="Xóa phiên bản này">
+                🗑️
+              </button>
             </div>
           </td>
         </tr>
@@ -949,6 +952,9 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
                     ★ Đặt hiện hành
                   </button>
                 ` : ''}
+                <button type="button" class="btn btn-outline btn-sm" onclick="LeadDashboard.deleteVersion('${escapeHtml(vStr)}')" style="color:#dc2626; border-color:rgba(220,38,38,0.35); display:flex; align-items:center; justify-content:center; padding:0 10px" title="Xóa phiên bản ${escapeHtml(vStr)}">
+                  <span>🗑️</span>
+                </button>
               </div>
             </div>
           `;
@@ -1233,6 +1239,9 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
     document.getElementById('vf-changelog').value = '';
     document.getElementById('vf-set-active').checked = false;
 
+    const delBtn = document.getElementById('btn-vf-delete');
+    if (delBtn) delBtn.style.display = 'none';
+
     document.getElementById('modal-version-title').textContent = '➕ Thêm phiên bản mới cho dự án';
     openModal('modal-version-form');
   },
@@ -1252,8 +1261,74 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
     document.getElementById('vf-changelog').value = (vObj && vObj.changelog) ? vObj.changelog : '';
     document.getElementById('vf-set-active').checked = (versionStr === p.activeVersion);
 
+    const delBtn = document.getElementById('btn-vf-delete');
+    if (delBtn) delBtn.style.display = 'inline-flex';
+
     document.getElementById('modal-version-title').textContent = `✏️ Cấu hình phiên bản: ${versionStr}`;
     openModal('modal-version-form');
+  },
+
+  deleteFromModal() {
+    const originalVer = document.getElementById('vf-original-version')?.value?.trim();
+    if (originalVer) {
+      this.deleteVersion(originalVer);
+    }
+  },
+
+  deleteVersion(versionStr) {
+    const p = getActiveProject();
+    if (!p) return;
+
+    // Đếm số kịch bản và đợt test chịu ảnh hưởng
+    const affectedTcs = (p.testCases || []).filter(tc => tc.version === versionStr).length;
+    const affectedCycles = (typeof getTestCyclesForProject === 'function' 
+      ? getTestCyclesForProject(p.id, versionStr) 
+      : (p.testCycles || []).filter(c => c.version === versionStr)).length;
+
+    let confirmMsg = `Bạn có chắc chắn muốn xóa phiên bản [${versionStr}] khỏi dự án "${p.name}"?`;
+    if (affectedTcs > 0 || affectedCycles > 0) {
+      confirmMsg += `\n\n⚠️ Cảnh báo: Phiên bản này đang chứa ${affectedTcs} kịch bản kiểm thử và ${affectedCycles} đợt test. Toàn bộ dữ liệu này sẽ bị xóa vĩnh viễn khỏi dự án và cơ sở dữ liệu Cloud!`;
+    }
+    confirmMsg += `\n\nThao tác này không thể hoàn tác!`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      if (typeof deleteProjectVersion === 'function') {
+        deleteProjectVersion(p.id, versionStr);
+      } else {
+        p.versions = (p.versions || []).filter(v => (v.version || v) !== versionStr);
+        p.testCases = (p.testCases || []).filter(tc => tc.version !== versionStr);
+        p.testCycles = (p.testCycles || []).filter(c => c.version !== versionStr);
+        if (state.testCycles) {
+          state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && c.version === versionStr));
+        }
+        if (p.activeVersion === versionStr) {
+          p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
+          state.activeVersion = p.activeVersion;
+        }
+        saveCoreState();
+        if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
+        if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+      }
+
+      showToast(`🗑️ Đã xóa thành công phiên bản [${versionStr}]!`, 'success');
+
+      // Đóng modal form nếu đang mở
+      closeModal('modal-version-form');
+
+      // Cập nhật lại toàn bộ giao diện điều hành phiên bản
+      this.renderVersionManagementCockpit();
+      this.renderExecutiveHealth();
+      this.renderProjectRoster();
+      this.renderDevPipeline();
+      this.updateQuickActions();
+      if (window.LeadContext) {
+        LeadContext.renderCompactProjectBar();
+      }
+    } catch (err) {
+      showToast(`❌ Lỗi khi xóa phiên bản: ${err.message}`, 'error');
+    }
   },
 
   confirmSaveVersion() {
