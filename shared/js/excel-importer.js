@@ -805,9 +805,20 @@
     window.state.comments = {};
     window.state.testCycles = [];
 
-    // Xóa sạch localStorage trình duyệt
+    // Xóa sạch localStorage trình duyệt (giữ lại người dùng smartvms_system_users_v3)
     try {
       localStorage.removeItem('smartvms_qa_hub_state_v3');
+      localStorage.setItem('sqtm_enterprise_projects_v3', '[]');
+      localStorage.removeItem('sqtm_active_project_id_v3');
+      localStorage.setItem('smartvms_test_cycles_v3', '[]');
+      localStorage.removeItem('smartvms_session_projects');
+      localStorage.removeItem('smartvms_active_project_id');
+      localStorage.removeItem('smartvms_adhoc_defects_v3');
+      sessionStorage.setItem('sqtm_enterprise_projects_v3', '[]');
+      sessionStorage.removeItem('sqtm_active_project_id_v3');
+      sessionStorage.setItem('smartvms_test_cycles_v3', '[]');
+      sessionStorage.removeItem('smartvms_session_projects');
+      sessionStorage.removeItem('smartvms_active_project_id');
     } catch (e) {}
 
     // Lưu Core State

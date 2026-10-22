@@ -5,9 +5,16 @@
  */
 
 let reportCharts = { pie: null, bar: null };
+let rptSelectedVersion = '';
+let rptSelectedCycleId = '';
 
 function initReportsModule() {
   initCoreState();
+  populateReportScopeSelectors();
+  refreshReportsView();
+}
+
+function refreshReportsView() {
   renderKpiMetrics();
   renderReportCharts();
   renderProjectComparisonTable();
@@ -16,9 +23,111 @@ function initReportsModule() {
   renderMultiCycleReport();
 }
 
+function populateReportScopeSelectors() {
+  const p = getActiveProject();
+  if (!p) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCycleId = urlParams.get('cycleId');
+  const urlVersion = urlParams.get('version');
+
+  // Version filter
+  const verSel = document.getElementById('rpt-filter-version');
+  if (verSel) {
+    const versions = (Array.isArray(p.versions) && p.versions.length > 0)
+      ? p.versions
+      : [{ version: p.activeVersion || 'v1.0', label: 'Bản phát hành chuẩn' }];
+
+    rptSelectedVersion = urlVersion || p.activeVersion || versions[0]?.version || '';
+    verSel.innerHTML = `<option value="">-- Tất cả phiên bản --</option>` +
+      versions.map(v => `<option value="${escapeHtml(v.version)}" ${v.version === rptSelectedVersion ? 'selected' : ''}>
+        ${escapeHtml(v.version)} (${escapeHtml(v.label || 'Bản phát hành')})
+      </option>`).join('');
+    verSel.value = rptSelectedVersion;
+  }
+
+  // Cycle filter
+  populateReportCycleSelector(p.id, rptSelectedVersion, urlCycleId || state.activeCycleId);
+  updateReportScopeSummary();
+}
+
+function populateReportCycleSelector(projectId, version, selectCycleId) {
+  const cycleSel = document.getElementById('rpt-filter-cycle');
+  if (!cycleSel) return;
+  const pId = projectId || state.activeProjectId;
+  let cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(pId, version) : [];
+  if (cycles.length === 0 && version) {
+    cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(pId) : [];
+  }
+
+  rptSelectedCycleId = selectCycleId || '';
+  if (rptSelectedCycleId && !cycles.some(c => c.id === rptSelectedCycleId)) {
+    rptSelectedCycleId = cycles[0]?.id || '';
+  }
+
+  cycleSel.innerHTML = `<option value="">-- Tất cả đợt kiểm thử (${cycles.length}) --</option>` +
+    cycles.map(c => {
+      const scopeTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(c.id) : [];
+      return `<option value="${c.id}" ${c.id === rptSelectedCycleId ? 'selected' : ''}>
+        ${c.status === 'ACTIVE' ? '🟢' : '⏳'} ${escapeHtml(c.name)} (${scopeTcs.length} bài)
+      </option>`;
+    }).join('');
+
+  cycleSel.value = rptSelectedCycleId;
+}
+
+function handleReportScopeChange() {
+  const p = getActiveProject();
+  rptSelectedVersion = document.getElementById('rpt-filter-version')?.value || '';
+  rptSelectedCycleId = document.getElementById('rpt-filter-cycle')?.value || '';
+
+  if (document.activeElement?.id === 'rpt-filter-version') {
+    populateReportCycleSelector(p?.id, rptSelectedVersion, '');
+    rptSelectedCycleId = document.getElementById('rpt-filter-cycle')?.value || '';
+  }
+
+  updateReportScopeSummary();
+  refreshReportsView();
+}
+
+function updateReportScopeSummary() {
+  const badge = document.getElementById('rpt-scope-summary-badge');
+  if (!badge) return;
+  const p = getActiveProject();
+  if (!p) return;
+
+  const tcs = getReportTargetTestCases();
+  if (rptSelectedCycleId) {
+    const c = typeof getCycleById === 'function' ? getCycleById(rptSelectedCycleId) : null;
+    badge.innerHTML = `<span class="badge badge-info" style="font-size:12px; font-weight:700">🎯 Phạm vi: ${escapeHtml(c?.name || rptSelectedCycleId)} — ${tcs.length} kịch bản</span>`;
+  } else if (rptSelectedVersion) {
+    badge.innerHTML = `<span class="badge badge-pass" style="font-size:12px; font-weight:700">📦 Phiên bản: ${escapeHtml(rptSelectedVersion)} — ${tcs.length} kịch bản</span>`;
+  } else {
+    badge.innerHTML = `<span class="badge badge-outline" style="font-size:12px">🌐 Toàn bộ dự án: ${tcs.length} kịch bản</span>`;
+  }
+}
+
+function getReportTargetTestCases() {
+  const p = getActiveProject();
+  if (!p) return [];
+
+  if (rptSelectedCycleId) {
+    return typeof getTestCasesForCycle === 'function' 
+      ? getTestCasesForCycle(rptSelectedCycleId) 
+      : (p.testCases || []);
+  }
+
+  if (rptSelectedVersion) {
+    return typeof getTestCasesForVersion === 'function'
+      ? getTestCasesForVersion(p.id, rptSelectedVersion)
+      : (p.testCases || []);
+  }
+
+  return getAccessibleTcsForUser(getCurrentUser(), state.activeProjectId);
+}
+
 function renderKpiMetrics() {
-  const u = getCurrentUser();
-  const all = getAccessibleTcsForUser(u, state.activeProjectId);
+  const all = getReportTargetTestCases();
   const total = all.length;
   let pass = 0, fail = 0, blocked = 0, skip = 0, wip = 0;
   let criticalBugs = 0;
@@ -59,7 +168,7 @@ function renderKpiMetrics() {
 
 function renderReportCharts() {
   const u = getCurrentUser();
-  const all = getAccessibleTcsForUser(u, state.activeProjectId);
+  const all = getReportTargetTestCases();
   let pass = 0, fail = 0, blocked = 0, skip = 0, pending = 0;
 
   all.forEach(tc => {
@@ -189,19 +298,35 @@ function renderTesterReportTable() {
   if (!tbody) return;
 
   const curUser = getCurrentUser();
-  const asgs = state.assignments || [];
-  const testers = (curUser.role === 'tester') ? [curUser.username] : ['tester', 'tester_nam', 'tester_lan'];
-  const testerNames = {
-    'tester': 'Nguyễn Văn Nam (Tester 1)',
-    'tester_nam': 'Nguyễn Văn Nam (Tester)',
-    'tester_lan': 'Trần Thị Lan (Tester)'
-  };
+  const p = getActiveProject();
+  const allUsers = typeof getUsers === 'function' ? getUsers() : [];
+  const pMembers = (p?.members || []).map(m => m.username);
+
+  // Lọc nhiệm vụ đúng dự án và đúng đợt kiểm thử đang chọn
+  const asgs = (state.assignments || []).filter(a => 
+    (!a.projectId || a.projectId === state.activeProjectId) &&
+    (!rptSelectedCycleId || a.cycleId === rptSelectedCycleId || !a.cycleId)
+  );
+
+  let testers = (curUser.role === 'tester') 
+    ? [curUser.username] 
+    : allUsers.filter(u => u.role === 'tester' || pMembers.includes(u.username)).map(u => u.username);
+
+  if (testers.length === 0) {
+    testers = Array.from(new Set(asgs.map(a => a.assigneeUsername).filter(Boolean)));
+  }
+  if (testers.length === 0) {
+    testers = ['tester', 'usr_002', 'usr_003'];
+  }
+
+  const testerNames = {};
+  allUsers.forEach(u => { testerNames[u.username] = u.name; });
 
   tbody.innerHTML = testers.map(u => {
     const userAsgs = asgs.filter(a => a.assigneeUsername === u || (a.assigneeName && a.assigneeName.includes(u)));
     const total = userAsgs.length;
-    const pass = userAsgs.filter(a => a.status === 'PASSED').length;
-    const fail = userAsgs.filter(a => a.status === 'FAILED').length;
+    const pass = userAsgs.filter(a => a.status === 'PASSED' || (state.results && state.results[a.tcId]?.status === 'Pass')).length;
+    const fail = userAsgs.filter(a => a.status === 'FAILED' || (state.results && state.results[a.tcId]?.status === 'Fail')).length;
     const wip = total - pass - fail;
     const rate = total > 0 ? Math.round((pass / total) * 100) : 0;
 
@@ -226,8 +351,7 @@ function renderDefectReportTable() {
                 document.getElementById('tbody-defects-list');
   if (!tbody) return;
 
-  const curUser = getCurrentUser();
-  const all = getAccessibleTcsForUser(curUser, state.activeProjectId);
+  const all = getReportTargetTestCases();
   const tcMap = {};
   all.forEach(t => { tcMap[t.id] = t; });
 

@@ -27,7 +27,7 @@ const DEFAULT_SYSTEM_USERS = [
     password: '123',
     name: 'Hoàng Hải Đăng',
     role: 'project_lead',
-    roleTitle: 'Quản trị viên Dự án (Project Lead)',
+    roleTitle: 'Quản trị viên dự án',
     email: 'dang.hh@smartvms.local',
     assignedProjects: [],
     status: 'ACTIVE',
@@ -39,7 +39,7 @@ const DEFAULT_SYSTEM_USERS = [
     password: '123',
     name: 'Nguyễn Văn Nam',
     role: 'tester',
-    roleTitle: 'Kiểm thử viên 1 (Tester)',
+    roleTitle: 'Kiểm thử viên 1',
     email: 'nam.nv@smartvms.local',
     assignedProjects: [],
     status: 'ACTIVE',
@@ -51,7 +51,7 @@ const DEFAULT_SYSTEM_USERS = [
     password: '123',
     name: 'Trần Thị Lan',
     role: 'tester',
-    roleTitle: 'Kiểm thử viên 2 (Tester)',
+    roleTitle: 'Kiểm thử viên 2',
     email: 'lan.tt@smartvms.local',
     assignedProjects: [],
     status: 'ACTIVE',
@@ -63,7 +63,7 @@ const DEFAULT_SYSTEM_USERS = [
     password: '123',
     name: 'Lê Hoàng Minh',
     role: 'tester',
-    roleTitle: 'Kiểm thử viên 3 (Tester)',
+    roleTitle: 'Kiểm thử viên 3',
     email: 'minh.lh@smartvms.local',
     assignedProjects: [],
     status: 'ACTIVE',
@@ -75,7 +75,7 @@ const DEFAULT_SYSTEM_USERS = [
     password: '123',
     name: 'Trần Quốc Tuấn',
     role: 'developer',
-    roleTitle: 'Lập trình viên (Developer)',
+    roleTitle: 'Lập trình viên',
     email: 'tuan.tq@smartvms.local',
     assignedProjects: [],
     status: 'ACTIVE',
@@ -107,6 +107,9 @@ let state = {
 };
 
 // ================================================================
+// STATE PERSISTENCE & INITIALIZATION
+
+// ================================================================
 // STATE PERSISTENCE & INITIALIZATION (RESILIENT MULTI-TIER ARCHITECTURE)
 // ================================================================
 function initCoreState(force = false) {
@@ -134,9 +137,21 @@ function initCoreState(force = false) {
     console.warn('Lỗi đọc dự án từ Storage:', e);
   }
 
+  // 1b. Fallback tự động nạp từ Manifest khởi tạo ban đầu nếu Storage chưa có dữ liệu
+  if ((!state.projects || state.projects.length === 0) && typeof window !== 'undefined' && window.OPENQAS_ENTERPRISE_MANIFEST) {
+    const m = window.OPENQAS_ENTERPRISE_MANIFEST;
+    if (Array.isArray(m.projects) && m.projects.length > 0) {
+      state.projects = JSON.parse(JSON.stringify(m.projects));
+      try {
+        localStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, JSON.stringify(state.projects));
+      } catch (e) {}
+    }
+  }
+
   // 2. Khôi phục Active Project ID
   try {
     const savedActiveId = localStorage.getItem(SQTM_ACTIVE_PRJ_STORAGE_KEY) || 
+                          localStorage.getItem('smartvms_active_project_id') ||
                           sessionStorage.getItem(SQTM_ACTIVE_PRJ_STORAGE_KEY) || 
                           sessionStorage.getItem('smartvms_active_project_id');
     if (savedActiveId && state.projects.some(p => p.id === savedActiveId)) {
@@ -158,10 +173,48 @@ function initCoreState(force = false) {
       if (parsedState.evidences) state.evidences = parsedState.evidences;
       if (parsedState.executionLogs) state.executionLogs = parsedState.executionLogs;
       if (parsedState.adhocDefects) state.adhocDefects = parsedState.adhocDefects;
+      if (Array.isArray(parsedState.testCycles) && parsedState.testCycles.length > 0) {
+        state.testCycles = parsedState.testCycles;
+      }
     }
   } catch (e) {}
 
-  state.testCycles = [];
+  // 3b. Fallback khôi phục assignments, results, testCycles từ Manifest nếu trống hoặc thiếu
+  if (typeof window !== 'undefined' && window.OPENQAS_ENTERPRISE_MANIFEST) {
+    const m = window.OPENQAS_ENTERPRISE_MANIFEST;
+    if ((!state.assignments || state.assignments.length === 0 || state.assignments.length < (m.assignments || []).length) && Array.isArray(m.assignments) && m.assignments.length > 0) {
+      state.assignments = JSON.parse(JSON.stringify(m.assignments));
+    }
+    if ((!state.results || Object.keys(state.results).length === 0) && m.results && Object.keys(m.results).length > 0) {
+      state.results = JSON.parse(JSON.stringify(m.results));
+    }
+    if ((!state.testCycles || state.testCycles.length === 0 || state.testCycles.length < (m.testCycles || []).length) && Array.isArray(m.testCycles) && m.testCycles.length > 0) {
+      state.testCycles = JSON.parse(JSON.stringify(m.testCycles));
+    }
+    if ((!state.cycleResults || Object.keys(state.cycleResults).length === 0) && m.cycleResults) {
+      state.cycleResults = JSON.parse(JSON.stringify(m.cycleResults));
+    }
+  }
+
+  // Khôi phục các đợt test bền vững từ storage
+  if (!state.testCycles || state.testCycles.length === 0) {
+    try {
+      const rawCycles = localStorage.getItem('smartvms_test_cycles_v3') || sessionStorage.getItem('smartvms_test_cycles_v3');
+      if (rawCycles) {
+        const parsedCycles = JSON.parse(rawCycles);
+        if (Array.isArray(parsedCycles)) {
+          state.testCycles = parsedCycles;
+        }
+      }
+    } catch (e) {}
+  }
+  if (!state.testCycles || !Array.isArray(state.testCycles)) {
+    state.testCycles = [];
+  }
+
+  // Tự động đảm bảo mỗi dự án luôn có sẵn ít nhất một đợt test mặc định để phân công công việc
+  ensureDefaultTestCyclesForProjects();
+
   state.isCleanProjectState = state.projects.length === 0;
 
   // Cấu hình tài khoản người dùng hệ thống (RBAC) với cơ chế lưu bền vững
@@ -181,27 +234,52 @@ function initCoreState(force = false) {
     state.users = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_USERS));
   }
 
+  // Chuẩn hóa loại bỏ hậu tố tiếng Anh trong ngoặc khỏi chức danh người dùng
+  if (Array.isArray(state.users)) {
+    state.users.forEach(u => {
+      if (u.roleTitle) {
+        u.roleTitle = u.roleTitle.replace(/\s*\([^)]*\)/g, '').replace(/Dự án/g, 'dự án').trim();
+      }
+    });
+  }
+
   // Tự động đồng bộ hai chiều giữa project.members (từ Cloud) và user.assignedProjects
   syncUserProjectsWithMembers();
 
-  // Phân quyền ngữ cảnh người dùng theo thư mục giao diện
-  const currentPath = (window.location.pathname || '').toLowerCase();
+  // Khôi phục phiên người dùng đã đăng nhập (Session-First)
+  let savedUser = null;
+  try {
+    const rawUser = sessionStorage.getItem('smartvms_current_user') || localStorage.getItem('smartvms_current_user');
+    if (rawUser) {
+      savedUser = JSON.parse(rawUser);
+    }
+  } catch (e) {}
+
   const allUsers = state.users || DEFAULT_SYSTEM_USERS;
-  if (currentPath.includes('/tester/')) {
-    if (!state.currentUser || state.currentUser.role !== 'tester') {
+  if (savedUser && savedUser.username) {
+    const matched = allUsers.find(u => u.username.toLowerCase() === savedUser.username.toLowerCase());
+    state.currentUser = matched || savedUser;
+  } else {
+    state.currentUser = null;
+  }
+
+  // Phân quyền ngữ cảnh người dùng theo thư mục giao diện nếu chưa có phiên hoặc cần fallback phù hợp
+  const currentPath = (window.location.pathname || '').toLowerCase();
+  if (currentPath.includes('/lead/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'project_lead' && state.currentUser.role !== 'admin')) {
+      state.currentUser = allUsers.find(u => u.role === 'project_lead' || u.username === 'lead') || allUsers.find(u => u.username === 'lead');
+    }
+  } else if (currentPath.includes('/tester/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'tester' && state.currentUser.role !== 'admin')) {
       state.currentUser = allUsers.find(u => u.role === 'tester') || allUsers.find(u => u.username === 'tester');
     }
-  } else if (currentPath.includes('/lead/')) {
-    if (!state.currentUser || (state.currentUser.role !== 'project_lead' && state.currentUser.role !== 'admin')) {
-      state.currentUser = allUsers.find(u => u.role === 'project_lead') || allUsers.find(u => u.username === 'lead');
+  } else if (currentPath.includes('/dev/')) {
+    if (!state.currentUser || (state.currentUser.role !== 'developer' && state.currentUser.role !== 'admin')) {
+      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers.find(u => u.username === 'dev');
     }
   } else if (currentPath.includes('/admin/')) {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
       state.currentUser = allUsers.find(u => u.role === 'admin') || allUsers[0];
-    }
-  } else if (currentPath.includes('/dev/')) {
-    if (!state.currentUser || state.currentUser.role !== 'developer') {
-      state.currentUser = allUsers.find(u => u.role === 'developer') || allUsers.find(u => u.username === 'dev');
     }
   }
 
@@ -212,6 +290,7 @@ function initCoreState(force = false) {
   // 4. Nếu đang chạy qua HTTP Server LAN, tự động gọi ngầm để đồng bộ từ máy chủ LAN
   if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
     fetchProjectsFromLanServer();
+    fetchFullStateFromLanServer();
   }
 }
 
@@ -261,7 +340,27 @@ function syncUserProjectsWithMembers() {
       });
     }
 
-    // 3. Quét từng thành viên trong p.members để cập nhật vào assignedProjects của user
+    // 3. Đảm bảo dự án luôn có đủ thành phần nhân sự nòng cốt (Lead, Tester, Dev)
+    if (!p.members.some(m => m.username === 'dev')) {
+      const devObj = state.users.find(u => u.username === 'dev');
+      p.members.push({
+        username: 'dev',
+        name: devObj ? devObj.name : 'Trần Quốc Tuấn',
+        projectRole: 'dev',
+        title: 'Lập trình viên'
+      });
+    }
+    if (!p.members.some(m => m.username === 'tester')) {
+      const testerObj = state.users.find(u => u.username === 'tester');
+      p.members.push({
+        username: 'tester',
+        name: testerObj ? testerObj.name : 'Nguyễn Văn Nam',
+        projectRole: 'tester',
+        title: 'Kiểm thử viên'
+      });
+    }
+
+    // 4. Quét từng thành viên trong p.members để cập nhật vào assignedProjects của user
     p.members.forEach(m => {
       const u = state.users.find(usr => usr.username === m.username);
       if (u) {
@@ -298,10 +397,55 @@ function syncUserProjectsWithMembers() {
 }
 
 /**
+/**
+ * Đồng bộ danh sách các đợt test thực tế từ p.testCycles sang state.testCycles (Không tự ý sinh đợt test giả lập)
+ */
+function ensureDefaultTestCyclesForProjects() {
+  if (!state.projects || !Array.isArray(state.projects)) return;
+  if (!state.testCycles) state.testCycles = [];
+
+  const validCycleIds = new Set();
+  state.projects.forEach(p => {
+    if (!p.testCycles) p.testCycles = [];
+
+    // Chỉ nạp các cycle người dùng đã thực sự tạo từ p.testCycles sang state.testCycles
+    p.testCycles.forEach(pc => {
+      validCycleIds.add(pc.id);
+      if (!state.testCycles.some(sc => sc.id === pc.id)) {
+        state.testCycles.push({ ...pc, projectId: pc.projectId || p.id });
+      }
+    });
+  });
+
+  // Loại bỏ triệt để các đợt test mồ côi khỏi state.testCycles nếu dự án hiện tại không chứa chúng
+  state.testCycles = state.testCycles.filter(c => c && c.id && validCycleIds.has(c.id));
+}
+
+/**
  * Lưu trạng thái bền vững (LocalStorage + SessionStorage + LAN Server + Cloud)
  */
 function saveCoreState() {
   try {
+    // Đồng bộ hai chiều giữa p.testCycles và state.testCycles trước khi lưu
+    if (!state.testCycles) state.testCycles = [];
+    const validCycleIds = new Set();
+    (state.projects || []).forEach(p => {
+      if (Array.isArray(p.testCycles)) {
+        p.testCycles.forEach(c => {
+          validCycleIds.add(c.id);
+          const idx = state.testCycles.findIndex(x => x.id === c.id);
+          const fullCycle = { ...c, projectId: c.projectId || p.id };
+          if (idx >= 0) {
+            state.testCycles[idx] = { ...state.testCycles[idx], ...fullCycle };
+          } else {
+            state.testCycles.push(fullCycle);
+          }
+        });
+      }
+    });
+    // Loại bỏ các đợt test mồ côi
+    state.testCycles = state.testCycles.filter(c => c && c.id && validCycleIds.has(c.id));
+
     // 1. Lưu danh mục dự án bền vững vào LocalStorage & SessionStorage
     if (state.projects) {
       const prjJson = JSON.stringify(state.projects);
@@ -311,8 +455,14 @@ function saveCoreState() {
     }
     if (state.activeProjectId) {
       localStorage.setItem(SQTM_ACTIVE_PRJ_STORAGE_KEY, state.activeProjectId);
+      localStorage.setItem('smartvms_active_project_id', state.activeProjectId);
       sessionStorage.setItem(SQTM_ACTIVE_PRJ_STORAGE_KEY, state.activeProjectId);
       sessionStorage.setItem('smartvms_active_project_id', state.activeProjectId);
+    } else {
+      localStorage.removeItem(SQTM_ACTIVE_PRJ_STORAGE_KEY);
+      localStorage.removeItem('smartvms_active_project_id');
+      sessionStorage.removeItem(SQTM_ACTIVE_PRJ_STORAGE_KEY);
+      sessionStorage.removeItem('smartvms_active_project_id');
     }
 
     // 2. Lưu danh mục tài khoản người dùng và phân quyền vào LocalStorage & SessionStorage
@@ -322,7 +472,21 @@ function saveCoreState() {
       sessionStorage.setItem('smartvms_system_users_v3', usersJson);
     }
 
-    // 3. Lưu trạng thái công việc và kết quả
+    // 3. Lưu phiên đăng nhập người dùng hiện tại
+    if (state.currentUser) {
+      const curUserJson = JSON.stringify(state.currentUser);
+      localStorage.setItem('smartvms_current_user', curUserJson);
+      sessionStorage.setItem('smartvms_current_user', curUserJson);
+    }
+
+    // 4. Lưu danh sách các đợt test (Test Cycles) bền vững
+    if (state.testCycles && Array.isArray(state.testCycles)) {
+      const cyclesJson = JSON.stringify(state.testCycles);
+      localStorage.setItem('smartvms_test_cycles_v3', cyclesJson);
+      sessionStorage.setItem('smartvms_test_cycles_v3', cyclesJson);
+    }
+
+    // 5. Lưu trạng thái công việc và kết quả
     const appPayload = {
       assignments: state.assignments || [],
       results: state.results || {},
@@ -330,21 +494,29 @@ function saveCoreState() {
       comments: state.comments || {},
       evidences: state.evidences || {},
       executionLogs: state.executionLogs || [],
-      adhocDefects: state.adhocDefects || []
+      adhocDefects: state.adhocDefects || [],
+      testCycles: state.testCycles || []
     };
     localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
 
-    // 4. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects)
+    // 6. Nếu đang chạy mạng LAN, đồng bộ lên máy chủ Node.js (/api/projects & /api/state)
     if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
       syncProjectsToLanServer(state.projects);
+      syncFullStateToLanServer(appPayload);
     }
 
-    // 5. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud Database
+    // 7. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud Database
     if (typeof window !== 'undefined' && window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
       window.pushProjectsToCloud(state.projects);
     }
     if (typeof window !== 'undefined' && window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
       window.pushUsersToCloud(state.users);
+    }
+    if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+      window.pushCyclesToCloud(state.testCycles);
+    }
+    if (typeof window !== 'undefined' && window.pushAssignmentsToCloud && typeof window.pushAssignmentsToCloud === 'function' && state.assignments) {
+      window.pushAssignmentsToCloud(state.assignments);
     }
   } catch (e) {
     console.warn('Lỗi saveCoreState:', e);
@@ -355,7 +527,7 @@ function saveCoreState() {
  * Đồng bộ danh mục dự án lên máy chủ LAN Node.js (lưu file data/projects_state.json)
  */
 function syncProjectsToLanServer(projects) {
-  if (!projects || !Array.isArray(projects)) return;
+  if (!projects || !Array.isArray(projects) || projects.length === 0) return;
   try {
     fetch('/api/projects', {
       method: 'POST',
@@ -363,6 +535,74 @@ function syncProjectsToLanServer(projects) {
       body: JSON.stringify({ projects })
     }).catch(() => {});
   } catch (e) {}
+}
+
+/**
+ * Đồng bộ toàn bộ trạng thái công việc (kết quả, đợt test, phân công) lên máy chủ LAN (lưu data/app_state.json)
+ */
+function syncFullStateToLanServer(payload) {
+  if (!payload) return;
+  try {
+    fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+/**
+ * Nạp toàn bộ trạng thái kiểm thử bền vững từ máy chủ LAN Node.js khi khởi động
+ */
+function fetchFullStateFromLanServer() {
+  try {
+    fetch('/api/state')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        let changed = false;
+        if (data.results && Object.keys(data.results).length > 0) {
+          if (!state.results || Object.keys(state.results).length === 0) {
+            state.results = data.results;
+            changed = true;
+          }
+        }
+        if (data.cycleResults && Object.keys(data.cycleResults).length > 0) {
+          if (!state.cycleResults || Object.keys(state.cycleResults).length === 0) {
+            state.cycleResults = data.cycleResults;
+            changed = true;
+          }
+        }
+        if (Array.isArray(data.assignments) && data.assignments.length > 0) {
+          if (!state.assignments || state.assignments.length === 0) {
+            state.assignments = data.assignments;
+            changed = true;
+          }
+        }
+        if (Array.isArray(data.testCycles) && data.testCycles.length > 0) {
+          if (!state.testCycles || state.testCycles.length === 0) {
+            state.testCycles = data.testCycles;
+            changed = true;
+          }
+        }
+        if (changed) {
+          try {
+            const appPayload = {
+              assignments: state.assignments || [],
+              results: state.results || {},
+              cycleResults: state.cycleResults || {},
+              comments: state.comments || {},
+              evidences: state.evidences || {},
+              executionLogs: state.executionLogs || [],
+              adhocDefects: state.adhocDefects || [],
+              testCycles: state.testCycles || []
+            };
+            localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
+          } catch(e) {}
+        }
+      })
+      .catch(() => {});
+  } catch(e) {}
 }
 
 /**
@@ -384,16 +624,29 @@ function fetchProjectsFromLanServer() {
             state.projects = serverProjects;
             hasChange = true;
           } else {
-            // Đối soát và gộp dự án từ server nếu client chưa có
+            // Đối soát và gộp dự án từ server nếu client chưa có hoặc cập nhật từ server
             serverProjects.forEach(sp => {
               const idx = state.projects.findIndex(p => p.id === sp.id || p.code === sp.code);
               if (idx === -1) {
                 state.projects.push(sp);
                 hasChange = true;
+              } else {
+                // Đồng bộ cập nhật từ Server Disk vào Local Project
+                const lp = state.projects[idx];
+                state.projects[idx] = {
+                  ...lp,
+                  ...sp,
+                  testCycles: sp.testCycles || [],
+                  testCases: sp.testCases || [],
+                  modules: sp.modules || []
+                };
+                hasChange = true;
               }
             });
           }
           if (hasChange) {
+            ensureDefaultTestCyclesForProjects();
+            saveCoreState();
             if (!state.activeProjectId && state.projects.length > 0) {
               state.activeProjectId = state.projects[0].id;
             }
@@ -401,11 +654,35 @@ function fetchProjectsFromLanServer() {
               localStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, JSON.stringify(state.projects));
             } catch (e) {}
             // Cập nhật lại UI nếu hàm tương ứng tồn tại trên trang
+            if (typeof renderProjectsTab === 'function') {
+              try { renderProjectsTab(); } catch(e){}
+            }
             if (typeof AdminPortfolio !== 'undefined' && typeof AdminPortfolio.init === 'function') {
-              AdminPortfolio.init();
+              try { AdminPortfolio.init(); } catch(e){}
+            }
+            if (typeof LeadPortfolio !== 'undefined' && typeof LeadPortfolio.init === 'function') {
+              try { LeadPortfolio.init(); } catch(e){}
             }
             if (typeof LeadContext !== 'undefined' && typeof LeadContext.init === 'function') {
-              LeadContext.init();
+              try { LeadContext.init(); } catch(e){}
+            }
+            if (typeof LeadDashboard !== 'undefined' && typeof LeadDashboard.init === 'function') {
+              try { LeadDashboard.init(); } catch(e){}
+            }
+            if (typeof DevPortfolio !== 'undefined' && typeof DevPortfolio.init === 'function') {
+              try { DevPortfolio.init(); } catch(e){}
+            }
+            if (typeof DevReports !== 'undefined' && typeof DevReports.init === 'function') {
+              try { DevReports.init(); } catch(e){}
+            }
+            if (typeof DevContext !== 'undefined' && typeof DevContext.init === 'function') {
+              try { DevContext.init(); } catch(e){}
+            }
+            if (typeof TesterPortfolio !== 'undefined' && typeof TesterPortfolio.init === 'function') {
+              try { TesterPortfolio.init(); } catch(e){}
+            }
+            if (typeof TesterContext !== 'undefined' && typeof TesterContext.init === 'function') {
+              try { TesterContext.init(); } catch(e){}
             }
           }
         }
@@ -435,39 +712,62 @@ function getAllProjects() {
 }
 
 /**
- * Lấy danh sách các Dự án mà User có quyền truy cập.
+ * Lấy danh sách các Dự án mà Trưởng Dự Án (Project Lead) phụ trách.
  * - Admin: Toàn bộ dự án trong hệ thống
- * - Tester: Chỉ các dự án nằm trong user.assignedProjects hoặc có bài được phân công
+ * - Leader: Các dự án mà Leader này được phân bổ (leadUsername, leadUsernames, member lead, hoặc user.assignedProjects)
+ */
+function getLeaderProjects(user) {
+  const all = getAllProjects();
+  const u = user || getCurrentUser();
+  if (!u || u.role === 'admin') return all;
+
+  const myProjects = all.filter(p => {
+    if (p.leadUsername === u.username) return true;
+    if (Array.isArray(p.leadUsernames) && p.leadUsernames.includes(u.username)) return true;
+    if (Array.isArray(p.members) && p.members.some(m => m.username === u.username)) return true;
+    if (Array.isArray(u.assignedProjects) && u.assignedProjects.includes(p.id)) return true;
+    return false;
+  });
+
+  return myProjects.length > 0 ? myProjects : all;
+}
+
+/**
+ * Lấy danh sách các Dự án mà User có quyền truy cập theo vai trò.
+ * - Admin: Toàn bộ dự án trong hệ thống
+ * - Leader: Các dự án Leader phụ trách
+ * - Tester: Các dự án mà Tester có bài được phân công hoặc là thành viên
+ * - Dev: Các dự án Dev được phân công
  */
 function getAccessibleProjects(user) {
   const all = getAllProjects();
   const u = user || getCurrentUser();
-  const isTesterPortal = (window.location.pathname || '').toLowerCase().includes('/tester/');
-  if (!isTesterPortal && (!u || u.role === 'admin' || u.role === 'project_lead')) return all;
+  if (!u || u.role === 'admin') return all;
 
-  // Đối với Tester: Chỉ lấy các dự án mà Tester THỰC SỰ có kịch bản/nhiệm vụ được phân công trong state.assignments
+  if (u.role === 'project_lead' || u.username === 'lead') {
+    return getLeaderProjects(u);
+  }
+
+  // Đối với Tester / Developer:
   const assignedPrjIds = new Set();
   (state.assignments || []).forEach(a => {
-    if (a.assigneeUsername === u.username || a.assigneeUsername === 'tester') {
-      assignedPrjIds.add(a.projectId);
+    if (a.assigneeUsername === u.username || (u.role === 'tester' && a.assigneeUsername === 'tester')) {
+      if (a.projectId) assignedPrjIds.add(a.projectId);
     }
   });
 
-  // Bổ sung xét theo danh sách thành viên dự án (project.members)
-  const memberPrjIds = new Set();
   all.forEach(p => {
     if (p.members && Array.isArray(p.members)) {
       if (p.members.some(m => m.username === u.username)) {
-        memberPrjIds.add(p.id);
+        assignedPrjIds.add(p.id);
       }
+    }
+    if (Array.isArray(u.assignedProjects) && u.assignedProjects.includes(p.id)) {
+      assignedPrjIds.add(p.id);
     }
   });
 
-  if (memberPrjIds.size > 0) {
-    memberPrjIds.forEach(id => assignedPrjIds.add(id));
-    accessible = all.filter(p => assignedPrjIds.has(p.id));
-  }
-
+  let accessible = all.filter(p => assignedPrjIds.has(p.id));
   return accessible.length > 0 ? accessible : (all.length > 0 ? [all[0]] : []);
 }
 
@@ -735,7 +1035,10 @@ function getProjectDefects(projectId) {
         module: tc.module || 'M01',
         tcTitle: tc.name || tc.title || actualTcId,
         failReason: res.failReason || 'Phát hiện lỗi trong quá trình thực thi kiểm thử',
-        severity: res.severity || 'Critical',
+        severity: res.severity || tc.severity || 'Critical',
+        priority: res.priority || tc.priority || 'P2',
+        version: res.version || res.targetVersion || res.detectedInVersion || tc.version || p.activeVersion || '',
+        detectedInVersion: res.detectedInVersion || res.version || tc.version || p.activeVersion || '',
         defectStatus: res.defectStatus || 'New',
         tester: res.tester || 'Kiểm thử viên',
         assignedDev: res.assignedDev || '',
@@ -745,6 +1048,36 @@ function getProjectDefects(projectId) {
         devNotes: res.devNotes || '',
         cycleId: res.cycleId || '',
         cycleName: res.cycleName || ''
+      });
+    }
+  });
+
+  // Đồng thời liên thông cả các lỗi phát sinh ngoài kịch bản (Ad-hoc defects) của dự án này
+  const adhocList = state.adhocDefects || [];
+  adhocList.forEach(ad => {
+    if ((ad.projectId === pId || (!ad.projectId && pId === state.activeProjectId)) && !seenTcIds.has(ad.id)) {
+      seenTcIds.add(ad.id);
+      defects.push({
+        projectId: pId,
+        projectName: p.name,
+        tcId: ad.id,
+        module: ad.module || 'M01',
+        tcTitle: `[Ngoài KB] ${ad.title}`,
+        failReason: ad.actualResult || ad.stepsToReproduce || ad.title,
+        severity: ad.severity ? ad.severity.replace(/^[SP][0-9]-/, '') : 'Critical',
+        priority: ad.priority ? ad.priority.slice(0, 2) : 'P2',
+        version: ad.version || p.activeVersion || '',
+        detectedInVersion: ad.detectedInVersion || ad.version || p.activeVersion || '',
+        defectStatus: ad.status === 'RESOLVED' ? 'Resolved' : (ad.status === 'CLOSED' ? 'Closed' : (ad.status || 'New')),
+        tester: ad.reporterName || 'Kiểm thử viên',
+        assignedDev: ad.assignedDev || '',
+        fixVersion: ad.fixVersion || '',
+        commitHash: ad.commitHash || '',
+        runAt: ad.reportedAt,
+        devNotes: ad.devNotes || '',
+        cycleId: '',
+        cycleName: 'Ngoài kịch bản (Ad-hoc)',
+        isAdhoc: true
       });
     }
   });
@@ -876,14 +1209,15 @@ function getTestTypeBadge(type) {
 
 function getTestSuiteLabel(suite) {
   const map = {
-    'SMOKE': '⚡ Smoke Test (Khởi động)',
-    'REGRESSION': '🔄 Regression (Hồi quy chuẩn)',
-    'INTEGRATION_HW': '🔌 Tích hợp Thiết bị & Ngoại vi',
-    'SECURITY_FRAUD': '🛡️ Bảo mật & Chống gian lận',
-    'PERF_STRESS': '⏱️ Tải cao điểm & Hiệu năng',
-    'FAILOVER_OFFLINE': '📶 Ngoại tuyến & Chịu lỗi'
+    'SMOKE': '⚡ Kiểm thử Smoke',
+    'REGRESSION': '🔄 Kiểm thử hồi quy',
+    'ACCEPTANCE': '📋 Nghiệm thu UAT',
+    'INTEGRATION_HW': '🔌 Tích hợp thiết bị và ngoại vi',
+    'SECURITY_FRAUD': '🛡️ Bảo mật và chống gian lận',
+    'PERF_STRESS': '⏱️ Tải cao điểm và hiệu năng',
+    'FAILOVER_OFFLINE': '📶 Ngoại tuyến và chịu lỗi'
   };
-  return map[suite] || suite || 'Hồi quy chuẩn';
+  return map[suite] || suite || 'Kiểm thử hồi quy';
 }
 
 // ================================================================
@@ -891,7 +1225,12 @@ function getTestSuiteLabel(suite) {
 // ================================================================
 function getTestCyclesForProject(projectId, version) {
   const pId = projectId || state.activeProjectId;
-  let list = (state.testCycles || []).filter(c => c.projectId === pId);
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return [];
+
+  // Nguồn chân lý duy nhất cho danh mục đợt test của dự án là p.testCycles
+  const projectCycles = Array.isArray(p.testCycles) ? p.testCycles : [];
+  let list = projectCycles.map(c => ({ ...c, projectId: c.projectId || pId }));
   if (version) {
     list = list.filter(c => {
       if (!c.version) return false;
@@ -914,7 +1253,7 @@ function getActiveCycle(projectId, version) {
     const found = cycles.find(c => c.id === state.activeCycleId);
     if (found) return found;
   }
-  return cycles.find(c => c.status === 'ACTIVE') || cycles[0];
+  return cycles.find(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS') || cycles[0];
 }
 
 function setActiveCycle(cycleId) {
@@ -924,7 +1263,326 @@ function setActiveCycle(cycleId) {
 }
 
 function getCycleById(cycleId) {
+  if (!cycleId) return null;
+  const p = getActiveProject();
+  if (p && Array.isArray(p.testCycles)) {
+    const found = p.testCycles.find(c => c.id === cycleId);
+    if (found) return found;
+  }
   return (state.testCycles || []).find(c => c.id === cycleId) || null;
+}
+
+/**
+ * Lấy danh mục Kịch bản thuộc về một Phiên bản cụ thể
+ */
+function getTestCasesForVersion(projectId, version) {
+  const pId = projectId || state.activeProjectId;
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return [];
+
+  const allTcs = (Array.isArray(p.testCases) && p.testCases.length > 0)
+    ? p.testCases
+    : ((p.id === 'PRJ-SMARTVMS' || p.code === 'SMARTVMS') && window.SMARTVMS_DEFAULT_CATALOG && Array.isArray(window.SMARTVMS_DEFAULT_CATALOG.testCases)
+        ? window.SMARTVMS_DEFAULT_CATALOG.testCases
+        : (p.testCases || []));
+
+  const targetVer = version || p.activeVersion;
+  if (!targetVer) return allTcs;
+
+  // 1. Kiểm tra xem có kịch bản nào được gán đích danh cho phiên bản này không
+  const specificTcs = allTcs.filter(tc => tc.version === targetVer);
+  if (specificTcs.length > 0) {
+    return specificTcs;
+  }
+
+  // 2. Kế thừa kịch bản chuẩn (Smart Baseline Inheritance):
+  // Nếu phiên bản chưa gán kịch bản riêng, tự động kế thừa toàn bộ Baseline kịch bản của dự án
+  return allTcs;
+}
+
+/**
+ * Kế thừa toàn bộ kịch bản chuẩn của dự án cho một phiên bản cụ thể
+ */
+function inheritBaselineTestCases(projectId, targetVersion) {
+  const pId = projectId || state.activeProjectId;
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p || !targetVersion) return false;
+
+  const baseline = (Array.isArray(p.testCases) && p.testCases.length > 0)
+    ? p.testCases
+    : ((window.SMARTVMS_DEFAULT_CATALOG && Array.isArray(window.SMARTVMS_DEFAULT_CATALOG.testCases))
+        ? window.SMARTVMS_DEFAULT_CATALOG.testCases
+        : []);
+
+  if (!p.testCases) p.testCases = [];
+  
+  // Đảm bảo các kịch bản của dự án được cập nhật
+  let addedCount = 0;
+  baseline.forEach(btc => {
+    const exists = p.testCases.some(tc => tc.id === btc.id && (tc.version === targetVersion || !tc.version));
+    if (!exists) {
+      const cloned = JSON.parse(JSON.stringify(btc));
+      cloned.version = targetVersion;
+      p.testCases.push(cloned);
+      addedCount++;
+    }
+  });
+
+  saveCoreState();
+  if (typeof syncProjectsToLanServer === 'function') {
+    syncProjectsToLanServer();
+  }
+
+  return true;
+}
+
+/**
+ * Lấy danh mục Kịch bản nằm trong Phạm vi kiểm thử đã cấu hình của một Đợt test (Cycle Scope)
+ */
+function getTestCasesForCycle(cycleId) {
+  if (!cycleId) return [];
+  const c = getCycleById(cycleId);
+  const p = (c && c.projectId ? (state.projects || []).find(pr => pr.id === c.projectId) : null) || getActiveProject();
+  if (!p) return [];
+
+  const targetVer = c?.version || p.activeVersion;
+  const versionTcs = getTestCasesForVersion(p.id, targetVer);
+
+  if (!c) return versionTcs;
+
+  // Hỗ trợ cả 2 trường tên thuộc tính scopeTcIds và testCaseIds
+  const chosenIds = (Array.isArray(c.scopeTcIds) && c.scopeTcIds.length > 0)
+    ? c.scopeTcIds
+    : (Array.isArray(c.testCaseIds) && c.testCaseIds.length > 0 ? c.testCaseIds : null);
+
+  if (chosenIds && chosenIds.length > 0) {
+    const scopeSet = new Set(chosenIds);
+    return versionTcs.filter(tc => scopeSet.has(tc.id));
+  }
+
+  // Fallback theo suite / targetSuite nếu có
+  const suite = (c.targetSuite || c.suite || '').toUpperCase();
+  if (suite === 'SMOKE') {
+    const p1s = versionTcs.filter(t => t.priority === 'P1' || (t.type || '').toUpperCase().includes('SMOKE'));
+    return p1s.length > 0 ? p1s : versionTcs;
+  }
+  if (suite === 'REGRESSION') {
+    const p12 = versionTcs.filter(t => t.priority === 'P1' || t.priority === 'P2');
+    return p12.length > 0 ? p12 : versionTcs;
+  }
+
+  // Mặc định toàn bộ kịch bản của phiên bản đó
+  return versionTcs;
+}
+
+/**
+ * Lưu cấu hình Danh mục Kịch bản cho Đợt test (Save Cycle Scope)
+ */
+function saveCycleScope(cycleId, scopeTcIds, scopeType = 'CUSTOM') {
+  if (!cycleId) return false;
+
+  const validIds = Array.from(new Set(scopeTcIds || []));
+
+  // 1. Cập nhật trong state.testCycles
+  if (!state.testCycles) state.testCycles = [];
+  let cState = state.testCycles.find(x => x.id === cycleId);
+  if (cState) {
+    cState.scopeTcIds = validIds;
+    cState.testCaseIds = validIds;
+    cState.scopeType = scopeType;
+  }
+
+  // 2. Cập nhật trong project.testCycles
+  const p = getActiveProject();
+  if (p) {
+    if (!p.testCycles) p.testCycles = [];
+    let cProj = p.testCycles.find(x => x.id === cycleId);
+    if (cProj) {
+      cProj.scopeTcIds = validIds;
+      cProj.testCaseIds = validIds;
+      cProj.scopeType = scopeType;
+    } else if (cState) {
+      p.testCycles.push(JSON.parse(JSON.stringify(cState)));
+    }
+  }
+
+  saveCoreState();
+  if (typeof syncProjectsToLanServer === 'function') {
+    syncProjectsToLanServer();
+  }
+
+  window.dispatchEvent(new CustomEvent('cycle-scope-updated', {
+    detail: { cycleId, count: validIds.length }
+  }));
+
+  return true;
+}
+
+/**
+ * Lấy danh sách các Phiên bản của Dự án
+ */
+function getProjectVersions(projectId) {
+  const pId = projectId || state.activeProjectId;
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return [{ version: 'v1.0', label: 'Bản phát hành chuẩn v1.0', status: 'ACTIVE' }];
+  if (Array.isArray(p.versions) && p.versions.length > 0) {
+    return p.versions;
+  }
+  return [{ version: p.activeVersion || 'v1.0', label: (p.activeVersion || 'v1.0') + ' (Chuẩn)', status: 'ACTIVE' }];
+}
+
+/**
+ * Tính toán 4 chỉ số cốt lõi cho một Phiên bản
+ */
+function getVersionMetrics(projectId, version) {
+  const pId = projectId || state.activeProjectId;
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return { totalTcs: 0, modulesCount: 0, cyclesCount: 0, activeCyclesCount: 0, passCount: 0, failCount: 0, untestedCount: 0, passRate: 0, failRate: 0, untestedRate: 0 };
+
+  const targetVer = version || p.activeVersion;
+  const vTcs = getTestCasesForVersion(p.id, targetVer);
+  const totalTcs = vTcs.length;
+
+  const modulesSet = new Set();
+  vTcs.forEach(tc => {
+    if (tc.moduleId) modulesSet.add(tc.moduleId);
+    else if (tc.module) modulesSet.add(tc.module);
+  });
+  const modulesCount = modulesSet.size;
+
+  const cycles = getTestCyclesForProject(p.id, targetVer);
+  const cyclesCount = cycles.length;
+  const activeCyclesCount = cycles.filter(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS').length;
+
+  let passCount = 0;
+  let failCount = 0;
+  let blockedCount = 0;
+  const results = state.results || {};
+  vTcs.forEach(tc => {
+    const r = results[tc.id];
+    if (r) {
+      const st = (r.status || '').toUpperCase();
+      if (st === 'PASS') passCount++;
+      else if (st === 'FAIL') failCount++;
+      else if (st === 'BLOCKED') blockedCount++;
+    }
+  });
+
+  const passRate = totalTcs > 0 ? Math.round((passCount / totalTcs) * 100) : 0;
+  const failRate = totalTcs > 0 ? Math.round((failCount / totalTcs) * 100) : 0;
+  const untestedCount = Math.max(0, totalTcs - passCount - failCount - blockedCount);
+  const untestedRate = totalTcs > 0 ? Math.max(0, 100 - passRate - failRate) : 0;
+
+  return {
+    version: targetVer,
+    totalTcs,
+    modulesCount,
+    cyclesCount,
+    activeCyclesCount,
+    passCount,
+    failCount,
+    blockedCount,
+    untestedCount,
+    passRate,
+    failRate,
+    untestedRate
+  };
+}
+
+/**
+ * Tính toán 4 chỉ số cốt lõi cho một Đợt kiểm thử (Test Cycle)
+ */
+function getCycleMetrics(cycleId) {
+  const c = getCycleById(cycleId);
+  if (!c) return { totalTcs: 0, assignedCount: 0, assignedRate: 0, passCount: 0, failCount: 0, untestedCount: 0, passRate: 0, failRate: 0, untestedRate: 0, assignees: [] };
+
+  const scopeTcs = getTestCasesForCycle(c.id);
+  const totalTcs = scopeTcs.length;
+
+  // Lấy phân công thuộc đợt này
+  const asgs = (state.assignments || []).filter(a => a.cycleId === c.id || (!a.cycleId && c.status === 'ACTIVE'));
+  const assignedTcIds = new Set(asgs.map(a => a.tcId || a.testCaseId));
+  const assignedCount = scopeTcs.filter(tc => assignedTcIds.has(tc.id)).length;
+  const assignedRate = totalTcs > 0 ? Math.round((assignedCount / totalTcs) * 100) : 0;
+
+  // Tester usernames
+  const assignees = Array.from(new Set(asgs.map(a => a.username || a.assignee).filter(Boolean)));
+
+  let passCount = 0;
+  let failCount = 0;
+  let blockedCount = 0;
+  const results = state.results || {};
+  scopeTcs.forEach(tc => {
+    const r = results[tc.id];
+    if (r) {
+      const st = (r.status || '').toUpperCase();
+      if (st === 'PASS') passCount++;
+      else if (st === 'FAIL') failCount++;
+      else if (st === 'BLOCKED') blockedCount++;
+    }
+  });
+
+  const passRate = totalTcs > 0 ? Math.round((passCount / totalTcs) * 100) : 0;
+  const failRate = totalTcs > 0 ? Math.round((failCount / totalTcs) * 100) : 0;
+  const untestedCount = Math.max(0, totalTcs - passCount - failCount - blockedCount);
+  const untestedRate = totalTcs > 0 ? Math.max(0, 100 - passRate - failRate) : 0;
+
+  return {
+    cycle: c,
+    totalTcs,
+    assignedCount,
+    assignedRate,
+    assignees,
+    passCount,
+    failCount,
+    blockedCount,
+    untestedCount,
+    passRate,
+    failRate,
+    untestedRate
+  };
+}
+
+/**
+ * Kế thừa / Sao chép toàn bộ kịch bản từ Phiên bản nguồn sang Phiên bản mới
+ */
+function cloneVersionTestCases(projectId, sourceVersion, newVersion, newLabel, changelog) {
+  const pId = projectId || state.activeProjectId;
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return false;
+
+  const sourceTcs = getTestCasesForVersion(p.id, sourceVersion);
+
+  // Tạo bản sao các kịch bản với tag version mới
+  const clonedTcs = sourceTcs.map(tc => {
+    return {
+      ...tc,
+      version: newVersion,
+      isCustom: true
+    };
+  });
+
+  if (!p.versions) p.versions = [];
+  p.versions.push({
+    version: newVersion,
+    label: newLabel || newVersion,
+    status: 'ACTIVE',
+    targetDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    changelog: changelog || `Kế thừa ${sourceTcs.length} kịch bản từ phiên bản ${sourceVersion}`
+  });
+
+  if (!p.testCases) p.testCases = [];
+  p.testCases.push(...clonedTcs);
+
+  p.activeVersion = newVersion;
+  state.activeVersion = newVersion;
+
+  saveCoreState();
+  if (typeof syncProjectsToLanServer === 'function') {
+    syncProjectsToLanServer();
+  }
+
+  return true;
 }
 
 /**
@@ -1024,41 +1682,11 @@ function deleteTestCycle(cycleId) {
 }
 
 /**
- * Lấy danh sách các Test Case thuộc phạm vi đợt kiểm thử cụ thể (Test Cycle Scope)
- */
-function getTestCasesForCycle(cycleId) {
-  const cycle = getCycleById(cycleId);
-  if (!cycle) return [];
-  const p = (state.projects || []).find(pr => pr.id === cycle.projectId) || getActiveProject();
-  if (!p) return [];
-  const allTcs = getAllTcs(cycle.version, p.id);
-
-  if (Array.isArray(cycle.testCaseIds) && cycle.testCaseIds.length > 0) {
-    const idSet = new Set(cycle.testCaseIds);
-    return allTcs.filter(t => idSet.has(t.id));
-  }
-
-  // Fallback theo targetSuite nếu chưa cấu hình testCaseIds tường minh
-  if (cycle.targetSuite === 'SMOKE') {
-    const p1s = allTcs.filter(t => t.priority === 'P1');
-    return p1s.length > 0 ? p1s : allTcs;
-  }
-  if (cycle.targetSuite === 'REGRESSION') {
-    const p12 = allTcs.filter(t => t.priority === 'P1' || t.priority === 'P2');
-    return p12.length > 0 ? p12 : allTcs;
-  }
-  return allTcs;
-}
-
-/**
  * Cấu hình danh mục Test Cases cụ thể cho một Đợt kiểm thử
  */
 function setCycleTestCases(cycleId, testCaseIds) {
-  const cycle = getCycleById(cycleId);
-  if (!cycle) return null;
-  cycle.testCaseIds = Array.isArray(testCaseIds) ? testCaseIds : [];
-  saveCoreState();
-  return cycle;
+  saveCycleScope(cycleId, testCaseIds, 'CUSTOM');
+  return getCycleById(cycleId);
 }
 
 /**
@@ -1222,6 +1850,25 @@ function switchProject(newProjId) {
   window.location.reload();
 }
 
+/**
+ * Cập nhật ngữ cảnh dự án đang kích hoạt (Tương thích ngược & chuyển đổi an toàn)
+ */
+function setActiveProject(projectId) {
+  if (!projectId) return;
+  state.activeProjectId = projectId;
+  try {
+    localStorage.setItem(SQTM_ACTIVE_PRJ_STORAGE_KEY, projectId);
+    sessionStorage.setItem(SQTM_ACTIVE_PRJ_STORAGE_KEY, projectId);
+    sessionStorage.setItem('smartvms_active_project_id', projectId);
+  } catch (e) {}
+  const projectCycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(projectId) : [];
+  if (projectCycles && projectCycles.length > 0) {
+    const act = projectCycles.find(c => c.status === 'ACTIVE') || projectCycles[0];
+    state.activeCycleId = act ? act.id : null;
+  }
+  saveCoreState();
+}
+
 function addProject(projData) {
   if (!state.projects) state.projects = [];
   const code = (projData.code || '').trim().toUpperCase();
@@ -1230,6 +1877,32 @@ function addProject(projData) {
     throw new Error(`Mã dự án "${code}" đã tồn tại trên hệ thống!`);
   }
   const initVer = projData.activeVersion || 'v1.0';
+  const leadUn = projData.leadUsername || projData.lead || 'lead';
+  const leadObj = (state.users || []).find(u => u.username === leadUn);
+  const devObj = (state.users || []).find(u => u.username === 'dev');
+  const testerObj = (state.users || []).find(u => u.username === 'tester');
+
+  const defaultMembers = [
+    {
+      username: leadUn,
+      name: leadObj ? leadObj.name : 'Hoàng Hải Đăng',
+      projectRole: 'lead',
+      title: (leadObj && leadObj.role === 'admin') ? 'Quản trị viên cấp cao' : 'Trưởng dự án'
+    },
+    {
+      username: 'dev',
+      name: devObj ? devObj.name : 'Trần Quốc Tuấn',
+      projectRole: 'dev',
+      title: 'Lập trình viên'
+    },
+    {
+      username: 'tester',
+      name: testerObj ? testerObj.name : 'Nguyễn Văn Nam',
+      projectRole: 'tester',
+      title: 'Kiểm thử viên'
+    }
+  ];
+
   const newProj = {
     id: projId,
     code: code,
@@ -1237,7 +1910,7 @@ function addProject(projData) {
     domain: projData.domain || 'Hệ thống phần mềm',
     desc: projData.desc || '',
     lead: projData.lead || 'QA Lead',
-    leadUsername: projData.leadUsername || projData.lead || 'lead',
+    leadUsername: leadUn,
     standards: projData.standards || ['ISO/IEC 25010', 'ISO/IEC/IEEE 29119'],
     activeVersion: initVer,
     versions: [
@@ -1251,13 +1924,24 @@ function addProject(projData) {
     ],
     modules: [],
     testCases: [],
-    members: []
+    members: defaultMembers
   };
   state.projects.push(newProj);
   state.activeProjectId = projId;
+
+  // Tự động phân bổ vào assignedProjects của users và tạo đợt test mặc định
+  syncUserProjectsWithMembers();
+  ensureDefaultTestCyclesForProjects();
+
   saveCoreState();
   if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
     window.pushProjectsToCloud(state.projects);
+  }
+  if (window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+    window.pushCyclesToCloud(state.testCycles);
+  }
+  if (window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function' && state.users) {
+    window.pushUsersToCloud(state.users);
   }
   return newProj;
 }
@@ -1547,21 +2231,40 @@ function deleteUser(userId) {
 function getCurrentUser() {
   const users = getUsers();
   if (state.currentUser) {
-    const matched = users.find(u => u.username === state.currentUser.username);
+    const matched = users.find(u => u.username.toLowerCase() === state.currentUser.username.toLowerCase());
     if (matched) return matched;
     return state.currentUser;
   }
-  const isTesterPortal = typeof window !== 'undefined' && (window.location.pathname || '').toLowerCase().includes('/tester');
-  if (isTesterPortal) {
-    const tUser = users.find(u => u.role === 'tester' || u.username === 'tester') || {
-      username: 'tester',
-      name: 'Nguyễn Văn Huy (Tester)',
-      role: 'tester',
-      title: 'Kiểm Thử Viên'
-    };
-    return tUser;
+
+  // Thử đọc từ sessionStorage / localStorage nếu state chưa kịp gán
+  try {
+    const rawUser = sessionStorage.getItem('smartvms_current_user') || localStorage.getItem('smartvms_current_user');
+    if (rawUser) {
+      const parsed = JSON.parse(rawUser);
+      if (parsed && parsed.username) {
+        const matched = users.find(u => u.username.toLowerCase() === parsed.username.toLowerCase());
+        state.currentUser = matched || parsed;
+        return state.currentUser;
+      }
+    }
+  } catch (e) {}
+
+  // Fallback theo URL ngữ cảnh
+  const path = typeof window !== 'undefined' ? (window.location.pathname || '').toLowerCase() : '';
+  if (path.includes('/lead/')) {
+    const leadUser = users.find(u => u.role === 'project_lead' || u.username === 'lead');
+    if (leadUser) return leadUser;
   }
-  return users[0] || { username: 'admin', name: 'Nguyễn Văn Huy', role: 'admin', title: 'QA Lead' };
+  if (path.includes('/tester/')) {
+    const tUser = users.find(u => u.role === 'tester' || u.username === 'tester');
+    if (tUser) return tUser;
+  }
+  if (path.includes('/dev/')) {
+    const dUser = users.find(u => u.role === 'developer' || u.username === 'dev');
+    if (dUser) return dUser;
+  }
+
+  return users.find(u => u.role === 'admin') || users[0] || { username: 'admin', name: 'Nguyễn Văn Huy', role: 'admin', roleTitle: 'Quản trị viên Cấp cao' };
 }
 
 function switchRole(roleTarget) {
@@ -1578,11 +2281,17 @@ function switchRole(roleTarget) {
     window.location.href = '../tester/index.html';
   } else if (user.role === 'developer') {
     window.location.href = '../dev/index.html';
+  } else if (user.role === 'project_lead' || user.username === 'lead') {
+    window.location.href = '../lead/index.html';
   }
 }
 
 function handleLogout() {
   state.currentUser = null;
+  try {
+    sessionStorage.removeItem('smartvms_current_user');
+    localStorage.removeItem('smartvms_current_user');
+  } catch (e) {}
   saveCoreState();
   window.location.href = '../index.html';
 }
@@ -1607,12 +2316,18 @@ function showToast(message, type = 'info') {
 
 function openModal(modalId) {
   const el = document.getElementById(modalId);
-  if (el) el.classList.add('active');
+  if (el) {
+    el.classList.add('active');
+    el.classList.add('open');
+  }
 }
 
 function closeModal(modalId) {
   const el = document.getElementById(modalId);
-  if (el) el.classList.remove('active');
+  if (el) {
+    el.classList.remove('active');
+    el.classList.remove('open');
+  }
 }
 
 function toggleTheme() {
@@ -1638,19 +2353,19 @@ setInterval(updateRealtimeClock, 1000);
 // Badges
 function priorityBadge(prio) {
   const p = (prio || 'P3').toUpperCase();
-  if (p === 'P1') return '<span class="badge badge-p1">🔴 P1 Critical</span>';
-  if (p === 'P2') return '<span class="badge badge-p2">🟠 P2 Important</span>';
-  if (p === 'P3') return '<span class="badge badge-p3">🟡 P3 Medium</span>';
-  return '<span class="badge badge-p4">🟢 P4 Low</span>';
+  if (p === 'P1' || p === 'CRITICAL') return '<span class="badge badge-p1">🔴 Khẩn cấp (P1)</span>';
+  if (p === 'P2' || p === 'HIGH') return '<span class="badge badge-p2">🟠 Cao (P2)</span>';
+  if (p === 'P3' || p === 'MEDIUM') return '<span class="badge badge-p3">🟡 Trung bình (P3)</span>';
+  return '<span class="badge badge-p4">🟢 Thấp (P4)</span>';
 }
 
 function statusBadge(status) {
   const s = status || 'Not Run';
-  if (s === 'Pass' || s === 'PASSED') return '<span class="badge badge-pass">✅ Đã Đạt</span>';
-  if (s === 'Fail' || s === 'FAILED') return '<span class="badge badge-fail">❌ Bị Lỗi</span>';
-  if (s === 'Blocked' || s === 'BLOCKED') return '<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #f87171">⛔ Bị chặn</span>';
+  if (s === 'Pass' || s === 'PASSED') return '<span class="badge badge-pass">✅ Đạt</span>';
+  if (s === 'Fail' || s === 'FAILED') return '<span class="badge badge-fail">❌ Không đạt</span>';
+  if (s === 'Blocked' || s === 'BLOCKED') return '<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #f87171">⛔ Bị nghẽn</span>';
   if (s === 'Skip') return '<span class="badge badge-skip">⏭ Bỏ qua</span>';
-  if (s === 'In Progress' || s === 'WIP') return '<span class="badge" style="background:#e0e7ff;color:#3730a3">⏳ Đang làm</span>';
+  if (s === 'In Progress' || s === 'WIP') return '<span class="badge" style="background:#e0e7ff;color:#3730a3">⏳ Đang thực hiện</span>';
   return '<span class="badge badge-nr">⚪ Chưa chạy</span>';
 }
 
@@ -1717,12 +2432,72 @@ function closeLightbox() {
   if (modal) modal.classList.remove('active');
 }
 
+/**
+ * Lấy ngữ cảnh cấp bậc 4 tầng hoàn chỉnh (4-Tier Hierarchy Context)
+ */
+function getHierarchyContext() {
+  const p = getActiveProject();
+  const versions = p ? getProjectVersions(p.id) : [];
+
+  const params = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const urlVer = params.get('version');
+  let currentVer = urlVer || state.activeVersion || p?.activeVersion || (versions[0]?.version) || 'v1.0';
+  if (versions.length > 0 && !versions.some(v => v.version === currentVer)) {
+    currentVer = versions[0].version;
+  }
+
+  const cycles = p ? getTestCyclesForProject(p.id, currentVer) : [];
+
+  const urlCycleId = params.get('cycleId');
+  let currentCycle = null;
+  if (urlCycleId && cycles.some(c => c.id === urlCycleId)) {
+    currentCycle = cycles.find(c => c.id === urlCycleId);
+  } else if (state.activeCycleId && cycles.some(c => c.id === state.activeCycleId)) {
+    currentCycle = cycles.find(c => c.id === state.activeCycleId);
+  } else {
+    currentCycle = cycles.find(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS') || cycles[0] || null;
+  }
+
+  let currentTier = 1;
+  const path = (typeof window !== 'undefined' && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+  if (path.includes('index.html') || path.endsWith('/lead/') || path.endsWith('/lead')) {
+    currentTier = 0;
+  } else if (path.includes('version.html')) {
+    currentTier = 2;
+  } else if (path.includes('assignments.html') || path.includes('testcases.html') || path.includes('reports.html') || path.includes('cycle.html')) {
+    currentTier = 3;
+  } else if (path.includes('project.html')) {
+    currentTier = 1;
+  }
+
+  return {
+    tier: currentTier,
+    project: p,
+    projects: typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects(),
+    version: currentVer,
+    versions: versions,
+    cycle: currentCycle,
+    cycles: cycles
+  };
+}
+
 if (typeof window !== 'undefined') {
   window.syncUserProjectsWithMembers = syncUserProjectsWithMembers;
   window.getAllUsers = getAllUsers;
   window.getUsers = getUsers;
   window.assignStaffToProject = assignStaffToProject;
   window.saveCoreState = saveCoreState;
+  window.getTestCyclesForProject = getTestCyclesForProject;
+  window.getActiveCycle = getActiveCycle;
+  window.getCycleById = getCycleById;
+  window.getTestCasesForCycle = getTestCasesForCycle;
+  window.getTestCasesForVersion = getTestCasesForVersion;
+  window.saveCycleScope = saveCycleScope;
+  window.getProjectVersions = getProjectVersions;
+  window.getVersionMetrics = getVersionMetrics;
+  window.getCycleMetrics = getCycleMetrics;
+  window.getHierarchyContext = getHierarchyContext;
+  window.inheritBaselineTestCases = inheritBaselineTestCases;
 }
 
 // Initialize on script load

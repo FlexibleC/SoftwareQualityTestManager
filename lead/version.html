@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không gian quản trị phiên bản - Quản trị dự án kiểm thử</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/settings.css" />
+  <link rel="stylesheet" href="../shared/css/assignment.css" />
+  <link rel="stylesheet" href="css/lead-theme.css" />
+</head>
+<body>
+
+  <!-- Lead Topbar (Global Header với Universal Breadcrumb) -->
+  <header class="lead-topbar">
+    <div class="lead-topbar-left" style="display:flex; align-items:center; gap:20px">
+      <a href="index.html" class="lead-brand-wrap">
+        <div class="lead-brand-badge">👑</div>
+        <div>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử và quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án</span>
+        </div>
+      </a>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Compact Project Navigation Bar (Tầng 2 Subnav Tabs) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
+  <!-- Main Container: Version Release Cockpit (Tier 2) -->
+  <main class="main-wrapper" style="max-width:1440px; margin:20px auto; padding:0 24px">
+
+    <!-- ==================== TAB 1: TỔNG QUAN PHIÊN BẢN (EXECUTIVE RELEASE COCKPIT) ==================== -->
+    <div id="tab-pane-v-overview" class="lead-tab-pane">
+
+      <!-- 4 THẺ KPI CỐT LÕI TINH GỌN (EXECUTIVE KPI STRIP) -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-bottom:18px">
+        
+        <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
+          <div class="lead-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">🎯</div>
+          <div style="flex:1">
+            <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">Tỷ lệ đạt</div>
+            <div class="lead-kpi-val" id="v-kpi-pass-val" style="color:#2563eb">0%</div>
+            <div style="font-size:11.5px; color:#d97706; font-weight:700; margin-top:2px" id="v-kpi-pass-sub">Đang tải...</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
+          <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">⏱️</div>
+          <div style="flex:1">
+            <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">Tiến độ thực thi</div>
+            <div class="lead-kpi-val" id="v-kpi-exec-val" style="color:#16a34a">0%</div>
+            <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px" id="v-kpi-exec-sub">Đang tải...</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #dc2626">
+          <div class="lead-kpi-icon" style="background:rgba(220,38,38,0.1); color:#dc2626">🐛</div>
+          <div style="flex:1">
+            <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">Lỗi chặn phát hành</div>
+            <div class="lead-kpi-val" id="v-kpi-bugs-val" style="color:#dc2626">0 lỗi P1/P2</div>
+            <div style="font-size:11.5px; color:#dc2626; font-weight:700; margin-top:2px" id="v-kpi-bugs-sub">Đang tải...</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #7c3aed">
+          <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">🚀</div>
+          <div style="flex:1">
+            <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">Đợt kiểm thử đang chạy</div>
+            <div class="lead-kpi-val" id="v-kpi-cycles-val" style="color:#7c3aed">0 đợt (0 đang chạy)</div>
+            <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px" id="v-kpi-cycles-sub">Đang tải...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TIẾN ĐỘ & PHÂN BỔ KẾT QUẢ KIỂM THỬ -->
+      <div class="card" style="padding:18px 22px; margin-bottom:18px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              📊 Tiến độ và phân bổ kết quả kiểm thử
+            <span id="v-overview-tc-count-badge" style="font-size:12px; font-weight:600; color:var(--text-muted)"></span>
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px" id="v-overview-version-subtitle">
+              Thống kê toàn diện trạng thái kiểm thử của phiên bản trên tất cả các đợt tác chiến
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <span class="badge badge-pass" style="font-size:11px" id="v-summary-p1-cov">Bao phủ P1: 0/0 bài (0%)</span>
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.switchVersionTab('cycles')">
+              Chi tiết các đợt kiểm thử ➔
+            </button>
+          </div>
+        </div>
+
+        <!-- Thanh phân bổ 4 màu lớn -->
+        <div style="height:14px; border-radius:7px; background:var(--bg-body); overflow:hidden; display:flex; box-shadow:inset 0 1px 3px rgba(0,0,0,0.1); margin-bottom:14px">
+          <div id="v-bar-pass" style="width:0%; background:#16a34a" title="Đạt: 0 bài"></div>
+          <div id="v-bar-fail" style="width:0%; background:#dc2626" title="Lỗi: 0 bài"></div>
+          <div id="v-bar-block" style="width:0%; background:#f59e0b" title="Bị nghẽn: 0 bài"></div>
+          <div id="v-bar-untest" style="width:100%; background:#cbd5e1" title="Chưa kiểm thử: 0 bài"></div>
+        </div>
+
+        <!-- 4 Khối kết quả trực quan -->
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; text-align:center">
+          <div style="padding:10px; background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.25); border-radius:10px">
+            <div style="font-size:18px; font-weight:900; color:#16a34a" id="v-stat-pass">0 (0%)</div>
+            <div style="font-size:11.5px; font-weight:700; color:#15803d; margin-top:2px">🟢 Đạt</div>
+          </div>
+          <div style="padding:10px; background:rgba(220,38,38,0.08); border:1px solid rgba(220,38,38,0.25); border-radius:10px">
+            <div style="font-size:18px; font-weight:900; color:#dc2626" id="v-stat-fail">0 (0%)</div>
+            <div style="font-size:11.5px; font-weight:700; color:#b91c1c; margin-top:2px">🔴 Không đạt</div>
+          </div>
+          <div style="padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:10px">
+            <div style="font-size:18px; font-weight:900; color:#d97706" id="v-stat-block">0 (0%)</div>
+            <div style="font-size:11.5px; font-weight:700; color:#b45309; margin-top:2px">🟡 Bị nghẽn</div>
+          </div>
+          <div style="padding:10px; background:rgba(100,116,139,0.08); border:1px solid rgba(100,116,139,0.25); border-radius:10px">
+            <div style="font-size:18px; font-weight:900; color:#475569" id="v-stat-untest">0 (100%)</div>
+            <div style="font-size:11.5px; font-weight:700; color:#475569; margin-top:2px">⚪ Chưa kiểm thử</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 ĐIỂM NGHẼN CHẶN PHÁT HÀNH CẦN XỬ LÝ NGAY -->
+      <div style="margin-bottom:18px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+          <div style="font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px">
+            ⚠️ 3 điểm nghẽn chặn phát hành cần xử lý ngay
+          </div>
+          <span style="font-size:12px; color:var(--text-muted)">Hành động trực tiếp để mở khóa điều kiện phát hành</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(310px, 1fr)); gap:12px">
+          
+          <div class="lead-risk-card" style="border-left:4px solid #dc2626">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                <span class="badge badge-fail" style="font-size:10px; font-weight:800">🔴 Lỗi nghiêm trọng</span>
+                <span style="font-size:11px; color:#dc2626; font-weight:700" id="v-bn-p2-status">Đang tải...</span>
+              </div>
+              <h4 style="margin:0 0 4px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)" id="v-bn-p2-title">
+                Lỗi nghiêm trọng P2 chưa đóng
+              </h4>
+              <p style="margin:0; font-size:12px; color:var(--text-secondary); line-height:1.4" id="v-bn-p2-desc">
+                Hệ thống chưa ghi nhận lỗi nghiêm trọng nào chặn tiến độ nghiệm thu.
+              </p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="window.location.href='../dev/index.html'" style="color:#dc2626; border-color:#dc2626; font-weight:700; font-size:12px; width:100%; margin-top:8px">
+              👉 Xem lỗi trên bảng lập trình ➔
+            </button>
+          </div>
+
+          <div class="lead-risk-card" style="border-left:4px solid #d97706">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                <span class="badge" style="background:#fef3c7; color:#b45309; font-size:10px; font-weight:800">🟡 Trọng yếu P1</span>
+                <span style="font-size:11px; color:#d97706; font-weight:700" id="v-bn-p1-status">Đang tải...</span>
+              </div>
+              <h4 style="margin:0 0 4px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)" id="v-bn-p1-title">
+                Tồn đọng kịch bản trọng yếu P1
+              </h4>
+              <p style="margin:0; font-size:12px; color:var(--text-secondary); line-height:1.4" id="v-bn-p1-desc">
+                Tiêu chuẩn cổng nghiệm thu yêu cầu 100% kịch bản P1 phải đạt trước khi phát hành.
+              </p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="LeadVersion.filterP1Scope()" style="color:#d97706; border-color:#d97706; font-weight:700; font-size:12px; width:100%; margin-top:8px">
+              👉 Lọc kịch bản P1 để chạy ➔
+            </button>
+          </div>
+
+          <div class="lead-risk-card" style="border-left:4px solid #2563eb">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                <span class="badge badge-info" style="font-size:10px; font-weight:800">⏱️ Tiến độ đợt kiểm thử</span>
+                <span style="font-size:11px; color:#2563eb; font-weight:700" id="v-bn-cycle-deadline">Chưa xác định</span>
+              </div>
+              <h4 style="margin:0 0 4px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)" id="v-bn-cycle-title">
+                Tiến độ đợt kiểm thử
+              </h4>
+              <p style="margin:0; font-size:12px; color:var(--text-secondary); line-height:1.4" id="v-bn-cycle-desc">
+                Cần phân bổ thêm kỹ sư kiểm thử hoặc chia đều tải trọng để kịp tiến độ.
+              </p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="LeadVersion.switchVersionTab('cycles')" style="color:#2563eb; border-color:#2563eb; font-weight:700; font-size:12px; width:100%; margin-top:8px">
+              👉 Quản lý đợt kiểm thử ➔
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TÓM TẮT NHANH CÁC ĐỢT TEST ĐANG CHẠY -->
+      <div class="card" style="padding:16px 20px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+          <h4 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">
+            🚀 Các đợt kiểm thử đang diễn ra
+          </h4>
+          <button type="button" class="btn btn-primary btn-xs" onclick="LeadVersion.switchVersionTab('cycles')">
+            Quản lý tất cả đợt kiểm thử ➔
+          </button>
+        </div>
+        <div id="v-overview-active-cycles-container" style="display:flex; flex-direction:column; gap:10px">
+          <!-- Populated by lead-version.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 2: QUẢN TRỊ ĐỢT KIỂM THỬ (TEST CYCLES LIFECYCLE) ==================== -->
+    <div id="tab-pane-v-cycles" class="lead-tab-pane" style="display:none">
+      
+      <!-- Toolbar Điều Hành Đợt Test -->
+      <div class="lead-portfolio-header-strip" style="margin-bottom:16px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:14px 20px">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+          <h2 style="font-size:17px; font-weight:800; color:var(--text-primary); margin:0">
+            🎯 Quản trị vòng đời đợt kiểm thử
+          </h2>
+          <span class="badge badge-info" id="v-cycles-count-badge">3 đợt kiểm thử</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <!-- Lọc theo loại đợt test -->
+          <select id="v-cycles-filter-suite" class="form-control" style="max-width:140px; height:32px; font-size:12px" onchange="LeadVersion.filterCycles()">
+            <option value="">-- Tất cả loại kiểm thử --</option>
+            <option value="REGRESSION">🔄 Kiểm thử hồi quy</option>
+            <option value="SMOKE">💨 Kiểm thử Smoke</option>
+            <option value="SANITY">🧪 Kiểm thử Sanity</option>
+            <option value="ACCEPTANCE_UAT">🏆 Nghiệm thu UAT</option>
+            <option value="PERF_STRESS">⚡ Hiệu năng và tải</option>
+            <option value="SECURITY_FRAUD">🛡️ An ninh bảo mật</option>
+          </select>
+
+          <!-- Lọc theo trạng thái vòng đời -->
+          <select id="v-cycles-filter-status" class="form-control" style="max-width:140px; height:32px; font-size:12px" onchange="LeadVersion.filterCycles()">
+            <option value="">-- Tất cả trạng thái --</option>
+            <option value="ACTIVE">🟢 Đang diễn ra</option>
+            <option value="PLANNED">🟡 Kế hoạch</option>
+            <option value="PAUSED">⏸️ Tạm dừng</option>
+            <option value="CLOSED">🔒 Đã đóng</option>
+          </select>
+
+          <!-- Toggle View -->
+          <div class="btn-group" style="display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden">
+            <button type="button" id="btn-v-cycles-view-cards" class="btn btn-primary btn-sm" onclick="LeadVersion.switchCyclesSubView('cards')">
+              🎴 Thẻ đợt kiểm thử
+            </button>
+            <button type="button" id="btn-v-cycles-view-matrix" class="btn btn-outline btn-sm" onclick="LeadVersion.switchCyclesSubView('matrix')">
+              📑 Bảng đối soát
+            </button>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openAddCycleModal()" style="font-weight:700">
+            ➕ Tạo đợt kiểm thử mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Subview 1: Lưới Thẻ Quản Trị Đợt Test -->
+      <div id="v-cycles-subview-cards">
+        <div id="lead-version-cycles-container">
+          <!-- Populated by lead-version.js -->
+        </div>
+      </div>
+
+      <!-- Subview 2: Bảng Đối Soát Đa Đợt Kiểm Thử -->
+      <div id="v-cycles-subview-matrix" style="display:none">
+        <div class="lead-matrix-card">
+          <div style="overflow-x:auto">
+            <table class="lead-matrix-table">
+              <thead>
+                <tr>
+                  <th>Mã và tên đợt kiểm thử</th>
+                  <th style="text-align:center">Phân loại</th>
+                  <th style="text-align:center">Trạng thái</th>
+                  <th style="text-align:center">Thời hạn</th>
+                  <th style="text-align:center">Phạm vi (bài)</th>
+                  <th style="text-align:center">Đã giao</th>
+                  <th style="text-align:center">Tiến độ và tỷ lệ đạt</th>
+                  <th style="text-align:center">Nhân sự</th>
+                  <th style="text-align:center">Thao tác quản trị</th>
+                </tr>
+              </thead>
+              <tbody id="v-cycles-matrix-tbody">
+                <!-- Populated by lead-version.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 3: KỊCH BẢN VÀ PHÂN HỆ ==================== -->
+    <div id="tab-pane-v-scope" class="lead-tab-pane" style="display:none">
+      
+      <!-- Workstation 2 Cột: Cây Phân Hệ (Trái) & Bảng Kịch Bản (Phải) -->
+      <div style="display:flex; gap:16px; align-items:flex-start">
+        
+        <!-- CỘT TRÁI: CÂY PHÂN HỆ NGHIỆP VỤ (310px) -->
+        <div style="width:310px; flex-shrink:0; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden">
+          <div style="padding:14px 16px; background:var(--bg-surface); border-bottom:1px solid var(--border)">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+              <h4 style="margin:0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+                📁 Cây phân hệ
+              </h4>
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openAddModuleModal()" title="Thêm phân hệ mới">
+                ➕ Thêm
+              </button>
+            </div>
+            <input type="text" id="v-module-search" class="form-control" placeholder="🔍 Tìm phân hệ..." style="height:30px; font-size:11.5px" oninput="LeadVersion.filterModuleTree()" />
+          </div>
+
+          <!-- Danh sách phân hệ cây (Tree List) -->
+          <div id="v-scope-modules-tree" style="max-height:600px; overflow-y:auto; padding:8px">
+            <!-- Populated by lead-version.js -->
+          </div>
+
+          <div style="padding:10px 14px; background:var(--bg-surface); border-top:1px solid var(--border); text-align:center">
+            <button type="button" class="btn btn-outline btn-xs" style="width:100%" onclick="LeadVersion.inheritBaseline()">
+              ⚡ Kế thừa kho kịch bản chuẩn
+            </button>
+          </div>
+        </div>
+
+        <!-- CỘT PHẢI: BẢNG DANH MỤC KỊCH BẢN CỦA PHÂN HỆ ĐANG CHỌN -->
+        <div style="flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden">
+          
+          <!-- Thanh điều khiển & Lọc kịch bản -->
+          <div style="padding:12px 18px; border-bottom:1px solid var(--border); background:var(--bg-surface); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px">
+                <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)" id="v-scope-selected-module-title">
+                  📦 Tất cả kịch bản
+                </h3>
+                <span class="badge badge-info" id="v-scope-selected-count">0 kịch bản</span>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+              <input type="text" id="v-scope-search" class="form-control" placeholder="🔍 Tìm mã, tên kịch bản..." style="max-width:180px; height:32px; font-size:12px" oninput="LeadVersion.filterScopeTestCases()" />
+              <select id="v-scope-filter-prio" class="form-control" style="max-width:120px; height:32px; font-size:12px" onchange="LeadVersion.filterScopeTestCases()">
+                <option value="">-- Mức ưu tiên --</option>
+                <option value="P1">P1 - Khẩn cấp</option>
+                <option value="P2">P2 - Cao</option>
+                <option value="P3">P3 - Trung bình</option>
+                <option value="P4">P4 - Thấp</option>
+              </select>
+              <select id="v-scope-filter-status" class="form-control" style="max-width:120px; height:32px; font-size:12px" onchange="LeadVersion.filterScopeTestCases()">
+                <option value="">-- Kết quả --</option>
+                <option value="PASS">🟢 Đạt</option>
+                <option value="FAIL">🔴 Không đạt</option>
+                <option value="BLOCKED">🟡 Bị nghẽn</option>
+                <option value="UNTESTED">⚪ Chưa kiểm thử</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openAddTestCaseModal()">
+                ➕ Thêm kịch bản
+              </button>
+            </div>
+          </div>
+
+          <!-- Thanh Thao Tác Hàng Loạt (Batch Action Toolbar) -->
+          <div id="v-scope-batch-bar" style="display:none; padding:8px 18px; background:rgba(37,99,235,0.08); border-bottom:1px solid #bfdbfe; justify-content:space-between; align-items:center">
+            <span style="font-size:12px; font-weight:700; color:#1d4ed8" id="v-scope-batch-count">
+              Đã chọn 0 kịch bản
+            </span>
+            <div style="display:flex; align-items:center; gap:8px">
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openBatchAssignCycleModal()">
+                🎯 Đưa vào đợt kiểm thử...
+              </button>
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openBatchAssignTesterModal()">
+                👥 Giao cho người kiểm thử...
+              </button>
+              <button type="button" class="btn btn-outline btn-xs" style="color:#dc2626; border-color:rgba(220,38,38,0.35); font-weight:700" onclick="LeadVersion.batchDeleteTestCases()">
+                🗑️ Xóa các kịch bản đã chọn
+              </button>
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.clearBatchSelection()">
+                ✕ Bỏ chọn
+              </button>
+            </div>
+          </div>
+
+          <!-- Bảng Kịch Bản Chi Tiết -->
+          <div style="overflow-x:auto; max-height:560px">
+            <table class="lead-matrix-table">
+              <thead style="position:sticky; top:0; z-index:2">
+                <tr>
+                  <th style="width:36px; text-align:center">
+                    <input type="checkbox" id="v-scope-check-all" onchange="LeadVersion.toggleCheckAllTestCases(this.checked)" style="cursor:pointer" />
+                  </th>
+                  <th style="width:110px">Mã kịch bản</th>
+                  <th>Tiêu đề và yêu cầu nghiệp vụ</th>
+                  <th style="width:120px">Phân hệ</th>
+                  <th style="width:80px; text-align:center">Ưu tiên</th>
+                  <th style="width:110px; text-align:center">Đợt kiểm thử gán</th>
+                  <th style="width:100px; text-align:center">Kết quả</th>
+                  <th style="width:90px; text-align:center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="v-scope-tcs-tbody">
+                <!-- Populated by lead-version.js -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 4: QUẢN TRỊ NHÂN SỰ VÀ PHÂN BỔ ĐỢT KIỂM THỨ ==================== -->
+    <div id="tab-pane-v-roster" class="lead-tab-pane" style="display:none">
+      
+      <!-- BÀN ĐIỀU PHỐI PHÂN BỔ NHÂN SỰ THEO ĐỢT TEST -->
+      <div class="card" style="padding:18px 22px; margin-bottom:18px; background:var(--bg-card); border:1.5px solid var(--border)">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px">
+          <div>
+            <div style="font-size:11.5px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.5px">
+              👥 Trung tâm phân bổ nhân sự và điều phối đợt kiểm thử
+            </div>
+            <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:2px 0 0 0">
+              Phân bổ kỹ sư kiểm thử theo từng đợt tác chiến
+            </h2>
+          </div>
+
+          <!-- Bộ Chọn Đợt Test Mục Tiêu -->
+          <div style="display:flex; align-items:center; gap:10px">
+            <span style="font-size:13px; font-weight:700; color:var(--text-primary)">🎯 Chọn đợt kiểm thử cần giao việc:</span>
+            <select id="v-roster-cycle-select" class="form-control" style="font-weight:800; color:#2563eb; min-width:240px; height:36px" onchange="LeadVersion.onRosterCycleChange()">
+              <!-- Populated by lead-version.js -->
+            </select>
+          </div>
+        </div>
+
+        <!-- 4 NÚT PHÂN CÔNG TÁC CHIẾN NHANH (SMART DISPATCH TOOLBAR) -->
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+          <span style="font-size:12px; font-weight:800; color:var(--text-muted)">⚡ Thao tác phân công nhanh:</span>
+          
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openAssignTesterToCycleModal()">
+            ➕ Chỉ định kiểm thử viên vào đợt này
+          </button>
+          
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.autoDistributeEvenly()" title="Hệ thống tự động chia đều kịch bản cho các tester trong đợt test">
+            ⚡ Tự động chia đều kịch bản
+          </button>
+          
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.openAssignByModuleModal()" title="Phân công tester phụ trách theo từng phân hệ nghiệp vụ">
+            🎯 Phân công theo phân hệ
+          </button>
+          
+          <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:rgba(220,38,38,0.3)" onclick="LeadVersion.assignFailedForRetest()" title="Tự động gom toàn bộ kịch bản từng bị lỗi để giao re-test">
+            ⚠️ Gom kịch bản lỗi để kiểm thử lại
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 Chỉ Số Nhân Sự Đợt Test Đang Chọn -->
+      <div class="lead-kpi-grid" style="margin-bottom:18px">
+        <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
+          <div class="lead-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">👥</div>
+          <div style="flex:1">
+            <div class="lead-kpi-val" id="v-roster-cycle-testers-count">0 kỹ sư</div>
+            <div class="lead-scale-lbl">Kiểm thử viên tham gia đợt này</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
+          <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">📋</div>
+          <div style="flex:1">
+            <div class="lead-kpi-val" id="v-roster-cycle-assigned-rate">0 / 0 bài (0%)</div>
+            <div class="lead-scale-lbl">Kịch bản đã phân công thực hiện</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #7c3aed">
+          <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">⚖️</div>
+          <div style="flex:1">
+            <div class="lead-kpi-val" id="v-roster-cycle-avg-load">0 bài / người</div>
+            <div class="lead-scale-lbl">Định mức tải trọng bình quân</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Ma Trận Phân Bổ Nhân Sự Đợt Test -->
+      <div class="lead-matrix-card">
+        <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+          <h3 style="margin:0; font-size:14.5px; font-weight:800; color:var(--text-primary)" id="v-roster-table-heading">
+            📊 Bảng phân bổ nhiệm vụ và tải trọng kỹ sư — Đợt 1
+          </h3>
+          <span style="font-size:12px; color:var(--text-muted)">Cập nhật thời gian thực</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="lead-matrix-table">
+            <thead>
+              <tr>
+                <th>Kỹ sư kiểm thử</th>
+                <th style="text-align:center">Vai trò đợt</th>
+                <th>Phân hệ đảm nhận</th>
+                <th style="text-align:center">Số bài giao</th>
+                <th style="text-align:center">Đã thực hiện</th>
+                <th style="text-align:center">Tỷ lệ đạt</th>
+                <th style="text-align:center">Lỗi tìm thấy</th>
+                <th style="text-align:center">Hệ số tải trọng</th>
+                <th style="text-align:center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="v-roster-tbody">
+              <!-- Populated by lead-version.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 5: CÀI ĐẶT & CHUẨN NGHIỆM THU PHIÊN BẢN ==================== -->
+    <div id="tab-pane-v-settings" class="lead-tab-pane" style="display:none">
+      
+      <!-- Header Action Strip của Tab 5 -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:16px 22px">
+        <div>
+          <div style="display:flex; align-items:center; gap:10px">
+            <h2 style="font-size:18px; font-weight:900; color:var(--text-primary); margin:0">
+              ⚙️ Cấu hình phiên bản và tiêu chuẩn nghiệm thu
+            </h2>
+            <span class="badge badge-info" id="v-settings-tag-badge" style="font-weight:800; font-size:12px">v2.0</span>
+            <span class="badge" id="v-settings-status-badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-weight:800; font-size:11px">ACTIVE</span>
+          </div>
+          <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px">
+            Thiết lập vòng đời phát hành, chính sách cổng nghiệm thu, môi trường mục tiêu và cam kết SLA xử lý lỗi.
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.switchVersionTab('overview')">
+            Quay lại tổng quan
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.saveVersionSettings()" style="padding:8px 22px; font-weight:800">
+            💾 Lưu cấu hình phiên bản
+          </button>
+        </div>
+      </div>
+
+      <form id="v-settings-form" onsubmit="event.preventDefault(); LeadVersion.saveVersionSettings();">
+        <div class="vset-grid-layout">
+          
+          <!-- CỘT TRÁI (1.25fr): VÒNG ĐỜI & QUALITY GATE -->
+          <div>
+            
+            <!-- CARD 1: VÒNG ĐỜI PHÁT HÀNH -->
+            <div class="vset-card">
+              <div class="vset-card-header">
+                <h3 class="vset-card-title">
+                  <span class="vset-card-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">📦</span>
+                  <span>1. Định danh và lộ trình phát hành</span>
+                </h3>
+                <span style="font-size:11.5px; color:var(--text-muted); font-weight:600">Chuẩn ISO/IEC 29119</span>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:14px">
+                <div style="display:grid; grid-template-columns:120px 1.5fr 1fr; gap:12px">
+                  <div>
+                    <label class="form-label" style="font-size:12px; font-weight:700">Mã phiên bản (*)</label>
+                    <input type="text" id="vset-tag" class="form-control" placeholder="v2.0" required style="font-weight:800" />
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size:12px; font-weight:700">Tên và nhãn phát hành (*)</label>
+                    <input type="text" id="vset-label" class="form-control" placeholder="v2.0-SingleSite 2026" required />
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size:12px; font-weight:700">Loại phát hành</label>
+                    <select id="vset-release-type" class="form-control" style="font-weight:600">
+                      <option value="MAJOR" selected>🌟 Bản phát hành lớn</option>
+                      <option value="MINOR">✨ Tính năng bổ sung</option>
+                      <option value="PATCH">🔧 Bản vá sửa lỗi</option>
+                      <option value="HOTFIX">🔥 Bản vá khẩn cấp</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Visual Lifecycle Stepper -->
+                <div>
+                  <label class="form-label" style="font-size:12px; font-weight:700; margin-bottom:6px">
+                    Trạng thái vòng đời hiện tại:
+                  </label>
+                  <div class="vset-lifecycle-stepper" id="vset-stepper-wrap">
+                    <button type="button" class="vset-step-btn" data-status="PLANNING" onclick="LeadVersion.setLifecycleStatus('PLANNING')">
+                      ⏳ Kế hoạch
+                    </button>
+                    <button type="button" class="vset-step-btn" data-status="IN_DEV" onclick="LeadVersion.setLifecycleStatus('IN_DEV')">
+                      🔧 Đang lập trình
+                    </button>
+                    <button type="button" class="vset-step-btn active" data-status="ACTIVE" onclick="LeadVersion.setLifecycleStatus('ACTIVE')">
+                      🟢 Đang kiểm thử
+                    </button>
+                    <button type="button" class="vset-step-btn" data-status="CODE_FREEZE" onclick="LeadVersion.setLifecycleStatus('CODE_FREEZE')">
+                      ❄️ Đóng băng mã nguồn
+                    </button>
+                    <button type="button" class="vset-step-btn" data-status="RELEASED" onclick="LeadVersion.setLifecycleStatus('RELEASED')">
+                      🔒 Đã phát hành
+                    </button>
+                  </div>
+                  <input type="hidden" id="vset-status" value="ACTIVE" />
+                </div>
+
+                <!-- 3 Cột Mốc Thời Gian -->
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">
+                  <div>
+                    <label class="form-label" style="font-size:12px; font-weight:700">Ngày bắt đầu kiểm thử</label>
+                    <input type="date" id="vset-start-date" class="form-control" />
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size:12px; font-weight:700">Ngày đóng băng mã nguồn</label>
+                    <input type="date" id="vset-freeze-date" class="form-control" />
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size:12px; font-weight:700">Hạn bàn giao phát hành (*)</label>
+                    <input type="date" id="vset-target-date" class="form-control" required />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 2: CỔNG NGHIỆM THU CHẤT LƯỢNG -->
+            <div class="vset-card">
+              <div class="vset-card-header">
+                <div>
+                  <h3 class="vset-card-title">
+                    <span class="vset-card-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">🛡️</span>
+                    <span>2. Tiêu chuẩn cổng nghiệm thu</span>
+                  </h3>
+                  <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px">
+                    Chính sách kiểm soát chất lượng bắt buộc: Phiên bản chỉ được phép phát hành khi thỏa mãn toàn bộ 4 quy tắc này.
+                  </div>
+                </div>
+                <div id="vset-qg-overall-badge">
+                  <span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:800; font-size:11px">
+                    ⚠️ Chưa đủ điều kiện nghiệm thu
+                  </span>
+                </div>
+              </div>
+
+              <!-- 4 Khối Tiêu Chuẩn Độc Lập -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                
+                <!-- Rule 1: Pass Rate -->
+                <div class="vset-rule-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center">
+                    <span style="font-size:12px; font-weight:800; color:var(--text-primary)">Tỷ lệ đạt</span>
+                    <span class="badge" id="vset-eval-pass" style="font-size:10px">Đang tính...</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-secondary)">Tối thiểu ≥</span>
+                    <input type="number" id="vset-qg-pass" class="form-control" style="font-weight:800; color:#16a34a; font-size:15px; width:80px; height:34px" min="50" max="100" value="95" oninput="LeadVersion.evalQualityGateUI()" />
+                    <span style="font-weight:800; font-size:14px">%</span>
+                  </div>
+                  <div style="font-size:11px; color:var(--text-muted)">
+                    Chuẩn khuyến nghị quốc tế: ≥ 95%
+                  </div>
+                </div>
+
+                <!-- Rule 2: Blocker P1 -->
+                <div class="vset-rule-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center">
+                    <span style="font-size:12px; font-weight:800; color:var(--text-primary)">Lỗi nghẽn (P1) tối đa</span>
+                    <span class="badge" id="vset-eval-p1" style="font-size:10px">Đang tính...</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-secondary)">Tối đa =</span>
+                    <input type="number" id="vset-qg-p1" class="form-control" style="font-weight:800; color:#dc2626; font-size:15px; width:80px; height:34px" min="0" max="5" value="0" oninput="LeadVersion.evalQualityGateUI()" />
+                    <span style="font-size:12px; color:var(--text-muted)">lỗi</span>
+                  </div>
+                  <div style="font-size:11px; color:#16a34a; font-weight:700">
+                    Bắt buộc kiểm soát nghiêm ngặt (0 lỗi)
+                  </div>
+                </div>
+
+                <!-- Rule 3: Critical P2 -->
+                <div class="vset-rule-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center">
+                    <span style="font-size:12px; font-weight:800; color:var(--text-primary)">Lỗi nghiêm trọng (P2) tối đa</span>
+                    <span class="badge" id="vset-eval-p2" style="font-size:10px">Đang tính...</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-secondary)">Tối đa ≤</span>
+                    <input type="number" id="vset-qg-p2" class="form-control" style="font-weight:800; color:#d97706; font-size:15px; width:80px; height:34px" min="0" max="10" value="2" oninput="LeadVersion.evalQualityGateUI()" />
+                    <span style="font-size:12px; color:var(--text-muted)">lỗi</span>
+                  </div>
+                  <div style="font-size:11px; color:var(--text-muted)">
+                    Cam kết trần chịu lỗi: ≤ 2 lỗi
+                  </div>
+                </div>
+
+                <!-- Rule 4: Major P3 -->
+                <div class="vset-rule-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center">
+                    <span style="font-size:12px; font-weight:800; color:var(--text-primary)">Lỗi trung bình (P3) tối đa</span>
+                    <span class="badge" id="vset-eval-p3" style="font-size:10px">Đang tính...</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-secondary)">Tối đa ≤</span>
+                    <input type="number" id="vset-qg-p3" class="form-control" style="font-weight:800; font-size:15px; width:80px; height:34px" min="0" max="20" value="5" oninput="LeadVersion.evalQualityGateUI()" />
+                    <span style="font-size:12px; color:var(--text-muted)">lỗi</span>
+                  </div>
+                  <div style="font-size:11px; color:var(--text-muted)">
+                    Cam kết chất lượng: ≤ 5 lỗi
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- CARD 3: GHI CHÚ PHÁT HÀNH -->
+            <div class="vset-card">
+              <div class="vset-card-header">
+                <h3 class="vset-card-title">
+                  <span class="vset-card-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">📖</span>
+                  <span>3. Ghi chú phát hành và phạm vi bàn giao</span>
+                </h3>
+                <div style="display:flex; gap:6px">
+                  <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.insertReleaseNotesTemplate('features')">+ Tính năng</button>
+                  <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.insertReleaseNotesTemplate('bugfix')">+ Vá lỗi</button>
+                  <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.insertReleaseNotesTemplate('scope')">+ Phạm vi</button>
+                </div>
+              </div>
+
+              <div>
+                <textarea id="vset-changelog" class="form-control" rows="4" style="font-family:inherit; font-size:13px; line-height:1.5" placeholder="Mô tả nội dung tính năng mới, phạm vi nghiệm thu trọng tâm và các lưu ý kỹ thuật khi bàn giao phiên bản..."></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CỘT PHẢI (1fr): MÔI TRƯỜNG, THIẾT BỊ, SLA & DANGER ZONE -->
+          <div>
+            
+            <!-- CARD 4: MÔI TRƯỜNG & MA TRẬN THIẾT BỊ -->
+            <div class="vset-card">
+              <div class="vset-card-header">
+                <h3 class="vset-card-title">
+                  <span class="vset-card-icon" style="background:rgba(14,165,233,0.1); color:#0284c7">🌐</span>
+                  <span>4. Môi trường và thiết bị kiểm thử</span>
+                </h3>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:14px">
+                <div>
+                  <label class="form-label" style="font-size:12px; font-weight:700">Đường dẫn máy chủ thử nghiệm và API</label>
+                  <div style="display:flex; gap:6px">
+                    <input type="url" id="vset-env-url" class="form-control" placeholder="https://staging-v2.yourdomain.com" style="font-size:12.5px" />
+                    <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.testEnvUrl()" title="Kiểm tra mở URL">↗️</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="form-label" style="font-size:12px; font-weight:700">Nhánh Git và mã băm commit</label>
+                  <input type="text" id="vset-env-build" class="form-control" placeholder="release/v2.0 (commit #8a7f4c9)" style="font-family:monospace; font-size:12px" />
+                </div>
+
+                <div>
+                  <label class="form-label" style="font-size:12px; font-weight:700; margin-bottom:8px">Ma trận thiết bị mục tiêu bắt buộc nghiệm thu:</label>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                    
+                    <label class="vset-platform-chip active" id="chip-dev-web-chrome" onclick="LeadVersion.togglePlatformChip('vset-dev-web-chrome', this)">
+                      <input type="checkbox" id="vset-dev-web-chrome" checked style="display:none" />
+                      <span style="font-size:16px">🖥️</span>
+                      <span style="font-size:12px">Web Chrome</span>
+                    </label>
+
+                    <label class="vset-platform-chip active" id="chip-dev-web-firefox" onclick="LeadVersion.togglePlatformChip('vset-dev-web-firefox', this)">
+                      <input type="checkbox" id="vset-dev-web-firefox" checked style="display:none" />
+                      <span style="font-size:16px">🦊</span>
+                      <span style="font-size:12px">Web Firefox</span>
+                    </label>
+
+                    <label class="vset-platform-chip active" id="chip-dev-mobile-android" onclick="LeadVersion.togglePlatformChip('vset-dev-mobile-android', this)">
+                      <input type="checkbox" id="vset-dev-mobile-android" checked style="display:none" />
+                      <span style="font-size:16px">🤖</span>
+                      <span style="font-size:12px">Ứng dụng Android</span>
+                    </label>
+
+                    <label class="vset-platform-chip active" id="chip-dev-mobile-ios" onclick="LeadVersion.togglePlatformChip('vset-dev-mobile-ios', this)">
+                      <input type="checkbox" id="vset-dev-mobile-ios" checked style="display:none" />
+                      <span style="font-size:16px">🍏</span>
+                      <span style="font-size:12px">Ứng dụng iOS</span>
+                    </label>
+
+                    <label class="vset-platform-chip active" id="chip-dev-ai-camera" onclick="LeadVersion.togglePlatformChip('vset-dev-ai-camera', this)">
+                      <input type="checkbox" id="vset-dev-ai-camera" checked style="display:none" />
+                      <span style="font-size:16px">📷</span>
+                      <span style="font-size:12px">Camera AI</span>
+                    </label>
+
+                    <label class="vset-platform-chip active" id="chip-dev-rfid" onclick="LeadVersion.togglePlatformChip('vset-dev-rfid', this)">
+                      <input type="checkbox" id="vset-dev-rfid" checked style="display:none" />
+                      <span style="font-size:16px">💳</span>
+                      <span style="font-size:12px">Đầu đọc RFID</span>
+                    </label>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 5: CAM KẾT SLA SỬA LỖI ĐỘI DEV -->
+            <div class="vset-card">
+              <div class="vset-card-header">
+                <h3 class="vset-card-title">
+                  <span class="vset-card-icon" style="background:rgba(217,119,6,0.1); color:#d97706">⏱️</span>
+                  <span>5. Quy chuẩn cam kết SLA sửa lỗi</span>
+                </h3>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:10px">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:8px">
+                  <div>
+                    <div style="font-weight:800; font-size:12.5px; color:#dc2626">🔴 Lỗi chặn (P1)</div>
+                    <div style="font-size:11px; color:var(--text-muted)">Khẩn cấp cao điểm, Dev trực 24/7</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px">
+                    <input type="number" id="vset-sla-p1" class="form-control" value="4" style="width:65px; height:32px; font-weight:800; text-align:center" />
+                    <span style="font-size:12px; font-weight:700">giờ</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(217,119,6,0.06); border:1px solid rgba(217,119,6,0.25); border-radius:8px">
+                  <div>
+                    <div style="font-weight:800; font-size:12.5px; color:#d97706">🟠 Lỗi nghiêm trọng (P2)</div>
+                    <div style="font-size:11px; color:var(--text-muted)">Trong 1 ngày làm việc</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px">
+                    <input type="number" id="vset-sla-p2" class="form-control" value="24" style="width:65px; height:32px; font-weight:800; text-align:center" />
+                    <span style="font-size:12px; font-weight:700">giờ</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.25); border-radius:8px">
+                  <div>
+                    <div style="font-weight:800; font-size:12.5px; color:#2563eb">🔵 Lỗi trung bình (P3)</div>
+                    <div style="font-size:11px; color:var(--text-muted)">Trong 3 ngày làm việc</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px">
+                    <input type="number" id="vset-sla-p3" class="form-control" value="72" style="width:65px; height:32px; font-weight:800; text-align:center" />
+                    <span style="font-size:12px; font-weight:700">giờ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 6: VÙNG NGUY HIỂM -->
+            <div class="vset-card" style="border:1.5px solid rgba(220,38,38,0.3); background:rgba(220,38,38,0.02)">
+              <div class="vset-card-header" style="border-color:rgba(220,38,38,0.2)">
+                <h3 class="vset-card-title" style="color:#dc2626">
+                  <span class="vset-card-icon" style="background:rgba(220,38,38,0.1); color:#dc2626">⚠️</span>
+                  <span>6. Vùng nguy hiểm</span>
+                </h3>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:12px">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                  <div>
+                    <div style="font-size:12.5px; font-weight:800; color:var(--text-primary)">Đóng băng mã nguồn</div>
+                    <div style="font-size:11px; color:var(--text-muted)">Khóa nhánh mã nguồn, chỉ cho phép vá lỗi P1/P2</div>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-xs" style="color:#d97706; border-color:rgba(217,119,6,0.4); font-weight:700" onclick="LeadVersion.toggleFreezeVersion()">
+                    ❄️ Code Freeze
+                  </button>
+                </div>
+
+                <div style="border-top:1px dashed var(--border); padding-top:10px; display:flex; justify-content:space-between; align-items:center">
+                  <div>
+                    <div style="font-size:12.5px; font-weight:800; color:#dc2626">Xóa phiên bản này</div>
+                    <div style="font-size:11px; color:var(--text-muted)">Xóa vĩnh viễn khỏi không gian dự án</div>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-xs" style="color:#dc2626; border-color:rgba(220,38,38,0.4); font-weight:700" onclick="LeadVersion.deleteCurrentVersion()">
+                    🗑️ Xóa phiên bản
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </form>
+
+    </div>
+
+  </main>
+
+  <!-- ==================== CÁC MODAL CẤU HÌNH TRỰC TIẾP TRONG KHÔNG GIAN PHIÊN BẢN ==================== -->
+
+  <!-- Modal 1: Thêm/Sửa đợt kiểm thử -->
+  <div class="modal" id="modal-cycle-form">
+    <div class="modal-box" style="max-width:580px">
+      <div class="modal-header">
+        <h3 id="modal-cycle-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ➕ Thêm đợt kiểm thử mới
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-cycle-form')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <input type="hidden" id="cf-id" />
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã đợt kiểm thử (*)</label>
+            <input type="text" id="cf-code" class="form-control" placeholder="ROUND-2 hoặc CYC-02" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Thuộc phiên bản</label>
+            <div style="padding:7px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb; font-size:13px; display:flex; align-items:center; gap:6px">
+              <span>📦</span>
+              <span id="cf-version-display">v2.0</span>
+            </div>
+            <input type="hidden" id="cf-version" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Tên đợt kiểm thử (*)</label>
+          <input type="text" id="cf-name" class="form-control" placeholder="Đợt 2 — Kiểm thử lại sửa lỗi và kiểm thử hồi quy" required />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Loại kiểm thử</label>
+            <select id="cf-suite" class="form-control">
+              <option value="REGRESSION" selected>🔄 Kiểm thử hồi quy</option>
+              <option value="SMOKE">💨 Kiểm thử Smoke</option>
+              <option value="SANITY">🧪 Kiểm thử Sanity</option>
+              <option value="PERF_STRESS">⚡ Hiệu năng và tải cao điểm</option>
+              <option value="SECURITY_FRAUD">🛡️ An ninh bảo mật</option>
+              <option value="ACCEPTANCE_UAT">🏆 Nghiệm thu UAT</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng thái đợt kiểm thử</label>
+            <select id="cf-status" class="form-control">
+              <option value="ACTIVE" selected>🟢 Đang diễn ra</option>
+              <option value="PLANNED">🟡 Kế hoạch</option>
+              <option value="CLOSED">⚪ Đã đóng</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Ngày bắt đầu</label>
+            <input type="date" id="cf-start-date" class="form-control" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn chót kế hoạch</label>
+            <input type="date" id="cf-end-date" class="form-control" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Mục tiêu và phạm vi đợt kiểm thử</label>
+          <textarea id="cf-description" class="form-control" rows="3" placeholder="Mô tả phạm vi nghiệm thu, các kịch bản hoặc phân hệ trọng tâm cần kiểm thử trong đợt này..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-form')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmSaveCycle()">💾 Lưu đợt kiểm thử</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Cấu hình danh mục kịch bản cho đợt kiểm thử -->
+  <div class="modal" id="modal-cycle-scope">
+    <div class="modal-box" style="max-width:1380px; width:96vw; height:92vh; max-height:92vh; display:flex; flex-direction:column; padding:0; overflow:hidden">
+      
+      <!-- Modal Header -->
+      <div class="modal-header" style="flex-shrink:0; padding:12px 20px; border-bottom:1px solid var(--border); background:var(--bg-card); display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0">
+            🎯
+          </div>
+          <div>
+            <h3 id="mcs-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+              Cấu hình danh mục kịch bản cho đợt kiểm thử
+            </h3>
+            <div id="mcs-subtitle" style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Chọn danh mục kịch bản từ kho phiên bản để đưa vào đợt kiểm thử này.
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px">
+          <span class="badge badge-info" id="mcs-version-badge" style="font-size:12px; font-weight:800">Phiên bản</span>
+          <span class="badge" id="mcs-cycle-type-badge" style="background:#e0e7ff; color:#3730a3; font-size:12px; font-weight:800">Kiểm thử hồi quy</span>
+          <button type="button" class="btn-close" onclick="closeModal('modal-cycle-scope')">✕</button>
+        </div>
+      </div>
+
+      <!-- Scope KPI Overview -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px; padding:12px 20px; background:var(--bg-surface); border-bottom:1px solid var(--border); flex-shrink:0">
+        <div style="padding:8px 12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); border-left:3px solid #2563eb">
+          <div style="font-size:11px; color:var(--text-muted); font-weight:700">Tổng kịch bản phiên bản</div>
+          <div style="font-size:18px; font-weight:800; color:#2563eb; margin-top:2px" id="mcs-kpi-total">0</div>
+        </div>
+        <div style="padding:8px 12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); border-left:3px solid #16a34a">
+          <div style="font-size:11px; color:var(--text-muted); font-weight:700">Đã chọn vào đợt</div>
+          <div style="font-size:18px; font-weight:800; color:#16a34a; margin-top:2px" id="mcs-kpi-selected">0 (0%)</div>
+        </div>
+        <div style="padding:8px 12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); border-left:3px solid #dc2626">
+          <div style="font-size:11px; color:var(--text-muted); font-weight:700">Lỗi đợt trước cần kiểm thử lại</div>
+          <div style="font-size:18px; font-weight:800; color:#dc2626; margin-top:2px" id="mcs-kpi-failed">0</div>
+        </div>
+        <div style="padding:8px 12px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border); border-left:3px solid #f59e0b">
+          <div style="font-size:11px; color:var(--text-muted); font-weight:700">Kịch bản trọng yếu P1 và P2</div>
+          <div style="font-size:18px; font-weight:800; color:#f59e0b; margin-top:2px" id="mcs-kpi-high-prio">0</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Presets & Filter Bar -->
+      <div style="padding:10px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px; flex-shrink:0">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+            <span style="font-size:12px; font-weight:700; color:var(--text-primary)">⚡ Chọn nhanh theo bộ:</span>
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.applyScopePreset('all')">
+              📦 Toàn bộ phiên bản
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" style="color:#dc2626; border-color:rgba(220,38,38,0.4)" onclick="LeadVersion.applyScopePreset('failed')">
+              ⚠️ Các bài từng bị lỗi (kiểm thử lại)
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" style="color:#d97706; border-color:rgba(217,119,6,0.4)" onclick="LeadVersion.applyScopePreset('p1_p2')">
+              🔥 Trọng yếu P1 và P2
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.applyScopePreset('smoke')">
+              💨 Bộ kiểm thử Smoke
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.applyScopePreset('none')">
+              ❌ Bỏ chọn tất cả
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <input type="text" id="mcs-search" class="form-control" placeholder="🔍 Tìm mã kịch bản, tiêu đề..." style="max-width:240px; height:32px; font-size:12px" oninput="LeadVersion.filterScopeTable()" />
+          <select id="mcs-filter-prio" class="form-control" style="max-width:140px; height:32px; font-size:12px" onchange="LeadVersion.filterScopeTable()">
+            <option value="">-- Mức ưu tiên --</option>
+            <option value="P1">P1 - Khẩn cấp</option>
+            <option value="P2">P2 - Cao</option>
+            <option value="P3">P3 - Trung bình</option>
+            <option value="P4">P4 - Thấp</option>
+          </select>
+          <select id="mcs-filter-history" class="form-control" style="max-width:160px; height:32px; font-size:12px" onchange="LeadVersion.filterScopeTable()">
+            <option value="">-- Lịch sử kiểm thử --</option>
+            <option value="FAIL">❌ Từng bị lỗi</option>
+            <option value="PASS">✅ Từng đạt</option>
+            <option value="UNTESTED">⚪ Chưa kiểm thử</option>
+          </select>
+          <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.resetScopeFilters()" style="height:32px">
+            🔄 Đặt lại
+          </button>
+          <div id="mcs-filter-count-badge" style="font-size:11.5px; font-weight:700; color:var(--text-muted); margin-left:4px">
+            0 kịch bản
+          </div>
+        </div>
+      </div>
+
+      <!-- Master-Detail Grid -->
+      <div style="flex:1; display:grid; grid-template-columns:300px minmax(0, 1fr); overflow:hidden; background:var(--bg-surface)">
+        <!-- Left: Modules Sidebar -->
+        <div style="border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg-card); overflow:hidden">
+          <div style="padding:10px 14px; background:var(--bg-surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
+            <strong style="font-size:12.5px; color:var(--text-primary)">📦 Phân hệ nghiệp vụ</strong>
+            <span style="font-size:11px; color:var(--text-muted)">Tích ô để chọn cả phân hệ</span>
+          </div>
+          <ul id="mcs-modules-list" class="asg-module-list" style="overflow-y:auto; flex:1"></ul>
+        </div>
+
+        <!-- Right: Test Cases Table -->
+        <div style="display:flex; flex-direction:column; background:var(--bg-card); overflow:hidden">
+          <div style="padding:10px 16px; background:var(--bg-surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0">
+            <div style="display:flex; align-items:center; gap:8px">
+              <strong id="mcs-current-mod-title" style="font-size:13px; color:var(--text-primary)">Tất cả phân hệ</strong>
+              <span id="mcs-current-mod-badge" class="badge badge-info" style="font-size:11px">0 kịch bản</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px">
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.toggleCurrentViewTcs(true)">
+                ✅ Chọn tất cả đang lọc
+              </button>
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.toggleCurrentViewTcs(false)">
+                ❌ Bỏ chọn đang lọc
+              </button>
+            </div>
+          </div>
+
+          <div style="flex:1; overflow-y:auto; overflow-x:hidden">
+            <table class="asg-tc-table" style="table-layout:fixed; width:100%">
+              <thead>
+                <tr>
+                  <th style="width:38px; text-align:center">
+                    <input type="checkbox" id="mcs-check-all" onchange="LeadVersion.toggleCurrentViewTcs(this.checked)" style="cursor:pointer" />
+                  </th>
+                  <th style="width:110px; text-align:center">Mã kịch bản</th>
+                  <th style="width:75px; text-align:center">Phân hệ</th>
+                  <th style="width:75px; text-align:center">Ưu tiên</th>
+                  <th style="min-width:320px">Tiêu đề và mục tiêu kiểm thử</th>
+                  <th style="width:130px; text-align:center">Loại kịch bản</th>
+                  <th style="width:160px; text-align:center">Lịch sử đợt trước</th>
+                  <th style="width:110px; text-align:center">Trạng thái đợt</th>
+                </tr>
+              </thead>
+              <tbody id="mcs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scope Modal Footer -->
+      <div class="modal-footer" style="flex-shrink:0; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px; background:var(--bg-card)">
+        <div style="font-size:12px; color:var(--text-secondary)">
+          💡 Đang chọn <strong id="mcs-footer-count" style="color:var(--primary)">0</strong> kịch bản. Các kịch bản này sẽ xuất hiện trong <strong>kế hoạch và giao việc</strong> của đợt kiểm thử.
+        </div>
+        <div style="display:flex; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-scope')">Hủy bỏ</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmSaveCycleScope()" style="font-weight:800; padding:0 20px">
+            💾 Lưu cấu hình danh mục kịch bản cho đợt kiểm thử
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal 3: Thêm phân hệ nghiệp vụ mới -->
+  <div class="modal" id="modal-add-module">
+    <div class="modal-box" style="max-width:520px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ➕ Thêm phân hệ nghiệp vụ mới
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-add-module')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Mã phân hệ (*)</label>
+          <input type="text" id="new-mod-id" class="form-control" placeholder="VD: M13" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Tên phân hệ (*)</label>
+          <input type="text" id="new-mod-name" class="form-control" placeholder="VD: Cổng thanh toán điện tử" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700">Mô tả chức năng</label>
+          <textarea id="new-mod-desc" class="form-control" rows="3" placeholder="Mô tả chức năng nghiệp vụ của phân hệ..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-add-module')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmAddModule()">💾 Lưu phân hệ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Cấu hình thông tin phiên bản -->
+  <div class="modal" id="modal-version-edit">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ⚙️ Cấu hình thông tin phiên bản
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-version-edit')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã phiên bản</label>
+            <input type="text" id="ve-tag" class="form-control" readonly style="background:var(--bg-surface); font-weight:800" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Tên và nhãn hiển thị</label>
+            <input type="text" id="ve-label" class="form-control" placeholder="Nhãn phiên bản..." />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng thái</label>
+            <select id="ve-status" class="form-control">
+              <option value="ACTIVE">🟢 Đang triển khai</option>
+              <option value="IN_DEV">🔧 Đang phát triển</option>
+              <option value="RELEASED">🔒 Đã phát hành</option>
+              <option value="PLANNING">⏳ Kế hoạch</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn bàn giao</label>
+            <input type="date" id="ve-date" class="form-control" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi chú phát hành</label>
+          <textarea id="ve-changelog" class="form-control" rows="3" placeholder="Mô tả tóm tắt nội dung thay đổi hoặc trọng tâm kiểm thử..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-version-edit')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmSaveVersion()">💾 Lưu cập nhật</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Chỉ định kỹ sư vào đợt kiểm thử -->
+  <div class="modal" id="modal-assign-cycle-tester">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          👥 Chỉ định kỹ sư kiểm thử vào đợt kiểm thử
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-assign-cycle-tester')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div>
+          <label class="form-label" style="font-weight:700">Đợt kiểm thử mục tiêu</label>
+          <div id="mact-cycle-display" style="padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb">
+            Đợt 1
+          </div>
+          <input type="hidden" id="mact-cycle-id" />
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Chọn kỹ sư kiểm thử (*)</label>
+          <select id="mact-tester-select" class="form-control" required>
+            <!-- Populated dynamically from project members -->
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Vai trò trong đợt kiểm thử</label>
+            <select id="mact-role-select" class="form-control">
+              <option value="Lead Tester">Chủ trì kiểm thử</option>
+              <option value="Senior Tester" selected>Kỹ sư kiểm thử chính</option>
+              <option value="Functional Tester">Kiểm thử viên chức năng</option>
+              <option value="Automation Tester">Kiểm thử viên tự động hóa</option>
+              <option value="UAT Specialist">Chuyên viên nghiệm thu UAT</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Phân hệ phụ trách</label>
+            <select id="mact-module-select" class="form-control">
+              <option value="ALL">📦 Toàn bộ phân hệ</option>
+              <!-- Populated dynamically with M01 - M12 -->
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Định mức kịch bản giao kiểm thử</label>
+          <input type="number" id="mact-quota" class="form-control" value="25" min="1" placeholder="Số lượng bài giao..." />
+          <span style="font-size:11px; color:var(--text-muted)">Hệ thống sẽ tự động gán các kịch bản chưa phân công cho kỹ sư này</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-cycle-tester')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmAssignTesterToCycle()">💾 Xác nhận chỉ định</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Phân công kịch bản theo phân hệ nghiệp vụ -->
+  <div class="modal" id="modal-assign-by-module">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          🎯 Phân công kịch bản theo phân hệ nghiệp vụ
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-assign-by-module')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div>
+          <label class="form-label" style="font-weight:700">Đợt kiểm thử áp dụng</label>
+          <div id="mabm-cycle-display" style="padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb">
+            Đợt 1
+          </div>
+          <input type="hidden" id="mabm-cycle-id" />
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Chọn phân hệ nghiệp vụ cần giao (*)</label>
+          <select id="mabm-module-select" class="form-control" onchange="LeadVersion.onModuleAssignSelectChange()">
+            <!-- Populated with M01 - M12 -->
+          </select>
+          <div id="mabm-module-info" style="font-size:11.5px; color:#2563eb; margin-top:4px; font-weight:600">
+            Phân hệ đang chọn.
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Giao cho kỹ sư kiểm thử phụ trách (*)</label>
+          <select id="mabm-tester-select" class="form-control">
+            <!-- Populated with project members -->
+          </select>
+        </div>
+
+        <div style="padding:10px 14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); border-radius:8px; font-size:12px; color:var(--text-secondary)">
+          💡 <strong>Quy tắc điều phối:</strong> Toàn bộ kịch bản thuộc phân hệ này trong đợt kiểm thử sẽ được gán cho kỹ sư đã chọn, tự động ghi nhận vào bàn giao việc và cập nhật ma trận phân bổ công việc.
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-by-module')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmAssignByModule()">💾 Phân công phân hệ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Nhân bản đợt kiểm thử -->
+  <div class="modal" id="modal-clone-cycle">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          📑 Nhân bản đợt kiểm thử
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-clone-cycle')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div>
+          <label class="form-label" style="font-weight:700">Đợt kiểm thử gốc</label>
+          <input type="text" id="mcc-source-name" class="form-control" readonly style="background:var(--bg-surface); font-weight:700" />
+          <input type="hidden" id="mcc-source-id" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã đợt kiểm thử mới (*)</label>
+            <input type="text" id="mcc-target-code" class="form-control" placeholder="ROUND-3 hoặc CYC-03" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Loại kiểm thử</label>
+            <select id="mcc-target-suite" class="form-control">
+              <option value="REGRESSION" selected>🔄 Kiểm thử hồi quy</option>
+              <option value="SANITY">🧪 Kiểm thử Sanity</option>
+              <option value="ACCEPTANCE_UAT">🏆 Nghiệm thu UAT</option>
+              <option value="SMOKE">💨 Kiểm thử Smoke</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Tên đợt kiểm thử mới (*)</label>
+          <input type="text" id="mcc-target-name" class="form-control" placeholder="Đợt 3 — Kiểm thử lại sau đóng lỗi..." required />
+        </div>
+
+        <div style="border-top:1px dashed var(--border); padding-top:12px">
+          <label class="form-label" style="font-weight:700; margin-bottom:8px">Tùy chọn kế thừa khi nhân bản:</label>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer">
+              <input type="checkbox" id="mcc-opt-scope" checked /> Kế thừa toàn bộ danh mục kịch bản từ đợt gốc
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer">
+              <input type="checkbox" id="mcc-opt-failed-only" /> Chỉ kế thừa các kịch bản từng không đạt để kiểm thử lại
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer">
+              <input type="checkbox" id="mcc-opt-staff" checked /> Sao chép đội ngũ nhân sự và phân công phụ trách
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer">
+              <input type="checkbox" id="mcc-opt-reset-results" checked /> Đặt lại toàn bộ trạng thái kết quả về chưa kiểm thử
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-clone-cycle')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmCloneCycle()">🚀 Nhân bản và khởi tạo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Đưa kịch bản vào đợt kiểm thử -->
+  <div class="modal" id="modal-batch-assign-cycle">
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          🎯 Đưa kịch bản vào đợt kiểm thử
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-batch-assign-cycle')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div id="mbac-count-info" style="font-weight:700; color:#2563eb; font-size:13px">
+          Đang chọn 0 kịch bản kiểm thử.
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:700">Chọn đợt kiểm thử đích (*)</label>
+          <select id="mbac-target-cycle" class="form-control">
+            <!-- Populated with cycles of current version -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-batch-assign-cycle')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmBatchAssignCycle()">💾 Thêm vào đợt kiểm thử</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 9: Giao kịch bản cho kỹ sư kiểm thử -->
+  <div class="modal" id="modal-batch-assign-tester">
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          👥 Giao kịch bản cho kỹ sư kiểm thử
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-batch-assign-tester')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div id="mbat-count-info" style="font-weight:700; color:#2563eb; font-size:13px">
+          Đang chọn 0 kịch bản kiểm thử.
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:700">Chọn đợt kiểm thử (*)</label>
+          <select id="mbat-target-cycle" class="form-control">
+            <!-- Populated with cycles -->
+          </select>
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:700">Chọn kỹ sư kiểm thử phụ trách (*)</label>
+          <select id="mbat-target-tester" class="form-control">
+            <!-- Populated with members -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-batch-assign-tester')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmBatchAssignTester()">💾 Giao kịch bản</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js?v=3.1.0"></script>
+  <script src="../data/smartvms_test_catalog.js?v=3.1.0"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+  <script src="../shared/js/core.js?v=3.1.0"></script>
+  <script src="../shared/js/cloud-sync.js?v=3.1.0"></script>
+
+  <!-- Modular Lead Scripts -->
+  <script src="js/lead-context.js?v=3.1.0"></script>
+  <script src="js/lead-version.js?v=3.1.0"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+      LeadContext.init('version');
+      LeadVersion.init();
+    });
+  </script>
+</body>
+</html>

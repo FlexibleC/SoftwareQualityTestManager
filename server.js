@@ -186,7 +186,41 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // 4. PHỤC VỤ CÁC TỆP TĨNH (STATIC FILES)
+  // 4. API LƯU TRỮ TOÀN BỘ TRẠNG THÁI HỆ THỐNG TRÊN ĐĨA CỨNG (Assignments, Results, Defects, Test Cycles)
+  if (req.url.startsWith('/api/state')) {
+    const statePath = path.join(ROOT_DIR, 'data', 'app_state.json');
+    if (req.method === 'GET') {
+      if (fs.existsSync(statePath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        fs.createReadStream(statePath).pipe(res);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ assignments: [], results: {}, testCycles: [], updatedAt: new Date().toISOString() }));
+      }
+      return;
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          parsed.updatedAt = new Date().toISOString();
+          if (!fs.existsSync(path.join(ROOT_DIR, 'data'))) {
+            fs.mkdirSync(path.join(ROOT_DIR, 'data'), { recursive: true });
+          }
+          fs.writeFileSync(statePath, JSON.stringify(parsed, null, 2), 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, updatedAt: parsed.updatedAt }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // 5. PHỤC VỤ CÁC TỆP TĨNH (STATIC FILES)
   let safePath = req.url.split('?')[0].split('#')[0];
   if (safePath === '/' || safePath === '') {
     safePath = '/index.html';

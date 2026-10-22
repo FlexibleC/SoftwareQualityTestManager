@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lịch Sử Thực Thi & Phiên Test - Tester QA Hub</title>
+  <title>Lịch Sử Thực Thi & Nhật Ký Kiểm Thử - Kiểm Thử Viên</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../shared/css/base.css?v=20261014" />
-  <link rel="stylesheet" href="../shared/css/testcases.css?v=20261014" />
-  <link rel="stylesheet" href="../shared/css/reports.css?v=20261014" />
-  <link rel="stylesheet" href="../shared/css/adhoc.css?v=20261014" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/testcases.css" />
+  <link rel="stylesheet" href="../shared/css/reports.css" />
+  <link rel="stylesheet" href="css/tester-theme.css" />
   <style>
     .hist-session-card {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -58,57 +58,47 @@
   </style>
 </head>
 <body>
+
   <!-- Tester Topbar -->
-  <header class="vms-topbar">
-    <div class="vms-topbar-left">
-      <a href="index.html" class="vms-brand">
-        <div class="vms-brand-icon">🧪</div>
-        <div class="vms-brand-text">
-          <span class="vms-title">SmartVMS QA Hub</span>
-          <span class="vms-subtitle">Phân Hệ Kiểm Thử Viên (Tester)</span>
+  <header class="tester-topbar">
+    <div class="tester-topbar-left">
+      <a href="index.html" class="tester-brand-wrap" title="Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm">
+        <div class="tester-brand-badge">🧪</div>
+        <div>
+          <h2 class="tester-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="tester-brand-subtitle">Không gian làm việc kiểm thử viên (Tester)</span>
         </div>
       </a>
-      <nav class="vms-nav-container">
-        <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item">📝 Việc của tôi</a>
-          <a href="execution.html" class="nav-item">▶️ Thực thi</a>
-          <a href="history.html" class="nav-item active">🕒 Lịch sử & Phiên test</a>
-          <a href="reports.html" class="nav-item">📈 Báo cáo cá nhân</a>
-        </div>
-      </nav>
+      <div class="tester-header-divider"></div>
+      <div id="tester-breadcrumb-container"></div>
     </div>
 
-    <div class="vms-topbar-right">
-      <button type="button" class="btn-adhoc-trigger" onclick="openAdhocDefectModal()" title="Báo cáo lỗi phát sinh không có trong Test Case">🐞 Báo Lỗi Ngoài Kịch Bản</button>
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-      <div class="vms-user-profile">
-        <div class="vms-user-avatar">T</div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Kiểm thử viên">
+        <div class="vms-user-avatar" id="tester-user-avatar" style="background:#0d9488">T</div>
         <div class="vms-user-info">
-          <span class="vms-user-name">Nguyễn Văn Nam</span>
-          <span class="vms-user-role">Kiểm thử viên (Tester)</span>
+          <span class="vms-user-name" id="tester-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role" id="tester-user-role">Kiểm thử viên (Tester)</span>
         </div>
       </div>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')">👑 Sang Admin</button>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('dev')">💻 Sang Dev</button>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="main-wrapper">
+  <main class="main-wrapper" style="max-width:1440px; margin:20px auto; padding:0 24px">
     <!-- Header Row -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px">
       <div>
-        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">🕒 Lịch Sử Thực Thi & Các Phiên Kiểm Thử Của Tôi</h2>
+        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">🕒 Lịch Sử Thực Thi & Nhật Ký Kiểm Thử Của Bạn</h2>
         <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Nhật ký thực thi kiểm thử thời gian thực (Test Execution Audit Log - ISO/IEC/IEEE 29119-3 Clause 7)</div>
       </div>
       <div style="display:flex; align-items:center; gap:8px">
-        <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Dự án:</span>
-        <select id="hist-project-select" onchange="switchProject(this.value)" class="topbar-select" style="background:var(--bg-card); color:var(--text-primary); border-color:var(--border)"></select>
-        <button type="button" class="btn btn-adhoc-trigger" onclick="openAdhocDefectModal()">🐞 Báo Lỗi Ngoài Kịch Bản</button>
         <button type="button" class="btn btn-outline btn-sm" onclick="printHistory()">🖨️ In Nhật Ký</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="exportHistoryHtml()">⬇️ Xuất File Báo Cáo</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="exportHistoryHtml()" style="background:#0d9488; border-color:#0f766e">⬇️ Xuất File Báo Cáo</button>
       </div>
     </div>
 
@@ -116,18 +106,18 @@
     <div class="hist-session-card">
       <div>
         <div class="hist-session-title">
-          <span>🎯 Phiên Kiểm Thử Hiện Tại: <span id="hist-session-name">Sprint 1 - Regression Test</span></span>
+          <span>🎯 Đợt Kiểm Thử Hiện Tại: <span id="hist-session-name">Sprint 1 - Regression Test</span></span>
           <span class="badge badge-pass" style="font-size:10px; background:#10b981; color:#fff">🟢 ĐANG HOẠT ĐỘNG</span>
         </div>
         <div class="hist-session-meta">
-          <span>👤 Quản trị / QA Lead: <strong id="hist-session-owner">Nguyễn Văn Huy</strong></span>
-          <span>💻 Phiên bản phần mềm: <strong id="hist-session-version">SmartVMS Local v2.0</strong></span>
+          <span>👤 Quản trị / QA Lead: <strong id="hist-session-owner">Hoàng Hải Đăng</strong></span>
+          <span>💻 Phiên bản phần mềm: <strong id="hist-session-version">v2.0</strong></span>
           <span>📑 Tiêu chuẩn: <strong>ISO 9001:2015 Clause 8.5.2 & ISO 29119-3</strong></span>
         </div>
-        <div class="hist-session-notes" id="hist-session-notes">Kiểm thử toàn diện 12 phân hệ nghiệp vụ và đối soát kết quả với đặc tả SRS.</div>
+        <div class="hist-session-notes" id="hist-session-notes">Kiểm thử toàn diện các phân hệ nghiệp vụ và đối soát kết quả với đặc tả SRS.</div>
       </div>
       <div style="text-align:right">
-        <a href="execution.html" class="btn btn-primary btn-sm" style="background:#38bdf8; color:#0f172a; font-weight:800; border:none">▶️ Tiếp Tục Thực Thi</a>
+        <a href="cycle.html" class="btn btn-primary btn-sm" style="background:#0d9488; color:#ffffff; font-weight:800; border:none">▶️ Vào Bàn Thực Thi (Studio)</a>
       </div>
     </div>
 
@@ -143,32 +133,28 @@
       <div class="stat-card stat-pass">
         <div class="stat-icon">✅</div>
         <div class="stat-body">
-          <div class="stat-value" id="kpi-hist-pass" style="color:var(--success)">0</div>
-          <div class="stat-label">Lượt Đạt (Pass)</div>
+          <div class="stat-value" id="kpi-hist-pass">0</div>
+          <div class="stat-label">Số lượt Đạt (Pass)</div>
         </div>
       </div>
       <div class="stat-card stat-fail">
         <div class="stat-icon">❌</div>
         <div class="stat-body">
-          <div class="stat-value" id="kpi-hist-fail" style="color:var(--danger)">0</div>
-          <div class="stat-label">Lượt Phát hiện Lỗi (Fail)</div>
+          <div class="stat-value" id="kpi-hist-fail">0</div>
+          <div class="stat-label">Số lượt Lỗi (Fail)</div>
         </div>
       </div>
-      <div class="stat-card stat-skip">
-        <div class="stat-icon">⏭</div>
+      <div class="stat-card" style="border-left:4px solid #f59e0b">
+        <div class="stat-icon">⏱️</div>
         <div class="stat-body">
-          <div class="stat-value" id="kpi-hist-skip" style="color:#d97706">0</div>
-          <div class="stat-label">Lượt Bỏ qua / Bị chặn</div>
+          <div class="stat-value" id="kpi-hist-avg-time">~3 phút</div>
+          <div class="stat-label">Thời gian trung bình / bài</div>
         </div>
       </div>
     </div>
 
     <!-- Filter Bar -->
     <div class="filter-bar">
-      <div class="filter-group">
-        <label>Phiên kiểm thử (Session)</label>
-        <select id="filter-hist-session" onchange="renderHistoryLogs()"></select>
-      </div>
       <div class="filter-group">
         <label>Phân hệ</label>
         <select id="filter-hist-module" onchange="renderHistoryLogs()"></select>
@@ -177,26 +163,33 @@
         <label>Đánh giá kết quả</label>
         <select id="filter-hist-status" onchange="renderHistoryLogs()">
           <option value="">Tất cả kết quả</option>
-          <option value="Pass">✅ Đã Đạt (Pass)</option>
-          <option value="Fail">❌ Bị Lỗi (Fail)</option>
-          <option value="Blocked">⛔ Bị chặn (Blocked)</option>
-          <option value="Skip">⏭ Bỏ qua (Skip)</option>
+          <option value="PASS">✅ Pass (Đạt)</option>
+          <option value="FAIL">❌ Fail (Lỗi)</option>
+          <option value="BLOCKED">⛔ Blocked (Bị chặn)</option>
+          <option value="SKIP">⏭ Skip (Bỏ qua)</option>
         </select>
+      </div>
+      <div class="filter-group">
+        <label>Đợt kiểm thử</label>
+        <select id="filter-hist-session" onchange="renderHistoryLogs()"></select>
       </div>
       <div class="filter-search-group">
         <label>Tìm kiếm nhật ký</label>
-        <input type="text" id="filter-hist-search" placeholder="🔍 Mã kịch bản, tiêu đề, ghi chú kết quả thực tế..." oninput="renderHistoryLogs()" />
+        <input type="text" id="filter-hist-search" placeholder="🔍 Mã test, tên kịch bản, kết quả thực tế..." oninput="renderHistoryLogs()" />
       </div>
       <div style="display:flex; align-items:flex-end">
         <button type="button" class="btn btn-outline btn-sm" onclick="resetHistoryFilters()">Đặt lại</button>
       </div>
     </div>
 
-    <!-- Execution Log Table Card -->
+    <!-- Audit Logs Table Card -->
     <div class="card" style="padding:0; overflow:hidden">
-      <div class="card-header" style="border-bottom:1px solid var(--border)">
+      <div class="card-header" style="border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
         <div style="font-weight:700; font-size:13px; color:var(--text-primary)">
-          📋 Nhật Ký Thực Thi Kiểm Thử Chi Tiết (<span id="hist-log-count">0</span> lượt chạy)
+          📜 Sổ Nhật Ký Kiểm Toán Thực Thi (Audit Trail — <span id="hist-log-count">0</span> lượt ghi nhận)
+        </div>
+        <div style="font-size:11.5px; color:var(--text-muted)">
+          Dữ liệu ghi nhận độc lập theo từng chu kỳ và lần chạy
         </div>
       </div>
       <div class="tc-table-wrapper">
@@ -251,16 +244,17 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../data/enterprise_projects_manifest.js?v=20261014_hist"></script>
-  <script src="../data/smartvms_test_catalog.js?v=20261014_hist"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../shared/js/vendor/xlsx.full.min.js"></script>
-  <script src="../shared/js/core.js?v=20261014_hist"></script>
+  <script src="../shared/js/core.js"></script>
   <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
-  <script src="../shared/js/adhoc-defect.js?v=20261014_hist"></script>
-  <script src="../shared/js/history.js?v=20261014_hist"></script>
+  <script src="../shared/js/adhoc-defect.js"></script>
+  <script src="../shared/js/history.js"></script>
+  <script src="js/tester-context.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      TesterContext.init();
       initHistoryModule();
     });
   </script>

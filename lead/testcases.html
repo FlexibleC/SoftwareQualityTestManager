@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kịch Bản Kiểm Thử - Không Gian Quản Trị Dự Án QA</title>
+  <title>Kịch bản kiểm thử - Không gian quản trị dự án QA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -14,69 +14,62 @@
 </head>
 <body>
 
-  <!-- Lead Topbar -->
+  <!-- Lead Topbar (Global Header) -->
   <header class="lead-topbar">
-    <div style="display:flex; align-items:center; gap:20px">
+    <div class="lead-topbar-left" style="display:flex; align-items:center; gap:20px">
       <a href="index.html" class="lead-brand-wrap">
         <div class="lead-brand-badge">👑</div>
         <div>
-          <h2 class="lead-brand-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</h2>
-          <span class="lead-brand-subtitle">Không Gian Quản Trị Viên Dự Án (Project Lead)</span>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án</span>
         </div>
       </a>
-
-      <!-- Navigation Pills -->
-      <nav class="lead-nav-pills" role="navigation">
-        <a href="index.html" class="lead-nav-pill">📊 Tổng quan Dự án</a>
-        <a href="testcases.html" class="lead-nav-pill active">📋 Kịch bản Kiểm thử</a>
-        <a href="assignments.html" class="lead-nav-pill">📌 Điều phối & Giao việc</a>
-        <a href="reports.html" class="lead-nav-pill">📈 Báo cáo Chất lượng</a>
-        <a href="settings.html" class="lead-nav-pill">⚙️ Cài đặt Dự án</a>
-      </nav>
     </div>
 
-    <div style="display:flex; align-items:center; gap:14px">
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
       <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
       
       <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
-        <div class="vms-user-avatar" style="background:#d97706">L</div>
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
-          <span class="vms-user-role" id="lead-user-role">Quản trị viên Dự án</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
+  <!-- Compact Project Navigation Bar (Tầng 2) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
   <!-- Main Container -->
   <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
-
-    <!-- Active Project Hero Banner -->
-    <div class="lead-project-hero" id="lead-project-hero">
-      <!-- Populated by lead-context.js -->
-    </div>
 
     <!-- Testcases Workspace Header & Toolbar -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px">
       <div>
         <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:8px">
-          📋 Thư Viện Kịch Bản Kiểm Thử Dự Án
-          <span class="badge badge-info" id="tc-total-count" style="font-size:12px">0 test cases</span>
+          📋 Thư viện kịch bản kiểm thử dự án
+          <span class="badge badge-info" id="tc-total-count" style="font-size:12px">0 kịch bản</span>
         </h2>
         <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-          Toàn bộ kịch bản được lưu trữ độc lập theo không gian dự án, phân loại theo Module và Chu kỳ kiểm thử.
+          Toàn bộ kịch bản được lưu trữ độc lập theo không gian dự án, phân loại theo phân hệ và chu kỳ kiểm thử.
         </div>
       </div>
 
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
         <button type="button" class="btn btn-primary btn-sm" onclick="openAddTcModal()">
-          ➕ Thêm Kịch Bản Mới
+          ➕ Thêm kịch bản mới
+        </button>
+
+        <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:rgba(220,38,38,0.35); font-weight:700" onclick="batchDeleteTcs()" title="Xóa các kịch bản đang được tích chọn">
+          🗑️ Xóa kịch bản đã chọn
         </button>
 
         <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0; background:rgba(34,197,94,0.1); border-color:#16a34a; color:#16a34a; font-weight:700" title="Nhập danh mục kịch bản từ file Excel chuẩn">
-          📗 Nhập Excel (.xlsx)
+          📗 Nhập Excel
           <input type="file" id="tc-excel-file-input" accept=".xlsx, .xls" style="display:none" onchange="handleExcelImport(event)" />
         </label>
 
@@ -86,20 +79,42 @@
       </div>
     </div>
 
-    <!-- Filter & Search Toolbar -->
-    <div class="card" style="padding:14px 18px; margin-bottom:18px">
-      <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr 1fr auto; gap:12px; align-items:center">
+    <!-- Filter & Search Toolbar (Đồng bộ đa chiều Phiên bản, Đợt test, Phân hệ & Giao việc) -->
+    <div class="card" style="padding:16px 20px; margin-bottom:18px">
+      <!-- Dòng 1: Tìm kiếm, Lọc Phiên bản & Đợt kiểm thử, Nút điều hướng Giao việc -->
+      <div style="display:grid; grid-template-columns: 1.5fr 1fr 1.2fr auto; gap:12px; align-items:center; margin-bottom:12px">
         <div>
           <input 
             type="text" 
             id="filter-search" 
             class="form-control" 
-            placeholder="🔍 Tìm theo Mã TC, Tên kịch bản, Dữ liệu test..." 
+            placeholder="🔍 Tìm theo mã kịch bản, tên kịch bản, dữ liệu kiểm thử..." 
             oninput="renderTestcasesTable()"
             style="font-size:12.5px"
           />
         </div>
 
+        <div>
+          <select id="filter-version" class="form-control" onchange="handleVersionFilterChange()" style="font-size:12.5px; font-weight:700; color:var(--text-primary)">
+            <option value="">-- Tất cả phiên bản --</option>
+          </select>
+        </div>
+
+        <div>
+          <select id="filter-cycle" class="form-control" onchange="renderTestcasesTable()" style="font-size:12.5px; font-weight:700; color:var(--primary)">
+            <option value="">-- Tất cả đợt kiểm thử --</option>
+          </select>
+        </div>
+
+        <div>
+          <a id="btn-quick-goto-asg" href="assignments.html" class="btn btn-primary btn-sm" style="font-weight:700; padding:6px 14px" title="Chuyển sang màn hình giao việc và phân công đợt này">
+            🚀 Giao việc đợt này ➔
+          </a>
+        </div>
+      </div>
+
+      <!-- Dòng 2: Lọc Phân hệ, Mức ưu tiên, Trạng thái thực thi, Người được phân công & Nút Reset -->
+      <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr 1.2fr auto; gap:12px; align-items:center">
         <div>
           <select id="filter-module" class="form-control" onchange="renderTestcasesTable()" style="font-size:12.5px; font-weight:600">
             <option value="">Tất cả phân hệ</option>
@@ -109,20 +124,28 @@
         <div>
           <select id="filter-priority" class="form-control" onchange="renderTestcasesTable()" style="font-size:12.5px">
             <option value="">Tất cả mức độ ưu tiên</option>
-            <option value="CRITICAL">🔴 Critical (Khẩn cấp)</option>
-            <option value="HIGH">🟠 High (Cao)</option>
-            <option value="MEDIUM">🟡 Medium (Trung bình)</option>
-            <option value="LOW">🟢 Low (Thấp)</option>
+            <option value="CRITICAL">🔴 Khẩn cấp (P1)</option>
+            <option value="HIGH">🟠 Cao (P2)</option>
+            <option value="MEDIUM">🟡 Trung bình (P3)</option>
+            <option value="LOW">🟢 Thấp (P4)</option>
           </select>
         </div>
 
         <div>
           <select id="filter-status" class="form-control" onchange="renderTestcasesTable()" style="font-size:12.5px">
             <option value="">Tất cả trạng thái</option>
-            <option value="PASS">✅ Pass (Đạt)</option>
-            <option value="FAIL">❌ Fail (Lỗi)</option>
-            <option value="BLOCKED">🚫 Blocked (Bị chặn)</option>
-            <option value="Not Run">⏳ Not Run (Chưa chạy)</option>
+            <option value="PASS">✅ Đạt</option>
+            <option value="FAIL">❌ Không đạt</option>
+            <option value="BLOCKED">⛔ Bị nghẽn</option>
+            <option value="Not Run">⚪ Chưa chạy</option>
+          </select>
+        </div>
+
+        <div>
+          <select id="filter-assignee" class="form-control" onchange="renderTestcasesTable()" style="font-size:12.5px; font-weight:600">
+            <option value="">-- Tất cả người kiểm thử --</option>
+            <option value="__UNASSIGNED__">⚠️ Chưa phân công</option>
+            <option value="__ASSIGNED__">👤 Đã phân công</option>
           </select>
         </div>
 
@@ -134,21 +157,22 @@
       </div>
     </div>
 
-    <!-- Main Testcases Table -->
+    <!-- Main Testcases Table (Đầy đủ 9 cột chuẩn Enterprise) -->
     <div class="card" style="overflow:hidden">
       <table class="tc-table asg-tc-table" style="table-layout:auto; width:100%">
         <thead>
           <tr>
-            <th style="width:40px; text-align:center">
+            <th style="width:36px; text-align:center">
               <input type="checkbox" title="Chọn tất cả" />
             </th>
-            <th style="width:110px">Mã TC</th>
-            <th style="width:170px">Phân Hệ</th>
-            <th>Tên Kịch Bản Kiểm Thử & Mục Tiêu Thẩm Định</th>
-            <th style="width:110px; text-align:center">Loại</th>
-            <th style="width:105px; text-align:center">Mức Độ</th>
-            <th style="width:115px; text-align:center">Kết Quả</th>
-            <th style="width:140px; text-align:center">Thao Tác</th>
+            <th style="width:115px; text-align:center">Mã kịch bản</th>
+            <th style="width:90px; text-align:center">Ưu tiên</th>
+            <th style="width:105px; text-align:center">Phân hệ</th>
+            <th style="width:125px; text-align:center">Loại và bộ kịch bản</th>
+            <th>Tên kịch bản kiểm thử và đặc tả</th>
+            <th style="width:110px; text-align:center">Kết quả</th>
+            <th style="width:145px">Người kiểm thử</th>
+            <th style="width:160px; text-align:center">Thao tác</th>
           </tr>
         </thead>
         <tbody id="tc-table-body">
@@ -164,7 +188,7 @@
     <div class="modal-box" style="max-width:760px">
       <div class="modal-header">
         <h3 id="modal-tc-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          Biên Soạn Kịch Bản Kiểm Thử
+          Biên soạn kịch bản kiểm thử
         </h3>
         <button type="button" class="btn-close" onclick="closeModal('modal-tc-form')">✕</button>
       </div>
@@ -174,79 +198,79 @@
 
         <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
           <div>
-            <label class="form-label" style="font-weight:700">Mã Kịch Bản (*)</label>
+            <label class="form-label" style="font-weight:700">Mã kịch bản (*)</label>
             <input type="text" id="tc-form-id" class="form-control" placeholder="TC_MOD_001" required />
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Phân Hệ Trực Thuộc (*)</label>
+            <label class="form-label" style="font-weight:700">Phân hệ trực thuộc (*)</label>
             <select id="tc-form-module" class="form-control" required></select>
           </div>
         </div>
 
         <div>
-          <label class="form-label" style="font-weight:700">Tên Kịch Bản Kiểm Thử (*)</label>
+          <label class="form-label" style="font-weight:700">Tên kịch bản kiểm thử (*)</label>
           <input type="text" id="tc-form-name" class="form-control" placeholder="Tên tóm tắt mục tiêu kiểm thử..." required />
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">
           <div>
-            <label class="form-label" style="font-weight:700">Mức Độ Ưu Tiên</label>
+            <label class="form-label" style="font-weight:700">Mức độ ưu tiên</label>
             <select id="tc-form-priority" class="form-control">
-              <option value="CRITICAL">🔴 Critical</option>
-              <option value="HIGH" selected>🟠 High</option>
-              <option value="MEDIUM">🟡 Medium</option>
-              <option value="LOW">🟢 Low</option>
+              <option value="CRITICAL">🔴 Khẩn cấp (P1)</option>
+              <option value="HIGH" selected>🟠 Cao (P2)</option>
+              <option value="MEDIUM">🟡 Trung bình (P3)</option>
+              <option value="LOW">🟢 Thấp (P4)</option>
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Loại Kiểm Thử</label>
+            <label class="form-label" style="font-weight:700">Loại kiểm thử</label>
             <select id="tc-form-type" class="form-control">
               <option value="Chức năng" selected>Chức năng</option>
-              <option value="Giao diện">Giao diện (UI)</option>
+              <option value="Giao diện">Giao diện người dùng</option>
               <option value="Bảo mật">Bảo mật</option>
               <option value="Hiệu năng">Hiệu năng</option>
               <option value="Luồng E2E">Luồng E2E</option>
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Bộ Kiểm Thử (Suite)</label>
+            <label class="form-label" style="font-weight:700">Bộ kịch bản kiểm thử</label>
             <select id="tc-form-suite" class="form-control">
-              <option value="SMOKE">Smoke Test</option>
-              <option value="REGRESSION" selected>Regression Test</option>
-              <option value="ACCEPTANCE">Nghiệm thu (UAT)</option>
+              <option value="SMOKE">Kiểm thử Smoke</option>
+              <option value="REGRESSION" selected>Kiểm thử hồi quy</option>
+              <option value="ACCEPTANCE">Nghiệm thu UAT</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label class="form-label" style="font-weight:700">Tiền Điều Kiện (Pre-conditions)</label>
-          <textarea id="tc-form-precondition" class="form-control" rows="2" placeholder="Ví dụ: Đã đăng nhập với tài khoản có quyền Quản trị..."></textarea>
+          <label class="form-label" style="font-weight:700">Tiền điều kiện</label>
+          <textarea id="tc-form-precondition" class="form-control" rows="2" placeholder="Ví dụ: Đã đăng nhập với tài khoản có quyền quản trị..."></textarea>
         </div>
 
         <div>
-          <label class="form-label" style="font-weight:700">Các Bước Thực Hiện (Test Steps)</label>
-          <textarea id="tc-form-steps" class="form-control" rows="4" placeholder="1. Mở màn hình...&#10;2. Nhập dữ liệu...&#10;3. Nhấp nút Xác nhận..."></textarea>
+          <label class="form-label" style="font-weight:700">Các bước thực hiện</label>
+          <textarea id="tc-form-steps" class="form-control" rows="4" placeholder="1. Mở màn hình...&#10;2. Nhập dữ liệu...&#10;3. Nhấp nút xác nhận..."></textarea>
         </div>
 
         <div>
-          <label class="form-label" style="font-weight:700">Kết Quả Mong Đợi (Expected Results)</label>
+          <label class="form-label" style="font-weight:700">Kết quả mong đợi</label>
           <textarea id="tc-form-expected" class="form-control" rows="2" placeholder="Hệ thống hiển thị thông báo thành công và cập nhật bản ghi..."></textarea>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
           <div>
-            <label class="form-label" style="font-weight:700">Dữ Liệu Kiểm Thử (Test Data)</label>
+            <label class="form-label" style="font-weight:700">Dữ liệu kiểm thử</label>
             <input type="text" id="tc-form-data" class="form-control" placeholder="User: admin, Pass: 123..." />
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Ghi Chú Kỹ Thuật (Notes / ISO 9001)</label>
+            <label class="form-label" style="font-weight:700">Ghi chú kỹ thuật</label>
             <input type="text" id="tc-form-notes" class="form-control" placeholder="Ghi chú về phiên bản hoặc tiêu chuẩn..." />
           </div>
         </div>
       </div>
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-tc-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="saveTcForm()">💾 Lưu Kịch Bản</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveTcForm()">💾 Lưu kịch bản</button>
       </div>
     </div>
   </div>
@@ -256,7 +280,7 @@
     <div class="modal-box" style="max-width:820px">
       <div class="modal-header">
         <h3 id="modal-asg-tc-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          Bản Mô Tả Chi Tiết Kịch Bản Kiểm Thử
+          Bản mô tả chi tiết kịch bản kiểm thử
         </h3>
         <button type="button" class="btn-close" onclick="closeModal('modal-asg-tc-detail')">✕</button>
       </div>
@@ -286,7 +310,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
-      LeadContext.init();
+      LeadContext.init('testcases');
       initTestcasesModule();
     });
 

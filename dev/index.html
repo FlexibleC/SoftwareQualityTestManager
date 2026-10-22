@@ -3,280 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trung Tâm Xử Lý Lỗi - Dev QA Hub</title>
+  <title>Bàn điều hành danh mục dự án - Lập trình viên</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../shared/css/base.css" />
-  <link rel="stylesheet" href="../shared/css/testcases.css" />
-  <script>
-    if (window.location.pathname === '/dev') {
-      window.location.replace('/dev/');
-    }
-  </script>
-  <style>
-    .dev-kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .dev-kpi-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: var(--shadow-sm);
-    }
-    .dev-kpi-icon {
-      font-size: 26px;
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-body);
-      flex-shrink: 0;
-    }
-    .dev-kpi-val {
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1.1;
-      color: var(--text-primary);
-    }
-    .dev-kpi-lbl {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      margin-top: 2px;
-    }
-    .severity-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .sev-critical { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-    .sev-high { background: #ffedd5; color: #ea580c; border: 1px solid #fdba74; }
-    .sev-medium { background: #fef9c3; color: #ca8a04; border: 1px solid #fde047; }
-    .sev-low { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-  </style>
+  <link rel="stylesheet" href="css/dev-theme.css" />
 </head>
 <body>
-  <!-- Dev Topbar -->
-  <header class="vms-topbar">
-    <div class="vms-topbar-left">
-      <a href="index.html" class="vms-brand">
-        <div class="vms-brand-icon">💻</div>
-        <div class="vms-brand-text">
-          <span class="vms-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</span>
-          <span class="vms-subtitle">Không Gian Xử Lý Lỗi (Developer Bug Tracker)</span>
+
+  <!-- Developer Topbar -->
+  <header class="dev-topbar">
+    <div class="dev-topbar-left">
+      <a href="index.html" class="dev-brand-wrap" title="Hệ thống kiểm thử & quản lý chất lượng phần mềm">
+        <div class="dev-brand-badge">💻</div>
+        <div>
+          <h2 class="dev-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="dev-brand-subtitle">Không gian làm việc lập trình viên</span>
         </div>
       </a>
-      <nav class="vms-nav-container">
-        <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item active">🐛 Xử lý lỗi</a>
-          <a href="execution.html" class="nav-item">🔍 Tái hiện bug</a>
-          <a href="reports.html" class="nav-item">📈 Báo cáo</a>
-        </div>
-      </nav>
+      <div class="dev-header-divider"></div>
+      <div id="dev-breadcrumb-container"></div>
     </div>
 
-    <div class="vms-topbar-right">
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-      <div class="vms-user-profile">
-        <div class="vms-user-avatar">D</div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+
+      <div class="vms-user-profile" title="Tài khoản Lập trình viên">
+        <div class="vms-user-avatar" id="dev-user-avatar" style="background:#0284c7">D</div>
         <div class="vms-user-info">
-          <span class="vms-user-name">Trần Quốc Tuấn</span>
-          <span class="vms-user-role">Lập trình viên (Dev)</span>
+          <span class="vms-user-name" id="dev-user-name">--</span>
+          <span class="vms-user-role">Lập trình viên</span>
         </div>
       </div>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')" title="Chuyển sang vai trò Admin">👑 Sang Admin</button>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('tester')" title="Chuyển sang vai trò Tester">🧪 Sang Tester</button>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="main-wrapper">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px">
+  <!-- Main Container: Portfolio Hub (Tier 0) -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+
+    <!-- Portfolio Header Strip -->
+    <div class="dev-header-strip">
       <div>
-        <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">🐛 Trung Tâm Quản Lý & Khắc Phục Lỗi (Defect Tracking)</h2>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tiếp nhận báo cáo lỗi từ Tester, tái hiện hành vi và cập nhật tiến độ bản vá</div>
+        <div style="font-size:11px; color:#0284c7; font-weight:800; letter-spacing:0.3px; margin-bottom:2px">
+          Tầng 0: Bàn điều hành danh mục dự án phụ trách
+        </div>
+        <h1 style="font-size:22px; font-weight:800; color:var(--text-primary); margin:0">
+          Danh mục dự án bạn tham gia phát triển
+        </h1>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0">
+          Theo dõi tổng quan lỗi phần mềm, chỉ số khắc phục sự cố và điều phối bản vá trên tất cả các dự án được phân bổ.
+        </p>
       </div>
+
       <div style="display:flex; align-items:center; gap:8px">
-        <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Dự án:</span>
-        <select id="dev-project-select" onchange="switchProject(this.value)" class="topbar-select" style="background:var(--bg-card); color:var(--text-primary); border-color:var(--border)"></select>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-view-table" onclick="DevPortfolio.switchViewMode('table')">
+          📋 Bảng chi tiết
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="btn-view-cards" onclick="DevPortfolio.switchViewMode('cards')">
+          🗂️ Dạng thẻ
+        </button>
+        <a href="reports.html" class="btn btn-outline btn-sm">
+          📈 Báo cáo kỹ thuật
+        </a>
       </div>
     </div>
 
-    <!-- Dev KPI Grid -->
+    <!-- 5 Executive KPIs -->
     <div class="dev-kpi-grid">
-      <div class="dev-kpi-card" style="border-left:4px solid #dc2626; cursor:pointer" onclick="filterDevStatus('New')">
-        <div class="dev-kpi-icon">🔴</div>
+      <div class="dev-kpi-card" style="border-left:4px solid #0284c7">
+        <div class="dev-kpi-icon" style="background:rgba(2, 132, 199, 0.12); color:#0284c7">🏢</div>
         <div>
-          <div class="dev-kpi-val" id="dev-kpi-new" style="color:#dc2626">0</div>
-          <div class="dev-kpi-lbl">Lỗi Mới Cần Xử Lý</div>
+          <div class="dev-kpi-val" id="dev-kpi-projects">0</div>
+          <div class="dev-kpi-lbl">Dự án tham gia</div>
         </div>
       </div>
-      <div class="dev-kpi-card" style="border-left:4px solid #f59e0b; cursor:pointer" onclick="filterDevStatus('In Progress')">
-        <div class="dev-kpi-icon">🟡</div>
+
+      <div class="dev-kpi-card" style="border-left:4px solid #64748b">
+        <div class="dev-kpi-icon" style="background:rgba(100, 116, 139, 0.12); color:#64748b">📦</div>
         <div>
-          <div class="dev-kpi-val" id="dev-kpi-wip" style="color:#f59e0b">0</div>
-          <div class="dev-kpi-lbl">Đang Sửa (In Progress)</div>
+          <div class="dev-kpi-val" id="dev-kpi-total-bugs">0</div>
+          <div class="dev-kpi-lbl">Tổng lỗi tồn đọng</div>
         </div>
       </div>
-      <div class="dev-kpi-card" style="border-left:4px solid #b91c1c; cursor:pointer" onclick="filterDevStatus('Reopened')">
-        <div class="dev-kpi-icon">🔥</div>
+
+      <div class="dev-kpi-card" style="border-left:4px solid #dc2626">
+        <div class="dev-kpi-icon" style="background:rgba(220, 38, 38, 0.12); color:#dc2626">🔴</div>
+        <div>
+          <div class="dev-kpi-val" id="dev-kpi-blocker" style="color:#dc2626">0</div>
+          <div class="dev-kpi-lbl">Lỗi Blocker / Critical</div>
+        </div>
+      </div>
+
+      <div class="dev-kpi-card" style="border-left:4px solid #b91c1c">
+        <div class="dev-kpi-icon" style="background:rgba(185, 28, 28, 0.12); color:#b91c1c">🔥</div>
         <div>
           <div class="dev-kpi-val" id="dev-kpi-reopened" style="color:#b91c1c">0</div>
-          <div class="dev-kpi-lbl">Lỗi Tái Phát (Reopened)</div>
+          <div class="dev-kpi-lbl">Lỗi tái phát</div>
         </div>
       </div>
-      <div class="dev-kpi-card" style="border-left:4px solid #8b5cf6; cursor:pointer" onclick="filterDevStatus('Fixed')">
-        <div class="dev-kpi-icon">🔄</div>
+
+      <div class="dev-kpi-card" style="border-left:4px solid #7c3aed">
+        <div class="dev-kpi-icon" style="background:rgba(124, 58, 237, 0.12); color:#7c3aed">🔄</div>
         <div>
           <div class="dev-kpi-val" id="dev-kpi-fixed" style="color:#7c3aed">0</div>
-          <div class="dev-kpi-lbl">Đã Fix (Chờ Re-test)</div>
-        </div>
-      </div>
-      <div class="dev-kpi-card" style="border-left:4px solid #64748b">
-        <div class="dev-kpi-icon">📦</div>
-        <div>
-          <div class="dev-kpi-val" id="dev-kpi-total">0</div>
-          <div class="dev-kpi-lbl">Tổng Số Bug Đã Ghi Nhận</div>
+          <div class="dev-kpi-lbl">Đã sửa chờ kiểm tra lại</div>
         </div>
       </div>
     </div>
 
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <div class="filter-group">
-        <label>Trạng thái Bug</label>
-        <select id="dev-filter-status" onchange="renderDefectList()">
-          <option value="">Tất cả trạng thái</option>
-          <option value="New">🔴 Lỗi mới (New)</option>
-          <option value="In Progress">🟡 Đang xử lý (In Progress)</option>
-          <option value="Reopened">🔥 Lỗi tái phát (Reopened)</option>
-          <option value="Fixed">🔄 Đã khắc phục (Chờ Re-test)</option>
-          <option value="Closed">🏁 Đã đóng (Closed)</option>
-        </select>
+    <!-- Urgent Triage Notification Callout -->
+    <div id="dev-urgent-banner-wrap"></div>
+
+    <!-- Search & Filter Bar -->
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:10px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
+      <div style="flex:1; min-width:240px; max-width:400px">
+        <input type="text" id="dev-search-input" class="form-control" placeholder="🔍 Tìm kiếm tên dự án, mã dự án..." oninput="DevPortfolio.renderProjects()" style="font-size:12.5px" />
       </div>
-      <div class="filter-group">
-        <label>Mức nghiêm trọng</label>
-        <select id="dev-filter-severity" onchange="renderDefectList()">
-          <option value="">Tất cả mức độ</option>
-          <option value="Critical">Critical - Nghiêm trọng</option>
-          <option value="High">High - Cao</option>
-          <option value="Medium">Medium - Trung bình</option>
-          <option value="Low">Low - Thấp</option>
-        </select>
-      </div>
-      <div class="filter-search-group">
-        <label>Tìm kiếm</label>
-        <input type="text" id="dev-filter-search" placeholder="🔍 Tìm kiếm mã lỗi, mô tả, module..." oninput="renderDefectList()" />
-      </div>
-      <div style="display:flex; align-items:flex-end">
-        <button type="button" class="btn btn-outline btn-sm" onclick="resetDevFilters()">Đặt lại</button>
+      <div style="font-size:12px; color:var(--text-muted); font-weight:600">
+        💡 Nhấp vào dự án để xem các phiên bản và đợt kiểm thử đang phát sinh lỗi
       </div>
     </div>
 
-    <!-- Defect Table Card -->
-    <div class="card" style="padding:0; overflow:hidden">
-      <div class="card-header" style="border-bottom:1px solid var(--border)">
-        <div style="font-weight:700; font-size:13px; color:var(--text-primary)">
-          🐛 Danh Sách Lỗi & Sự Cố Cần Khắc Phục (<span id="defect-count">0</span>)
-        </div>
-      </div>
-      <div class="tc-table-wrapper">
-        <table class="tc-table">
-          <thead>
-            <tr>
-              <th style="width:110px">Mã Kịch Bản</th>
-              <th style="width:90px">Phân Hệ</th>
-              <th>Tiêu Đề Kịch Bản & Mô Tả Lỗi</th>
-              <th style="width:110px; text-align:center">Nghiêm Trọng</th>
-              <th style="width:120px; text-align:center">Trạng Thái Bug</th>
-              <th style="width:140px">Người Phát Hiện</th>
-              <th style="width:150px; text-align:center">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody id="defect-table-body">
-            <!-- Dynamically populated -->
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- Main Portfolio Project Grid / Table Container -->
+    <div id="dev-portfolio-container"></div>
+
   </main>
-
-  <!-- Modal Cập Nhật Trạng Thái Bug (ISO 29119-3 Defect Resolution) -->
-  <div class="modal-overlay" id="modal-bug-status" onclick="closeModal('modal-bug-status')">
-    <div class="modal-dialog modal-lg" onclick="event.stopPropagation()" style="max-width:650px">
-      <div class="modal-header">
-        <h3 id="modal-bug-title">Cập Nhật Trạng Thái Khắc Phục Bug (ISO 29119-3)</h3>
-        <button class="modal-close" onclick="closeModal('modal-bug-status')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="bug-modal-tcid" />
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
-          <div class="form-group">
-            <label style="font-weight:700; font-size:12px">Trạng thái xử lý vòng đời bug:</label>
-            <select id="bug-modal-status" class="form-control" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:var(--text-primary)">
-              <option value="New">🔴 New - Lỗi mới tiếp nhận</option>
-              <option value="In Progress">🟡 In Progress - Đang sửa code</option>
-              <option value="Fixed">🟢 Fixed - Đã sửa, chờ Tester kiểm thử lại</option>
-              <option value="Resolved">🔧 Resolved - Đã giải quyết</option>
-              <option value="Closed">🏁 Closed - Đóng lỗi</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label style="font-weight:700; font-size:12px">Phiên bản vá lỗi mục tiêu (Fix Version):</label>
-            <input type="text" id="bug-modal-fix-version" class="form-control" placeholder="VD: v2.0.1, Hotfix-03" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:var(--text-primary)" />
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
-          <div class="form-group">
-            <label style="font-weight:700; font-size:12px">Phân loại nguyên nhân gốc rễ (RCA):</label>
-            <select id="bug-modal-rca-category" class="form-control" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:var(--text-primary)">
-              <option value="Logic Backend API">Logic Backend API / Xử lý nghiệp vụ</option>
-              <option value="Giao diện Frontend">Lỗi giao diện Web UI / JavaScript</option>
-              <option value="Thiết bị phần cứng Barie/Camera">Ngắt kết nối Socket / Thiết bị Barie, Camera, Đầu đọc</option>
-              <option value="CSDL & Migration">Lỗi ràng buộc CSDL / Thiếu chỉ mục / Schema</option>
-              <option value="Hiệu năng / Quá tải">Quá tải / Tràn bộ nhớ / Timeout</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label style="font-weight:700; font-size:12px">Mã Git Commit / Pull Request:</label>
-            <input type="text" id="bug-modal-commit" class="form-control" placeholder="VD: commit a8f9c1e hoặc PR #42" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:var(--text-primary)" />
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-bottom:12px">
-          <label style="font-weight:700; font-size:12px">Chi tiết phân tích nguyên nhân gốc rễ (Root Cause Analysis):</label>
-          <input type="text" id="bug-modal-rca-desc" class="form-control" placeholder="Mô tả tóm tắt nguyên nhân xảy ra lỗi..." style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:var(--text-primary)" />
-        </div>
-
-        <div class="form-group" style="margin-bottom:12px">
-          <label style="font-weight:700; font-size:12px">Ghi chú giải pháp kỹ thuật / Hướng dẫn Tester kiểm thử lại:</label>
-          <textarea id="bug-modal-notes" rows="3" class="form-control" placeholder="Nhập ghi chú giải pháp đã áp dụng và lưu ý khi retest..." style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:var(--text-primary)"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModal('modal-bug-status')">Hủy</button>
-        <button class="btn btn-primary" onclick="saveBugStatus()">💾 Lưu Cập Nhật Bản Vá</button>
-      </div>
-    </div>
-  </div>
 
   <div class="toast" id="toast"></div>
 
@@ -286,254 +140,12 @@
   <script src="../data/smartvms_test_catalog.js"></script>
   <script src="../shared/js/core.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
+  <script src="js/dev-context.js"></script>
+  <script src="js/dev-portfolio.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      initCoreState();
-      populateProjectSelect();
-      renderDefectList();
+      DevPortfolio.init();
     });
-
-    function populateProjectSelect() {
-      const sel = document.getElementById('dev-project-select');
-      if (!sel) return;
-      sel.innerHTML = '';
-      getAllProjects().forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        if (p.id === state.activeProjectId) opt.selected = true;
-        sel.appendChild(opt);
-      });
-    }
-
-    function filterDevStatus(st) {
-      const sel = document.getElementById('dev-filter-status');
-      if (sel) {
-        sel.value = st || '';
-        renderDefectList();
-      }
-    }
-
-    function resetDevFilters() {
-      document.getElementById('dev-filter-status').value = '';
-      document.getElementById('dev-filter-severity').value = '';
-      document.getElementById('dev-filter-search').value = '';
-      renderDefectList();
-    }
-
-    function getDefectsList() {
-      if (typeof getProjectDefects === 'function') {
-        return getProjectDefects(state.activeProjectId);
-      }
-      const allTcs = getAllTcs();
-      const tcMap = {};
-      allTcs.forEach(t => { tcMap[t.id] = t; });
-
-      const defects = [];
-      Object.keys(state.results || {}).forEach(tcId => {
-        const res = state.results[tcId];
-        if (res && (res.status === 'Fail' || res.status === 'FAILED' || res.failReason || (res.defectStatus && res.defectStatus !== 'None'))) {
-          const tc = tcMap[tcId] || { title: tcId, module: 'M01', priority: 'P2' };
-          defects.push({
-            tcId: tcId,
-            module: tc.module || 'M01',
-            tcTitle: tc.title || tc.name || tcId,
-            failReason: res.failReason || 'Phát hiện lỗi khi thực thi kịch bản kiểm thử',
-            severity: res.severity || 'Critical',
-            defectStatus: res.defectStatus || 'New',
-            tester: res.tester || 'Kiểm thử viên',
-            runAt: res.runAt,
-            devNotes: res.devNotes || '',
-            fixVersion: res.fixVersion || '',
-            commitHash: res.commitHash || '',
-            rca: res.rca || ''
-          });
-        }
-      });
-      return defects;
-    }
-
-    function renderDefectList() {
-      const tbody = document.getElementById('defect-table-body');
-      if (!tbody) return;
-
-      const defects = getDefectsList();
-
-      // Calculate KPI
-      let newCount = 0;
-      let wipCount = 0;
-      let reopenedCount = 0;
-      let fixedCount = 0;
-      defects.forEach(d => {
-        if (d.defectStatus === 'New') newCount++;
-        else if (d.defectStatus === 'In Progress') wipCount++;
-        else if (d.defectStatus === 'Reopened') reopenedCount++;
-        else if (d.defectStatus === 'Fixed' || d.defectStatus === 'Resolved') fixedCount++;
-      });
-
-      document.getElementById('dev-kpi-new').textContent = newCount;
-      document.getElementById('dev-kpi-wip').textContent = wipCount;
-      if (document.getElementById('dev-kpi-reopened')) {
-        document.getElementById('dev-kpi-reopened').textContent = reopenedCount;
-      }
-      document.getElementById('dev-kpi-fixed').textContent = fixedCount;
-      document.getElementById('dev-kpi-total').textContent = defects.length;
-
-      const stVal = document.getElementById('dev-filter-status')?.value || '';
-      const sevVal = document.getElementById('dev-filter-severity')?.value || '';
-      const kw = (document.getElementById('dev-filter-search')?.value || '').trim().toLowerCase();
-
-      const filtered = defects.filter(d => {
-        if (stVal) {
-          if (stVal === 'Fixed') {
-            if (d.defectStatus !== 'Fixed' && d.defectStatus !== 'Resolved') return false;
-          } else if (d.defectStatus !== stVal) {
-            return false;
-          }
-        }
-        if (sevVal && d.severity !== sevVal) return false;
-        if (kw) {
-          const m1 = (d.tcId || '').toLowerCase().includes(kw);
-          const m2 = (d.tcTitle || '').toLowerCase().includes(kw);
-          const m3 = (d.failReason || '').toLowerCase().includes(kw);
-          if (!m1 && !m2 && !m3) return false;
-        }
-        return true;
-      });
-
-      document.getElementById('defect-count').textContent = filtered.length;
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted)">Không có lỗi nào phù hợp với bộ lọc hiện tại của dự án này.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(d => {
-        let sevClass = 'sev-critical';
-        if (d.severity === 'High') sevClass = 'sev-high';
-        else if (d.severity === 'Medium') sevClass = 'sev-medium';
-        else if (d.severity === 'Low') sevClass = 'sev-low';
-
-        let stBadge = '<span class="tc-badge" style="background:#fee2e2; color:#dc2626">🔴 New</span>';
-        if (d.defectStatus === 'In Progress') {
-          stBadge = '<span class="tc-badge" style="background:#fef3c7; color:#d97706">🟡 Đang sửa</span>';
-        } else if (d.defectStatus === 'Reopened') {
-          stBadge = '<span class="tc-badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #ef4444; font-weight:800">🔥 Reopened</span>';
-        } else if (d.defectStatus === 'Fixed' || d.defectStatus === 'Resolved') {
-          stBadge = '<span class="tc-badge" style="background:#f3e8ff; color:#7c3aed; border:1px solid #c084fc; font-weight:800">🔄 Đã fix (Chờ Re-test)</span>';
-        } else if (d.defectStatus === 'Closed') {
-          stBadge = '<span class="tc-badge" style="background:#f1f5f9; color:#475569">🏁 Đã đóng</span>';
-        }
-
-        return `
-          <tr ${d.defectStatus === 'Reopened' ? 'style="background:rgba(239, 68, 68, 0.04)"' : ''}>
-            <td><strong style="color:var(--primary); font-family:monospace; font-size:12px">${escapeHtml(d.tcId)}</strong></td>
-            <td><span class="tc-badge" style="background:#e0e7ff; color:#3730a3; font-weight:700">${escapeHtml(d.module)}</span></td>
-            <td>
-              <div style="font-weight:700; color:var(--text-primary); font-size:12px">${escapeHtml(d.tcTitle)}</div>
-              <div style="font-size:11px; color:#dc2626; margin-top:2px; line-height:1.4"><strong>Lỗi:</strong> ${escapeHtml(d.failReason)}</div>
-              ${d.fixVersion ? `<div style="font-size:11px; color:#7c3aed; margin-top:2px"><strong>Bản vá:</strong> ${escapeHtml(d.fixVersion)} ${d.commitHash ? `(${escapeHtml(d.commitHash)})` : ''}</div>` : ''}
-              ${d.devNotes ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px"><em>Ghi chú fix: ${escapeHtml(d.devNotes)}</em></div>` : ''}
-            </td>
-            <td style="text-align:center"><span class="severity-badge ${sevClass}">${escapeHtml(d.severity)}</span></td>
-            <td style="text-align:center">${stBadge}</td>
-            <td style="font-size:12px">${escapeHtml(d.tester)}</td>
-            <td style="text-align:center">
-              <div style="display:inline-flex; align-items:center; gap:6px">
-                <a href="execution.html?tc=${d.tcId}" class="btn btn-outline btn-xs" title="Tái hiện bug">🔍 Tái Hiện</a>
-                <button type="button" class="btn btn-primary btn-xs" onclick="openBugStatusModal('${d.tcId}')">🛠️ Fix</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function openBugStatusModal(tcId) {
-      const res = (typeof getResultForTc === 'function') 
-        ? getResultForTc(tcId, state.activeProjectId) 
-        : (state.results ? state.results[tcId] : null);
-      if (!res) {
-        showToast('⚠️ Không tìm thấy bản ghi kết quả của kịch bản này!', 'error');
-        return;
-      }
-      document.getElementById('bug-modal-tcid').value = tcId;
-      document.getElementById('modal-bug-title').textContent = `Cập Nhật Trạng Thái: [${tcId}]`;
-      document.getElementById('bug-modal-status').value = res.defectStatus || 'New';
-      document.getElementById('bug-modal-fix-version').value = res.fixVersion || 'v2.0.1';
-      document.getElementById('bug-modal-rca-category').value = res.defectCategory || 'Logic Backend API';
-      document.getElementById('bug-modal-commit').value = res.commitHash || '';
-      document.getElementById('bug-modal-rca-desc').value = res.rca || '';
-      document.getElementById('bug-modal-notes').value = res.devNotes || '';
-      openModal('modal-bug-status');
-    }
-
-    function saveBugStatus() {
-      const tcId = document.getElementById('bug-modal-tcid').value;
-      const status = document.getElementById('bug-modal-status').value;
-      const fixVersion = document.getElementById('bug-modal-fix-version').value.trim();
-      const defectCategory = document.getElementById('bug-modal-rca-category').value;
-      const commitHash = document.getElementById('bug-modal-commit').value.trim();
-      const rca = document.getElementById('bug-modal-rca-desc').value.trim();
-      const notes = document.getElementById('bug-modal-notes').value.trim();
-
-      const res = (typeof getResultForTc === 'function')
-        ? getResultForTc(tcId, state.activeProjectId)
-        : (state.results ? state.results[tcId] : null);
-      if (!tcId || !res) return;
-
-      // Validation khi bàn giao sang Tester
-      if (status === 'Fixed' || status === 'Resolved') {
-        if (!fixVersion) {
-          showToast('⚠️ Vui lòng nhập Phiên bản vá lỗi (Fix Version)!', 'error');
-          document.getElementById('bug-modal-fix-version')?.focus();
-          return;
-        }
-        if (!commitHash) {
-          showToast('⚠️ Vui lòng nhập Mã Commit Git hoặc Pull Request để đối soát!', 'error');
-          document.getElementById('bug-modal-commit')?.focus();
-          return;
-        }
-      }
-
-      res.defectStatus = status;
-      res.fixVersion = fixVersion;
-      res.defectCategory = defectCategory;
-      res.commitHash = commitHash;
-      res.rca = rca;
-      res.devNotes = notes;
-      
-      // If Dev marks as Resolved/Fixed, add automatic audit comment
-      if (status === 'Resolved' || status === 'Fixed') {
-        if (!state.comments) state.comments = {};
-        if (!state.comments[tcId]) state.comments[tcId] = [];
-        state.comments[tcId].push({
-          author: getCurrentUser().name,
-          role: 'Developer',
-          text: `🔧 [Dev Resolution]: Đã khắc phục lỗi trên bản vá ${fixVersion}${commitHash ? ` (${commitHash})` : ''}. RCA: ${rca || 'Đã sửa code logic'}. Ghi chú: ${notes || 'Chờ Tester re-test.'}`,
-          time: new Date().toISOString()
-        });
-      }
-
-      if (typeof setResultForTc === 'function') {
-        setResultForTc(tcId, res, state.activeProjectId);
-      } else {
-        state.results[tcId] = res;
-      }
-      saveCoreState();
-
-      if (typeof window.syncResultToCloud === 'function') {
-        window.syncResultToCloud(tcId);
-      }
-
-      closeModal('modal-bug-status');
-      renderDefectList();
-      if (status === 'Fixed' || status === 'Resolved') {
-        showToast(`🔄 Đã chuyển [${tcId}] sang [Fixed] và bàn giao sang Bàn làm việc của Tester để Re-test!`, 'success');
-      } else {
-        showToast(`✅ Đã cập nhật trạng thái lỗi [${tcId}] thành công!`, 'success');
-      }
-    }
   </script>
 </body>
 </html>

@@ -3,64 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Báo Cáo Tiến Độ - Tester QA Hub</title>
+  <title>Báo Cáo Tiến Độ & Chất Lượng - Kiểm Thử Viên</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../shared/css/base.css" />
   <link rel="stylesheet" href="../shared/css/reports.css" />
-  <link rel="stylesheet" href="../shared/css/adhoc.css" />
+  <link rel="stylesheet" href="css/tester-theme.css" />
 </head>
 <body>
+
   <!-- Tester Topbar -->
-  <header class="vms-topbar">
-    <div class="vms-topbar-left">
-      <a href="index.html" class="vms-brand">
-        <div class="vms-brand-icon">🧪</div>
-        <div class="vms-brand-text">
-          <span class="vms-title">SmartVMS QA Hub</span>
-          <span class="vms-subtitle">Phân Hệ Kiểm Thử Viên (Tester)</span>
+  <header class="tester-topbar">
+    <div class="tester-topbar-left">
+      <a href="index.html" class="tester-brand-wrap" title="Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm">
+        <div class="tester-brand-badge">🧪</div>
+        <div>
+          <h2 class="tester-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="tester-brand-subtitle">Không gian làm việc kiểm thử viên (Tester)</span>
         </div>
       </a>
-      <nav class="vms-nav-container">
-        <div class="vms-nav-pills">
-          <a href="index.html" class="nav-item">📝 Việc của tôi</a>
-          <a href="execution.html" class="nav-item">▶️ Thực thi</a>
-          <a href="history.html" class="nav-item">🕒 Lịch sử & Phiên test</a>
-          <a href="reports.html" class="nav-item active">📈 Báo cáo cá nhân</a>
-        </div>
-      </nav>
+      <div class="tester-header-divider"></div>
+      <div id="tester-breadcrumb-container"></div>
     </div>
 
-    <div class="vms-topbar-right">
-      <button type="button" class="btn-adhoc-trigger" onclick="openAdhocDefectModal()" title="Báo cáo lỗi phát sinh không có trong Test Case">🐞 Báo Lỗi Ngoài Kịch Bản</button>
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
-      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-      <div class="vms-user-profile">
-        <div class="vms-user-avatar">T</div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Kiểm thử viên">
+        <div class="vms-user-avatar" id="tester-user-avatar" style="background:#0d9488">T</div>
         <div class="vms-user-info">
-          <span class="vms-user-name">Nguyễn Văn Nam</span>
-          <span class="vms-user-role">Kiểm thử viên (Tester)</span>
+          <span class="vms-user-name" id="tester-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role" id="tester-user-role">Kiểm thử viên (Tester)</span>
         </div>
       </div>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('admin')">👑 Sang Admin</button>
-      <button class="btn btn-outline btn-xs" onclick="switchRole('dev')">💻 Sang Dev</button>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
-  <main class="main-wrapper" id="reports-main-content">
+  <main class="main-wrapper" id="reports-main-content" style="max-width:1440px; margin:20px auto; padding:0 24px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
       <div>
         <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0">📈 Báo Cáo Tiến Độ & Chất Lượng Kiểm Thử Cá Nhân</h2>
         <div style="font-size:12px; color:var(--text-muted); margin-top:3px">Tổng hợp khối lượng công việc, tỷ lệ Đạt (Pass Rate) và lỗi do bạn phát hiện</div>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap">
-        <button type="button" class="btn btn-outline" style="background:rgba(220,38,38,0.1); border-color:#dc2626; color:#dc2626; font-weight:700" onclick="deleteSkippedTestCases()" title="Xóa bỏ vĩnh viễn 55 ca kiểm thử Bỏ qua (Skip) không còn phù hợp để tối ưu tỷ lệ Đạt (Pass Rate) chuẩn hóa">🗑️ Xóa Bỏ 55 Ca Bỏ Qua (Skip)</button>
         <button type="button" class="btn btn-outline" onclick="exportCatalogToExcel()" title="Xuất toàn bộ kịch bản và kết quả kiểm thử sang Excel">📊 Xuất Excel (.xlsx)</button>
         <button type="button" class="btn btn-outline" onclick="printReport()">🖨️ In Báo Cáo</button>
-        <button type="button" class="btn btn-primary" onclick="exportReportHtml()">⬇️ Xuất File Báo Cáo (HTML)</button>
+        <button type="button" class="btn btn-primary" onclick="exportReportHtml()" style="background:#0d9488; border-color:#0f766e">⬇️ Xuất File Báo Cáo (HTML)</button>
       </div>
     </div>
 
@@ -113,13 +105,13 @@
     <!-- Charts Container -->
     <div class="charts-container">
       <div class="chart-card">
-        <div class="chart-title">📊 Tỷ Lệ Trạng Thái Kiểm Thử Toàn Dự Án</div>
+        <div class="chart-title">📊 Tỷ Lệ Trạng Thái Kiểm Thử Của Bạn</div>
         <div class="chart-wrapper">
           <canvas id="chart-status-doughnut"></canvas>
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">📈 Phân Bổ Kết Quả Kiểm Thử Theo 12 Phân Hệ</div>
+        <div class="chart-title">📈 Phân Bổ Kết Quả Theo Các Phân Hệ</div>
         <div class="chart-wrapper">
           <canvas id="chart-module-bar"></canvas>
         </div>
@@ -211,17 +203,18 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../data/enterprise_projects_manifest.js?v=20261014_scoped"></script>
-  <script src="../data/smartvms_test_catalog.js?v=20261014_scoped"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../shared/js/vendor/xlsx.full.min.js"></script>
   <script src="../shared/js/vendor/exceljs.min.js"></script>
-  <script src="../shared/js/core.js?v=20261014_scoped"></script>
+  <script src="../shared/js/core.js"></script>
   <script src="../shared/js/excel-importer.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
-  <script src="../shared/js/adhoc-defect.js?v=20261014_scoped"></script>
-  <script src="../shared/js/reports.js?v=20261014_scoped"></script>
+  <script src="../shared/js/adhoc-defect.js"></script>
+  <script src="../shared/js/reports.js"></script>
+  <script src="js/tester-context.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      TesterContext.init();
       initReportsModule();
     });
   </script>

@@ -403,16 +403,48 @@
 
       let projectsUpdated = false;
 
-      // 1. Phục hồi projects từ Cloud
+      // 1. Phục hồi projects từ Cloud với cơ chế hợp nhất bảo vệ dữ liệu (Smart Merge)
       const prjRow = sessionRows.find(r => r.id === 'system_projects');
       if (prjRow && prjRow.notes) {
         try {
           const parsed = JSON.parse(prjRow.notes);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            window.state.projects = parsed;
-            projectsUpdated = true;
+            if (!window.state.projects || window.state.projects.length === 0) {
+              window.state.projects = parsed;
+              projectsUpdated = true;
+            } else {
+              let hasNewCloudProject = false;
+              parsed.forEach(cp => {
+                const localIdx = window.state.projects.findIndex(lp => lp.id === cp.id || lp.code === cp.code);
+                if (localIdx >= 0) {
+                  const localPrj = window.state.projects[localIdx];
+                  window.state.projects[localIdx] = { 
+                    ...localPrj, 
+                    ...cp,
+                    testCycles: cp.testCycles || [],
+                    testCases: cp.testCases || [],
+                    modules: cp.modules || []
+                  };
+                  projectsUpdated = true;
+                } else {
+                  window.state.projects.push(cp);
+                  hasNewCloudProject = true;
+                }
+              });
+              // Nếu Client có dự án mới mà Cloud chưa có, tự động đẩy bù lên Cloud
+              const missingOnCloud = window.state.projects.some(lp => !parsed.some(cp => cp.id === lp.id || cp.code === lp.code));
+              if (missingOnCloud) {
+                console.log('⚡ [Cloud Database] Client có dự án mới chưa có trên Cloud, tự động đồng bộ lên Cloud...');
+                pushProjectsToCloud(window.state.projects);
+              }
+              if (hasNewCloudProject) {
+                projectsUpdated = true;
+              }
+            }
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Lỗi phân tích cú pháp projects từ Cloud:', e);
+        }
       } else {
         // NẾU CLOUD CHƯA CÓ DỰ ÁN NÀO:
         // Nếu client đang có dự án ở LocalStorage/State, tự động đồng bộ ngay lên Cloud!
@@ -427,19 +459,24 @@
         }
       }
 
-      // 2. Phục hồi test cycles
+      // 2. Phục hồi test cycles từ Cloud
       const cycleRow = sessionRows.find(r => r.id === 'system_cycles');
       if (cycleRow && cycleRow.notes) {
         try {
           const parsedCycles = JSON.parse(cycleRow.notes);
-          if (Array.isArray(parsedCycles) && parsedCycles.length > 0) {
+          if (Array.isArray(parsedCycles)) {
             window.state.testCycles = parsedCycles;
+            try {
+              localStorage.setItem('smartvms_test_cycles_v3', JSON.stringify(parsedCycles));
+              sessionStorage.setItem('smartvms_test_cycles_v3', JSON.stringify(parsedCycles));
+            } catch (e) {}
           }
         } catch (e) {}
-      } else {
-        if (window.state.testCycles && window.state.testCycles.length > 0) {
-          pushCyclesToCloud(window.state.testCycles);
-        }
+      }
+
+      // Đồng bộ dọn dẹp các đợt test mồ côi
+      if (typeof window.ensureDefaultTestCyclesForProjects === 'function') {
+        window.ensureDefaultTestCyclesForProjects();
       }
 
       // 3. Phục hồi assignments
@@ -485,12 +522,36 @@
         if (typeof window.saveCoreState === 'function') {
           window.saveCoreState();
         }
-        // Cập nhật lại giao diện tương ứng nếu đang mở trang
+        // Cập nhật lại giao diện tương ứng trên tất cả các cổng
+        if (typeof renderProjectsTab === 'function') {
+          renderProjectsTab();
+        }
         if (typeof AdminPortfolio !== 'undefined' && typeof AdminPortfolio.init === 'function') {
           AdminPortfolio.init();
         }
+        if (typeof LeadPortfolio !== 'undefined' && typeof LeadPortfolio.init === 'function') {
+          LeadPortfolio.init();
+        }
         if (typeof LeadContext !== 'undefined' && typeof LeadContext.init === 'function') {
           LeadContext.init();
+        }
+        if (typeof LeadDashboard !== 'undefined' && typeof LeadDashboard.init === 'function') {
+          LeadDashboard.init();
+        }
+        if (typeof DevPortfolio !== 'undefined' && typeof DevPortfolio.init === 'function') {
+          DevPortfolio.init();
+        }
+        if (typeof DevReports !== 'undefined' && typeof DevReports.init === 'function') {
+          DevReports.init();
+        }
+        if (typeof DevContext !== 'undefined' && typeof DevContext.init === 'function') {
+          DevContext.init();
+        }
+        if (typeof TesterPortfolio !== 'undefined' && typeof TesterPortfolio.init === 'function') {
+          TesterPortfolio.init();
+        }
+        if (typeof TesterContext !== 'undefined' && typeof TesterContext.init === 'function') {
+          TesterContext.init();
         }
       }
 
@@ -521,8 +582,7 @@
     if (!cloudState.client) return false;
     try {
       if (!Array.isArray(projects) || projects.length === 0) {
-        await cloudState.client.from('test_sessions').delete().eq('id', 'system_projects');
-        console.log('⚡ [Cloud Database] Đã xóa danh mục dự án trên Cloud (0 Dự án).');
+        // Tránh race-condition: Tuyệt đối không tự động xóa bảng khi mảng rỗng
         return true;
       }
       const payload = {
@@ -536,6 +596,10 @@
       const { error } = await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
       if (!error) {
         console.log(`⚡ [Cloud Database] Đã đồng bộ ${projects.length} dự án lên Supabase Cloud.`);
+        const allTcs = projects.flatMap(p => p.testCases || []);
+        if (allTcs.length > 0) {
+          pushCatalogToCloud(allTcs);
+        }
       }
       return !error;
     } catch (e) {
@@ -549,7 +613,6 @@
     if (!cloudState.client) return false;
     try {
       if (!Array.isArray(cycles) || cycles.length === 0) {
-        await cloudState.client.from('test_sessions').delete().eq('id', 'system_cycles');
         return true;
       }
       const payload = {
@@ -572,7 +635,6 @@
     if (!cloudState.client) return false;
     try {
       if (!Array.isArray(assignments) || assignments.length === 0) {
-        await cloudState.client.from('test_sessions').delete().eq('id', 'system_assignments');
         return true;
       }
       const payload = {
@@ -663,21 +725,19 @@
         window.state.catalogSource = 'Supabase Cloud Database';
         console.log(`⚡ [Database Sync] Đã đồng bộ ${mapped.length} kịch bản từ Cloud Database về trình duyệt.`);
       } else {
-        // Database Cloud sạch sẽ (0 kịch bản): Đảm bảo trình duyệt cũng sạch sẽ 100%
-        if (window.state.projects.length > 0) {
-          window.state.projects.forEach(p => p.testCases = []);
+        // Bảng test_cases_custom trên Cloud đang có 0 bản ghi:
+        // NGUYÊN TẮC BẢO VỆ DỮ LIỆU: Tuyệt đối không xóa trắng kịch bản và kết quả của máy trạm!
+        const curPrj = (window.state.projects || []).find(p => p.id === window.state.activeProjectId) || window.state?.projects?.[0];
+        const localTcs = curPrj?.testCases || [];
+        if (localTcs.length > 0) {
+          console.log(`⚡ [Database Sync] Cloud chưa có kịch bản nhưng máy trạm đang có ${localTcs.length} kịch bản. Tự động đồng bộ bảo vệ lên Supabase Cloud...`);
+          pushCatalogToCloud(localTcs);
+          window.state.isCleanProjectState = false;
+        } else {
+          window.state.isCleanProjectState = true;
         }
-        window.state.isCustomCatalog = true;
-        window.state.isCleanProjectState = true;
-        window.state.results = {};
-        window.state.cycleResults = {};
-        window.state.assignments = [];
-        console.log('⚡ [Database Sync] Database Cloud đang ở trạng thái sạch (0 kịch bản). Trình duyệt đã đồng bộ về 0.');
       }
 
-      if (typeof window.saveCoreState === 'function') {
-        window.saveCoreState();
-      }
       triggerUiRefresh();
       return true;
     } catch (err) {
@@ -1259,8 +1319,8 @@
       await cloudState.client.from('test_comments').delete().neq('tc_id', '___NONE___');
       // Xóa toàn bộ test cases tùy chỉnh trên bảng test_cases_custom
       await cloudState.client.from('test_cases_custom').delete().neq('tc_id', '___NONE___');
-      // Xóa toàn bộ dự án, đợt test, phân công trên bảng test_sessions
-      await cloudState.client.from('test_sessions').delete().neq('id', '___NONE___');
+      // Xóa toàn bộ dự án, đợt test, phân công trên bảng test_sessions (ngoại trừ danh mục người dùng)
+      await cloudState.client.from('test_sessions').delete().neq('id', 'system_users');
       // Xóa toàn bộ đợt kiểm thử trên bảng test_runs
       await cloudState.client.from('test_runs').delete().neq('id', '___NONE___');
       // Xóa toàn bộ danh mục test_modules

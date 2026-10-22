@@ -229,19 +229,7 @@ const AdminPortfolio = {
       ],
       modules: [],
       testCases: [],
-      testCycles: [
-        {
-          id: 'CYC-' + code + '-01',
-          code: 'CYC-01',
-          name: 'Đợt 1 — Khảo sát & Kiểm thử chức năng',
-          version: version,
-          type: 'SMOKE',
-          scope: 'ALL',
-          status: 'IN_PROGRESS',
-          startDate: new Date().toISOString().slice(0, 10),
-          endDate: ''
-        }
-      ],
+      testCycles: [],
       members: [
         {
           username: state.currentUser?.username || 'admin',

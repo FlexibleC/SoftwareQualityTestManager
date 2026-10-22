@@ -1,0 +1,104 @@
+{
+  "updatedAt": "2026-10-22T02:15:00.000Z",
+  "totalProjects": 2,
+  "projects": [
+    {
+      "id": "PRJ-SMARTVMS SINGLE SITE",
+      "code": "SMARTVMS SINGLE SITE",
+      "name": "Hệ thống quản lý khách vào-ra",
+      "domain": "Hệ thống phần mềm",
+      "desc": "Hệ thống quản lý khách vào-ra SmartVMS",
+      "lead": "Hoàng Hải Đăng",
+      "leadUsername": "lead",
+      "standards": [
+        "ISO/IEC 25010",
+        "ISO/IEC/IEEE 29119"
+      ],
+      "activeVersion": "v1.0",
+      "versions": [
+        {
+          "version": "v1.0",
+          "label": "v1.0",
+          "status": "IN_QA",
+          "targetDate": "2026-11-21",
+          "changelog": "Phiên bản khởi tạo ban đầu"
+        }
+      ],
+      "modules": [],
+      "testCases": [],
+      "members": [
+        {
+          "username": "lead",
+          "name": "Hoàng Hải Đăng",
+          "projectRole": "lead",
+          "title": "Trưởng dự án"
+        },
+        {
+          "username": "tester",
+          "name": "Nguyễn Văn Nam",
+          "projectRole": "tester",
+          "title": "Kiểm thử viên"
+        },
+        {
+          "username": "tester2",
+          "name": "Trần Thị Lan",
+          "projectRole": "tester",
+          "title": "Kiểm thử viên"
+        },
+        {
+          "username": "dev",
+          "name": "Trần Quốc Tuấn",
+          "projectRole": "dev",
+          "title": "Lập trình viên"
+        }
+      ],
+      "testCycles": []
+    },
+    {
+      "id": "PRJ-SMANRTVMS LOCAL SITE",
+      "code": "SMANRTVMS LOCAL SITE",
+      "name": "Hệ thống quản lý khách vào-ra",
+      "domain": "Hệ thống phần mềm",
+      "desc": "Hệ thống quản lý khách vào-ra SmartVMS",
+      "lead": "Hoàng Hải Đăng",
+      "leadUsername": "lead",
+      "standards": [
+        "ISO/IEC 25010",
+        "ISO/IEC/IEEE 29119"
+      ],
+      "activeVersion": "v1.0",
+      "versions": [
+        {
+          "version": "v1.0",
+          "label": "v1.0",
+          "status": "IN_QA",
+          "targetDate": "2026-11-20",
+          "changelog": "Phiên bản khởi tạo ban đầu"
+        }
+      ],
+      "modules": [],
+      "testCases": [],
+      "members": [
+        {
+          "username": "lead",
+          "name": "Hoàng Hải Đăng",
+          "projectRole": "lead",
+          "title": "Trưởng dự án"
+        },
+        {
+          "username": "dev",
+          "name": "Phạm Minh Tuấn",
+          "projectRole": "dev",
+          "title": "Kỹ sư phát triển"
+        },
+        {
+          "username": "tester",
+          "name": "Trần Thị Mai",
+          "projectRole": "tester",
+          "title": "Chuyên viên kiểm thử"
+        }
+      ],
+      "testCycles": []
+    }
+  ]
+}

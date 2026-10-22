@@ -9,53 +9,62 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../shared/css/base.css" />
   <link rel="stylesheet" href="../shared/css/settings.css" />
+  <link rel="stylesheet" href="../shared/css/assignment.css" />
   <link rel="stylesheet" href="css/lead-theme.css" />
+  <script>
+    // Smart Redirect: Đưa người dùng về đúng Không gian phân cấp thay vì trang cài đặt rời rạc
+    (function() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const projectId = params.get('projectId') || (typeof state !== 'undefined' ? (state.activeProjectId || '') : '');
+        const tab = params.get('tab') || 'versions';
+        const version = params.get('version') || 'v1.0';
+
+        if (tab === 'cycles' || tab === 'modules') {
+          window.location.replace(`version.html?projectId=${encodeURIComponent(projectId)}&version=${encodeURIComponent(version)}`);
+        } else {
+          window.location.replace(`project.html?projectId=${encodeURIComponent(projectId)}`);
+        }
+      } catch (e) {
+        // Fallback
+      }
+    })();
+  </script>
 </head>
 <body>
 
-  <!-- Lead Topbar -->
+  <!-- Lead Topbar (Global Header) -->
   <header class="lead-topbar">
-    <div style="display:flex; align-items:center; gap:20px">
+    <div class="lead-topbar-left" style="display:flex; align-items:center; gap:20px">
       <a href="index.html" class="lead-brand-wrap">
         <div class="lead-brand-badge">👑</div>
         <div>
-          <h2 class="lead-brand-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</h2>
-          <span class="lead-brand-subtitle">Không Gian Quản Trị Viên Dự Án (Project Lead)</span>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án</span>
         </div>
       </a>
-
-      <!-- Navigation Pills -->
-      <nav class="lead-nav-pills" role="navigation">
-        <a href="index.html" class="lead-nav-pill">📊 Tổng quan Dự án</a>
-        <a href="testcases.html" class="lead-nav-pill">📋 Kịch bản Kiểm thử</a>
-        <a href="assignments.html" class="lead-nav-pill">📌 Điều phối & Giao việc</a>
-        <a href="reports.html" class="lead-nav-pill">📈 Báo cáo Chất lượng</a>
-        <a href="settings.html" class="lead-nav-pill active">⚙️ Cài đặt Dự án</a>
-      </nav>
     </div>
 
-    <div style="display:flex; align-items:center; gap:14px">
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
       <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
       
       <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
-        <div class="vms-user-avatar" style="background:#d97706">L</div>
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
-          <span class="vms-user-role" id="lead-user-role">Quản trị viên Dự án</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
+  <!-- Compact Project Navigation Bar (Tầng 2) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
   <!-- Main Content -->
   <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
-
-    <!-- Active Project Hero Banner -->
-    <div class="lead-project-hero" id="lead-project-hero">
-      <!-- Populated by lead-context.js -->
-    </div>
 
     <!-- Header Title -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px">
@@ -69,18 +78,18 @@
       </div>
     </div>
 
-    <!-- Lead Settings Subtabs -->
-    <div class="lead-nav-pills" style="margin-bottom:18px; padding:6px; display:inline-flex; width:100%; box-sizing:border-box">
-      <button type="button" class="lead-nav-pill lead-settings-tab-btn active" data-tab="versions" onclick="LeadSettings.switchTab('versions')" style="cursor:pointer; border:none; background:transparent">
+    <!-- Lead Settings Subtabs (Giao diện Tab Pills Hiện Đại Chuẩn Enterprise) -->
+    <div class="lead-settings-tabs-container">
+      <button type="button" class="lead-settings-tab-btn active" data-tab="versions" onclick="LeadSettings.switchTab('versions')">
         📦 1. Phiên Bản Phần Mềm (Versions)
       </button>
-      <button type="button" class="lead-nav-pill lead-settings-tab-btn" data-tab="cycles" onclick="LeadSettings.switchTab('cycles')" style="cursor:pointer; border:none; background:transparent">
+      <button type="button" class="lead-settings-tab-btn" data-tab="cycles" onclick="LeadSettings.switchTab('cycles')">
         🎯 2. Các Đợt Kiểm Thử (Test Cycles)
       </button>
-      <button type="button" class="lead-nav-pill lead-settings-tab-btn" data-tab="modules" onclick="LeadSettings.switchTab('modules')" style="cursor:pointer; border:none; background:transparent">
+      <button type="button" class="lead-settings-tab-btn" data-tab="modules" onclick="LeadSettings.switchTab('modules')">
         📁 3. Phân Hệ Nghiệp Vụ (Modules)
       </button>
-      <button type="button" class="lead-nav-pill lead-settings-tab-btn" data-tab="roster" onclick="LeadSettings.switchTab('roster')" style="cursor:pointer; border:none; background:transparent">
+      <button type="button" class="lead-settings-tab-btn" data-tab="roster" onclick="LeadSettings.switchTab('roster')">
         👥 4. Đội Ngũ Nhân Sự Dự Án
       </button>
     </div>
@@ -88,29 +97,39 @@
     <!-- PANE 1: VERSIONS -->
     <section class="lead-settings-tab-pane active" id="lead-pane-versions">
       <div class="card">
-        <div class="card-header" style="justify-content:space-between">
+        <div class="card-header" style="justify-content:space-between; flex-wrap:wrap; gap:10px">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
               📦 Danh Sách Phiên Bản Phần Mềm Của Dự Án
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Quản lý lộ trình phiên bản phát hành và kích hoạt phiên bản làm việc hiện hành.
+              Mỗi phiên bản quản lý độc lập Danh mục Phân hệ, Kho kịch bản kiểm thử và Các đợt test trực thuộc.
             </div>
           </div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.openAddVersionModal()">
-            ➕ Thêm Phiên Bản Mới
-          </button>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+            <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.openAddVersionModal()">
+              ➕ Thêm Thủ Công
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="LeadSettings.openImportVersionModal()" title="Nhập danh mục kịch bản phiên bản mới từ file Excel hoặc JSON">
+              📥 Nhập Từ Excel / JSON
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="LeadSettings.openCloneVersionModal()" title="Kế thừa toàn bộ kịch bản từ phiên bản hiện tại sang phiên bản mới">
+              📋 Kế Thừa Kịch Bản
+            </button>
+          </div>
         </div>
 
         <table class="asg-tc-table" style="table-layout:auto; width:100%">
           <thead>
             <tr>
-              <th style="width:120px">Phiên Bản</th>
-              <th style="width:240px">Nhãn Hiển Thị</th>
-              <th style="width:140px; text-align:center">Trạng Thái</th>
-              <th style="width:140px; text-align:center">Hạn Mục Tiêu</th>
+              <th style="width:110px">Phiên Bản</th>
+              <th style="width:230px">Nhãn Hiển Thị</th>
+              <th style="width:130px; text-align:center">Kịch Bản</th>
+              <th style="width:120px; text-align:center">Đợt Test</th>
+              <th style="width:130px; text-align:center">Trạng Thái</th>
+              <th style="width:120px; text-align:center">Hạn Mục Tiêu</th>
               <th>Ghi Chú Phát Hành / Changelog</th>
-              <th style="width:130px; text-align:center">Thao Tác</th>
+              <th style="width:120px; text-align:center">Thao Tác</th>
             </tr>
           </thead>
           <tbody id="lead-versions-tbody"></tbody>
@@ -119,7 +138,7 @@
     </section>
 
     <!-- PANE 2: TEST CYCLES -->
-    <section class="lead-settings-tab-pane" id="lead-pane-cycles" style="display:none">
+    <section class="lead-settings-tab-pane" id="lead-pane-cycles">
       <div class="card">
         <div class="card-header" style="justify-content:space-between">
           <div>
@@ -154,7 +173,7 @@
     </section>
 
     <!-- PANE 3: MODULES -->
-    <section class="lead-settings-tab-pane" id="lead-pane-modules" style="display:none">
+    <section class="lead-settings-tab-pane" id="lead-pane-modules">
       <div class="card">
         <div class="card-header" style="justify-content:space-between">
           <div>
@@ -186,7 +205,7 @@
     </section>
 
     <!-- PANE 4: TEAM ROSTER -->
-    <section class="lead-settings-tab-pane" id="lead-pane-roster" style="display:none">
+    <section class="lead-settings-tab-pane" id="lead-pane-roster">
       <div class="card">
         <div class="card-header" style="justify-content:space-between">
           <div>
@@ -370,12 +389,343 @@
     </div>
   </div>
 
+  <!-- Modal Cấu hình Danh mục Kịch bản cho Đợt Test (Smart Workstation Modal) -->
+  <div class="modal" id="modal-cycle-scope">
+    <div class="modal-box" style="max-width:1380px; width:96vw; height:92vh; max-height:92vh; display:flex; flex-direction:column; padding:0; overflow:hidden">
+      
+      <!-- 1. Modal Header -->
+      <div class="modal-header" style="flex-shrink:0; padding:12px 20px; border-bottom:1px solid var(--border); background:var(--bg-card); display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0">
+            🎯
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px">
+              <h3 id="mcs-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+                Cấu Hình Danh Mục Kịch Bản Cho Đợt Kiểm Thử
+              </h3>
+              <span id="mcs-version-badge" class="badge badge-outline" style="font-size:11px; font-weight:800">v2.0</span>
+              <span id="mcs-cycle-type-badge" class="badge badge-info" style="font-size:11px">REGRESSION</span>
+            </div>
+            <div id="mcs-subtitle" style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Tuyển chọn danh mục kịch bản theo phân hệ nghiệp vụ, lịch sử lỗi và ma trận rủi ro (ISO/IEC/IEEE 29119-2)
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-cycle-scope')">✕</button>
+      </div>
+
+      <!-- 2. Smart Analytics KPI Ribbon (ISO 29119 Test Scope Intelligence) -->
+      <div style="padding:10px 20px; background:var(--bg-surface); border-bottom:1px solid var(--border); display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; flex-shrink:0">
+        <div class="asg-kpi-card" style="padding:8px 12px; margin:0">
+          <div class="asg-kpi-icon" style="color:#2563eb; background:rgba(37,99,235,0.08)">🎯</div>
+          <div>
+            <div class="asg-kpi-val" id="mcs-kpi-selected">0 / 0</div>
+            <div class="asg-kpi-label">Phạm vi đợt (<span id="mcs-kpi-percent">0%</span>)</div>
+          </div>
+        </div>
+        <div class="asg-kpi-card" style="padding:8px 12px; margin:0">
+          <div class="asg-kpi-icon" style="color:#dc2626; background:rgba(220,38,38,0.08)">🔥</div>
+          <div>
+            <div class="asg-kpi-val" id="mcs-kpi-failed" style="color:#dc2626">0</div>
+            <div class="asg-kpi-label">Lỗi cần Re-test</div>
+          </div>
+        </div>
+        <div class="asg-kpi-card" style="padding:8px 12px; margin:0">
+          <div class="asg-kpi-icon" style="color:#d97706; background:rgba(217,119,6,0.08)">⭐</div>
+          <div>
+            <div class="asg-kpi-val" id="mcs-kpi-high-prio" style="color:#d97706">0</div>
+            <div class="asg-kpi-label">Trọng yếu (P1/P2)</div>
+          </div>
+        </div>
+        <div class="asg-kpi-card" style="padding:8px 12px; margin:0">
+          <div class="asg-kpi-icon" style="color:#16a34a; background:rgba(22,163,74,0.08)">📁</div>
+          <div>
+            <div class="asg-kpi-val" id="mcs-kpi-modules">0 / 0</div>
+            <div class="asg-kpi-label">Phân hệ tham gia</div>
+          </div>
+        </div>
+        <div class="asg-kpi-card" style="padding:8px 12px; margin:0">
+          <div class="asg-kpi-icon" style="color:#8b5cf6; background:rgba(139,92,246,0.08)">⏱️</div>
+          <div>
+            <div class="asg-kpi-val" id="mcs-kpi-effort" style="color:#8b5cf6">~0h</div>
+            <div class="asg-kpi-label">Dự toán nỗ lực (Effort)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Consolidated Command Bar (Presets & Multi-dimensional Filters) -->
+      <div style="padding:10px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px; flex-shrink:0">
+        <!-- Dòng 1: Bộ chọn thông minh (Smart Presets) -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+            <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">⚡ Chọn nhanh:</span>
+            <button type="button" class="asg-preset-btn" onclick="LeadSettings.applyScopePreset('ALL')">
+              ⚡ Tất Cả (<span id="mcs-preset-all-cnt">0</span>)
+            </button>
+            <button type="button" class="asg-preset-btn asg-preset-btn-danger" style="color:#dc2626; border-color:rgba(220,38,38,0.3)" onclick="LeadSettings.applyScopePreset('FAILED')">
+              🔥 Từng Lỗi (<span id="mcs-preset-fail-cnt">0</span>)
+            </button>
+            <button type="button" class="asg-preset-btn" style="color:#d97706; border-color:rgba(217,119,6,0.3)" onclick="LeadSettings.applyScopePreset('HIGH_PRIO')">
+              ⭐ Trọng Yếu P1/P2 (<span id="mcs-preset-high-cnt">0</span>)
+            </button>
+            <button type="button" class="asg-preset-btn" onclick="LeadSettings.applyScopePreset('SMOKE')">
+              💨 Smoke Suite (<span id="mcs-preset-smoke-cnt">0</span>)
+            </button>
+            <button type="button" class="asg-preset-btn" onclick="LeadSettings.applyScopePreset('NOT_RUN')">
+              ⏳ Chưa Chạy (<span id="mcs-preset-notrun-cnt">0</span>)
+            </button>
+            <button type="button" class="asg-preset-btn" onclick="LeadSettings.applyScopePreset('NONE')">
+              ✕ Bỏ Chọn Hết
+            </button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px">
+            <span style="font-size:11.5px; color:var(--text-secondary)">Tiến độ chọn:</span>
+            <div style="width:140px; height:8px; background:var(--bg-surface); border-radius:4px; overflow:hidden; border:1px solid var(--border)">
+              <div id="mcs-progress-bar" style="height:100%; width:0%; background:#2563eb; transition:width 0.2s ease"></div>
+            </div>
+            <strong id="mcs-progress-text" style="font-size:12px; color:var(--primary); min-width:35px; text-align:right">0%</strong>
+          </div>
+        </div>
+
+        <!-- Dòng 2: Bộ lọc đa chiều (Search, Priority, History, Suite) -->
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:220px">
+            <span style="font-size:12px; color:var(--text-muted)">🔍</span>
+            <input type="text" id="mcs-search" class="asg-filter-input" placeholder="Tìm theo mã kịch bản, tiêu đề, bước thực hiện..." oninput="LeadSettings.handleScopeFilterChange()" style="flex:1; height:32px" />
+          </div>
+          <select id="mcs-filter-prio" class="asg-filter-select" onchange="LeadSettings.handleScopeFilterChange()" style="height:32px">
+            <option value="">🏷️ Mức ưu tiên: Tất cả</option>
+            <option value="P1">🔴 P1 — Critical</option>
+            <option value="P2">🟠 P2 — High</option>
+            <option value="P3">🟡 P3 — Medium</option>
+            <option value="P4">🟢 P4 — Low</option>
+          </select>
+          <select id="mcs-filter-history" class="asg-filter-select" onchange="LeadSettings.handleScopeFilterChange()" style="height:32px">
+            <option value="">🧪 Lịch sử: Tất cả</option>
+            <option value="FAIL" style="color:#dc2626; font-weight:700">❌ Từng BỊ LỖI</option>
+            <option value="PASS" style="color:#16a34a; font-weight:700">✅ Đã PASS</option>
+            <option value="UNTESTED" style="color:#64748b">⚪ Chưa chạy</option>
+          </select>
+          <select id="mcs-filter-suite" class="asg-filter-select" onchange="LeadSettings.handleScopeFilterChange()" style="height:32px">
+            <option value="">📂 Loại suite: Tất cả</option>
+            <option value="REGRESSION">🔄 Regression</option>
+            <option value="SMOKE">💨 Smoke</option>
+            <option value="SANITY">🧪 Sanity</option>
+            <option value="PERF_STRESS">⚡ Performance</option>
+            <option value="SECURITY_FRAUD">🛡️ Security</option>
+          </select>
+          <button type="button" class="btn btn-outline btn-xs" onclick="LeadSettings.resetScopeFilters()" title="Xóa tất cả bộ lọc" style="height:32px">
+            🔄 Đặt lại
+          </button>
+          <div id="mcs-filter-count-badge" style="font-size:11.5px; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:4px">
+            0 kịch bản
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Master-Detail 2-Column Grid (Like assignments.html) -->
+      <div style="flex:1; display:grid; grid-template-columns:300px minmax(0, 1fr); overflow:hidden; background:var(--bg-surface)">
+        
+        <!-- Left: Modules Sidebar with per-module bulk toggling & progress -->
+        <div style="border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg-card); overflow:hidden">
+          <div style="padding:10px 14px; background:var(--bg-surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
+            <strong style="font-size:12.5px; color:var(--text-primary)">📦 Phân Hệ Nghiệp Vụ</strong>
+            <span style="font-size:11px; color:var(--text-muted)">Tích ô để chọn cả phân hệ</span>
+          </div>
+          <ul id="mcs-modules-list" class="asg-module-list" style="overflow-y:auto; flex:1"></ul>
+        </div>
+
+        <!-- Right: Test Cases Table Panel -->
+        <div style="display:flex; flex-direction:column; background:var(--bg-card); overflow:hidden">
+          <!-- Panel Header: Module Context & Selection Actions -->
+          <div style="padding:10px 16px; background:var(--bg-surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0">
+            <div style="display:flex; align-items:center; gap:8px">
+              <strong id="mcs-current-mod-title" style="font-size:13px; color:var(--text-primary)">Tất cả phân hệ</strong>
+              <span id="mcs-current-mod-badge" class="badge badge-info" style="font-size:11px">0 kịch bản</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px">
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadSettings.toggleCurrentViewTcs(true)">
+                ✅ Chọn tất cả đang lọc
+              </button>
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadSettings.toggleCurrentViewTcs(false)">
+                ❌ Bỏ chọn đang lọc
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div style="flex:1; overflow-y:auto; overflow-x:hidden">
+            <table class="asg-tc-table" style="table-layout:fixed; width:100%">
+              <thead>
+                <tr>
+                  <th style="width:38px; text-align:center">
+                    <input type="checkbox" id="mcs-check-all" onchange="LeadSettings.toggleCurrentViewTcs(this.checked)" title="Chọn/Bỏ chọn tất cả kịch bản đang hiển thị" style="cursor:pointer" />
+                  </th>
+                  <th style="width:110px; text-align:center">Mã kịch bản</th>
+                  <th style="width:75px; text-align:center">Phân hệ</th>
+                  <th style="width:75px; text-align:center">Ưu tiên</th>
+                  <th style="min-width:320px">Tiêu đề & Mục tiêu kiểm thử</th>
+                  <th style="width:130px; text-align:center">Loại Suite</th>
+                  <th style="width:160px; text-align:center">Lịch sử đợt trước</th>
+                  <th style="width:110px; text-align:center">Trạng thái đợt</th>
+                </tr>
+              </thead>
+              <tbody id="mcs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 5. Modal Footer -->
+      <div class="modal-footer" style="flex-shrink:0; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px; background:var(--bg-card)">
+        <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary)">
+          <span>💡 Đang kích hoạt <strong id="mcs-footer-count" style="color:var(--primary)">0</strong> kịch bản (<strong id="mcs-footer-effort">~0h</strong> thực thi). Chỉ các kịch bản này mới xuất hiện trong <strong>Kế hoạch & Giao việc</strong> của đợt test.</span>
+        </div>
+        <div style="display:flex; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-scope')">Hủy bỏ</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.confirmSaveCycleScope()" style="font-weight:800; padding:0 20px">
+            💾 Lưu Cấu Hình Danh Mục Kịch Bản Cho Đợt Test
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Nhập Phiên Bản Mới từ Excel / JSON -->
+  <div class="modal" id="modal-import-version">
+    <div class="modal-box" style="max-width:680px; width:95%">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+            📥 Khởi Tạo Phiên Bản Mới Từ File Kịch Bản (Excel / JSON)
+          </h3>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Nhập danh mục kịch bản chuẩn hóa từ bảng tính Excel (.xlsx) hoặc file cấu hình JSON.
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-import-version')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã Phiên Bản Mới (*)</label>
+            <input type="text" id="miv-version" class="form-control" placeholder="VD: v2.2" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Tên / Nhãn Hiển Thị (*)</label>
+            <input type="text" id="miv-label" class="form-control" placeholder="VD: Phiên bản Tích hợp Đa điểm" required />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn Mục Tiêu Hoàn Thành</label>
+            <input type="date" id="miv-date" class="form-control" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng Thái Khởi Đầu</label>
+            <select id="miv-status" class="form-control">
+              <option value="ACTIVE" selected>🟢 ACTIVE (Kích hoạt ngay)</option>
+              <option value="PLANNED">🟡 PLANNED (Lập kế hoạch)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi Chú Phát Hành / Changelog</label>
+          <input type="text" id="miv-changelog" class="form-control" placeholder="Tóm tắt nội dung thay đổi hoặc phạm vi kiểm thử..." />
+        </div>
+
+        <!-- File Upload Area -->
+        <div style="border:2px dashed var(--border); border-radius:8px; padding:20px; text-align:center; background:var(--bg-subtle)">
+          <div style="font-size:32px; margin-bottom:8px">📄</div>
+          <div style="font-weight:700; margin-bottom:4px">Chọn file Excel (.xlsx, .xls) hoặc JSON chứa kịch bản</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px">
+            Cột chuẩn trong file Excel: <code>Mã kịch bản</code>, <code>Phân hệ</code>, <code>Tên kịch bản</code>, <code>Mức ưu tiên</code>, <code>Các bước</code>, <code>Kết quả mong đợi</code>
+          </div>
+          <input type="file" id="miv-file-input" accept=".xlsx, .xls, .json" onchange="LeadSettings.handleVersionFileSelected(event)" style="display:none" />
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('miv-file-input').click()">
+            📁 Duyệt Chọn File Trên Máy
+          </button>
+          <div id="miv-file-name" style="margin-top:8px; font-size:12px; font-weight:700; color:var(--primary)"></div>
+        </div>
+
+        <!-- Preview Summary Box -->
+        <div id="miv-preview-box" style="display:none; padding:12px; border-radius:6px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); font-size:12.5px">
+          <div style="font-weight:700; color:var(--primary); margin-bottom:4px">🔍 Kết Quả Phân Tích File:</div>
+          <div id="miv-preview-content"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-import-version')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" id="miv-submit-btn" onclick="LeadSettings.confirmImportVersion()" disabled>
+          🚀 Nhập Kịch Bản & Khởi Tạo Phiên Bản
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Kế Thừa Phiên Bản -->
+  <div class="modal" id="modal-clone-version">
+    <div class="modal-box" style="max-width:580px; width:95%">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+            📋 Kế Thừa Kịch Bản Sang Phiên Bản Mới
+          </h3>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Sao chép toàn bộ kho kịch bản từ phiên bản hiện tại sang một phiên bản phát hành mới.
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-clone-version')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div>
+          <label class="form-label" style="font-weight:700">Phiên Bản Gốc Cần Kế Thừa (*)</label>
+          <select id="mcv-source-version" class="form-control" onchange="LeadSettings.handleCloneSourceChange()"></select>
+          <div id="mcv-source-info" style="font-size:12px; color:var(--text-muted); margin-top:4px"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã Phiên Bản Mới (*)</label>
+            <input type="text" id="mcv-new-version" class="form-control" placeholder="VD: v2.1-Patch1" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Nhãn Hiển Thị (*)</label>
+            <input type="text" id="mcv-new-label" class="form-control" placeholder="VD: Bản sửa lỗi Hotfix Đợt 2" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi Chú Phát Hành / Changelog</label>
+          <textarea id="mcv-changelog" class="form-control" rows="2" placeholder="Mô tả mục tiêu của phiên bản kế thừa này..."></textarea>
+        </div>
+
+        <div style="padding:12px; border-radius:6px; background:var(--bg-subtle); border:1px solid var(--border); font-size:12px; color:var(--text-secondary)">
+          💡 Hệ thống sẽ tự động sao chép toàn bộ các kịch bản kiểm thử từ phiên bản gốc sang phiên bản mới và gắn nhãn tương ứng. Sau khi tạo xong, bạn có thể thiết lập các Đợt test riêng cho phiên bản mới.
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-clone-version')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadSettings.confirmCloneVersion()">
+          📋 Xác Nhận Kế Thừa & Tạo Mới
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../data/smartvms_test_catalog.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
   <script src="../shared/js/core.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
 
@@ -386,7 +736,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
-      LeadContext.init();
+      LeadContext.init('settings');
       LeadSettings.init();
     });
   </script>

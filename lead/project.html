@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không gian điều hành dự án - Quản trị dự án kiểm thử</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="../shared/css/settings.css" />
+  <link rel="stylesheet" href="../shared/css/assignment.css" />
+  <link rel="stylesheet" href="css/lead-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- Lead Topbar (Unified Global Header) -->
+  <header class="lead-topbar">
+    <div class="lead-topbar-left" style="display:flex; align-items:center; gap:20px">
+      <a href="index.html" class="lead-brand-wrap">
+        <div class="lead-brand-badge">👑</div>
+        <div>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử và quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án</span>
+        </div>
+      </a>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Compact Project Navigation Bar (Tầng 2 Subnav Tabs) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
+  <!-- Main Container: Project Executive Cockpit (Tier 1) -->
+  <main class="main-wrapper" style="max-width:1440px; margin:20px auto; padding:0 24px">
+
+    <!-- ==================== TAB PANE 1: TỔNG QUAN DỰ ÁN ==================== -->
+    <div id="tab-pane-overview" class="lead-main-tab-pane">
+      
+      <!-- 1. Header Strip Điều Hành -->
+      <div class="lead-portfolio-header-strip" style="margin-bottom:16px">
+        <div>
+          <div style="font-size:11.5px; color:#2563eb; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px">
+            🏢 Tầng 1: Không gian quản trị dự án
+          </div>
+          <h2 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
+            Tổng quan điều hành dự án
+          </h2>
+          <p style="color:var(--text-muted); font-size:13px; margin:4px 0 0 0">
+            Hồ sơ quy mô, thiết lập môi trường cấu hình và giám sát các điểm nghẽn chất lượng theo thời gian thực.
+          </p>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadDashboard.init()" title="Làm mới toàn bộ số liệu thống kê">
+            🔄 Làm mới số liệu
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadDashboard.exportHealthSummary()" title="Xuất báo cáo sức khỏe dự án">
+            📋 Xuất tóm tắt điều hành
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.switchMainTab('settings')" title="Điều chỉnh tham số cổng nghiệm thu">
+            ⚙️ Cấu hình dự án ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. KHỐI 1: HỒ SƠ QUY MÔ DỰ ÁN (PROJECT SCALE AT A GLANCE - 5 THẺ ĐỊNH LƯỢNG) -->
+      <div class="lead-scale-grid">
+        <!-- Scale 1: Phiên bản -->
+        <div class="lead-scale-card" style="border-left:4px solid #2563eb">
+          <div class="lead-scale-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">📦</div>
+          <div style="flex:1; min-width:0">
+            <div class="lead-scale-lbl">Phiên bản quản trị</div>
+            <div class="lead-scale-val" id="scale-val-versions" style="color:#2563eb">0 bản</div>
+            <div class="lead-scale-sub" id="scale-sub-versions">0 Active • 0 Planning</div>
+          </div>
+        </div>
+
+        <!-- Scale 2: Kịch bản kiểm thử -->
+        <div class="lead-scale-card" style="border-left:4px solid #10b981">
+          <div class="lead-scale-icon" style="background:rgba(16,185,129,0.1); color:#10b981">📋</div>
+          <div style="flex:1; min-width:0">
+            <div class="lead-scale-lbl">Kịch bản kiểm thử</div>
+            <div class="lead-scale-val" id="scale-val-tcs" style="color:#10b981">0 bài</div>
+            <div class="lead-scale-sub" id="scale-sub-tcs">P1: 0 • P2: 0 • P3+: 0</div>
+          </div>
+        </div>
+
+        <!-- Scale 3: Đợt kiểm thử -->
+        <div class="lead-scale-card" style="border-left:4px solid #7c3aed">
+          <div class="lead-scale-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">🎯</div>
+          <div style="flex:1; min-width:0">
+            <div class="lead-scale-lbl">Đợt kiểm thử</div>
+            <div class="lead-scale-val" id="scale-val-cycles" style="color:#7c3aed">0 đợt</div>
+            <div class="lead-scale-sub" id="scale-sub-cycles">0 đang mở tác chiến</div>
+          </div>
+        </div>
+
+        <!-- Scale 4: Biên chế kỹ sư -->
+        <div class="lead-scale-card" style="border-left:4px solid #d97706">
+          <div class="lead-scale-icon" style="background:rgba(217,119,6,0.1); color:#d97706">👥</div>
+          <div style="flex:1; min-width:0">
+            <div class="lead-scale-lbl">Biên chế nhân sự</div>
+            <div class="lead-scale-val" id="scale-val-roster" style="color:#d97706">0 kỹ sư</div>
+            <div class="lead-scale-sub" id="scale-sub-roster">0 Lead • 0 QA • 0 Dev</div>
+          </div>
+        </div>
+
+        <!-- Scale 5: Phân hệ nghiệp vụ -->
+        <div class="lead-scale-card" style="border-left:4px solid #06b6d4">
+          <div class="lead-scale-icon" style="background:rgba(6,182,212,0.1); color:#06b6d4">🧩</div>
+          <div style="flex:1; min-width:0">
+            <div class="lead-scale-lbl">Phân hệ nghiệp vụ</div>
+            <div class="lead-scale-val" id="scale-val-modules" style="color:#06b6d4">0 phân hệ</div>
+            <div class="lead-scale-sub" id="scale-sub-modules">0 phân hệ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. KHỐI 2: CẤU HÌNH DỰ ÁN & MÔI TRƯỜNG THIẾT BỊ MỤC TIÊU -->
+      <div class="lead-cfg-grid">
+        
+        <!-- Card 2A: Hạ tầng và thiết bị mục tiêu -->
+        <div class="lead-cfg-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px">
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="font-size:16px">🌐</span>
+              <h3 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">
+                Môi trường và thiết bị kiểm thử
+              </h3>
+            </div>
+            <span class="badge" style="background:rgba(22,163,74,0.1); color:#16a34a; font-size:11px; font-weight:700">
+              🟢 Sẵn sàng kiểm thử
+            </span>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Máy chủ Staging / API:</span>
+            <span style="font-family:monospace; font-weight:700; color:#2563eb" id="cfg-server-url">
+              Đang tải...
+            </span>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Cơ sở dữ liệu và nền tảng lõi:</span>
+            <span style="font-weight:700; color:var(--text-primary)" id="cfg-infra-desc">
+              Đang tải...
+            </span>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Quy trình kiểm thử:</span>
+            <span style="font-weight:700; color:var(--text-primary)" id="cfg-process-desc">
+              Continuous Integration (CI/CD) • Agile Sprint Regression
+            </span>
+          </div>
+
+          <div style="margin-top:10px">
+            <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px">
+              Ma trận nền tảng và thiết bị mục tiêu:
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap" id="cfg-platforms-chips">
+              <!-- Rendered dynamically by LeadDashboard -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2B: Cấu hình cổng nghiệm thu và SLA -->
+        <div class="lead-cfg-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px">
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="font-size:16px">🛡️</span>
+              <h3 style="margin:0; font-size:14px; font-weight:800; color:var(--text-primary)">
+                Cổng nghiệm thu và SLA
+              </h3>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadDashboard.switchMainTab('settings')" style="font-weight:700">
+              ⚙️ Cấu hình ➔
+            </button>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Tỷ lệ đạt tối thiểu:</span>
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="color:var(--text-secondary)">Cam kết: <strong id="cfg-qg-pass">≥95%</strong></span>
+              <span style="font-weight:800; color:#dc2626" id="cfg-act-pass">Thực tế: 0%</span>
+            </div>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Lỗi khẩn cấp (P1) tối đa:</span>
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="color:var(--text-secondary)">Tiêu chuẩn: <strong id="cfg-qg-p1">0 lỗi</strong></span>
+              <span style="font-weight:800; color:#16a34a" id="cfg-act-p1">Thực tế: 0</span>
+            </div>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Lỗi nghiêm trọng (P2) tối đa:</span>
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="color:var(--text-secondary)">Tiêu chuẩn: <strong id="cfg-qg-p2">≤2 lỗi</strong></span>
+              <span style="font-weight:800; color:#d97706" id="cfg-act-p2">Thực tế: 0</span>
+            </div>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Cam kết SLA sửa lỗi của đội lập trình:</span>
+            <span style="font-weight:700; color:var(--text-primary)" id="cfg-sla-desc">
+              P1: 4h • P2: 24h • P3: 72h
+            </span>
+          </div>
+
+          <div class="lead-cfg-row">
+            <span style="color:var(--text-muted)">Đánh giá cổng nghiệm thu:</span>
+            <span class="badge" id="cfg-qg-verdict-badge" style="background:rgba(220,38,38,0.12); color:#dc2626; font-weight:800; font-size:11px">
+              ⚠️ CHƯA ĐẠT CHUẨN
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 4. KHỐI 3: THỰC TRẠNG SỨC KHỎE DỰ ÁN VÀ TIẾN ĐỘ TRỰC QUAN -->
+      <div style="display:grid; grid-template-columns: 280px 1.2fr 1fr; gap:16px; margin-bottom:18px">
+        
+        <!-- Gauge 3A: Chỉ số Sức Khỏe Dự Án PHI -->
+        <div class="lead-cfg-card" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:18px">
+          <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px">
+            Chỉ số sức khỏe dự án PHI
+          </div>
+          <div style="margin:10px 0 6px 0">
+            <span id="lead-phi-score" style="font-size:46px; font-weight:900; line-height:1; color:#dc2626">--</span>
+            <span style="font-size:22px; color:var(--text-muted); font-weight:700">/100</span>
+          </div>
+          <span id="lead-phi-badge" class="badge" style="font-size:11px; font-weight:800; background:rgba(220,38,38,0.12); color:#dc2626; border:1px solid #dc2626">
+            🔴 BÁO ĐỘNG ĐỎ
+          </span>
+          <div id="lead-phi-verdict-desc" style="font-size:11.5px; color:var(--text-secondary); margin-top:8px; line-height:1.3">
+            Chưa đủ điều kiện phát hành do độ lệch tỷ lệ đạt và lỗi tồn đọng.
+          </div>
+        </div>
+
+        <!-- Gauge 3B: Phân bổ kết quả kiểm thử toàn diện -->
+        <div class="lead-cfg-card" style="display:flex; flex-direction:column; justify-content:space-between">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+              <span style="font-size:13px; font-weight:800; color:var(--text-primary)">
+                📊 Phân bổ kết quả kiểm thử toàn dự án
+              </span>
+              <strong id="dist-passrate-pct" style="font-size:16px; color:#16a34a">0% đạt</strong>
+            </div>
+
+            <!-- 4-Color Segmented Execution Bar -->
+            <div style="height:12px; border-radius:6px; background:var(--bg-body); overflow:hidden; display:flex; border:1px solid var(--border); margin-bottom:12px">
+              <div id="bar-dist-pass" style="background:#16a34a; width:0%" title="Đạt"></div>
+              <div id="bar-dist-fail" style="background:#dc2626; width:0%" title="Không đạt"></div>
+              <div id="bar-dist-block" style="background:#f59e0b; width:0%" title="Bị nghẽn"></div>
+              <div id="bar-dist-untest" style="background:#cbd5e1; width:100%" title="Chưa kiểm thử"></div>
+            </div>
+          </div>
+
+          <!-- 4 Indicator Pills -->
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; text-align:center">
+            <div style="padding:6px; background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.2); border-radius:8px">
+              <div style="font-size:10.5px; color:#16a34a; font-weight:700">🟢 Đạt</div>
+              <div style="font-size:15px; font-weight:900; color:#16a34a" id="dist-pass-cnt">0</div>
+            </div>
+            <div style="padding:6px; background:rgba(220,38,38,0.08); border:1px solid rgba(220,38,38,0.2); border-radius:8px">
+              <div style="font-size:10.5px; color:#dc2626; font-weight:700">🔴 Không đạt</div>
+              <div style="font-size:15px; font-weight:900; color:#dc2626" id="dist-fail-cnt">0</div>
+            </div>
+            <div style="padding:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:8px">
+              <div style="font-size:10.5px; color:#d97706; font-weight:700">🟡 Bị nghẽn</div>
+              <div style="font-size:15px; font-weight:900; color:#d97706" id="dist-block-cnt">0</div>
+            </div>
+            <div style="padding:6px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px">
+              <div style="font-size:10.5px; color:var(--text-muted); font-weight:700">⚪ Chưa chạy</div>
+              <div style="font-size:15px; font-weight:900; color:var(--text-muted)" id="dist-untest-cnt">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gauge 3C: Tiến độ sửa lỗi Dev Board -->
+        <div class="lead-cfg-card" style="display:flex; flex-direction:column; justify-content:space-between">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+              <span style="font-size:13px; font-weight:800; color:var(--text-primary)">
+                🛠️ Tiến độ sửa lỗi của đội lập trình
+              </span>
+              <a href="../dev/index.html" class="btn btn-outline btn-xs" style="font-weight:700">💻 Bảng lập trình ➔</a>
+            </div>
+
+            <!-- Pipeline progress bar -->
+            <div style="height:12px; border-radius:6px; background:var(--bg-body); overflow:hidden; display:flex; border:1px solid var(--border); margin-bottom:12px">
+              <div id="lead-pipe-closed" style="background:#16a34a; width:0%" title="Đã đóng"></div>
+              <div id="lead-pipe-fixed" style="background:#7c3aed; width:0%" title="Chờ kiểm thử lại"></div>
+              <div id="lead-pipe-wip" style="background:#f59e0b; width:0%" title="Đang sửa"></div>
+              <div id="lead-pipe-new" style="background:#dc2626; width:0%" title="Lỗi mới"></div>
+            </div>
+          </div>
+
+          <!-- 3 Stats -->
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align:center">
+            <div style="padding:6px; background:rgba(220,38,38,0.08); border-radius:8px; border:1px solid rgba(220,38,38,0.2)">
+              <div style="font-size:10px; color:#dc2626; font-weight:700">Lỗi mới</div>
+              <div style="font-size:15px; font-weight:900; color:#dc2626" id="lead-dev-kpi-new">0</div>
+            </div>
+            <div style="padding:6px; background:rgba(245,158,11,0.08); border-radius:8px; border:1px solid rgba(245,158,11,0.2)">
+              <div style="font-size:10px; color:#d97706; font-weight:700">Đang sửa</div>
+              <div style="font-size:15px; font-weight:900; color:#d97706" id="lead-dev-kpi-wip">0</div>
+            </div>
+            <div style="padding:6px; background:rgba(22,163,74,0.08); border-radius:8px; border:1px solid rgba(22,163,74,0.2)">
+              <div style="font-size:10px; color:#16a34a; font-weight:700">Đã đóng</div>
+              <div style="font-size:15px; font-weight:900; color:#16a34a" id="lead-dev-kpi-closed">0</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 5. KHỐI 4: RADAR CẢNH BÁO MỐI NGUY VÀ ĐIỂM NGHẼN BÀN GIAO -->
+      <div class="card" style="margin-bottom:20px; padding:16px 20px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              ⚠️ Radar cảnh báo mối nguy và điểm nghẽn phát hành
+            </h3>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+              Tự động phát hiện các rủi ro kỹ thuật vượt ngưỡng kèm nút bấm can thiệp tác chiến tức thì
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <span class="badge" style="background:rgba(220,38,38,0.1); color:#dc2626; font-size:11px; font-weight:800">🔴 Cao</span>
+            <span class="badge" style="background:rgba(245,158,11,0.1); color:#d97706; font-size:11px; font-weight:800">🟡 Trung bình</span>
+            <span class="badge" style="background:rgba(22,163,74,0.1); color:#16a34a; font-size:11px; font-weight:800">🟢 An toàn</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Risk Cards Container -->
+        <div class="lead-risk-grid" id="lead-actionable-risks-container">
+          <!-- Populated dynamically by lead-dashboard.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB PANE 2: QUẢN TRỊ CÁC PHIÊN BẢN ==================== -->
+    <div id="tab-pane-versions" class="lead-main-tab-pane" style="display:none">
+      
+      <!-- 1. Header Strip Điều Hành Nghiệp Vụ Phiên Bản -->
+      <div class="lead-portfolio-header-strip" style="margin-bottom:16px" id="section-versions">
+        <div>
+          <div style="font-size:11.5px; color:#d97706; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px">
+            📦 Tầng 1: Không gian quản trị dự án
+          </div>
+          <h2 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
+            Quản trị vòng đời và sức khỏe các phiên bản
+          </h2>
+          <p style="color:var(--text-muted); font-size:13px; margin:4px 0 0 0">
+            Trung tâm điều phối danh mục phiên bản, kịch bản nghiệp vụ, các đợt kiểm thử và theo dõi chỉ số sẵn sàng phát hành độc lập cho từng bản phát hành.
+          </p>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <button type="button" class="btn-lead-action btn-lead-primary" onclick="LeadDashboard.openAddVersionModal()">
+            ➕ Thêm phiên bản mới
+          </button>
+          <button type="button" class="btn-lead-action btn-lead-outline" onclick="LeadDashboard.openImportVersionModal()" title="Nhập danh mục kịch bản từ file Excel hoặc JSON">
+            📥 Nhập từ Excel / JSON
+          </button>
+          <button type="button" class="btn-lead-action btn-lead-outline" onclick="LeadDashboard.openCloneVersionModal()" title="Kế thừa toàn bộ kịch bản sang phiên bản mới">
+            📋 Kế thừa kịch bản
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 4 DẢI KPI VÒNG ĐỜI & SỨC KHỎE PHIÊN BẢN -->
+      <div class="lead-kpi-grid" style="margin-bottom:20px">
+        <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
+          <div class="lead-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">📦</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Tổng phiên bản quản trị</div>
+            <div class="lead-kpi-val" id="kpi-ver-total" style="color:#2563eb; font-size:24px">0</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-ver-status-breakdown">0 Active • 0 Planning • 0 Released</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
+          <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">★</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Phiên bản hiện hành</div>
+            <div class="lead-kpi-val" id="kpi-ver-current-active" style="color:#16a34a; font-size:24px">--</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-ver-active-date">Hạn bàn giao: Chưa định</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #d97706">
+          <div class="lead-kpi-icon" style="background:rgba(217,119,6,0.1); color:#d97706">🚀</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Sẵn sàng phát hành</div>
+            <div class="lead-kpi-val" id="kpi-ver-readiness" style="color:#d97706; font-size:24px">0%</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-ver-readiness-label">Dựa trên tỷ lệ đạt và cổng nghiệm thu</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #7c3aed">
+          <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">🎯</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Tổng số đợt kiểm thử các phiên bản</div>
+            <div class="lead-kpi-val" id="kpi-ver-total-cycles" style="color:#7c3aed; font-size:24px">0</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-ver-cycles-breakdown">0 đợt đang mở kiểm thử</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. KHUNG HIỂN THỊ CÁC PHIÊN BẢN (CHUYỂN ĐỔI SUB-VIEW) -->
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="justify-content:space-between; flex-wrap:wrap; gap:12px; padding:12px 20px; background:var(--bg-card); border-bottom:1px solid var(--border)">
+          <div style="display:flex; align-items:center; gap:8px">
+            <button type="button" id="btn-ver-view-cards" class="btn btn-sm btn-primary" onclick="LeadDashboard.switchVersionsSubView('cards')" style="font-weight:700">
+              📦 Lưới thẻ sức khỏe phiên bản
+            </button>
+            <button type="button" id="btn-ver-view-matrix" class="btn btn-sm btn-outline" onclick="LeadDashboard.switchVersionsSubView('matrix')" style="font-weight:700">
+              📊 Bảng đối soát so sánh các phiên bản
+            </button>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted)">
+            Chuẩn quản lý: <strong>Jira Xray và TestRail Enterprise</strong>
+          </div>
+        </div>
+
+        <!-- Sub-view 1: Lưới thẻ các phiên bản (Cards Grid) -->
+        <div id="versions-subview-cards" style="padding:20px">
+          <div id="lead-project-versions-container">
+            <!-- Populated dynamically by lead-dashboard.js -->
+          </div>
+        </div>
+
+        <!-- Sub-view 2: Bảng đối soát so sánh chi tiết các phiên bản -->
+        <div id="versions-subview-matrix" style="display:none; overflow-x:auto">
+          <table class="asg-tc-table" style="width:100%; table-layout:auto; margin:0">
+            <thead>
+              <tr>
+                <th style="min-width:220px">Phiên bản và mô tả</th>
+                <th style="width:150px; text-align:center">Trạng thái vòng đời</th>
+                <th style="width:160px; text-align:center">Điểm sức khỏe PHI</th>
+                <th style="width:110px; text-align:center">Kịch bản</th>
+                <th style="width:120px; text-align:center">Đợt kiểm thử</th>
+                <th style="width:160px">Tiến độ và tỷ lệ đạt</th>
+                <th style="width:150px; text-align:center">Lỗi mở (P1 / P2 / tổng số)</th>
+                <th style="width:130px; text-align:center">Hạn bàn giao</th>
+                <th style="width:140px; text-align:center">Cổng nghiệm thu</th>
+                <th style="width:180px; text-align:center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="lead-versions-matrix-tbody">
+              <!-- Dynamically populated by lead-dashboard.js -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ==================== TAB PANE 2: QUẢN TRỊ NHÂN SỰ DỰ ÁN ==================== -->
+    <div id="tab-pane-roster" class="lead-main-tab-pane" style="display:none">
+      <!-- Header Strip -->
+      <div class="lead-portfolio-header-strip" style="margin-bottom:16px">
+        <div>
+          <div style="font-size:11.5px; color:#7c3aed; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px">
+            👥 Tầng 1: Không gian quản trị dự án
+          </div>
+          <h2 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
+            Quản trị nhân sự và ma trận phân bổ năng lực dự án
+          </h2>
+          <p style="color:var(--text-muted); font-size:13px; margin:4px 0 0 0">
+            Giám sát tải trọng, phân bổ nhân sự theo phiên bản và đo lường hiệu suất thực thi của từng kỹ sư.
+          </p>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <button type="button" id="btn-balance-workload" class="btn btn-outline btn-sm" onclick="LeadDashboard.balanceWorkload()" title="Kiểm tra và tự động cân bằng tải kịch bản giữa các kiểm thử viên">
+            ⚖️ Cân bằng tải
+          </button>
+          <button type="button" id="btn-open-roster-modal" class="btn btn-primary btn-sm" onclick="LeadDashboard.openAssignRosterModal('staffing')">
+            ⚙️ Thiết lập biên chế và phân bổ
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Dải KPI Quản Trị Nhân Lực Cốt Lõi -->
+      <div class="lead-kpi-grid" style="margin-bottom:20px">
+        <div class="lead-kpi-card" style="border-left:4px solid #7c3aed">
+          <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">👥</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Tổng nhân sự dự án</div>
+            <div class="lead-kpi-val" id="kpi-roster-total" style="color:#7c3aed; font-size:24px">0</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-roster-breakdown">0 Lead • 0 Tester • 0 Dev</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
+          <div class="lead-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">⚡</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Hệ số tải trọng bình quân</div>
+            <div class="lead-kpi-val" id="kpi-roster-workload" style="color:#2563eb; font-size:24px">0%</div>
+            <div style="font-size:11px; color:#16a34a; font-weight:700; margin-top:2px" id="kpi-roster-workload-status">🟢 Mức cân đối tối ưu</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
+          <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">📋</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Kịch bản đã phân bổ cho nhân sự</div>
+            <div class="lead-kpi-val" id="kpi-roster-assigned-tcs" style="color:#16a34a; font-size:24px">0 / 0 bài</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-roster-assigned-rate">Tỷ lệ phân công: 0%</div>
+          </div>
+        </div>
+
+        <div class="lead-kpi-card" style="border-left:4px solid #dc2626">
+          <div class="lead-kpi-icon" style="background:rgba(220,38,38,0.1); color:#dc2626">🐛</div>
+          <div style="flex:1">
+            <div class="lead-kpi-lbl">Lỗi phát hiện bởi nhân sự</div>
+            <div class="lead-kpi-val" id="kpi-roster-defects-found" style="color:#dc2626; font-size:24px">0 lỗi</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px" id="kpi-roster-defects-valid">Tỷ lệ xác nhận: 100%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khung Chuyển Đổi Sub-Views Quản Trị Nhân Sự -->
+      <div class="card" id="section-roster" style="padding:0; overflow:hidden">
+        <div class="card-header" style="justify-content:space-between; flex-wrap:wrap; gap:12px; padding:12px 20px; background:var(--bg-card); border-bottom:1px solid var(--border)">
+          <div style="display:flex; align-items:center; gap:8px">
+            <button type="button" id="btn-roster-view-table" class="btn btn-sm btn-primary" onclick="LeadDashboard.switchRosterSubView('table')" style="font-weight:700">
+              📋 Bảng đối soát kỹ sư chi tiết
+            </button>
+            <button type="button" id="btn-roster-view-matrix" class="btn btn-sm btn-outline" onclick="LeadDashboard.switchRosterSubView('matrix')" style="font-weight:700">
+              📦 Ma trận phân bổ theo phiên bản
+            </button>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted)">
+            Định mức chuẩn: <strong>35 kịch bản / tester / đợt</strong>
+          </div>
+        </div>
+
+        <!-- Sub-view 1: Bảng Đối Soát Chi Tiết -->
+        <div id="roster-subview-table" style="overflow-x:auto">
+          <table class="asg-tc-table" style="width:100%; table-layout:auto; margin:0">
+            <thead>
+              <tr>
+                <th style="min-width:220px">Kỹ sư và chuyên môn</th>
+                <th style="width:150px; text-align:center">Vai trò dự án</th>
+                <th style="min-width:180px">Phiên bản phụ trách</th>
+                <th style="min-width:190px">Kịch bản phụ trách và tiến độ</th>
+                <th style="width:170px; text-align:center">Tải trọng và trạng thái</th>
+                <th style="width:150px; text-align:center">Lỗi phát hiện</th>
+                <th style="width:110px; text-align:center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="lead-team-roster-table">
+              <!-- Populated dynamically by lead-dashboard.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Sub-view 2: Ma Trận Phân Bổ Trực Tiếp (Inline Matrix View) -->
+        <div id="roster-subview-matrix" style="display:none; padding:16px 20px">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px">
+            <div style="font-size:12.5px; color:var(--text-secondary)">
+              💡 Thiết lập trực tiếp tỷ lệ cam kết thời gian (% Allocation) cho từng phiên bản. Tổng tỷ lệ của mỗi kỹ sư nên đạt 100%.
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmSaveInlineMatrix()" style="font-weight:700">
+              💾 Lưu ma trận phân bổ
+            </button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="asg-tc-table" style="width:100%; table-layout:auto; margin:0">
+              <thead>
+                <tr id="lead-inline-matrix-thead-tr">
+                  <!-- Dynamically populated with Versions -->
+                </tr>
+              </thead>
+              <tbody id="lead-inline-matrix-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB PANE 3: CÀI ĐẶT CẤU HÌNH DỰ ÁN ==================== -->
+    <div id="tab-pane-settings" class="lead-main-tab-pane" style="display:none">
+      <!-- Header Strip -->
+      <div class="lead-portfolio-header-strip" style="margin-bottom:16px">
+        <div>
+          <div style="font-size:11.5px; color:#2563eb; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px">
+            ⚙️ Tầng 1: Không gian quản trị dự án
+          </div>
+          <h2 style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0">
+            Cài đặt cấu hình và tham số quản trị dự án
+          </h2>
+          <p style="color:var(--text-muted); font-size:13px; margin:4px 0 0 0">
+            Thiết lập tiêu chuẩn chất lượng (ISO 29119), cổng nghiệm thu, cam kết SLA và môi trường kiểm thử.
+          </p>
+        </div>
+
+        <div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.saveInlineProjectSettings()" style="font-weight:800; padding:8px 20px">
+            💾 Lưu cấu hình dự án
+          </button>
+        </div>
+      </div>
+
+      <!-- 5 Subtabs Bar -->
+      <div class="lead-settings-tabs-container">
+        <button type="button" class="lead-settings-tab-btn active" id="tab-btn-ips-gov" onclick="LeadDashboard.switchInlineSettingsTab('gov')">
+          🏢 1. Định danh và quản trị
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-ips-gates" onclick="LeadDashboard.switchInlineSettingsTab('gates')">
+          🏆 2. Cổng nghiệm thu
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-ips-sla" onclick="LeadDashboard.switchInlineSettingsTab('sla')">
+          ⏱️ 3. Cam kết sửa lỗi SLA và quy tắc
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-ips-env" onclick="LeadDashboard.switchInlineSettingsTab('env')">
+          🌐 4. Môi trường và thiết bị
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-ips-alerts" onclick="LeadDashboard.switchInlineSettingsTab('alerts')">
+          🔔 5. Cảnh báo và đám mây
+        </button>
+      </div>
+
+      <!-- Inline Settings Card Body -->
+      <div class="card" style="padding:24px">
+        <!-- PANE 1: GOVERNANCE -->
+        <div id="ips-pane-gov" class="ips-pane" style="display:flex; flex-direction:column; gap:16px">
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px">
+            <div>
+              <label class="form-label" style="font-weight:700">Mã dự án (*)</label>
+              <input type="text" id="ips-code" class="form-control" readonly style="background:var(--bg-surface); font-weight:800; color:#2563eb" />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Tên dự án kiểm thử (*)</label>
+              <input type="text" id="ips-name" class="form-control" required />
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
+            <div>
+              <label class="form-label" style="font-weight:700">Trưởng dự án</label>
+              <input type="text" id="ips-lead" class="form-control" placeholder="Họ tên QA Lead" />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Đại diện nghiệp vụ (PO / BA)</label>
+              <input type="text" id="ips-po" class="form-control" placeholder="Product Owner / BA Lead" />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Đầu mối đội lập trình</label>
+              <input type="text" id="ips-devlead" class="form-control" placeholder="Technical Lead" />
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label" style="font-weight:700">Mục tiêu chất lượng và phạm vi quản trị của dự án</label>
+            <textarea id="ips-desc" class="form-control" rows="3" placeholder="Mô tả phạm vi quản trị chất lượng, mục tiêu phát hành và cam kết độ tin cậy của phần mềm..."></textarea>
+          </div>
+        </div>
+
+        <!-- PANE 2: QUALITY GATES -->
+        <div id="ips-pane-gates" class="ips-pane" style="display:none; flex-direction:column; gap:16px">
+          <div>
+            <label class="form-label" style="font-weight:700">Tiêu chuẩn quản trị kiểm thử áp dụng</label>
+            <select id="ips-standard" class="form-control" style="font-weight:700">
+              <option value="ISO/IEC/IEEE 29119">🏆 ISO/IEC/IEEE 29119-2 (Quy trình kiểm thử chuẩn quốc tế)</option>
+              <option value="ISO/IEC 25010">💎 ISO/IEC 25010 (Mô hình đánh giá chất lượng phần mềm toàn diện)</option>
+              <option value="ISTQB Certified">📜 ISTQB Enterprise Test Management Standards</option>
+              <option value="Agile Scrum Test">⚡ Agile / Continuous Delivery Quality Testing</option>
+            </select>
+          </div>
+
+          <div style="padding:16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+              🎯 Ngưỡng nghiệm thu tối thiểu để cho phép bàn giao
+            </h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Tỷ lệ đạt kiểm thử tối thiểu</label>
+                <div style="display:flex; align-items:center; gap:8px">
+                  <input type="number" id="ips-gate-passrate" class="form-control" min="50" max="100" value="95" style="font-weight:800; color:#16a34a" />
+                  <span style="font-weight:800; font-size:14px">%</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Khuyến nghị ISO 29119: Tối thiểu 95% kịch bản đạt</div>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Độ bao phủ kịch bản P1/P2 tối thiểu</label>
+                <div style="display:flex; align-items:center; gap:8px">
+                  <input type="number" id="ips-gate-coverage" class="form-control" min="80" max="100" value="100" style="font-weight:800; color:#2563eb" />
+                  <span style="font-weight:800; font-size:14px">%</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">100% kịch bản khẩn cấp và cao phải được thực thi</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:#dc2626">
+              🛑 Giới hạn lỗi tồn đọng tối đa cho phép phát hành
+            </h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px">
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700; color:#dc2626">Lỗi khẩn cấp (P1)</label>
+                <input type="number" id="ips-gate-max-p1" class="form-control" min="0" max="10" value="0" style="font-weight:800; color:#dc2626" />
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Bắt buộc = 0 lỗi</div>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700; color:#d97706">Lỗi nghiêm trọng (P2)</label>
+                <input type="number" id="ips-gate-max-p2" class="form-control" min="0" max="10" value="1" style="font-weight:800; color:#d97706" />
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Tối đa cho phép: 1 lỗi</div>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700; color:#2563eb">Lỗi trung bình (P3)</label>
+                <input type="number" id="ips-gate-max-p3" class="form-control" min="0" max="20" value="3" style="font-weight:800" />
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Tối đa cho phép: 3 lỗi</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 3: SLA & RULES -->
+        <div id="ips-pane-sla" class="ips-pane" style="display:none; flex-direction:column; gap:16px">
+          <div style="padding:16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+              ⏱️ Thời gian cam kết sửa lỗi của đội lập trình (SLA)
+            </h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px">
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Lỗi khẩn cấp (P1)</label>
+                <select id="ips-sla-p1" class="form-control">
+                  <option value="4h" selected>⚡ Trong vòng 4 giờ</option>
+                  <option value="12h">Trong vòng 12 giờ</option>
+                  <option value="24h">Trong vòng 24 giờ</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Lỗi nghiêm trọng (P2)</label>
+                <select id="ips-sla-p2" class="form-control">
+                  <option value="24h" selected>Trong vòng 24 giờ</option>
+                  <option value="48h">Trong vòng 48 giờ</option>
+                  <option value="72h">Trong vòng 72 giờ</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Lỗi trung bình (P3)</label>
+                <select id="ips-sla-p3" class="form-control">
+                  <option value="3d">Trong 3 ngày làm việc</option>
+                  <option value="5d" selected>Trong 5 ngày làm việc</option>
+                  <option value="7d">Trong 1 tuần</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+              📋 Quy tắc kiểm soát chất lượng bắt buộc
+            </h4>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer">
+                <input type="checkbox" id="ips-rule-evidence" checked style="width:16px; height:16px" />
+                <span>Bắt buộc đính kèm bằng chứng (Ảnh chụp màn hình, Video hoặc Log lỗi) khi kiểm thử viên đánh dấu không đạt</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer">
+                <input type="checkbox" id="ips-rule-peer" checked style="width:16px; height:16px" />
+                <span>Yêu cầu kiểm thử chéo độc lập (kiểm thử viên khác xác nhận) trước khi đóng lỗi đã sửa</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer">
+                <input type="checkbox" id="ips-rule-autolock" checked style="width:16px; height:16px" />
+                <span>Tự động khóa đóng phiên bản khi nghiệm thu đạt chuẩn cổng nghiệm thu</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 4: ENVIRONMENTS -->
+        <div id="ips-pane-env" class="ips-pane" style="display:none; flex-direction:column; gap:16px">
+          <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:16px">
+            <div>
+              <label class="form-label" style="font-weight:700">Môi trường kiểm thử chính</label>
+              <select id="ips-env-type" class="form-control">
+                <option value="STAGING_UAT" selected>🧪 Môi trường Staging / UAT</option>
+                <option value="PRE_PROD">⚡ Môi trường sát thực tế Pre-Production</option>
+                <option value="LAB_AI">🔬 Phòng thí nghiệm AI và IoT</option>
+                <option value="PROD_MIRROR">🛡️ Môi trường mô phỏng Production Mirror</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">URL máy chủ / API kiểm thử</label>
+              <input type="text" id="ips-env-url" class="form-control" placeholder="https://staging.yourdomain.com" />
+            </div>
+          </div>
+
+          <div style="padding:16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <label class="form-label" style="font-weight:700; margin-bottom:10px">Ma trận nền tảng và thiết bị mục tiêu</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="ips-plat-web" style="width:16px; height:16px" />
+                <span>🌐 Trình duyệt web (Chrome, Edge, Firefox)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="ips-plat-mobile" style="width:16px; height:16px" />
+                <span>📱 Ứng dụng di động (Android và iOS)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="ips-plat-cam" style="width:16px; height:16px" />
+                <span>🖥️ Ứng dụng Desktop / Client chuyên dụng</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="ips-plat-iot" style="width:16px; height:16px" />
+                <span>🔌 Thiết bị ngoại vi & Phần cứng tích hợp</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 5: ALERTS & CLOUD -->
+        <div id="ips-pane-alerts" class="ips-pane" style="display:none; flex-direction:column; gap:16px">
+          <div style="padding:16px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); border-radius:10px">
+            <div style="font-weight:800; color:#2563eb; margin-bottom:4px">☁️ Trạng thái cơ sở dữ liệu đám mây Supabase</div>
+            <div style="font-size:12.5px; color:var(--text-secondary)">
+              Dữ liệu của dự án được đồng bộ liên tục lên Cloud khi có kết nối mạng và hỗ trợ làm việc offline an toàn.
+            </div>
+          </div>
+
+          <div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; cursor:pointer">
+              <input type="checkbox" id="ips-alert-critical" checked style="width:16px; height:16px" />
+              <span>Gửi cảnh báo khẩn cấp tức thời khi phát sinh lỗi P1</span>
+            </label>
+          </div>
+
+          <div>
+            <label class="form-label" style="font-weight:700">Kênh tiếp nhận cảnh báo (Webhook Slack / Telegram / Email)</label>
+            <input type="text" id="ips-alert-endpoint" class="form-control" placeholder="https://hooks.slack.com/services/... hoặc email@domain.com" />
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px">Hệ thống sẽ bắn thông báo khi có đợt kiểm thử bị chậm tiến độ hoặc phát hiện lỗi nghiêm trọng.</div>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border)">
+          <div style="font-size:12.5px; color:var(--text-muted)">
+            Đang áp dụng tiêu chuẩn kiểm thử cấp doanh nghiệp
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.saveInlineProjectSettings()" style="font-weight:800; padding:8px 24px">
+            💾 Lưu cấu hình dự án
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== CÁC MODAL CẤU HÌNH TRỰC TIẾP TRONG KHÔNG GIAN DỰ ÁN (TẦNG 1) ==================== -->
+
+  <!-- Modal 1: Thêm / Sửa Phiên Bản Phần Mềm -->
+  <div class="modal" id="modal-version-form">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-header">
+        <h3 id="modal-version-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+          ➕ Thêm phiên bản mới cho dự án
+        </h3>
+        <button type="button" class="btn-close" onclick="closeModal('modal-version-form')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <input type="hidden" id="vf-original-version" />
+
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã phiên bản (*)</label>
+            <input type="text" id="vf-tag" class="form-control" placeholder="VD: v2.1" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Tên / Nhãn hiển thị</label>
+            <input type="text" id="vf-label" class="form-control" placeholder="Bản nâng cấp phân hệ AI..." />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng thái phiên bản</label>
+            <select id="vf-status" class="form-control">
+              <option value="ACTIVE" selected>🟢 Đang triển khai</option>
+              <option value="IN_DEV">🔧 Đang phát triển</option>
+              <option value="PLANNING">⏳ Kế hoạch</option>
+              <option value="RELEASED">🔒 Đã phát hành</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn bàn giao / phát hành</label>
+            <input type="date" id="vf-date" class="form-control" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi chú phát hành</label>
+          <textarea id="vf-changelog" class="form-control" rows="3" placeholder="Mô tả tóm tắt tính năng mới, phân hệ trọng tâm hoặc mục tiêu kiểm thử của phiên bản..."></textarea>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--bg-surface); border-radius:8px; border:1px solid var(--border)">
+          <input type="checkbox" id="vf-set-active" style="cursor:pointer; width:16px; height:16px" />
+          <label for="vf-set-active" style="font-size:13px; font-weight:700; color:var(--text-primary); cursor:pointer">
+            ★ Đặt làm phiên bản hiện hành của dự án
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-version-form')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmSaveVersion()">💾 Lưu phiên bản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Kế Thừa Kịch Bản Sang Phiên Bản Mới -->
+  <div class="modal" id="modal-clone-version">
+    <div class="modal-box" style="max-width:580px; width:95%">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+            📋 Kế thừa kịch bản sang phiên bản mới
+          </h3>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Sao chép toàn bộ kho kịch bản từ phiên bản hiện có sang một phiên bản phát hành mới.
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-clone-version')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div>
+          <label class="form-label" style="font-weight:700">Phiên bản nguồn cần kế thừa (*)</label>
+          <select id="mcv-source-version" class="form-control" onchange="LeadDashboard.handleCloneSourceChange()"></select>
+          <div id="mcv-source-info" style="font-size:12px; color:#2563eb; font-weight:700; margin-top:4px"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã phiên bản mới (*)</label>
+            <input type="text" id="mcv-new-version" class="form-control" placeholder="VD: v2.1" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Tên / Nhãn hiển thị (*)</label>
+            <input type="text" id="mcv-new-label" class="form-control" placeholder="VD: Bản nâng cấp tính năng M12" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi chú phát hành</label>
+          <textarea id="mcv-changelog" class="form-control" rows="2" placeholder="Mô tả mục tiêu của phiên bản kế thừa này..."></textarea>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--bg-surface); border-radius:8px; border:1px solid var(--border)">
+          <input type="checkbox" id="mcv-set-active" checked style="cursor:pointer; width:16px; height:16px" />
+          <label for="mcv-set-active" style="font-size:13px; font-weight:700; color:var(--text-primary); cursor:pointer">
+            ⚡ Đặt làm phiên bản hiện hành ngay sau khi tạo
+          </label>
+        </div>
+
+        <div style="padding:12px; border-radius:8px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); font-size:12px; color:var(--text-secondary)">
+          💡 Hệ thống sẽ tự động sao chép toàn bộ các kịch bản kiểm thử từ phiên bản nguồn sang phiên bản mới. Sau khi tạo xong, bạn có thể vào không gian của phiên bản mới để tạo các đợt kiểm thử riêng biệt.
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-clone-version')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmCloneVersion()">
+          📋 Xác nhận kế thừa và tạo mới
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Khởi Tạo Phiên Bản Mới Từ File Excel / JSON -->
+  <div class="modal" id="modal-import-version">
+    <div class="modal-box" style="max-width:680px; width:95%">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+            📥 Khởi tạo phiên bản mới từ tệp kịch bản (Excel / JSON)
+          </h3>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Nhập danh mục kịch bản chuẩn hóa từ bảng tính Excel (.xlsx) hoặc tệp cấu hình JSON vào dự án này.
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-import-version')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Mã phiên bản mới (*)</label>
+            <input type="text" id="miv-version" class="form-control" placeholder="VD: v2.2" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Tên / Nhãn hiển thị (*)</label>
+            <input type="text" id="miv-label" class="form-control" placeholder="VD: Phiên bản Tích hợp Đa điểm" required />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="form-label" style="font-weight:700">Hạn mục tiêu hoàn thành</label>
+            <input type="date" id="miv-date" class="form-control" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:700">Trạng thái khởi đầu</label>
+            <select id="miv-status" class="form-control">
+              <option value="ACTIVE" selected>🟢 Kích hoạt ngay</option>
+              <option value="PLANNING">🟡 Lập kế hoạch</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:700">Ghi chú phát hành</label>
+          <input type="text" id="miv-changelog" class="form-control" placeholder="Tóm tắt nội dung thay đổi hoặc phạm vi kiểm thử..." />
+        </div>
+
+        <!-- File Upload Area -->
+        <div style="border:2px dashed var(--border); border-radius:8px; padding:20px; text-align:center; background:var(--bg-surface)">
+          <div style="font-size:32px; margin-bottom:8px">📄</div>
+          <div style="font-weight:700; margin-bottom:4px">Chọn file Excel (.xlsx, .xls) hoặc JSON chứa kịch bản</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px">
+            Cột chuẩn trong file Excel: <code>Mã kịch bản</code>, <code>Phân hệ</code>, <code>Tên kịch bản</code>, <code>Mức ưu tiên</code>, <code>Các bước</code>, <code>Kết quả mong đợi</code>
+          </div>
+          <input type="file" id="miv-file-input" accept=".xlsx, .xls, .json" onchange="LeadDashboard.handleVersionFileSelected(event)" style="display:none" />
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('miv-file-input').click()">
+            📁 Duyệt chọn tệp trên máy
+          </button>
+          <div id="miv-file-name" style="margin-top:8px; font-size:12px; font-weight:700; color:var(--primary)"></div>
+        </div>
+
+        <!-- Preview Summary Box -->
+        <div id="miv-preview-box" style="display:none; padding:12px; border-radius:6px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); font-size:12.5px">
+          <div style="font-weight:700; color:var(--primary); margin-bottom:4px">🔍 Kết quả phân tích tệp:</div>
+          <div id="miv-preview-content"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-import-version')">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" id="miv-submit-btn" onclick="LeadDashboard.confirmImportVersion()" disabled>
+          🚀 Nhập kịch bản và khởi tạo phiên bản
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Cấu Hình Toàn Diện Tham Số & Quản Trị Dự Án -->
+  <div class="modal" id="modal-project-form">
+    <div class="modal-box" style="max-width:920px; width:95%; max-height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden">
+      <!-- Header -->
+      <div class="modal-header" style="flex-shrink:0; padding:16px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:22px">
+            ⚙️
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+              Cài đặt cấu hình và tham số quản trị dự án
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Thiết lập tiêu chuẩn chất lượng (ISO 29119), cổng nghiệm thu, cam kết SLA và môi trường kiểm thử.
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-project-form')">✕</button>
+      </div>
+
+      <!-- Settings Subnav Tabs -->
+      <div class="lead-settings-tabs-container" style="margin:12px 20px 0 20px; flex-shrink:0">
+        <button type="button" class="lead-settings-tab-btn active" id="tab-btn-mpf-gov" onclick="LeadDashboard.switchProjectSettingsTab('gov')">
+          🏢 1. Định danh và quản trị
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-mpf-gates" onclick="LeadDashboard.switchProjectSettingsTab('gates')">
+          🏆 2. Cổng nghiệm thu
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-mpf-sla" onclick="LeadDashboard.switchProjectSettingsTab('sla')">
+          ⏱️ 3. Cam kết sửa lỗi SLA và quy tắc
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-mpf-env" onclick="LeadDashboard.switchProjectSettingsTab('env')">
+          🌐 4. Môi trường và thiết bị
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-mpf-alerts" onclick="LeadDashboard.switchProjectSettingsTab('alerts')">
+          🔔 5. Cảnh báo và đám mây
+        </button>
+      </div>
+
+      <!-- Settings Panes (Scrollable Body) -->
+      <div class="modal-body" style="padding:20px; flex:1; overflow-y:auto">
+        <!-- PANE 1: GOVERNANCE -->
+        <div id="mpf-pane-gov" class="mpf-pane" style="display:flex; flex-direction:column; gap:14px">
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Mã dự án (*)</label>
+              <input type="text" id="mpf-code" class="form-control" readonly style="background:var(--bg-surface); font-weight:800; color:#2563eb" />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Tên dự án kiểm thử (*)</label>
+              <input type="text" id="mpf-name" class="form-control" required />
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Trưởng dự án</label>
+              <input type="text" id="mpf-lead" class="form-control" placeholder="Họ tên QA Lead" />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Đại diện nghiệp vụ (PO / BA)</label>
+              <input type="text" id="mpf-po" class="form-control" placeholder="Product Owner / BA Lead" />
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">Đầu mối đội lập trình</label>
+              <input type="text" id="mpf-devlead" class="form-control" placeholder="Technical Lead" />
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label" style="font-weight:700">Mục tiêu chất lượng và phạm vi quản trị của dự án</label>
+            <textarea id="mpf-desc" class="form-control" rows="3" placeholder="Mô tả phạm vi quản trị chất lượng, mục tiêu phát hành và cam kết độ tin cậy của phần mềm..."></textarea>
+          </div>
+        </div>
+
+        <!-- PANE 2: QUALITY GATES -->
+        <div id="mpf-pane-gates" class="mpf-pane" style="display:none; flex-direction:column; gap:14px">
+          <div>
+            <label class="form-label" style="font-weight:700">Tiêu chuẩn quản trị kiểm thử áp dụng</label>
+            <select id="mpf-standard" class="form-control" style="font-weight:700">
+              <option value="ISO/IEC/IEEE 29119">🏆 ISO/IEC/IEEE 29119-2 (Quy trình kiểm thử chuẩn quốc tế)</option>
+              <option value="ISO/IEC 25010">💎 ISO/IEC 25010 (Mô hình đánh giá chất lượng phần mềm toàn diện)</option>
+              <option value="ISTQB Certified">📜 ISTQB Enterprise Test Management Standards</option>
+              <option value="Agile Scrum Test">⚡ Agile / Continuous Delivery Quality Testing</option>
+            </select>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+              🎯 Ngưỡng nghiệm thu tối thiểu để cho phép bàn giao
+            </h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Tỷ lệ đạt kiểm thử tối thiểu</label>
+                <div style="display:flex; align-items:center; gap:8px">
+                  <input type="number" id="mpf-gate-passrate" class="form-control" min="50" max="100" value="95" style="font-weight:800; color:#16a34a" />
+                  <span style="font-weight:800; font-size:14px">%</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Khuyến nghị ISO 29119: Tối thiểu 95% kịch bản đạt</div>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Độ bao phủ kịch bản P1/P2 tối thiểu</label>
+                <div style="display:flex; align-items:center; gap:8px">
+                  <input type="number" id="mpf-gate-coverage" class="form-control" min="80" max="100" value="100" style="font-weight:800; color:#2563eb" />
+                  <span style="font-weight:800; font-size:14px">%</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">100% kịch bản khẩn cấp và cao phải được thực thi</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:#dc2626">
+              🛑 Giới hạn lỗi tồn đọng tối đa cho phép phát hành
+            </h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700; color:#dc2626">Lỗi khẩn cấp (P1)</label>
+                <input type="number" id="mpf-gate-max-p1" class="form-control" min="0" max="10" value="0" style="font-weight:800; color:#dc2626" />
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Bắt buộc = 0 lỗi</div>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700; color:#d97706">Lỗi nghiêm trọng (P2)</label>
+                <input type="number" id="mpf-gate-max-p2" class="form-control" min="0" max="10" value="1" style="font-weight:800; color:#d97706" />
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Tối đa cho phép: 1 lỗi</div>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700; color:#2563eb">Lỗi trung bình (P3)</label>
+                <input type="number" id="mpf-gate-max-p3" class="form-control" min="0" max="20" value="3" style="font-weight:800" />
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px">Tối đa cho phép: 3 lỗi</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 3: SLA & RULES -->
+        <div id="mpf-pane-sla" class="mpf-pane" style="display:none; flex-direction:column; gap:14px">
+          <div style="padding:14px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+              ⏱️ Thời gian cam kết sửa lỗi của đội lập trình (SLA)
+            </h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Lỗi khẩn cấp (P1)</label>
+                <select id="mpf-sla-p1" class="form-control">
+                  <option value="4h" selected>⚡ Trong vòng 4 giờ</option>
+                  <option value="12h">Trong vòng 12 giờ</option>
+                  <option value="24h">Trong vòng 24 giờ</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Lỗi nghiêm trọng (P2)</label>
+                <select id="mpf-sla-p2" class="form-control">
+                  <option value="24h" selected>Trong vòng 24 giờ</option>
+                  <option value="48h">Trong vòng 48 giờ</option>
+                  <option value="72h">Trong vòng 72 giờ</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px; font-weight:700">Lỗi trung bình (P3)</label>
+                <select id="mpf-sla-p3" class="form-control">
+                  <option value="3d">Trong 3 ngày làm việc</option>
+                  <option value="5d" selected>Trong 5 ngày làm việc</option>
+                  <option value="7d">Trong 1 tuần</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary)">
+              📋 Quy tắc kiểm soát chất lượng bắt buộc
+            </h4>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer">
+                <input type="checkbox" id="mpf-rule-evidence" checked style="width:16px; height:16px" />
+                <span>Bắt buộc đính kèm bằng chứng (Ảnh chụp màn hình, Video hoặc Log lỗi) khi kiểm thử viên đánh dấu không đạt</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer">
+                <input type="checkbox" id="mpf-rule-peer" checked style="width:16px; height:16px" />
+                <span>Yêu cầu kiểm thử chéo độc lập (kiểm thử viên khác xác nhận) trước khi đóng lỗi đã sửa</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer">
+                <input type="checkbox" id="mpf-rule-autolock" checked style="width:16px; height:16px" />
+                <span>Tự động khóa đóng phiên bản khi nghiệm thu đạt chuẩn cổng nghiệm thu</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 4: ENVIRONMENTS -->
+        <div id="mpf-pane-env" class="mpf-pane" style="display:none; flex-direction:column; gap:14px">
+          <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px">
+            <div>
+              <label class="form-label" style="font-weight:700">Môi trường kiểm thử chính</label>
+              <select id="mpf-env-type" class="form-control">
+                <option value="STAGING_UAT" selected>🧪 Môi trường Staging / UAT</option>
+                <option value="PRE_PROD">⚡ Môi trường sát thực tế Pre-Production</option>
+                <option value="LAB_AI">🔬 Phòng thí nghiệm AI và IoT</option>
+                <option value="PROD_MIRROR">🛡️ Môi trường mô phỏng Production Mirror</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-weight:700">URL máy chủ / API kiểm thử</label>
+              <input type="text" id="mpf-env-url" class="form-control" placeholder="https://staging.yourdomain.com" />
+            </div>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
+            <label class="form-label" style="font-weight:700; margin-bottom:8px">Ma trận nền tảng và thiết bị mục tiêu</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="mpf-plat-web" style="width:16px; height:16px" />
+                <span>🌐 Trình duyệt web (Chrome, Edge, Firefox)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="mpf-plat-mobile" style="width:16px; height:16px" />
+                <span>📱 Ứng dụng di động (Android và iOS)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="mpf-plat-cam" style="width:16px; height:16px" />
+                <span>🖥️ Ứng dụng Desktop / Client chuyên dụng</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer">
+                <input type="checkbox" id="mpf-plat-iot" style="width:16px; height:16px" />
+                <span>🔌 Thiết bị ngoại vi & Phần cứng tích hợp</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 5: ALERTS & CLOUD -->
+        <div id="mpf-pane-alerts" class="mpf-pane" style="display:none; flex-direction:column; gap:14px">
+          <div style="padding:14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); border-radius:10px">
+            <div style="font-weight:800; color:#2563eb; margin-bottom:4px">☁️ Trạng thái cơ sở dữ liệu đám mây Supabase</div>
+            <div style="font-size:12.5px; color:var(--text-secondary)">
+              Dữ liệu của dự án được đồng bộ liên tục lên Cloud khi có kết nối mạng và hỗ trợ làm việc offline an toàn.
+            </div>
+          </div>
+
+          <div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; cursor:pointer">
+              <input type="checkbox" id="mpf-alert-critical" checked style="width:16px; height:16px" />
+              <span>Gửi cảnh báo khẩn cấp tức thời khi phát sinh lỗi P1</span>
+            </label>
+          </div>
+
+          <div>
+            <label class="form-label" style="font-weight:700">Kênh tiếp nhận cảnh báo (Webhook Slack / Telegram / Email)</label>
+            <input type="text" id="mpf-alert-endpoint" class="form-control" placeholder="https://hooks.slack.com/services/... hoặc email@domain.com" />
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px">Hệ thống sẽ bắn thông báo khi có đợt kiểm thử bị chậm tiến độ hoặc phát hiện lỗi nghiêm trọng.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="flex-shrink:0; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px; background:var(--bg-card)">
+        <div style="font-size:12px; color:var(--text-muted)">
+          Đang áp dụng tiêu chuẩn kiểm thử cấp doanh nghiệp
+        </div>
+        <div style="display:flex; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-project-form')">Hủy bỏ</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmSaveProjectSettings()" style="font-weight:800; padding:0 20px">
+            💾 Lưu cấu hình dự án
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Bàn Làm Việc Phân Bổ Nhân Sự Đa Chiều -->
+  <div class="modal" id="modal-assign-roster">
+    <div class="modal-box" style="max-width:960px; width:95%; max-height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden">
+      <!-- Header -->
+      <div class="modal-header" style="flex-shrink:0; padding:16px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(124,58,237,0.1); color:#7c3aed; display:flex; align-items:center; justify-content:center; font-size:22px">
+            👥
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
+              Bàn làm việc quản trị nhân sự và phân bổ theo phiên bản
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Quản lý biên chế kỹ sư tham gia dự án và thiết lập ma trận phân bổ nhân lực theo từng phiên bản phần mềm.
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-assign-roster')">✕</button>
+      </div>
+
+      <!-- Subnav Tabs -->
+      <div class="lead-settings-tabs-container" style="margin:12px 20px 0 20px; flex-shrink:0">
+        <button type="button" class="lead-settings-tab-btn active" id="tab-btn-mar-staffing" onclick="LeadDashboard.switchRosterModalTab('staffing')">
+          👥 1. Biên chế và vai trò trong dự án
+        </button>
+        <button type="button" class="lead-settings-tab-btn" id="tab-btn-mar-matrix" onclick="LeadDashboard.switchRosterModalTab('matrix')">
+          📦 2. Ma trận phân bổ theo phiên bản
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body" style="padding:16px 20px; flex:1; overflow-y:auto">
+        <!-- PANE 1: STAFFING -->
+        <div id="mar-pane-staffing" class="mar-pane">
+          <table class="asg-tc-table" style="width:100%; table-layout:auto; margin:0">
+            <thead>
+              <tr>
+                <th style="width:40px; text-align:center">Chọn</th>
+                <th>Kỹ sư và tài khoản</th>
+                <th style="width:160px">Chuyên môn hệ thống</th>
+                <th style="width:180px">Vai trò trong dự án</th>
+                <th style="width:150px; text-align:center">Định mức tải tối đa</th>
+              </tr>
+            </thead>
+            <tbody id="mar-roster-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PANE 2: VERSION MATRIX -->
+        <div id="mar-pane-matrix" class="mar-pane" style="display:none">
+          <div style="padding:10px 14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); border-radius:8px; margin-bottom:12px; font-size:12px; color:var(--text-secondary)">
+            💡 Thiết lập tỷ lệ cam kết thời gian (% Allocation) của từng nhân sự cho các phiên bản. Tổng tỷ lệ của một người không nên vượt quá 100%.
+          </div>
+          <table class="asg-tc-table" style="width:100%; table-layout:auto; margin:0">
+            <thead>
+              <tr id="mar-matrix-thead-tr">
+                <!-- Dynamically populated with Versions -->
+              </tr>
+            </thead>
+            <tbody id="mar-matrix-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="flex-shrink:0; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px; background:var(--bg-card)">
+        <div style="font-size:12px; color:var(--text-muted)">
+          Đã chọn: <strong id="mar-selected-count" style="color:var(--primary)">0</strong> thành viên biên chế
+        </div>
+        <div style="display:flex; gap:8px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-roster')">Hủy bỏ</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="LeadDashboard.confirmSaveRoster()" style="font-weight:800; padding:0 20px">
+            💾 Lưu cấu hình nhân sự
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js?v=3.1.0"></script>
+  <script src="../data/smartvms_test_catalog.js?v=3.1.0"></script>
+  <script src="../shared/js/core.js?v=3.1.0"></script>
+  <script src="../shared/js/cloud-sync.js?v=3.1.0"></script>
+
+  <!-- Modular Lead Scripts -->
+  <script src="js/lead-context.js?v=3.1.0"></script>
+  <script src="js/lead-dashboard.js?v=3.1.0"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoreState();
+      LeadContext.init('project');
+      LeadDashboard.init();
+    });
+  </script>
+</body>
+</html>

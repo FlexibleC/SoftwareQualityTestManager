@@ -588,7 +588,17 @@
         }
       });
 
+      if (typeof syncUserProjectsWithMembers === 'function') {
+        syncUserProjectsWithMembers();
+      }
+
       saveCoreState();
+      if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+        window.pushProjectsToCloud(state.projects);
+      }
+      if (window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
+        window.pushUsersToCloud(state.users);
+      }
       closeModal('modal-assign-staff');
       loadProjectDetail(p.id);
       showToast(`Đã cập nhật phân bổ nhân sự cho dự án [${p.code || p.id}] thành công`, 'success');

@@ -2,13 +2,13 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=index.html" />
-  <title>Chuyển Hướng - Việc Của Tôi</title>
+  <title>Chuyển Tiếp Sang Bàn Thực Thi Kịch Bản</title>
   <script>
-    window.location.replace('index.html');
+    const query = window.location.search || '';
+    window.location.replace(`cycle.html${query}`);
   </script>
 </head>
-<body style="font-family:sans-serif; text-align:center; padding-top:50px">
-  <p>Đang chuyển hướng sang <a href="index.html">Việc Của Tôi</a>...</p>
+<body style="font-family:sans-serif; text-align:center; padding-top:50px; color:#64748b">
+  <p>Đang chuyển hướng sang <a href="cycle.html">Bàn Thực Thi Kiểm Thử</a>...</p>
 </body>
 </html>

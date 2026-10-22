@@ -135,6 +135,30 @@ Dưới đây là nhật ký ghi lại chi tiết các quan điểm, nguyên t�
   - Chuẩn hóa định danh `package.json`, kịch bản khởi chạy `Open-TestManager.bat`, `Start-LAN-Server.bat` và tài liệu hướng dẫn độc lập.
   - Thiết lập tài liệu này (`NHAT_KY_YEU_CAU_HE_THONG_KIEM_THU.md`) làm tài liệu quy chuẩn duy nhất phục vụ việc tiếp tục trao đổi, nâng cấp và mở rộng tính năng.
 
+### 2.9. Chuẩn Hóa Bàn Điều Hành & Kiến Trúc Phân Tầng Cho Kiểm Thử Viên (Tester Workspace)
+- Quy chuẩn Bàn điều hành Tester phân tầng 4 cấp khép kín:
+  - Tầng 0: `tester/index.html` — Bàn điều hành danh mục dự án Tester tham gia (Portfolio Hub).
+  - Tầng 1: `tester/project.html` — Không gian dự án cá nhân Tester (các phiên bản được giao).
+  - Tầng 2: `tester/version.html` — Không gian phiên bản cá nhân Tester (phân hệ & đợt test được giao).
+  - Tầng 3: `tester/cycle.html` — Bàn thực thi FastTrack Studio Workstation (chấm điểm Pass/Fail, Timer, Step Checklist, Inline Defect).
+  - Tích hợp chuông thông báo re-test thông minh trên Header và Universal Breadcrumb 4 Tầng.
+
+### 2.10. Đồng Bộ Kiến Trúc Phân Tầng 4 Cấp Khép Kín Cho Phân Hệ Lập Trình Viên (Developer Workspace Hierarchy)
+> *"Hiện tại hệ thống đang thiết kế thành các không gian làm việc độc lập, phân tầng. Mỗi không gian làm việc có đầy đủ các thuộc tính của riêng nó (tham khảo trong phần thiết kế của Quản trị dự án) -> Như vậy thì trên giao diện của dev có phải đồng bộ không hay là thiết kế khác đi đọc lập như bạn đang đề xuất -> Đề nghị bạn đánh giá nghiêm túc vấn đề này cho tôi"*
+> *"triển khai theo lộ trình cho tôi"*
+
+- **Quy định triển khai:**
+  1. **Nguyên tắc đồng bộ phân tầng xuyên suốt hệ thống:**
+     - Phân hệ Developer tuyệt đối không được thiết kế phẳng hoặc cắt rời thành công cụ đơn lẻ. Developer phải tuân thủ nghiêm ngặt mô hình phân tầng 4 cấp khép kín đồng bộ với Project Lead và Tester:
+       - **TẦNG 0 (`dev/index.html`):** Bàn điều hành danh mục dự án phụ trách của Developer (Portfolio Hub). Hiển thị các dự án Dev được phân bổ, tổng tồn đọng lỗi, lỗi Blocker/Critical, lỗi Reopened, thanh phân bổ tiến độ lỗi 4 màu (Đã fix/Đóng, Đang sửa, Mới, Reopened) và bộ chuyển đổi 2 chế độ (Bảng chi tiết / Dạng thẻ).
+       - **TẦNG 1 (`dev/project.html`):** Không gian dự án của Developer (Project Space). Quản lý danh mục các phiên bản có lỗi của dự án, tỷ lệ sửa lỗi thành công và bản đồ nhiệt phân hệ nghiệp vụ (Module Defect Hotspots).
+       - **TẦNG 2 (`dev/version.html`):** Không gian phiên bản của Developer (Version Space). Quản lý danh mục các đợt kiểm thử (Test Cycles) có lỗi thuộc phiên bản và phân rã lỗi theo từng phân hệ chức năng.
+       - **TẦNG 3 (`dev/cycle.html`):** Bàn điều tra, Kanban & Bàn giao bản vá kỹ thuật (Defect Investigation Studio / Kanban). Tích hợp Bảng Kanban 5 cột (`Tiếp nhận mới`, `Đang sửa`, `Cần làm rõ / Không tái hiện`, `Đã có bản vá`, `Đã đóng`), Bàn chẩn đoán lỗi (kết quả thực tế vs kỳ vọng, các bước tái hiện, ảnh chụp phóng to Lightbox), lệnh tạo nhánh Git tự động (`git checkout -b fix/...`), và Hộp thoại bàn giao bản vá chuẩn ISO 29119-3 & IEEE 1044 (Fix Version, Commit Hash, RCA Category).
+       - **Báo cáo kỹ thuật (`dev/reports.html`):** Đo lường các chỉ số chất lượng mã nguồn thực chất: Thời gian khắc phục bình quân (MTTR), Tỷ lệ lỗi tái phát (Reopen Rate), Phân bổ nguyên nhân gốc rễ (Root Cause Analysis - RCA theo IEEE 1044).
+  2. **Chuẩn hóa nhận diện & Module hóa mã nguồn độc lập:**
+     - Tách riêng toàn bộ mã nguồn vào `dev/css/dev-theme.css` (tông màu Xanh Slate Navy & Electric Cyan 💻) và `dev/js/` (`dev-context.js`, `dev-portfolio.js`, `dev-project.js`, `dev-version.js`, `dev-cycle.js`, `dev-reports.js`).
+     - Tích hợp thanh **Universal Breadcrumb 4 Tầng** đồng bộ, cho phép chuyển đổi dự án, phiên bản, đợt kiểm thử linh hoạt qua menu thả xuống.
+
 ---
 
 ## 3. BẢN ĐỒ KIẾN TRÚC & CẤU TRÚC THƯ MỤC DỰ ÁN ĐỘC LẬP
@@ -177,16 +201,39 @@ d:\DevSoft\SoftwareQualityTestManager/
 │       ├── lead-dashboard.js        # Module tính toán KPI, tiến độ đợt test và danh sách nhân sự dự án
 │       └── lead-settings.js         # Module quản trị cấu hình nội bộ dự án (CRUD Versions, Cycles, Modules)
 │
-├── tester/                          # KHÔNG GIAN LÀM VIỆC CỦA KIỂM THỬ VIÊN (TESTER WORKBENCH)
-│   ├── index.html                   # Bàn làm việc của Tester: Danh sách nhiệm vụ kịch bản được phân công
-│   ├── execution.html               # Màn hình thực thi từng bước kịch bản (Pass/Fail/Block), đính kèm bằng chứng
+├── tester/                          # KHÔNG GIAN LÀM VIỆC CỦA KIỂM THỬ VIÊN (TESTER STUDIO & WORKSPACES)
+│   ├── index.html                   # TẦNG 0: Danh mục các dự án Tester được phân bổ tham gia
+│   ├── project.html                 # TẦNG 1: Không gian Dự án của Tester (Tiến độ, KPI & Sổ tay lỗi cá nhân)
+│   ├── version.html                 # TẦNG 2: Không gian Phiên bản của Tester (Phân hệ & Các đợt test)
+│   ├── cycle.html                   # TẦNG 3: BÀN THỰC THI STUDIO (Dual-Pane FastTrack, Timer, Step Checklist, Inline Defect)
+│   ├── execution.html               # Forwarder chuyển tiếp sang cycle.html (Bảo toàn tham số URL)
+│   ├── history.html                 # Nhật ký kiểm toán lịch sử thực thi kịch bản (Execution Logs - ISO 29119-3)
 │   ├── reports.html                 # Báo cáo kết quả và tiến độ cá nhân của Tester
-│   └── history.html                 # Nhật ký kiểm toán lịch sử thực thi kịch bản (Execution Logs)
+│   ├── css/
+│   │   └── tester-theme.css         # Hệ thống giao diện Tester Enterprise cấp cao (Tone Xanh Ngọc / Emerald 🧪)
+│   └── js/
+│       ├── tester-context.js        # Module đồng bộ Universal Breadcrumb 4 Tầng & Quản trị ngữ cảnh
+│       ├── tester-portfolio.js      # Logic điều phối danh mục dự án Tester được phân công (Tầng 0)
+│       ├── tester-project.js        # Logic điều hành không gian dự án cá nhân Tester (Tầng 1)
+│       ├── tester-version.js        # Logic điều hành không gian phiên bản cá nhân Tester (Tầng 2)
+│       └── tester-cycle.js          # Logic Bàn thực thi FastTrack Studio Workstation (Tầng 3)
 │
-├── dev/                             # KHÔNG GIAN CỦA KỸ SƯ LẬP TRÌNH (DEVELOPER DEFECT TRACKER)
-│   ├── index.html                   # Bảng theo dõi và xử lý các lỗi (Defects/Bugs) phát sinh trong dự án
-│   ├── execution.html               # Tra cứu kịch bản gây ra lỗi, xem dữ liệu test và các bước tái hiện
-│   └── reports.html                 # Báo cáo tỷ lệ sửa lỗi và tỷ lệ lỗi tồn đọng (Bug Burn-down)
+├── dev/                             # KHÔNG GIAN CỦA KỸ SƯ LẬP TRÌNH (DEVELOPER WORKBENCH & DEFECT TRACKER)
+│   ├── index.html                   # TẦNG 0: Bàn điều hành danh mục dự án phụ trách của Developer (Portfolio Hub)
+│   ├── project.html                 # TẦNG 1: Không gian Dự án của Developer (Các phiên bản & Heatmap lỗi)
+│   ├── version.html                 # TẦNG 2: Không gian Phiên bản của Developer (Phân hệ & Đợt test có lỗi)
+│   ├── cycle.html                   # TẦNG 3: Bàn điều tra, Kanban & Bàn giao bản vá kỹ thuật (Defect Studio)
+│   ├── execution.html               # Forwarder chuyển tiếp sang cycle.html (Bảo toàn tham số URL)
+│   ├── reports.html                 # Báo cáo chất lượng kỹ thuật (MTTR, Reopen Rate, RCA IEEE 1044)
+│   ├── css/
+│   │   └── dev-theme.css            # Hệ thống giao diện Developer Enterprise (Tone Slate Navy / Cyan 💻)
+│   └── js/
+│       ├── dev-context.js           # Quản lý Universal Breadcrumb 4 Tầng & Ngữ cảnh phân bổ dự án
+│       ├── dev-portfolio.js         # Logic điều phối danh mục dự án cá nhân của Dev (Tầng 0)
+│       ├── dev-project.js           # Logic điều hành không gian dự án của Dev (Tầng 1)
+│       ├── dev-version.js           # Logic điều hành không gian phiên bản của Dev (Tầng 2)
+│       ├── dev-cycle.js             # Logic Bàn điều tra lỗi, Kanban & Bàn giao bản vá (Tầng 3)
+│       └── dev-reports.js           # Logic tính toán biểu đồ MTTR, Reopen Rate, RCA
 │
 ├── shared/                          # THƯ MỤC CHỨA CÁC THÀNH PHẦN DÙNG CHUNG KHÔNG ẢNH HƯỞNG NGHIỆP VỤ
 │   ├── css/

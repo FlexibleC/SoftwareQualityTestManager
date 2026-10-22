@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không Gian Phiên Bản - Kiểm Thử Viên</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="css/tester-theme.css" />
+</head>
+
+<body>
+
+  <!-- Tester Topbar -->
+  <header class="tester-topbar">
+    <div class="tester-topbar-left">
+      <a href="index.html" class="tester-brand-wrap" title="Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm">
+        <div class="tester-brand-badge">🧪</div>
+        <div>
+          <h2 class="tester-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="tester-brand-subtitle">Không gian làm việc kiểm thử viên (Tester)</span>
+        </div>
+      </a>
+      <div class="tester-header-divider"></div>
+      <div id="tester-breadcrumb-container"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()"
+        title="Đổi giao diện Sáng / Tối">🌙</button>
+
+      <div class="vms-user-profile" title="Tài khoản Kiểm thử viên">
+        <div class="vms-user-avatar" id="tester-user-avatar" style="background:#0d9488">T</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="tester-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role" id="tester-user-role">Kiểm thử viên (Tester)</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Container: Version Cockpit (Tier 2) -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+
+    <!-- Version Hero Header Strip -->
+    <div class="tester-header-strip">
+      <div style="display:flex; align-items:center; gap:16px">
+        <div class="tester-hero-badge">📦</div>
+        <div>
+          <div style="font-size:11px; color:#0d9488; font-weight:800; letter-spacing:0.3px; margin-bottom:2px">
+            Tầng 2: Không gian phiên bản phần mềm
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <h1 style="font-size:22px; font-weight:800; color:var(--text-primary); margin:0" id="ver-hero-name">
+              Phiên bản: --
+            </h1>
+            <span style="font-size:14px; color:var(--text-muted)" id="ver-hero-label"></span>
+            <span class="badge badge-info" id="ver-hero-status" style="font-size:10.5px">🟢 Đang hoạt động</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0" id="ver-hero-prj-name">
+            Thuộc dự án: --
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Personal KPIs in this Version -->
+    <div class="tester-kpi-grid">
+      <div class="tester-kpi-card" style="border-left:4px solid #0d9488">
+        <div class="tester-kpi-icon" style="background:rgba(13,148,136,0.12); color:#0d9488">📋</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-ver-tasks">0</div>
+          <div class="tester-kpi-lbl">Bài test phiên bản này</div>
+        </div>
+      </div>
+
+      <div class="tester-kpi-card" style="border-left:4px solid #16a34a">
+        <div class="tester-kpi-icon" style="background:rgba(22,163,74,0.12); color:#16a34a">🎯</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-ver-passrate">0%</div>
+          <div class="tester-kpi-lbl">Tỷ lệ đạt cá nhân</div>
+        </div>
+      </div>
+
+      <div class="tester-kpi-card" style="border-left:4px solid #2563eb">
+        <div class="tester-kpi-icon" style="background:rgba(37,99,235,0.12); color:#2563eb">🧩</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-ver-modules">0</div>
+          <div class="tester-kpi-lbl">Phân hệ phụ trách</div>
+        </div>
+      </div>
+
+      <div class="tester-kpi-card" style="border-left:4px solid #7c3aed">
+        <div class="tester-kpi-icon" style="background:rgba(124,58,237,0.12); color:#7c3aed">🔄</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-ver-retests">0</div>
+          <div class="tester-kpi-lbl">Bài cần re-test</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 1: TEST CYCLES IN THIS VERSION -->
+    <div style="margin-bottom:24px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <div>
+          <h2 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:0">
+            🎯 Các đợt kiểm thử trong phiên bản
+          </h2>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Chọn một đợt kiểm thử để bước vào bàn thực thi kịch bản
+          </div>
+        </div>
+      </div>
+
+      <div id="version-cycles-grid"
+        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:16px">
+        <!-- Populated by tester-version.js -->
+      </div>
+    </div>
+
+    <!-- SECTION 2: MODULES BREAKDOWN -->
+    <div class="card" style="padding:0; overflow:hidden">
+      <div class="card-header" style="padding:14px 18px; border-bottom:1px solid var(--border)">
+        <h3 style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary)">
+          📦 Phân rã tiến độ theo phân hệ chức năng
+        </h3>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+          Khối lượng và tỷ lệ đạt của bạn trên từng phân hệ trong phiên bản này
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="summary-matrix-table" style="width:100%">
+          <thead>
+            <tr>
+              <th style="width:110px">Mã phân hệ</th>
+              <th>Tên phân hệ</th>
+              <th style="width:140px; text-align:center">Bài được giao</th>
+              <th style="width:110px; text-align:center">Đạt (pass)</th>
+              <th style="width:110px; text-align:center">Lỗi (fail)</th>
+              <th style="width:120px; text-align:center">Tỷ lệ đạt</th>
+            </tr>
+          </thead>
+          <tbody id="version-modules-tbody">
+            <!-- Populated by tester-version.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
+  <script src="js/tester-context.js"></script>
+  <script src="js/tester-version.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      TesterVersion.init();
+    });
+  </script>
+</body>
+
+</html>

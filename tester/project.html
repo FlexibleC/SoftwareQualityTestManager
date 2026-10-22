@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không Gian Dự Án - Kiểm Thử Viên</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/css/base.css" />
+  <link rel="stylesheet" href="css/tester-theme.css" />
+</head>
+<body>
+
+  <!-- Tester Topbar -->
+  <header class="tester-topbar">
+    <div class="tester-topbar-left">
+      <a href="index.html" class="tester-brand-wrap" title="Hệ thống Kiểm thử & Quản lý Chất lượng Phần mềm">
+        <div class="tester-brand-badge">🧪</div>
+        <div>
+          <h2 class="tester-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="tester-brand-subtitle">Không gian làm việc kiểm thử viên (Tester)</span>
+        </div>
+      </a>
+      <div class="tester-header-divider"></div>
+      <div id="tester-breadcrumb-container"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px">
+      <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
+      <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
+      
+      <div class="vms-user-profile" title="Tài khoản Kiểm thử viên">
+        <div class="vms-user-avatar" id="tester-user-avatar" style="background:#0d9488">T</div>
+        <div class="vms-user-info">
+          <span class="vms-user-name" id="tester-user-name">Nguyễn Văn Nam</span>
+          <span class="vms-user-role" id="tester-user-role">Kiểm thử viên (Tester)</span>
+        </div>
+      </div>
+      <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
+    </div>
+  </header>
+
+  <!-- Main Container: Project Cockpit (Tier 1) -->
+  <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
+
+    <!-- Project Hero Header Strip -->
+    <div class="tester-header-strip">
+      <div style="display:flex; align-items:center; gap:16px">
+        <div class="tester-hero-badge">🏢</div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px">
+            <span class="badge" style="background:rgba(13,148,136,0.12); color:#0d9488; font-family:monospace; font-weight:800; font-size:11px" id="prj-hero-code">
+              [PRJ]
+            </span>
+            <span style="font-size:11px; color:#0d9488; font-weight:800; letter-spacing:0.3px">
+              Tầng 1: Không gian dự án
+            </span>
+          </div>
+          <h1 style="font-size:22px; font-weight:800; color:var(--text-primary); margin:0" id="prj-hero-name">
+            Tên dự án
+          </h1>
+          <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0" id="prj-hero-desc">
+            Mô tả dự án kiểm thử...
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px; font-size:12px; color:var(--text-muted)">
+        <div>👑 Quản trị dự án: <strong id="prj-hero-lead" style="color:var(--text-primary)">--</strong></div>
+        <div style="width:1px; height:16px; background:var(--border)"></div>
+        <div>👥 Đội ngũ: <strong id="prj-hero-members" style="color:var(--text-primary)">--</strong></div>
+      </div>
+    </div>
+
+    <!-- Retest Alert Banner if any defect is resolved by Dev in this project -->
+    <div id="tester-prj-retest-alert" class="tester-retest-banner" style="display:none">
+      <div style="display:flex; align-items:center; gap:10px">
+        <span style="font-size:22px">🔔</span>
+        <div>
+          <div style="font-weight:700; font-size:13px">Có <span id="prj-retest-count">0</span> bài kiểm thử trong dự án này đã được lập trình viên sửa xong!</div>
+          <div style="font-size:12px; opacity:0.9">Vui lòng kiểm tra và thực hiện kiểm thử lại (re-test) nghiệm thu ngay.</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-sm" style="background:#7c3aed; color:#fff; font-weight:700" onclick="TesterProject.switchTab('defects')">
+        Xem danh sách lỗi cần re-test ➔
+      </button>
+    </div>
+
+    <!-- 4 Personal KPIs in this Project -->
+    <div class="tester-kpi-grid">
+      <div class="tester-kpi-card" style="border-left:4px solid #0d9488">
+        <div class="tester-kpi-icon" style="background:rgba(13,148,136,0.12); color:#0d9488">📋</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-prj-total">0</div>
+          <div class="tester-kpi-lbl">Nhiệm vụ được giao</div>
+        </div>
+      </div>
+
+      <div class="tester-kpi-card" style="border-left:4px solid #16a34a">
+        <div class="tester-kpi-icon" style="background:rgba(22,163,74,0.12); color:#16a34a">🎯</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-prj-passrate" style="color:#16a34a">0%</div>
+          <div class="tester-kpi-lbl">Tỷ lệ đạt cá nhân</div>
+        </div>
+      </div>
+
+      <div class="tester-kpi-card" style="border-left:4px solid #dc2626">
+        <div class="tester-kpi-icon" style="background:rgba(220,38,38,0.12); color:#dc2626">🐛</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-prj-fail" style="color:#dc2626">0</div>
+          <div class="tester-kpi-lbl">Lỗi do bạn phát hiện</div>
+        </div>
+      </div>
+
+      <div class="tester-kpi-card" style="border-left:4px solid #7c3aed">
+        <div class="tester-kpi-icon" style="background:rgba(124,58,237,0.12); color:#7c3aed">🔄</div>
+        <div>
+          <div class="tester-kpi-val" id="kpi-prj-retests" style="color:#7c3aed">0</div>
+          <div class="tester-kpi-lbl">Bài chờ re-test</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px">
+      <button type="button" id="tab-btn-overview" class="btn btn-primary btn-sm" onclick="TesterProject.switchTab('overview')">
+        📦 Các phiên bản & đợt kiểm thử
+      </button>
+      <button type="button" id="tab-btn-defects" class="btn btn-outline btn-sm" onclick="TesterProject.switchTab('defects')">
+        🐞 Sổ tay lỗi do bạn báo cáo
+      </button>
+    </div>
+
+    <!-- TAB PANE 1: VERSIONS & TEST CYCLES -->
+    <div id="pane-overview">
+      <div id="versions-cycles-container">
+        <!-- Populated by tester-project.js -->
+      </div>
+    </div>
+
+    <!-- TAB PANE 2: PERSONAL DEFECTS LOGBOOK -->
+    <div id="pane-defects" style="display:none">
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="card-header" style="padding:14px 18px; border-bottom:1px solid var(--border)">
+          <h3 style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary)">
+            🐞 Danh sách lỗi do bạn báo cáo trong dự án này
+          </h3>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+            Theo dõi tiến độ khắc phục của lập trình viên và thực hiện kiểm thử lại khi lỗi được chuyển sang trạng thái "Đã sửa".
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="summary-matrix-table" style="width:100%">
+            <thead>
+              <tr>
+                <th style="width:110px">Mã lỗi</th>
+                <th style="width:120px">Kịch bản gốc</th>
+                <th>Tóm tắt lỗi phát hiện</th>
+                <th style="width:120px; text-align:center">Nghiêm trọng</th>
+                <th style="width:160px; text-align:center">Trạng thái sửa</th>
+                <th style="width:120px">Ngày báo</th>
+                <th style="width:130px; text-align:center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="defects-logbook-tbody">
+              <!-- Populated by tester-project.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../data/enterprise_projects_manifest.js"></script>
+  <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/cloud-sync.js"></script>
+  <script src="js/tester-context.js"></script>
+  <script src="js/tester-project.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      TesterProject.init();
+    });
+  </script>
+</body>
+</html>

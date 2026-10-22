@@ -54,8 +54,8 @@ SoftwareQualityTestManager/
 │   ├── css/lead-theme.css           # Giao diện Project Lead (Tone Vàng Hổ Phách 👑)
 │   └── js/                          # Modular JS: lead-context.js, lead-dashboard.js, lead-settings.js
 │
-├── tester/                          # Không gian Làm việc của Kiểm Thử Viên (Tester Workbench)
-├── dev/                             # Không gian Xử lý Lỗi của Lập Trình Viên (Developer Defect Tracker)
+├── tester/                          # Không gian Làm việc của Kiểm Thử Viên (Tester Studio & 4-Tier Hierarchy)
+├── dev/                             # Không gian Xử lý Lỗi của Lập Trình Viên (Developer Studio & 4-Tier Hierarchy)
 ├── shared/                          # Thư mục mã nguồn dùng chung (base.css, core.js, cloud-sync.js, vendor)
 └── data/                            # Mẫu tệp Excel và tệp cấu hình khởi tạo ban đầu
 ```

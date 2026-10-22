@@ -14,49 +14,38 @@
 </head>
 <body>
 
-  <!-- Lead Topbar -->
+  <!-- Lead Topbar (Global Header) -->
   <header class="lead-topbar">
-    <div style="display:flex; align-items:center; gap:20px">
+    <div class="lead-topbar-left" style="display:flex; align-items:center; gap:20px">
       <a href="index.html" class="lead-brand-wrap">
         <div class="lead-brand-badge">👑</div>
         <div>
-          <h2 class="lead-brand-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</h2>
-          <span class="lead-brand-subtitle">Không Gian Quản Trị Viên Dự Án (Project Lead)</span>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án</span>
         </div>
       </a>
-
-      <!-- Navigation Pills -->
-      <nav class="lead-nav-pills" role="navigation">
-        <a href="index.html" class="lead-nav-pill">📊 Tổng quan Dự án</a>
-        <a href="testcases.html" class="lead-nav-pill">📋 Kịch bản Kiểm thử</a>
-        <a href="assignments.html" class="lead-nav-pill">📌 Điều phối & Giao việc</a>
-        <a href="reports.html" class="lead-nav-pill active">📈 Báo cáo Chất lượng</a>
-        <a href="settings.html" class="lead-nav-pill">⚙️ Cài đặt Dự án</a>
-      </nav>
     </div>
 
-    <div style="display:flex; align-items:center; gap:14px">
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
       <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
       
       <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
-        <div class="vms-user-avatar" style="background:#d97706">L</div>
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
-          <span class="vms-user-role" id="lead-user-role">Quản trị viên Dự án</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
+  <!-- Compact Project Navigation Bar (Tầng 2) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
   <!-- Main Content -->
   <main class="main-wrapper" id="reports-main-content" style="max-width:1440px; margin:24px auto; padding:0 24px">
-
-    <!-- Active Project Hero Banner -->
-    <div class="lead-project-hero" id="lead-project-hero">
-      <!-- Populated by lead-context.js -->
-    </div>
 
     <!-- Reports Header & Export Toolbar -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
@@ -78,6 +67,28 @@
         <button type="button" class="btn btn-primary btn-sm" onclick="exportReportHtml()">
           ⬇️ Xuất Biên Bản Nghiệm Thu (HTML)
         </button>
+      </div>
+    </div>
+
+    <!-- Reports Scope Selector Toolbar (Phiên bản & Đợt kiểm thử) -->
+    <div class="card" style="padding:14px 20px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:var(--bg-surface); border:1px solid var(--border)">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+        <div style="font-weight:700; font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:6px">
+          <span>🎯 Phạm vi phân tích:</span>
+        </div>
+        <div>
+          <select id="rpt-filter-version" class="form-control" onchange="handleReportScopeChange()" style="font-size:12.5px; font-weight:700; color:var(--text-primary); min-width:180px">
+            <option value="">-- Tất cả phiên bản --</option>
+          </select>
+        </div>
+        <div>
+          <select id="rpt-filter-cycle" class="form-control" onchange="handleReportScopeChange()" style="font-size:12.5px; font-weight:700; color:var(--primary); min-width:240px">
+            <option value="">-- Tất cả đợt kiểm thử --</option>
+          </select>
+        </div>
+      </div>
+      <div id="rpt-scope-summary-badge" style="font-size:12px; color:var(--text-muted); font-weight:600">
+        <!-- Dynamically populated badge -->
       </div>
     </div>
 
@@ -271,10 +282,10 @@
 
         <!-- Meta info grid -->
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px; font-size:12.5px; background:var(--bg-surface); padding:14px; border-radius:8px; border:1px solid var(--border-light)">
-          <div>Dự án: <strong id="cert-project-name">SmartVMS</strong></div>
-          <div>Mã dự án: <strong id="cert-project-id" style="font-family:monospace">PRJ_SMARTVMS</strong></div>
-          <div>Phiên bản nghiệm thu: <strong id="cert-version">v2.0</strong></div>
-          <div>Ngày đánh giá: <strong id="cert-date">19/10/2026</strong></div>
+          <div>Dự án: <strong id="cert-project-name">--</strong></div>
+          <div>Mã dự án: <strong id="cert-project-id" style="font-family:monospace">--</strong></div>
+          <div>Phiên bản nghiệm thu: <strong id="cert-version">--</strong></div>
+          <div>Ngày đánh giá: <strong id="cert-date">--</strong></div>
         </div>
 
         <!-- Metric summary table -->
@@ -342,6 +353,7 @@
   <script src="../data/enterprise_projects_manifest.js"></script>
   <script src="../data/smartvms_test_catalog.js"></script>
   <script src="../shared/js/vendor/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="../shared/js/core.js"></script>
   <script src="../shared/js/cloud-sync.js"></script>
   <script src="../shared/js/reports.js"></script>
@@ -353,7 +365,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
-      LeadContext.init();
+      LeadContext.init('reports');
       initReportsModule();
     });
 
@@ -405,12 +417,12 @@
       // 2. Render Cert Details
       document.getElementById('cert-project-name').textContent = p.name;
       document.getElementById('cert-project-id').textContent = p.id;
-      document.getElementById('cert-version').textContent = p.activeVersion || 'v2.0';
+      document.getElementById('cert-version').textContent = p.activeVersion || 'v1.0';
       document.getElementById('cert-date').textContent = new Date().toLocaleDateString('vi-VN');
 
       // Check signoff state
       if (!state.releaseSignoffs) state.releaseSignoffs = {};
-      const signKey = `${p.id}__${p.activeVersion || 'v2.0'}`;
+      const signKey = `${p.id}__${p.activeVersion || 'v1.0'}`;
       const signedData = state.releaseSignoffs[signKey];
 
       const metricsTbody = document.getElementById('cert-metrics-tbody');

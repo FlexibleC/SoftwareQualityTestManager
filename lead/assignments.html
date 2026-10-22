@@ -10,52 +10,47 @@
   <link rel="stylesheet" href="../shared/css/base.css" />
   <link rel="stylesheet" href="../shared/css/assignment.css" />
   <link rel="stylesheet" href="css/lead-theme.css" />
+  <script>
+    // Tự động chuyển tiếp đến Trung tâm Tác chiến Đợt Test hợp nhất (cycle.html)
+    const p = new URLSearchParams(window.location.search);
+    if (!p.has('tab')) p.set('tab', 'staffing');
+    window.location.replace('cycle.html?' + p.toString());
+  </script>
 </head>
 <body>
 
-  <!-- Lead Topbar -->
+  <!-- Lead Topbar (Global Header) -->
   <header class="lead-topbar">
-    <div style="display:flex; align-items:center; gap:20px">
+    <div class="lead-topbar-left" style="display:flex; align-items:center; gap:20px">
       <a href="index.html" class="lead-brand-wrap">
         <div class="lead-brand-badge">👑</div>
         <div>
-          <h2 class="lead-brand-title">Hệ Thống Kiểm Thử & Quản Lý Chất Lượng</h2>
-          <span class="lead-brand-subtitle">Không Gian Quản Trị Viên Dự Án (Project Lead)</span>
+          <h2 class="lead-brand-title">Hệ thống kiểm thử & quản lý chất lượng</h2>
+          <span class="lead-brand-subtitle">Không gian quản trị viên dự án</span>
         </div>
       </a>
-
-      <!-- Navigation Pills -->
-      <nav class="lead-nav-pills" role="navigation">
-        <a href="index.html" class="lead-nav-pill">📊 Tổng quan Dự án</a>
-        <a href="testcases.html" class="lead-nav-pill">📋 Kịch bản Kiểm thử</a>
-        <a href="assignments.html" class="lead-nav-pill active">📌 Điều phối & Giao việc</a>
-        <a href="reports.html" class="lead-nav-pill">📈 Báo cáo Chất lượng</a>
-        <a href="settings.html" class="lead-nav-pill">⚙️ Cài đặt Dự án</a>
-      </nav>
     </div>
 
-    <div style="display:flex; align-items:center; gap:14px">
+    <div style="display:flex; align-items:center; gap:16px">
       <div class="vms-clock-pill">🕒 <span id="clock-time">--:--:--</span></div>
       <button class="vms-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">🌙</button>
       
       <div class="vms-user-profile" title="Tài khoản Quản trị Dự án">
-        <div class="vms-user-avatar" style="background:#d97706">L</div>
+        <div class="vms-user-avatar" id="lead-user-avatar" style="background:#d97706">H</div>
         <div class="vms-user-info">
           <span class="vms-user-name" id="lead-user-name">Hoàng Hải Đăng</span>
-          <span class="vms-user-role" id="lead-user-role">Quản trị viên Dự án</span>
+          <span class="vms-user-role" id="lead-user-role">Quản trị viên dự án</span>
         </div>
       </div>
       <button class="vms-btn-logout" onclick="handleLogout()">Thoát</button>
     </div>
   </header>
 
+  <!-- Compact Project Navigation Bar (Tầng 2) -->
+  <div class="lead-compact-bar" id="lead-compact-bar"></div>
+
   <!-- Main Content -->
   <main class="main-wrapper" style="max-width:1440px; margin:24px auto; padding:0 24px">
-
-    <!-- Active Project Hero Banner -->
-    <div class="lead-project-hero" id="lead-project-hero">
-      <!-- Populated by lead-context.js -->
-    </div>
 
     <!-- Tabs Switcher Bar with Dispatch Actions on Right -->
     <div class="asg-tabs-nav" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:6px 14px; flex-wrap:wrap; gap:10px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px">
@@ -137,97 +132,89 @@
 
     <!-- TAB 2: CẤU HÌNH GIAO VIỆC CHI TIẾT -->
     <div id="asg-tab-content-detail">
-      <!-- 3-Tier Cascade Scope Selection Bar (Project -> Version -> Cycle) -->
-      <div class="asg-interactive-breadcrumb-bar" style="margin-bottom:14px">
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%">
-          <!-- Tier 1: Project -->
-          <div class="asg-cascade-item asg-cascade-prj">
-            <span class="asg-cascade-label">🏢 DỰ ÁN:</span>
-            <select id="asg-project-selector" class="asg-cascade-select" onchange="handleAsgProjectChange(this.value)"></select>
+      <!-- Consolidated Command & Filter Panel (Gom gọn 4 dải phân mảnh thành 1 Card chuẩn SaaS) -->
+      <div class="card" style="padding:12px 16px; margin-bottom:14px; display:flex; flex-direction:column; gap:10px">
+        <!-- Dòng 1: Phạm vi Chu kỳ (Version ➔ Đợt Test) & Các Nút Chọn Nhanh -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
+          <!-- Cascade Scope -->
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+            <select id="asg-project-selector" style="display:none" onchange="handleAsgProjectChange(this.value)"></select>
+            <div class="asg-cascade-item asg-cascade-ver">
+              <span class="asg-cascade-label">📦 PHIÊN BẢN:</span>
+              <select id="asg-version-selector" class="asg-cascade-select" onchange="handleAsgVersionChange(this.value)"></select>
+            </div>
+            <span class="asg-cascade-sep">➔</span>
+            <div class="asg-cascade-item asg-cascade-cycle" style="min-width:240px">
+              <span class="asg-cascade-label">🎯 ĐỢT TEST:</span>
+              <select id="detail-cycle" class="asg-cascade-select" onchange="handleAsgCycleChange(this.value)"></select>
+            </div>
           </div>
 
-          <span class="asg-cascade-sep">➔</span>
-
-          <!-- Tier 2: Version -->
-          <div class="asg-cascade-item asg-cascade-ver">
-            <span class="asg-cascade-label">📦 PHIÊN BẢN:</span>
-            <select id="asg-version-selector" class="asg-cascade-select" onchange="handleAsgVersionChange(this.value)"></select>
-          </div>
-
-          <span class="asg-cascade-sep">➔</span>
-
-          <!-- Tier 3: Cycle -->
-          <div class="asg-cascade-item asg-cascade-cycle" style="flex:1; min-width:280px">
-            <span class="asg-cascade-label">🎯 ĐỢT TEST:</span>
-            <select id="detail-cycle" class="asg-cascade-select" onchange="handleAsgCycleChange(this.value)" style="width:100%"></select>
+          <!-- Quick Presets -->
+          <div class="asg-presets-group" style="margin:0; display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+            <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">⚡ Chọn:</span>
+            <button type="button" class="asg-preset-btn asg-preset-btn-danger" onclick="applyAsgPreset('FAILED_RECENT')" title="Chọn bài bị lỗi ở đợt trước để giao Re-test">
+              ⚠️ Lỗi đợt trước
+            </button>
+            <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('UNASSIGNED')" title="Chọn kịch bản chưa giao">
+              ⚪ Chưa giao
+            </button>
+            <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('ALL')" title="Chọn toàn bộ bài đợt test">
+              ⚡ Tất cả
+            </button>
+            <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('NONE')" title="Bỏ chọn">
+              ✕ Bỏ chọn
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Presets Toolbar & Stats Ribbon -->
-      <div class="asg-presets-bar">
-        <div class="asg-presets-group">
-          <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase">⚡ Chọn nhanh:</span>
-          <button type="button" class="asg-preset-btn asg-preset-btn-danger" onclick="applyAsgPreset('FAILED_RECENT')" title="Chọn bài bị lỗi ở đợt trước để giao Re-test">
-            ⚠️ Lỗi đợt trước (Re-test)
-          </button>
-          <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('UNASSIGNED')" title="Chọn kịch bản chưa giao">
-            ⚪ Kịch bản Chưa giao
-          </button>
-          <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('ALL')" title="Chọn toàn bộ bài đợt test">
-            ⚡ Tất cả bài đợt test
-          </button>
-          <button type="button" class="asg-preset-btn" onclick="applyAsgPreset('NONE')" title="Bỏ chọn">
-            ✕ Bỏ chọn
-          </button>
-        </div>
+        <!-- Dòng 2: Bộ lọc đa chiều & Huy hiệu Thống kê -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding-top:8px; border-top:1px solid var(--border-light)">
+          <!-- Left: Tìm kiếm & Lọc -->
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1">
+            <div style="display:flex; align-items:center; gap:6px; min-width:200px; flex:1">
+              <span style="color:var(--text-muted); font-size:12px">🔍</span>
+              <input type="text" id="asg-filter-search" class="asg-filter-input" placeholder="Tìm theo mã TC, tiêu đề..." oninput="handleAsgFilterChange()" style="flex:1; height:32px" />
+            </div>
+            <select id="asg-filter-status" class="asg-filter-select" onchange="handleAsgFilterChange()" style="height:32px">
+              <option value="">🔘 Trạng thái: Tất cả</option>
+              <option value="UNASSIGNED">⚪ Chưa giao việc</option>
+              <option value="ASSIGNED">👤 Đã phân công</option>
+            </select>
+            <select id="asg-filter-tester" class="asg-filter-select" onchange="handleAsgFilterChange()" style="height:32px; font-weight:600">
+              <option value="">👤 Nhân sự: Tất cả</option>
+            </select>
+            <select id="asg-filter-history" class="asg-filter-select" onchange="handleAsgFilterChange()" style="height:32px">
+              <option value="">🧪 Lịch sử: Tất cả</option>
+              <option value="FAIL" style="color:#dc2626; font-weight:700">❌ Từng BỊ LỖI</option>
+              <option value="PASS" style="color:#16a34a; font-weight:700">✅ Đã PASS</option>
+              <option value="UNTESTED" style="color:#64748b">⚪ Bài mới</option>
+            </select>
+            <select id="asg-filter-priority" class="asg-filter-select" onchange="handleAsgFilterChange()" style="height:32px">
+              <option value="">🏷️ Tất cả ưu tiên</option>
+              <option value="P1">P1 — Critical</option>
+              <option value="P2">P2 — High</option>
+              <option value="P3">P3 — Medium</option>
+              <option value="P4">P4 — Low</option>
+            </select>
+            <button type="button" class="btn btn-outline btn-xs" onclick="resetAsgFilters()" title="Xóa bộ lọc" style="height:32px">🔄 Đặt lại</button>
+            <div id="asg-filter-count-badge" style="font-size:11px; font-weight:700; color:var(--text-muted); white-space:nowrap">
+              0 kịch bản
+            </div>
+          </div>
 
-        <div class="asg-stat-ribbon">
-          <div class="asg-stat-pill asg-stat-pill-primary" title="Số kịch bản đã chọn để giao việc">
-            🎯 Đã chọn: <strong id="asg-selected-count-badge" style="margin-left:2px">0 / 0</strong>
+          <!-- Right: Thống kê nhanh -->
+          <div class="asg-stat-ribbon" style="margin:0; gap:6px">
+            <div class="asg-stat-pill asg-stat-pill-primary" style="font-size:11.5px; padding:3px 10px">
+              🎯 Đã chọn: <strong id="asg-selected-count-badge" style="margin-left:2px">0 / 0</strong>
+            </div>
+            <div class="asg-stat-pill" style="border-left:3px solid #10b981; font-size:11.5px; padding:3px 10px">
+              👤 Đã giao: <strong id="asg-stat-assigned-badge" style="color:#10b981; margin-left:2px">0 (0%)</strong>
+            </div>
+            <div class="asg-stat-pill asg-stat-pill-danger" style="font-size:11.5px; padding:3px 10px">
+              ⚠️ <strong id="asg-stat-fail-badge" style="margin-left:2px">0 lỗi cần Re-test</strong>
+            </div>
           </div>
-          <div class="asg-stat-pill" style="border-left:3px solid #10b981" title="Tiến độ phân công kịch bản của đợt test">
-            👤 Đã giao: <strong id="asg-stat-assigned-badge" style="color:#10b981; margin-left:2px">0 (0%)</strong>
-          </div>
-          <div class="asg-stat-pill asg-stat-pill-danger" title="Số kịch bản bị lỗi ở các đợt trước cần giao xác minh">
-            ⚠️ <strong id="asg-stat-fail-badge" style="margin-left:2px">0 lỗi cần Re-test</strong>
-          </div>
-          <div class="asg-stat-pill asg-stat-pill-success" title="Số kịch bản đã từng pass ở đợt trước">
-            ✅ <strong id="asg-stat-pass-badge" style="margin-left:2px">0 đã Pass</strong>
-          </div>
-          <div class="asg-stat-pill" style="color:var(--text-muted)" title="Số kịch bản chưa phân công">
-            ⚪ <span id="asg-stat-unassigned-badge" style="margin-left:2px">0 chưa giao</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Multi-dimensional Filter Bar -->
-      <div class="asg-filter-bar" style="margin-bottom:14px">
-        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:200px">
-          <span style="color:var(--text-muted); font-size:12px">🔍</span>
-          <input type="text" id="asg-filter-search" class="asg-filter-input" placeholder="Tìm theo mã TC, tiêu đề, mục tiêu..." oninput="handleAsgFilterChange()" style="flex:1" />
-        </div>
-        <select id="asg-filter-status" class="asg-filter-select" onchange="handleAsgFilterChange()" title="Lọc theo trạng thái phân công">
-          <option value="">🔘 Trạng thái: Tất cả</option>
-          <option value="UNASSIGNED">⚪ Chưa giao việc</option>
-          <option value="ASSIGNED">👤 Đã phân công</option>
-        </select>
-        <select id="asg-filter-history" class="asg-filter-select" onchange="handleAsgFilterChange()" title="Lọc theo kết quả đợt test trước">
-          <option value="">🧪 Lịch sử: Tất cả</option>
-          <option value="FAIL" style="color:#dc2626; font-weight:700">❌ Từng BỊ LỖI (Cần Re-test)</option>
-          <option value="PASS" style="color:#16a34a; font-weight:700">✅ Đã từng PASS ở đợt trước</option>
-          <option value="UNTESTED" style="color:#64748b">⚪ Chưa từng thực hiện (Bài mới)</option>
-        </select>
-        <select id="asg-filter-priority" class="asg-filter-select" onchange="handleAsgFilterChange()" title="Lọc theo mức ưu tiên">
-          <option value="">🏷️ Tất cả ưu tiên</option>
-          <option value="P1">P1 — Critical / Smoke</option>
-          <option value="P2">P2 — High / Regression</option>
-          <option value="P3">P3 — Medium</option>
-          <option value="P4">P4 — Low</option>
-        </select>
-        <button type="button" class="btn btn-outline btn-xs" onclick="resetAsgFilters()" title="Xóa bộ lọc">🔄 Đặt lại</button>
-        <div id="asg-filter-count-badge" style="font-size:11.5px; font-weight:700; color:var(--text-muted); margin-left:auto; white-space:nowrap">
-          Đang lọc: 0 kịch bản
         </div>
       </div>
 
@@ -305,7 +292,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
-      LeadContext.init();
+      LeadContext.init('assignments');
       initAssignmentModule();
     });
   </script>

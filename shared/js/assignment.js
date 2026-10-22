@@ -12,6 +12,7 @@ let asgSelectedVersion = '';  // Active version filter for cycle cascade
 // Filter states
 let asgFilterSearch = '';
 let asgFilterStatus = '';     // '', 'UNASSIGNED', 'ASSIGNED'
+let asgFilterTester = '';     // '', username, or '__UNASSIGNED__'
 let asgFilterHistory = '';    // '', 'FAIL', 'PASS', 'UNTESTED'
 let asgFilterPriority = '';   // '', 'P1', 'P2', 'P3', 'P4'
 
@@ -37,8 +38,23 @@ function initAssignmentModule() {
     testerSel.innerHTML = activeTesters.map(u => `<option value="${u.username}">${u.name} (${u.roleTitle || u.role})</option>`).join('');
   }
 
+  // Check URL parameters for deep-linking
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCycleId = urlParams.get('cycleId');
+  const urlVersion = urlParams.get('version');
+
   // Set default selected version from project
   asgSelectedVersion = p.activeVersion || (p.versions && p.versions[0]?.version) || '';
+
+  if (urlCycleId) {
+    const cycleObj = typeof getCycleById === 'function' ? getCycleById(urlCycleId) : null;
+    if (cycleObj) {
+      state.activeCycleId = cycleObj.id;
+      asgSelectedVersion = cycleObj.version || asgSelectedVersion;
+    }
+  } else if (urlVersion) {
+    asgSelectedVersion = urlVersion;
+  }
 
   // Populate Tier 1: Projects
   populateAsgProjectSelector(p.id);
@@ -50,14 +66,64 @@ function initAssignmentModule() {
   populateAsgCycleSelector(p.id, asgSelectedVersion);
 
   updateAsgHierarchyBreadcrumb();
+  populateAsgTesterFilter();
   renderAsgOverviewTab();
   renderAsgDetailTab();
+}
+
+function populateAsgTesterFilter() {
+  const testerFilter = document.getElementById('asg-filter-tester');
+  if (!testerFilter) return;
+
+  const p = getActiveProject();
+  if (!p) return;
+  const cycleId = document.getElementById('detail-cycle')?.value || state.activeCycleId;
+  const cycle = getCycleById(cycleId);
+  const curVer = cycle?.version || p.activeVersion || 'v1.0';
+  const cycleTcs = cycleId ? getTestCasesForCycle(cycleId) : getAllTcs(curVer, p.id);
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const asgMap = new Map();
+  assignments.forEach(a => {
+    if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
+    asgMap.get(a.tcId).push(a);
+  });
+
+  const totalTcs = cycleTcs.length;
+  const assignedCount = cycleTcs.filter(t => asgMap.has(t.id) && asgMap.get(t.id).length > 0).length;
+  const unassignedCount = Math.max(0, totalTcs - assignedCount);
+
+  const allUsers = typeof getUsers === 'function' ? getUsers() : [];
+  let activeTesters = allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
+  if (activeTesters.length === 0) activeTesters = allUsers.filter(u => u.status !== 'LOCKED');
+
+  let opts = `
+    <option value="">👤 Nhân sự: Tất cả</option>
+    <option value="__UNASSIGNED__" ${asgFilterTester === '__UNASSIGNED__' ? 'selected' : ''}>⚪ Chưa phân công (${unassignedCount} bài)</option>
+  `;
+
+  opts += activeTesters.map(u => {
+    const userCount = cycleTcs.filter(t => {
+      const list = asgMap.get(t.id) || [];
+      return list.some(a => a.assigneeUsername === u.username);
+    }).length;
+    return `<option value="${u.username}" ${asgFilterTester === u.username ? 'selected' : ''}>👤 ${u.name} (${userCount} bài)</option>`;
+  }).join('');
+
+  testerFilter.innerHTML = opts;
+  testerFilter.value = asgFilterTester || '';
 }
 
 function populateAsgProjectSelector(activeId) {
   const prjSel = document.getElementById('asg-project-selector');
   if (!prjSel) return;
-  const projects = getAllProjects();
+  const isLead = (window.location.pathname || '').toLowerCase().includes('/lead/');
+  const projects = isLead ? (typeof getLeaderProjects === 'function' ? getLeaderProjects() : getAllProjects()) : (typeof getAccessibleProjects === 'function' ? getAccessibleProjects() : getAllProjects());
+  
+  if (projects.length > 0 && !projects.some(pr => pr.id === activeId)) {
+    activeId = projects[0].id;
+    state.activeProjectId = activeId;
+  }
+
   prjSel.innerHTML = projects.map(pr => `
     <option value="${pr.id}" ${pr.id === activeId ? 'selected' : ''}>
       ${escapeHtml(pr.name)} (${(pr.testCases || []).length} bài)
@@ -72,10 +138,12 @@ function populateAsgVersionSelector(projectId) {
   const p = (state.projects || []).find(x => x.id === projectId) || getActiveProject();
   if (!p) return;
 
-  const versions = p.versions || [{ version: p.activeVersion || 'v1.0', label: p.activeVersion || 'v1.0' }];
+  const versions = (Array.isArray(p.versions) && p.versions.length > 0)
+    ? p.versions
+    : [{ version: p.activeVersion || 'v1.0', label: p.activeVersion || 'v1.0' }];
 
   if (!asgSelectedVersion || (!versions.some(v => v.version === asgSelectedVersion) && asgSelectedVersion !== '')) {
-    asgSelectedVersion = p.activeVersion || versions[0]?.version || '';
+    asgSelectedVersion = p.activeVersion || versions[0]?.version || 'v1.0';
   }
 
   let options = versions.map(v => `
@@ -92,7 +160,12 @@ function populateAsgVersionSelector(projectId) {
 function populateAsgCycleSelector(projectId, version) {
   const cycleSel = document.getElementById('detail-cycle');
   if (!cycleSel) return;
-  const cycles = getTestCyclesForProject(projectId, version);
+  let cycles = getTestCyclesForProject(projectId, version);
+
+  if (cycles.length === 0 && version) {
+    // Nếu lọc theo phiên bản mà không có, fallback lấy tất cả các đợt test của dự án
+    cycles = getTestCyclesForProject(projectId);
+  }
 
   if (cycles.length === 0) {
     cycleSel.innerHTML = `<option value="">(Chưa có đợt test cho phiên bản này)</option>`;
@@ -115,6 +188,10 @@ function populateAsgCycleSelector(projectId, version) {
 function handleAsgProjectChange(projectId) {
   if (!projectId) return;
   setActiveProject(projectId);
+  if (typeof LeadContext !== 'undefined' && typeof LeadContext.switchProject === 'function') {
+    LeadContext.switchProject(projectId);
+    return;
+  }
   const p = getActiveProject();
   asgSelectedVersion = p?.activeVersion || (p?.versions && p.versions[0]?.version) || '';
   populateAsgVersionSelector(projectId);
@@ -230,7 +307,46 @@ function renderAsgOverviewTab() {
 function jumpToDetailForTester(username) {
   const sel = document.getElementById('detail-assignee');
   if (sel) sel.value = username;
+
+  // Luôn reset phân hệ về '' ([Tất cả phân hệ]) để toàn bộ kịch bản đã giao đều hiển thị đầy đủ
+  asgSelectedModuleId = '';
+
+  const p = getActiveProject();
+  const cycleId = document.getElementById('detail-cycle')?.value || state.activeCycleId;
+  const assignments = (state.assignments || []).filter(a => (!p || a.projectId === p.id) && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const userAsgs = assignments.filter(a => a.assigneeUsername === username);
+
+  if (userAsgs.length > 0) {
+    asgFilterTester = username;
+  } else {
+    asgFilterTester = '__UNASSIGNED__';
+  }
+
+  // Reset checkbox đã chọn
+  asgSelectedTcIds.clear();
+
+  const testerFilter = document.getElementById('asg-filter-tester');
+  if (testerFilter) testerFilter.value = asgFilterTester;
+
   switchAsgMainTab('detail');
+}
+
+function clearAsgTesterFilter() {
+  asgFilterTester = '';
+  const testerFilter = document.getElementById('asg-filter-tester');
+  if (testerFilter) testerFilter.value = '';
+  renderAsgDetailTab();
+}
+
+function filterByUnassignedForAssignee(username) {
+  if (username) {
+    const sel = document.getElementById('detail-assignee');
+    if (sel) sel.value = username;
+  }
+  asgFilterTester = '__UNASSIGNED__';
+  const testerFilter = document.getElementById('asg-filter-tester');
+  if (testerFilter) testerFilter.value = '__UNASSIGNED__';
+  renderAsgDetailTab();
 }
 
 function renderAsgDetailTab() {
@@ -243,6 +359,9 @@ function renderAsgDetailTab() {
     return;
   }
 
+  // Đồng bộ danh sách tester trong dropdown bộ lọc
+  populateAsgTesterFilter();
+
   const cycleId = document.getElementById('detail-cycle')?.value || state.activeCycleId;
   const cycle = getCycleById(cycleId);
   const curVer = cycle?.version || p.activeVersion || 'v1.0';
@@ -250,7 +369,10 @@ function renderAsgDetailTab() {
   const modules = getModules(curVer, p.id);
   const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
   const asgMap = new Map();
-  assignments.forEach(a => asgMap.set(a.tcId, a));
+  assignments.forEach(a => {
+    if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
+    asgMap.get(a.tcId).push(a);
+  });
 
   // Validate active module selection
   if (asgSelectedModuleId && asgSelectedModuleId !== '' && !modules.some(m => m.id === asgSelectedModuleId)) {
@@ -259,7 +381,7 @@ function renderAsgDetailTab() {
 
   // 1. Calculate & Render KPI Strip for Current Cycle
   const totalTcs = cycleTcs.length;
-  const assignedCount = cycleTcs.filter(t => asgMap.has(t.id)).length;
+  const assignedCount = cycleTcs.filter(t => asgMap.has(t.id) && asgMap.get(t.id).length > 0).length;
   const unassignedCount = Math.max(0, totalTcs - assignedCount);
   const assignedPct = totalTcs > 0 ? Math.round((assignedCount / totalTcs) * 100) : 0;
 
@@ -296,17 +418,34 @@ function renderAsgDetailTab() {
     const isAllModSelected = asgSelectedModuleId === '';
     const allModChecked = totalTcs > 0 && cycleTcs.every(t => asgSelectedTcIds.has(t.id));
 
+    let allBadgeLabel = `${assignedCount}/${totalTcs}`;
+    let allSubLabel = 'Toàn bộ kịch bản đợt test';
+    let filterTesterObj = null;
+
+    if (asgFilterTester && asgFilterTester !== '__UNASSIGNED__') {
+      filterTesterObj = (typeof getUsers === 'function' ? getUsers() : []).find(u => u.username === asgFilterTester);
+      const testerTotal = cycleTcs.filter(t => {
+        const list = asgMap.get(t.id) || [];
+        return list.some(a => a.assigneeUsername === asgFilterTester);
+      }).length;
+      allBadgeLabel = `${testerTotal} bài`;
+      allSubLabel = `Kịch bản của ${filterTesterObj ? filterTesterObj.name : asgFilterTester}`;
+    } else if (asgFilterTester === '__UNASSIGNED__') {
+      allBadgeLabel = `${unassignedCount} bài`;
+      allSubLabel = 'Kịch bản chưa phân công';
+    }
+
     let modulesHtml = `
       <li class="asg-mod-item ${isAllModSelected ? 'active' : ''}" onclick="selectModuleInTree('')">
         <div style="display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0; padding-right:8px">
           <input type="checkbox" ${allModChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleModuleSelection('', this.checked)" style="cursor:pointer; margin-top:3px" title="Chọn toàn bộ kịch bản đợt test" />
           <div style="display:flex; flex-direction:column; min-width:0">
             <span style="font-size:12.5px; font-weight:700; color:var(--text-primary)">📁 [Tất cả phân hệ]</span>
-            <span style="font-size:11px; color:var(--text-muted)">Toàn bộ kịch bản đợt test</span>
+            <span style="font-size:11px; color:var(--text-muted)">${allSubLabel}</span>
           </div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0">
-          <span class="badge ${totalTcs > 0 ? 'badge-nr' : ''}" style="font-size:10.5px; font-weight:700">${assignedCount}/${totalTcs}</span>
+          <span class="badge ${asgFilterTester ? 'badge-pass' : (totalTcs > 0 ? 'badge-nr' : '')}" style="font-size:10.5px; font-weight:700">${allBadgeLabel}</span>
           ${priorFailCount > 0 ? `<span class="asg-mod-bug-badge">⚠️ ${priorFailCount} lỗi</span>` : ''}
         </div>
       </li>
@@ -314,7 +453,7 @@ function renderAsgDetailTab() {
 
     modulesHtml += modules.map(m => {
       const modTcs = cycleTcs.filter(t => t.module === m.id);
-      const modAssigned = modTcs.filter(t => asgMap.has(t.id)).length;
+      const modAssigned = modTcs.filter(t => asgMap.has(t.id) && asgMap.get(t.id).length > 0).length;
       const isSelectedMod = m.id === asgSelectedModuleId;
       const allModSelected = modTcs.length > 0 && modTcs.every(t => asgSelectedTcIds.has(t.id));
       
@@ -322,6 +461,22 @@ function renderAsgDetailTab() {
         const s = getTcPriorExecutionSummary(t.id, cycleId, p.id);
         return s.lastStatus === 'FAIL' || s.lastStatus === 'BLOCKED' || s.hadFailure;
       }).length;
+
+      let modBadgeText = `${modAssigned}/${modTcs.length}`;
+      let modBadgeClass = modTcs.length > 0 ? 'badge-nr' : '';
+
+      if (asgFilterTester && asgFilterTester !== '__UNASSIGNED__') {
+        const modTesterCount = modTcs.filter(t => {
+          const list = asgMap.get(t.id) || [];
+          return list.some(a => a.assigneeUsername === asgFilterTester);
+        }).length;
+        modBadgeText = `${modTesterCount}/${modTcs.length}`;
+        modBadgeClass = modTesterCount > 0 ? 'badge-pass' : '';
+      } else if (asgFilterTester === '__UNASSIGNED__') {
+        const modUnassignedCount = modTcs.filter(t => !asgMap.has(t.id) || asgMap.get(t.id).length === 0).length;
+        modBadgeText = `${modUnassignedCount}/${modTcs.length}`;
+        modBadgeClass = modUnassignedCount > 0 ? 'badge-fail' : '';
+      }
 
       return `
         <li class="asg-mod-item ${isSelectedMod ? 'active' : ''}" onclick="selectModuleInTree('${m.id}')">
@@ -333,7 +488,7 @@ function renderAsgDetailTab() {
             </div>
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0">
-            <span class="badge ${modTcs.length > 0 ? 'badge-nr' : ''}" style="font-size:10.5px; font-weight:700">${modAssigned}/${modTcs.length}</span>
+            <span class="badge ${modBadgeClass}" style="font-size:10.5px; font-weight:700">${modBadgeText}</span>
             ${modBugs > 0 ? `<span class="asg-mod-bug-badge">⚠️ ${modBugs} lỗi</span>` : ''}
           </div>
         </li>
@@ -371,26 +526,30 @@ function toggleModuleSelection(modId, isChecked) {
 function handleAsgFilterChange() {
   asgFilterSearch = (document.getElementById('asg-filter-search')?.value || '').trim();
   asgFilterStatus = document.getElementById('asg-filter-status')?.value || '';
+  asgFilterTester = document.getElementById('asg-filter-tester')?.value || '';
   asgFilterHistory = document.getElementById('asg-filter-history')?.value || '';
   asgFilterPriority = document.getElementById('asg-filter-priority')?.value || '';
-  renderAsgTcTable();
+  renderAsgDetailTab();
 }
 
 function resetAsgFilters() {
   const searchEl = document.getElementById('asg-filter-search');
   const statusEl = document.getElementById('asg-filter-status');
+  const testerEl = document.getElementById('asg-filter-tester');
   const histEl = document.getElementById('asg-filter-history');
   const prioEl = document.getElementById('asg-filter-priority');
   if (searchEl) searchEl.value = '';
   if (statusEl) statusEl.value = '';
+  if (testerEl) testerEl.value = '';
   if (histEl) histEl.value = '';
   if (prioEl) prioEl.value = '';
 
   asgFilterSearch = '';
   asgFilterStatus = '';
+  asgFilterTester = '';
   asgFilterHistory = '';
   asgFilterPriority = '';
-  renderAsgTcTable();
+  renderAsgDetailTab();
 }
 
 function applyAsgPreset(type) {
@@ -449,7 +608,10 @@ function renderAsgTcTable() {
   const modules = getModules(curVer, p.id);
   const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
   const asgMap = new Map();
-  assignments.forEach(a => asgMap.set(a.tcId, a));
+  assignments.forEach(a => {
+    if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
+    asgMap.get(a.tcId).push(a);
+  });
 
   // Determine target scope (Module or All)
   let targetTcs = cycleTcs;
@@ -479,9 +641,18 @@ function renderAsgTcTable() {
   }
 
   if (asgFilterStatus === 'UNASSIGNED') {
-    filteredTcs = filteredTcs.filter(t => !asgMap.has(t.id));
+    filteredTcs = filteredTcs.filter(t => !asgMap.has(t.id) || asgMap.get(t.id).length === 0);
   } else if (asgFilterStatus === 'ASSIGNED') {
-    filteredTcs = filteredTcs.filter(t => asgMap.has(t.id));
+    filteredTcs = filteredTcs.filter(t => asgMap.has(t.id) && asgMap.get(t.id).length > 0);
+  }
+
+  if (asgFilterTester === '__UNASSIGNED__') {
+    filteredTcs = filteredTcs.filter(t => !asgMap.has(t.id) || asgMap.get(t.id).length === 0);
+  } else if (asgFilterTester) {
+    filteredTcs = filteredTcs.filter(t => {
+      const list = asgMap.get(t.id) || [];
+      return list.some(a => a.assigneeUsername === asgFilterTester);
+    });
   }
 
   if (asgFilterHistory === 'FAIL') {
@@ -518,11 +689,32 @@ function renderAsgTcTable() {
 
   // Panel Header
   if (panelHead) {
+    let testerBadgeBanner = '';
+    if (asgFilterTester && asgFilterTester !== '__UNASSIGNED__') {
+      const u = (typeof getUsers === 'function' ? getUsers() : []).find(x => x.username === asgFilterTester);
+      const testerName = u ? u.name : asgFilterTester;
+      testerBadgeBanner = `
+        <div style="display:flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px; color:#1e40af">
+          <span>👁️ Đang hiển thị bài của: <strong>👤 ${escapeHtml(testerName)}</strong></span>
+          <button type="button" class="btn btn-outline btn-xs" style="padding:1px 6px; font-size:10.5px; background:#fff" onclick="filterByUnassignedForAssignee('${asgFilterTester}')" title="Xem kịch bản chưa giao để giao thêm">➕ Xem bài chưa giao</button>
+          <button type="button" class="btn btn-outline btn-xs" style="padding:1px 6px; font-size:10.5px; background:#fff" onclick="clearAsgTesterFilter()" title="Xem tất cả bài đợt test">✕ Xem tất cả</button>
+        </div>
+      `;
+    } else if (asgFilterTester === '__UNASSIGNED__') {
+      testerBadgeBanner = `
+        <div style="display:flex; align-items:center; gap:6px; background:#fef3c7; border:1px solid #fde68a; padding:2px 8px; border-radius:6px; font-size:11.5px; color:#92400e">
+          <span>⚪ Đang lọc: <strong>Kịch bản CHƯA GIAO VIỆC</strong></span>
+          <button type="button" class="btn btn-outline btn-xs" style="padding:1px 6px; font-size:10.5px; background:#fff" onclick="clearAsgTesterFilter()">✕ Xem tất cả</button>
+        </div>
+      `;
+    }
+
     panelHead.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
         <span class="badge badge-nr" style="font-family:monospace; font-weight:800; color:var(--primary)">${activeBadge}</span>
         <strong style="font-size:13.5px">${activeTitle}</strong>
         <span style="font-size:11.5px; color:var(--text-muted)">(${filteredTcs.length} kịch bản)</span>
+        ${testerBadgeBanner}
       </div>
       <div style="display:flex; gap:6px">
         <button type="button" class="btn btn-outline btn-xs" onclick="batchSelectCurrentMod(true)">☑️ Chọn tất cả (${filteredTcs.length})</button>
@@ -559,7 +751,7 @@ function renderCompactPriorityBadge(priority) {
 
   tbody.innerHTML = filteredTcs.map(tc => {
     const isChecked = asgSelectedTcIds.has(tc.id);
-    const asg = asgMap.get(tc.id);
+    const asgList = asgMap.get(tc.id) || [];
     const summary = getTcPriorExecutionSummary(tc.id, cycleId, p.id);
 
     // Prior Round Execution Summary Column
@@ -595,21 +787,57 @@ function renderCompactPriorityBadge(priority) {
     let assigneeHtml = '<span class="badge badge-nr" style="color:#b45309; background:#fef3c7; font-size:10.5px; padding:2px 6px">⚪ Chưa giao</span>';
     let statusHtml = '<span class="badge badge-nr" style="font-size:10.5px; padding:2px 6px">⚪ Chưa giao</span>';
     let dateHtml = '<span style="color:var(--text-muted); font-size:11px">--</span>';
-    let actionHtml = `<button type="button" class="btn-tc-action btn-tc-assign" onclick="quickAssignSingle('${tc.id}')" style="padding:2px 7px; font-size:11px" title="Giao nhanh kịch bản này">+ Giao</button>`;
+    let actionHtml = `<button type="button" class="btn-tc-action btn-tc-assign" onclick="quickAssignSingle('${tc.id}')" style="padding:2px 7px; font-size:11px" title="Giao kịch bản này cho tester đang chọn">+ Giao</button>`;
 
-    if (asg) {
-      const shortName = escapeHtml(asg.assigneeName.split('(')[0].trim());
-      assigneeHtml = `<span class="tc-assignee-tag" style="font-size:11.5px; padding:2px 8px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block" title="${escapeHtml(asg.assigneeName)}">👤 ${shortName}</span>`;
-      if (asg.status === 'PASSED') statusHtml = '<span class="badge badge-pass" style="font-size:10.5px; padding:2px 6px">✅ Đã Đạt</span>';
-      else if (asg.status === 'FAILED') statusHtml = '<span class="badge badge-fail" style="font-size:10.5px; padding:2px 6px">❌ Bị Lỗi</span>';
-      else if (asg.status === 'BLOCKED' || asg.status === 'Blocked') statusHtml = '<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #f87171;font-size:10.5px; padding:2px 6px">⛔ Bị chặn</span>';
-      else statusHtml = '<span class="badge" style="background:#e0e7ff; color:#3730a3; font-size:10.5px; padding:2px 6px">⏳ Đang làm</span>';
+    if (asgList.length > 0) {
+      assigneeHtml = `
+        <div style="display:flex; flex-direction:column; gap:4px">
+          ${asgList.map(a => {
+            const shortName = escapeHtml(a.assigneeName.split('(')[0].trim());
+            return `
+              <div class="tc-assignee-tag" style="display:inline-flex; align-items:center; justify-content:space-between; gap:4px; font-size:11px; padding:2px 6px; max-width:145px" title="${escapeHtml(a.assigneeName)}">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">👤 ${shortName}</span>
+                <button type="button" onclick="event.stopPropagation(); cancelTcAsg('${tc.id}', '${a.assigneeUsername}')" style="border:none; background:transparent; color:#ef4444; cursor:pointer; font-size:11px; padding:0 2px; line-height:1" title="Hủy phân công của ${shortName}">✕</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
 
-      const sPart = asg.startDate ? asg.startDate.slice(5).replace('-', '/') : '';
-      const dPart = asg.dueDate ? asg.dueDate.slice(5).replace('-', '/') : '';
-      const dateText = sPart && dPart ? `${sPart} ➔ ${dPart}` : (dPart ? `Hạn: ${dPart}` : '--');
-      dateHtml = `<span style="font-family:monospace; font-size:10.5px; font-weight:700" title="Bắt đầu: ${asg.startDate || '--'} | Hạn chót: ${asg.dueDate || '--'}">📅 ${dateText}</span>`;
-      actionHtml = `<button type="button" class="btn-tc-action btn-tc-cancel" onclick="cancelTcAsg('${tc.id}')" style="padding:2px 7px; font-size:11px" title="Hủy phân công">✕ Hủy</button>`;
+      statusHtml = `
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:center">
+          ${asgList.map(a => {
+            if (a.status === 'PASSED') return '<span class="badge badge-pass" style="font-size:10px; padding:1px 5px">✅ Đạt</span>';
+            if (a.status === 'FAILED') return '<span class="badge badge-fail" style="font-size:10px; padding:1px 5px">❌ Lỗi</span>';
+            if (a.status === 'BLOCKED' || a.status === 'Blocked') return '<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #f87171;font-size:10px; padding:1px 5px">⛔ Bị chặn</span>';
+            return '<span class="badge" style="background:#e0e7ff; color:#3730a3; font-size:10px; padding:1px 5px">⏳ Đang làm</span>';
+          }).join('')}
+        </div>
+      `;
+
+      if (asgList.length === 1) {
+        const asg = asgList[0];
+        const sPart = asg.startDate ? asg.startDate.slice(5).replace('-', '/') : '';
+        const dPart = asg.dueDate ? asg.dueDate.slice(5).replace('-', '/') : '';
+        const dateText = sPart && dPart ? `${sPart} ➔ ${dPart}` : (dPart ? `Hạn: ${dPart}` : '--');
+        dateHtml = `<span style="font-family:monospace; font-size:10.5px; font-weight:700" title="Bắt đầu: ${asg.startDate || '--'} | Hạn chót: ${asg.dueDate || '--'}">📅 ${dateText}</span>`;
+      } else {
+        dateHtml = `
+          <div style="display:flex; flex-direction:column; gap:4px; align-items:center">
+            ${asgList.map(a => {
+              const dPart = a.dueDate ? a.dueDate.slice(5).replace('-', '/') : '--';
+              return `<span style="font-family:monospace; font-size:10px; font-weight:600" title="${escapeHtml(a.assigneeName)} - Hạn: ${a.dueDate || '--'}">📅 ${dPart}</span>`;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      actionHtml = `
+        <div style="display:flex; gap:3px; justify-content:center">
+          <button type="button" class="btn-tc-action btn-tc-assign" onclick="quickAssignSingle('${tc.id}')" style="padding:2px 5px; font-size:10.5px" title="Giao thêm kịch bản này cho tester khác">+ Thêm</button>
+          <button type="button" class="btn-tc-action btn-tc-cancel" onclick="cancelTcAsg('${tc.id}')" style="padding:2px 5px; font-size:10.5px" title="Hủy toàn bộ phân công của bài này">✕ Hết</button>
+        </div>
+      `;
     }
 
     return `
@@ -662,20 +890,31 @@ function batchSelectCurrentMod(select) {
     targetTcs = targetTcs.filter(t => t.module === asgSelectedModuleId);
   }
 
-  // Also respect active search/history/status filters if any
-  if (asgFilterSearch || asgFilterStatus || asgFilterHistory || asgFilterPriority) {
+  // Also respect active search/history/status/tester filters if any
+  if (asgFilterSearch || asgFilterStatus || asgFilterTester || asgFilterHistory || asgFilterPriority) {
     const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
     const asgMap = new Map();
-    assignments.forEach(a => asgMap.set(a.tcId, a));
+    assignments.forEach(a => {
+      if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
+      asgMap.get(a.tcId).push(a);
+    });
 
     if (asgFilterSearch) {
       const term = asgFilterSearch.toLowerCase();
       targetTcs = targetTcs.filter(t => (t.id || '').toLowerCase().includes(term) || (t.name || t.title || '').toLowerCase().includes(term) || (t.objective || '').toLowerCase().includes(term));
     }
     if (asgFilterStatus === 'UNASSIGNED') {
-      targetTcs = targetTcs.filter(t => !asgMap.has(t.id));
+      targetTcs = targetTcs.filter(t => !asgMap.has(t.id) || asgMap.get(t.id).length === 0);
     } else if (asgFilterStatus === 'ASSIGNED') {
-      targetTcs = targetTcs.filter(t => asgMap.has(t.id));
+      targetTcs = targetTcs.filter(t => asgMap.has(t.id) && asgMap.get(t.id).length > 0);
+    }
+    if (asgFilterTester === '__UNASSIGNED__') {
+      targetTcs = targetTcs.filter(t => !asgMap.has(t.id) || asgMap.get(t.id).length === 0);
+    } else if (asgFilterTester) {
+      targetTcs = targetTcs.filter(t => {
+        const list = asgMap.get(t.id) || [];
+        return list.some(a => a.assigneeUsername === asgFilterTester);
+      });
     }
     if (asgFilterHistory === 'FAIL') {
       targetTcs = targetTcs.filter(t => {
@@ -725,18 +964,24 @@ function confirmBatchDispatch() {
 
   let assignedCount = 0;
   asgSelectedTcIds.forEach(tcId => {
-    const existing = state.assignments.find(a => a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId));
+    // Tìm phân công của CHÍNH TESTER NÀY cho testcase trong đợt test hiện tại (không ghi đè người khác!)
+    const existing = state.assignments.find(a => 
+      a.projectId === p.id && 
+      a.tcId === tcId && 
+      (a.cycleId === cycleId || !a.cycleId) && 
+      a.assigneeUsername === username
+    );
+
     if (existing) {
       existing.cycleId = cycleId;
       existing.cycleName = curCycle ? curCycle.name : 'Đợt kiểm thử';
-      existing.assigneeUsername = username;
       existing.assigneeName = testerName;
       existing.startDate = sDate;
       existing.dueDate = dDate;
-      existing.status = 'WIP';
+      existing.status = existing.status || 'WIP';
     } else {
       state.assignments.push({
-        id: `asg-${Date.now()}-${tcId}`,
+        id: `asg-${Date.now()}-${tcId}-${username}`,
         projectId: p.id,
         cycleId: cycleId,
         cycleName: curCycle ? curCycle.name : 'Đợt kiểm thử',
@@ -765,15 +1010,21 @@ function quickAssignSingle(tcId) {
   confirmBatchDispatch();
 }
 
-function cancelTcAsg(tcId) {
+function cancelTcAsg(tcId, username) {
   const p = getActiveProject();
   if (!p) return;
   const cycleId = document.getElementById('detail-cycle')?.value || state.activeCycleId;
 
-  // Only remove assignment matching current project and cycle
-  state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId)));
+  if (username) {
+    // Chỉ hủy phân công cho nhân sự cụ thể được chọn
+    state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId) && a.assigneeUsername === username));
+    showToast(`✕ Đã hủy phân công kịch bản [${tcId}] của nhân sự ${username}`, 'info');
+  } else {
+    // Hủy toàn bộ phân công của kịch bản này trong đợt test
+    state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId)));
+    showToast(`✕ Đã hủy toàn bộ phân công kịch bản [${tcId}] trong đợt test`, 'info');
+  }
   saveCoreState();
-  showToast(`✕ Đã hủy phân công kịch bản [${tcId}] trong đợt test`, 'info');
   renderAsgDetailTab();
 }
 
@@ -787,7 +1038,7 @@ function openAsgTcDetail(tcId) {
   const tc = allTcs.find(t => t.id === tcId) || (p.testCases || []).find(t => t.id === tcId);
   if (!tc) return;
 
-  const asg = state.assignments.find(a => a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId));
+  const tcAsgs = (state.assignments || []).filter(a => a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId));
   const res = state.results ? state.results[tcId] : null;
   const summary = getTcPriorExecutionSummary(tc.id, cycleId, p.id);
   const title = document.getElementById('modal-asg-tc-title');
@@ -877,12 +1128,18 @@ function openAsgTcDetail(tcId) {
 
       <!-- Assignment Status Bar -->
       <div style="background:var(--bg-surface); padding:10px 14px; border-radius:6px; border:1px solid var(--border); margin-bottom:12px; font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-        <div>
-          <strong>Tình trạng phân công trong đợt [${cycle?.code || cycleId}]:</strong> 
-          ${asg ? `👤 Đã giao cho <strong>${escapeHtml(asg.assigneeName)}</strong> (Hạn chót: <strong>${asg.dueDate}</strong>, bởi ${escapeHtml(asg.assignedBy || 'QA Lead')})` : '<span style="color:#d97706">⚪ Chưa phân công nhân sự</span>'}
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+          <strong>Phân công trong đợt [${cycle?.code || cycleId}]:</strong> 
+          ${tcAsgs.length > 0 ? tcAsgs.map(a => `
+            <span style="display:inline-flex; align-items:center; gap:4px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:2px 8px; font-size:11.5px">
+              👤 <strong>${escapeHtml(a.assigneeName.split('(')[0].trim())}</strong> (Hạn: ${a.dueDate || '--'})
+              <button type="button" onclick="cancelTcAsg('${tc.id}', '${a.assigneeUsername}'); closeModal('modal-asg-tc-detail')" style="border:none; background:transparent; color:#ef4444; cursor:pointer; font-size:11px" title="Hủy phân công người này">✕</button>
+            </span>
+          `).join('') : '<span style="color:#d97706">⚪ Chưa phân công nhân sự nào</span>'}
         </div>
         <div style="display:flex; gap:6px">
-          ${asg ? `<button type="button" class="btn btn-outline btn-xs" style="color:#dc2626" onclick="cancelTcAsg('${tc.id}'); closeModal('modal-asg-tc-detail')">✕ Hủy phân công</button>` : `<button type="button" class="btn btn-primary btn-xs" onclick="quickAssignSingle('${tc.id}'); closeModal('modal-asg-tc-detail')">⚡ Giao ngay cho Tester đang chọn</button>`}
+          <button type="button" class="btn btn-primary btn-xs" onclick="quickAssignSingle('${tc.id}'); closeModal('modal-asg-tc-detail')">⚡ Giao cho Tester đang chọn ở trên</button>
+          ${tcAsgs.length > 0 ? `<button type="button" class="btn btn-outline btn-xs" style="color:#dc2626" onclick="cancelTcAsg('${tc.id}'); closeModal('modal-asg-tc-detail')">✕ Hủy tất cả</button>` : ''}
         </div>
       </div>
 
