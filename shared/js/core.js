@@ -1827,8 +1827,8 @@ function getTcPriorExecutionSummary(tcId, currentCycleId, projectId) {
 
 function getHierarchyContext(projectId, cycleId, tcId) {
   const prj = (state.projects || []).find(p => p.id === (projectId || state.activeProjectId)) || getActiveProject();
-  const cycle = (state.testCycles || []).find(c => c.id === (cycleId || state.activeCycleId)) || getActiveCycle(prj?.id);
-  const curVer = cycle?.version || prj?.activeVersion || 'v1.0';
+  const pVersions = prj ? (typeof getProjectVersions === 'function' ? getProjectVersions(prj.id) : (prj.versions || [])) : [];
+  const curVer = cycle?.version || prj?.activeVersion || (pVersions[0]?.version || pVersions[0]) || '';
   const tc = tcId ? getAllTcs(curVer, prj?.id).find(t => t.id === tcId) : null;
   const mod = tc ? getModules(curVer, prj?.id).find(m => m.id === tc.module) : null;
   
@@ -2539,9 +2539,12 @@ function getHierarchyContext() {
 
   const params = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlVer = params.get('version');
-  let currentVer = urlVer || state.activeVersion || p?.activeVersion || (versions[0]?.version) || 'v1.0';
-  if (versions.length > 0 && !versions.some(v => v.version === currentVer)) {
-    currentVer = versions[0].version;
+  let currentVer = '';
+  if (versions.length > 0) {
+    currentVer = urlVer || state.activeVersion || p?.activeVersion || (versions[0]?.version || versions[0]) || '';
+    if (!versions.some(v => (v.version || v) === currentVer)) {
+      currentVer = versions[0].version || versions[0];
+    }
   }
 
   const cycles = p ? getTestCyclesForProject(p.id, currentVer) : [];
