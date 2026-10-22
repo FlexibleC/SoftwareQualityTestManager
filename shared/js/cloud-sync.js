@@ -181,9 +181,6 @@
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'test_comments' }, (payload) => {
           handleRealtimeCommentChange(payload);
         })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'test_cases_custom' }, () => {
-          pullCloudCatalog({ silent: true });
-        })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'test_sessions' }, () => {
           pullCloudProjectState({ silent: true }).then(() => {
             triggerUiRefresh();
@@ -191,7 +188,7 @@
         })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_sessions, test_results, test_comments & test_cases_custom');
+            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_sessions, test_results, test_comments');
           }
         });
     } catch (err) {
@@ -601,10 +598,6 @@
       const { error } = await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
       if (!error) {
         console.log(`⚡ [Cloud Database] Đã đồng bộ ${projects.length} dự án lên Supabase Cloud.`);
-        const allTcs = projects.flatMap(p => p.testCases || []);
-        if (allTcs.length > 0) {
-          pushCatalogToCloud(allTcs);
-        }
       }
       return !error;
     } catch (e) {
@@ -705,13 +698,28 @@
       if (!window.state) window.state = {};
       if (!window.state.projects) window.state.projects = [];
 
+      // NGUYÊN TẮC BẢO VỆ DỮ LIỆU ĐA PHIÊN BẢN (MULTI-VERSION DATA ISOLATION):
+      // Nếu dự án đã có kịch bản trong projects (từ system_projects với đầy đủ tag version),
+      // TUYỆT ĐỐI KHÔNG ghi đè làm mất trường version và làm rò rỉ kịch bản giữa các phiên bản!
+      const curPrj = (window.state.projects || []).find(p => p.id === window.state.activeProjectId) || window.state?.projects?.[0];
+      if (curPrj && Array.isArray(curPrj.testCases) && curPrj.testCases.length > 0) {
+        console.log(`⚡ [Database Sync] Dự án đã có ${curPrj.testCases.length} kịch bản trong catalog. Giữ nguyên toàn vẹn phiên bản.`);
+        return true;
+      }
+
       if (dbTcs && dbTcs.length > 0) {
-        const mapped = dbTcs.map(mapCloudTestCaseToLocal);
+        const defaultVer = curPrj?.activeVersion || (curPrj?.versions?.[0]?.version || 'v1.0');
+        const mapped = dbTcs.map(rec => {
+          const item = mapCloudTestCaseToLocal(rec);
+          item.version = defaultVer;
+          item.projectId = curPrj?.id || 'PRJ-SMARTVMS';
+          return item;
+        });
         const modIds = [...new Set(mapped.map(t => t.module || 'M01'))].sort();
         const defaultModules = modIds.map(mId => ({
           id: mId,
           name: `Phân hệ ${mId}`,
-          versions: ['v1.0', 'v1.0.0']
+          versions: [defaultVer]
         }));
 
         if (!window.state.projects || window.state.projects.length === 0) {
@@ -722,8 +730,8 @@
             domain: 'Quản lý Khách & Ra vào',
             lead: 'Nguyễn Văn Huy (QA Lead)',
             standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
-            activeVersion: 'v1.0.0',
-            versions: [{ version: 'v1.0.0', label: 'v1.0.0-Base', status: 'IN_QA' }],
+            activeVersion: defaultVer,
+            versions: [{ version: defaultVer, label: `${defaultVer}-Base`, status: 'IN_QA' }],
             modules: defaultModules,
             testCases: mapped
           }];

@@ -1143,9 +1143,12 @@ const LeadSettings = {
     }
 
     // Gắn tag version cho toàn bộ kịch bản nhập
-    const taggedTcs = this.importedTcs.map(tc => ({
+    const taggedTcs = this.importedTcs.map((tc, idx) => ({
       ...tc,
-      version,
+      id: tc.id || `TC-IMP-${idx + 1}`,
+      name: tc.name || tc.title || `Kịch bản kiểm thử ${idx + 1}`,
+      title: tc.title || tc.name || `Kịch bản kiểm thử ${idx + 1}`,
+      version: version.trim(),
       projectId: p.id,
       isCustom: true
     }));
@@ -1158,9 +1161,16 @@ const LeadSettings = {
         p.modules.push({
           id: tc.module,
           name: `Phân hệ ${tc.module}`,
-          desc: `Tự động trích xuất từ kịch bản phiên bản ${version}`
+          desc: `Tự động trích xuất từ kịch bản phiên bản ${version.trim()}`,
+          versions: [version.trim()]
         });
         existingModIds.add(tc.module);
+      } else if (tc.module) {
+        const foundMod = p.modules.find(m => m.id === tc.module);
+        if (foundMod) {
+          if (!Array.isArray(foundMod.versions)) foundMod.versions = [];
+          if (!foundMod.versions.includes(version.trim())) foundMod.versions.push(version.trim());
+        }
       }
     });
 

@@ -147,8 +147,18 @@ function renderTestcasesTable() {
   const filtered = allTcs.filter(tc => {
     // 1. Lọc theo Phiên bản
     if (verFilter) {
-      if (tc.version && tc.version !== verFilter) return false;
-      if (!tc.version && p && p.activeVersion && p.activeVersion !== verFilter) return false;
+      const tcVer = (tc.version || '').trim().toLowerCase();
+      const targetVer = verFilter.trim().toLowerCase();
+      if (tcVer) {
+        if (tcVer !== targetVer) return false;
+      } else {
+        const vers = p?.versions || [];
+        if (vers.length === 1 && (vers[0].version || vers[0] || '').trim().toLowerCase() === targetVer) {
+          // OK cho dự án chỉ có 1 phiên bản duy nhất
+        } else {
+          return false;
+        }
+      }
     }
 
     // 2. Lọc theo Đợt kiểm thử (Cycle Scope)

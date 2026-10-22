@@ -497,7 +497,10 @@ const LeadDashboard = {
       : { totalTcs: 0, passCount: 0, failCount: 0, passRate: 0, failRate: 0, untestedRate: 100, cyclesCount: 0, activeCyclesCount: 0, modulesCount: 0 };
 
     const allDefects = (typeof getProjectDefects === 'function') ? getProjectDefects(p.id) : [];
-    const vDefects = allDefects.filter(d => (d.version === vStr || d.detectedInVersion === vStr || !d.version));
+    const vDefects = allDefects.filter(d => {
+      const dv = (d.version || d.detectedInVersion || '').trim().toLowerCase();
+      return dv === (vStr || '').trim().toLowerCase();
+    });
 
     let openP1 = 0, openP2 = 0, openTotal = 0;
     vDefects.forEach(d => {
@@ -1628,9 +1631,12 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
       return;
     }
 
-    const taggedTcs = this.importedTcs.map(tc => ({
+    const taggedTcs = this.importedTcs.map((tc, idx) => ({
       ...tc,
-      version,
+      id: tc.id || `TC-IMP-${idx + 1}`,
+      name: tc.name || tc.title || `Kịch bản kiểm thử ${idx + 1}`,
+      title: tc.title || tc.name || `Kịch bản kiểm thử ${idx + 1}`,
+      version: version.trim(),
       projectId: p.id,
       isCustom: true
     }));
@@ -1642,9 +1648,16 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
         p.modules.push({
           id: tc.module,
           name: `Phân hệ ${tc.module}`,
-          desc: `Tự động trích xuất từ kịch bản phiên bản ${version}`
+          desc: `Tự động trích xuất từ kịch bản phiên bản ${version.trim()}`,
+          versions: [version.trim()]
         });
         existingModIds.add(tc.module);
+      } else if (tc.module) {
+        const foundMod = p.modules.find(m => m.id === tc.module);
+        if (foundMod) {
+          if (!Array.isArray(foundMod.versions)) foundMod.versions = [];
+          if (!foundMod.versions.includes(version.trim())) foundMod.versions.push(version.trim());
+        }
       }
     });
 

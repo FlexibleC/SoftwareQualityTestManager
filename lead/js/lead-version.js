@@ -198,7 +198,10 @@ const LeadVersion = {
 
     // Lỗi thuộc phiên bản
     const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : [];
-    const vDefects = allDefects.filter(d => (d.version === vStr || d.detectedInVersion === vStr || !d.version));
+    const vDefects = allDefects.filter(d => {
+      const dv = (d.version || d.detectedInVersion || '').trim().toLowerCase();
+      return dv === (vStr || '').trim().toLowerCase();
+    });
 
     let p1Bugs = 0, p2Bugs = 0, p3Bugs = 0, p4Bugs = 0;
     let openBugs = 0, closedBugs = 0;
@@ -2508,7 +2511,10 @@ const LeadVersion = {
     const curPassRate = totalTcs > 0 ? (vMetrics.passRate ?? Math.round((passCount / totalTcs) * 1000) / 10) : 0;
 
     const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : [];
-    const vDefects = allDefects.filter(d => (d.version === this.currentVersion || d.detectedInVersion === this.currentVersion || !d.version));
+    const vDefects = allDefects.filter(d => {
+      const dv = (d.version || d.detectedInVersion || '').trim().toLowerCase();
+      return dv === (this.currentVersion || '').trim().toLowerCase();
+    });
     
     let curP1 = 0, curP2 = 0, curP3 = 0;
     vDefects.forEach(d => {

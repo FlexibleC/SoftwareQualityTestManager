@@ -851,15 +851,18 @@ function getAllTcs(version, projectId) {
   if (!p) return [];
   let tcs = p.testCases || [];
   if (version) {
+    const normTarget = (version || '').trim().toLowerCase();
     tcs = tcs.filter(tc => {
-      if (!tc.version) {
-        const mod = (p.modules || []).find(m => m.id === tc.module);
-        if (mod && mod.versions && mod.versions.length > 0) {
-          return mod.versions.some(v => v === version || v.startsWith(version) || version.startsWith(v));
-        }
+      const tcVer = (tc.version || '').trim().toLowerCase();
+      if (tcVer) {
+        return tcVer === normTarget;
+      }
+      // Hỗ trợ tương thích ngược: Chỉ nhận nếu dự án có đúng 1 phiên bản duy nhất
+      const vers = p.versions || [];
+      if (vers.length === 1 && (vers[0].version || vers[0] || '').trim().toLowerCase() === normTarget) {
         return true;
       }
-      return tc.version === version || tc.version.startsWith(version) || version.startsWith(tc.version);
+      return false;
     });
   }
   return tcs;
@@ -892,9 +895,24 @@ function getModules(version, projectId) {
   if (!p) return [];
   let mods = p.modules || [];
   if (version) {
+    const normTarget = (version || '').trim().toLowerCase();
+    // Lấy danh sách module thực sự có kịch bản thuộc phiên bản này
+    const vTcs = getTestCasesForVersion(p.id, version);
+    const activeModIds = new Set(vTcs.map(t => t.moduleId || t.module).filter(Boolean));
+
     mods = mods.filter(m => {
-      if (!m.versions || m.versions.length === 0) return true;
-      return m.versions.some(v => v === version || v.startsWith(version) || version.startsWith(v));
+      // 1. Phân hệ có kịch bản thuộc phiên bản này
+      if (activeModIds.has(m.id)) return true;
+      // 2. Phân hệ được gắn tag m.versions chỉ định rõ phiên bản này
+      if (Array.isArray(m.versions) && m.versions.length > 0) {
+        return m.versions.some(v => (v || '').trim().toLowerCase() === normTarget);
+      }
+      // Hỗ trợ tương thích ngược: Chỉ tự động nhận nếu dự án chỉ có đúng 1 phiên bản duy nhất
+      const vers = p.versions || [];
+      if (vers.length === 1 && (vers[0].version || vers[0] || '').trim().toLowerCase() === normTarget) {
+        return true;
+      }
+      return false;
     });
   }
   return mods;
@@ -1232,9 +1250,10 @@ function getTestCyclesForProject(projectId, version) {
   const projectCycles = Array.isArray(p.testCycles) ? p.testCycles : [];
   let list = projectCycles.map(c => ({ ...c, projectId: c.projectId || pId }));
   if (version) {
+    const normTarget = (version || '').trim().toLowerCase();
     list = list.filter(c => {
       if (!c.version) return false;
-      return c.version === version || c.version.startsWith(version) || version.startsWith(c.version);
+      return (c.version || '').trim().toLowerCase() === normTarget;
     });
   }
   return list;
@@ -1274,6 +1293,7 @@ function getCycleById(cycleId) {
 
 /**
  * Lấy danh mục Kịch bản thuộc về một Phiên bản cụ thể
+ * Đảm bảo nguyên tắc cô lập phiên bản tuyệt đối (Strict Version Isolation)
  */
 function getTestCasesForVersion(projectId, version) {
   const pId = projectId || state.activeProjectId;
@@ -1286,18 +1306,27 @@ function getTestCasesForVersion(projectId, version) {
         ? window.SMARTVMS_DEFAULT_CATALOG.testCases
         : (p.testCases || []));
 
-  const targetVer = version || p.activeVersion;
+  const targetVer = (version || p.activeVersion || '').trim().toLowerCase();
   if (!targetVer) return allTcs;
 
   // 1. Kiểm tra xem có kịch bản nào được gán đích danh cho phiên bản này không
-  const specificTcs = allTcs.filter(tc => tc.version === targetVer);
+  const specificTcs = allTcs.filter(tc => (tc.version || '').trim().toLowerCase() === targetVer);
   if (specificTcs.length > 0) {
     return specificTcs;
   }
 
-  // 2. Kế thừa kịch bản chuẩn (Smart Baseline Inheritance):
-  // Nếu phiên bản chưa gán kịch bản riêng, tự động kế thừa toàn bộ Baseline kịch bản của dự án
-  return allTcs;
+  // 2. Tương thích ngược: Nếu dự án CHỈ CÓ ĐÚNG 1 phiên bản duy nhất và các kịch bản chưa có tag version
+  const versions = Array.isArray(p.versions) ? p.versions : [];
+  if (versions.length === 1) {
+    const onlyVer = (versions[0].version || versions[0] || '').trim().toLowerCase();
+    if (onlyVer === targetVer) {
+      return allTcs.filter(tc => !tc.version || (tc.version || '').trim().toLowerCase() === targetVer);
+    }
+  }
+
+  // 3. Với dự án đa phiên bản: Nếu phiên bản chưa có kịch bản thì TRẢ VỀ RỖNG [] (0 kịch bản).
+  // Tuyệt đối không tự ý kế thừa hoặc lấy kịch bản của phiên bản khác đổ vào phiên bản này.
+  return [];
 }
 
 /**
