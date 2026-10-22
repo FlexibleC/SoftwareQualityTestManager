@@ -111,10 +111,20 @@ const DevContext = {
       ? getTestCyclesForProject(p.id, version) 
       : (p.testCycles || []);
 
+    const curUser = state.currentUser || getCurrentUser();
+    const curUsername = curUser?.username || 'dev';
+
     return allCycles.filter(c => {
       if (version && c.version) {
         const matchesVer = c.version === version || c.version.startsWith(version) || version.startsWith(c.version);
         if (!matchesVer) return false;
+      }
+      // Nếu đợt kiểm thử đã cấu hình danh sách lập trình viên phụ trách
+      const cycleDevs = Array.isArray(c.assignedDevs) && c.assignedDevs.length > 0
+        ? c.assignedDevs
+        : (Array.isArray(c.devUsernames) ? c.devUsernames : []);
+      if (cycleDevs.length > 0) {
+        return cycleDevs.includes(curUsername) || curUser?.role === 'admin';
       }
       return true;
     });

@@ -606,8 +606,8 @@ const LeadVersion = {
                     <div class="lead-portfolio-stat-lbl">Đã giao (${cMetrics.assignedRate}%)</div>
                   </div>
                   <div class="lead-portfolio-stat-box">
-                    <div class="lead-portfolio-stat-val" style="color:#7c3aed; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${cMetrics.assignees.join(', ')}">
-                      ${cMetrics.assignees.length > 0 ? `${cMetrics.assignees.length} kiểm thử viên` : '0 kiểm thử viên'}
+                    <div class="lead-portfolio-stat-val" style="color:#7c3aed; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="Testers: ${cMetrics.assignees.join(', ')} | Devs: ${(cyc.assignedDevs || cyc.devUsernames || []).join(', ')}">
+                      ${cMetrics.assignees.length} Tester • ${(cyc.assignedDevs || cyc.devUsernames || []).length} Dev
                     </div>
                     <div class="lead-portfolio-stat-lbl">Nhân sự thực thi</div>
                   </div>
@@ -699,7 +699,9 @@ const LeadVersion = {
             </div>
           </td>
           <td style="text-align:center; font-size:12px; color:var(--text-secondary)">
-            ${cMetrics.assignees.length} kiểm thử viên
+            <span title="Testers: ${cMetrics.assignees.join(', ')}">${cMetrics.assignees.length} Tester</span>
+            <span style="color:var(--text-muted)"> • </span>
+            <span style="color:#0284c7; font-weight:700" title="Developers: ${(c.assignedDevs || c.devUsernames || []).join(', ')}">${(c.assignedDevs || c.devUsernames || []).length} Dev</span>
           </td>
           <td style="text-align:center">
             <div style="display:flex; align-items:center; justify-content:center; gap:6px">
@@ -1892,6 +1894,20 @@ const LeadVersion = {
     return allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
   },
 
+  getProjectDevsList() {
+    const p = getActiveProject();
+    const allUsers = typeof getUsers === 'function' ? getUsers() : (state.users || DEFAULT_SYSTEM_USERS);
+    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p?.id) : (p?.members || []);
+    const memberDevs = members.filter(m => m.projectRole === 'dev' || m.projectRole === 'developer');
+    if (memberDevs.length > 0) {
+      const set = new Set(memberDevs.map(m => m.username));
+      const list = allUsers.filter(u => set.has(u.username) && u.status !== 'LOCKED');
+      if (list.length > 0) return list;
+    }
+    // Fallback nếu project.members chưa có role dev: lấy developers hệ thống
+    return allUsers.filter(u => (u.role === 'dev' || u.role === 'developer') && u.status !== 'LOCKED');
+  },
+
   renderFormTestersCheckboxes(selectedUsernames = []) {
     const container = document.getElementById('cf-testers-list');
     if (!container) return;
@@ -1949,6 +1965,63 @@ const LeadVersion = {
     return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
   },
 
+  renderFormDevsCheckboxes(selectedUsernames = []) {
+    const container = document.getElementById('cf-devs-list');
+    if (!container) return;
+    const devs = this.getProjectDevsList();
+    const selSet = new Set(selectedUsernames);
+
+    if (devs.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:12px">Chưa có lập trình viên nào trong dự án.</div>`;
+      this.updateFormDevsBadge();
+      return;
+    }
+
+    container.innerHTML = devs.map(u => {
+      const isChecked = selSet.has(u.username);
+      return `
+        <label style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:6px; background:${isChecked ? 'rgba(2,132,199,0.08)' : 'transparent'}; cursor:pointer; font-size:12.5px; transition:all 0.15s ease">
+          <input type="checkbox" class="cf-dev-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onFormDevCheckboxChange()" style="width:16px; height:16px; cursor:pointer" />
+          <div style="width:24px; height:24px; border-radius:50%; background:#0284c7; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px">
+            ${(u.name || u.username).slice(0, 1).toUpperCase()}
+          </div>
+          <div style="flex:1">
+            <strong>${escapeHtml(u.name || u.username)}</strong>
+            <span style="color:var(--text-muted); font-size:11px">(@${escapeHtml(u.username)})</span>
+          </div>
+          <span class="badge badge-outline" style="font-size:10px; color:#0284c7; border-color:rgba(2,132,199,0.3)">${escapeHtml((u.roleTitle || 'Developer').replace(/\s*\([^)]*\)/g, ''))}</span>
+        </label>
+      `;
+    }).join('');
+    this.updateFormDevsBadge();
+  },
+
+  onFormDevCheckboxChange() {
+    this.updateFormDevsBadge();
+  },
+
+  updateFormDevsBadge() {
+    const checkboxes = document.querySelectorAll('.cf-dev-checkbox');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const badge = document.getElementById('cf-devs-count-badge');
+    if (badge) badge.textContent = `${checked.length} đã chọn`;
+  },
+
+  toggleAllFormDevs(select) {
+    const checkboxes = document.querySelectorAll('.cf-dev-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = select;
+      const lbl = cb.closest('label');
+      if (lbl) lbl.style.background = select ? 'rgba(2,132,199,0.08)' : 'transparent';
+    });
+    this.updateFormDevsBadge();
+  },
+
+  getSelectedFormDevs() {
+    const checkboxes = document.querySelectorAll('.cf-dev-checkbox');
+    return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+  },
+
   // ==================== MODAL ĐỢT TEST (FORM & SCOPE) ====================
   openAddCycleModal() {
     const p = getActiveProject();
@@ -1966,9 +2039,12 @@ const LeadVersion = {
     const dispEl = document.getElementById('cf-version-display');
     if (dispEl) dispEl.textContent = this.currentVersion;
 
-    // Mặc định chọn tất cả kiểm thử viên dự án khi tạo mới
+    // Mặc định chọn tất cả kiểm thử viên & lập trình viên dự án khi tạo mới
     const testers = this.getProjectTestersList();
     this.renderFormTestersCheckboxes(testers.map(u => u.username));
+
+    const devs = this.getProjectDevsList();
+    this.renderFormDevsCheckboxes(devs.map(u => u.username));
 
     document.getElementById('modal-cycle-title').textContent = `➕ Thêm Đợt Kiểm Thử Cho Phiên Bản ${this.currentVersion}`;
     openModal('modal-cycle-form');
@@ -1995,10 +2071,16 @@ const LeadVersion = {
     if (dispEl) dispEl.textContent = c.version || this.currentVersion;
 
     // Đổ danh sách kiểm thử viên đã phân bổ
-    const currentAssigned = Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0
+    const currentAssignedTesters = Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0
       ? c.assignedTesters
       : (Array.isArray(c.testerUsernames) && c.testerUsernames.length > 0 ? c.testerUsernames : this.getProjectTestersList().map(u => u.username));
-    this.renderFormTestersCheckboxes(currentAssigned);
+    this.renderFormTestersCheckboxes(currentAssignedTesters);
+
+    // Đổ danh sách lập trình viên phụ trách
+    const currentAssignedDevs = Array.isArray(c.assignedDevs) && c.assignedDevs.length > 0
+      ? c.assignedDevs
+      : (Array.isArray(c.devUsernames) && c.devUsernames.length > 0 ? c.devUsernames : this.getProjectDevsList().map(u => u.username));
+    this.renderFormDevsCheckboxes(currentAssignedDevs);
 
     document.getElementById('modal-cycle-title').textContent = `✏️ Chỉnh Sửa Đợt Kiểm Thử: ${c.code || c.id}`;
     openModal('modal-cycle-form');
@@ -2018,6 +2100,7 @@ const LeadVersion = {
     const endDate = document.getElementById('cf-end-date').value;
     const description = (document.getElementById('cf-description').value || '').trim();
     const assignedTesters = this.getSelectedFormTesters();
+    const assignedDevs = this.getSelectedFormDevs();
 
     if (!code || !name) {
       showToast('⚠️ Vui lòng nhập Mã và Tên đợt kiểm thử!', 'error');
@@ -2040,6 +2123,8 @@ const LeadVersion = {
         c.description = description;
         c.assignedTesters = assignedTesters;
         c.testerUsernames = assignedTesters;
+        c.assignedDevs = assignedDevs;
+        c.devUsernames = assignedDevs;
       }
       const cs = state.testCycles.find(x => x.id === id);
       if (cs) {
@@ -2053,6 +2138,8 @@ const LeadVersion = {
         cs.description = description;
         cs.assignedTesters = assignedTesters;
         cs.testerUsernames = assignedTesters;
+        cs.assignedDevs = assignedDevs;
+        cs.devUsernames = assignedDevs;
       }
       showToast(`✅ Đã cập nhật đợt kiểm thử [${code}]!`, 'success');
     } else {
@@ -2072,7 +2159,9 @@ const LeadVersion = {
         description,
         scopeTcIds: [],
         assignedTesters,
-        testerUsernames: assignedTesters
+        testerUsernames: assignedTesters,
+        assignedDevs,
+        devUsernames: assignedDevs
       };
       p.testCycles.push(newCycleObj);
       state.testCycles.push(newCycleObj);
@@ -2113,32 +2202,30 @@ const LeadVersion = {
     if (titleEl) titleEl.textContent = `👥 Phân Bổ Nhân Sự Đợt: ${c.name} (${c.code || c.id})`;
 
     const subEl = document.getElementById('mcs-staff-subtitle');
-    if (subEl) subEl.textContent = `Chỉ định danh sách kỹ sư kiểm thử tham gia [${c.name}]. Sau khi lưu, kịch bản test sẽ được căn cứ điều phối cho các kỹ sư này.`;
+    if (subEl) subEl.textContent = `Chỉ định danh sách kỹ sư kiểm thử thực thi & lập trình viên trực chiến sửa lỗi cho [${c.name}].`;
 
     const nameEl = document.getElementById('mcs-staff-cycle-name');
     if (nameEl) nameEl.textContent = `${c.name} (${c.code || c.id})`;
 
+    // 1. Danh sách Testers
     const testers = this.getProjectTestersList();
-    const container = document.getElementById('mcs-staff-testers-list');
+    const testerContainer = document.getElementById('mcs-staff-testers-list');
     
-    // Đọc danh sách đã phân bổ hiện tại của đợt này
-    let currentAssigned = Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0 
+    let currentAssignedTesters = Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0 
       ? c.assignedTesters 
       : (Array.isArray(c.testerUsernames) ? c.testerUsernames : []);
     
-    // Nếu chưa từng cấu hình riêng, mặc định chọn toàn bộ tester trong dự án
-    if (currentAssigned.length === 0) {
-      currentAssigned = testers.map(u => u.username);
+    if (currentAssignedTesters.length === 0) {
+      currentAssignedTesters = testers.map(u => u.username);
     }
-    const selSet = new Set(currentAssigned);
+    const testerSelSet = new Set(currentAssignedTesters);
 
-    if (container) {
+    if (testerContainer) {
       if (testers.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:18px; color:var(--text-muted); font-size:13px">Chưa có kiểm thử viên nào trong dự án. Vui lòng thêm nhân sự vào dự án tại cổng Admin.</div>`;
+        testerContainer.innerHTML = `<div style="text-align:center; padding:14px; color:var(--text-muted); font-size:12.5px">Chưa có kiểm thử viên nào trong dự án.</div>`;
       } else {
-        container.innerHTML = testers.map(u => {
-          const isChecked = selSet.has(u.username);
-          // Đếm số bài đã giao trong đợt này nếu có
+        testerContainer.innerHTML = testers.map(u => {
+          const isChecked = testerSelSet.has(u.username);
           const userAsgs = (state.assignments || []).filter(a => a.cycleId === cycleId && (a.assigneeUsername === u.username || a.username === u.username));
           return `
             <label style="display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:10px; border:1px solid ${isChecked ? 'rgba(37,99,235,0.3)' : 'var(--border)'}; background:${isChecked ? 'rgba(37,99,235,0.04)' : 'var(--bg-card)'}; cursor:pointer; transition:all 0.15s ease">
@@ -2167,6 +2254,51 @@ const LeadVersion = {
       }
     }
 
+    // 2. Danh sách Developers
+    const devs = this.getProjectDevsList();
+    const devContainer = document.getElementById('mcs-staff-devs-list');
+    
+    let currentAssignedDevs = Array.isArray(c.assignedDevs) && c.assignedDevs.length > 0 
+      ? c.assignedDevs 
+      : (Array.isArray(c.devUsernames) ? c.devUsernames : []);
+    
+    if (currentAssignedDevs.length === 0) {
+      currentAssignedDevs = devs.map(u => u.username);
+    }
+    const devSelSet = new Set(currentAssignedDevs);
+
+    if (devContainer) {
+      if (devs.length === 0) {
+        devContainer.innerHTML = `<div style="text-align:center; padding:14px; color:var(--text-muted); font-size:12.5px">Chưa có lập trình viên nào trong dự án.</div>`;
+      } else {
+        devContainer.innerHTML = devs.map(u => {
+          const isChecked = devSelSet.has(u.username);
+          return `
+            <label style="display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:10px; border:1px solid ${isChecked ? 'rgba(16,185,129,0.3)' : 'var(--border)'}; background:${isChecked ? 'rgba(16,185,129,0.04)' : 'var(--bg-card)'}; cursor:pointer; transition:all 0.15s ease">
+              <input type="checkbox" class="mcs-staff-dev-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onStaffDevCheckboxChange(this)" style="width:18px; height:18px; cursor:pointer" />
+              <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0">
+                ${(u.name || u.username).slice(0, 1).toUpperCase()}
+              </div>
+              <div style="flex:1">
+                <div style="font-size:13px; font-weight:700; color:var(--text-primary)">
+                  ${escapeHtml(u.name || u.username)}
+                  <span style="font-weight:400; color:var(--text-muted); font-size:11.5px">(@${escapeHtml(u.username)})</span>
+                </div>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px">
+                  ${escapeHtml(u.roleTitle || 'Lập trình viên')} • Email: ${escapeHtml(u.email || 'N/A')}
+                </div>
+              </div>
+              <div style="text-align:right">
+                <span class="badge ${isChecked ? 'badge-pass' : 'badge-outline'}" style="font-size:11px">
+                  ${isChecked ? '💻 Trực chiến' : '⚪ Không phân bổ'}
+                </span>
+              </div>
+            </label>
+          `;
+        }).join('');
+      }
+    }
+
     this.updateStaffSummaryBadge();
     openModal('modal-cycle-staffing');
   },
@@ -2185,11 +2317,34 @@ const LeadVersion = {
     this.updateStaffSummaryBadge();
   },
 
+  onStaffDevCheckboxChange(cb) {
+    const lbl = cb.closest('label');
+    if (lbl) {
+      lbl.style.border = cb.checked ? '1px solid rgba(16,185,129,0.3)' : '1px solid var(--border)';
+      lbl.style.background = cb.checked ? 'rgba(16,185,129,0.04)' : 'var(--bg-card)';
+      const badge = lbl.querySelector('.badge');
+      if (badge) {
+        badge.className = `badge ${cb.checked ? 'badge-pass' : 'badge-outline'}`;
+        badge.textContent = cb.checked ? '💻 Trực chiến' : '⚪ Không phân bổ';
+      }
+    }
+    this.updateStaffSummaryBadge();
+  },
+
   updateStaffSummaryBadge() {
-    const cbs = document.querySelectorAll('.mcs-staff-checkbox');
-    const checked = Array.from(cbs).filter(cb => cb.checked);
+    const testerCbs = document.querySelectorAll('.mcs-staff-checkbox');
+    const checkedTesters = Array.from(testerCbs).filter(cb => cb.checked);
+    const devCbs = document.querySelectorAll('.mcs-staff-dev-checkbox');
+    const checkedDevs = Array.from(devCbs).filter(cb => cb.checked);
+
+    const testerBadge = document.getElementById('mcs-staff-testers-badge');
+    if (testerBadge) testerBadge.textContent = `${checkedTesters.length} đã chọn`;
+
+    const devBadge = document.getElementById('mcs-staff-devs-badge');
+    if (devBadge) devBadge.textContent = `${checkedDevs.length} đã chọn`;
+
     const summary = document.getElementById('mcs-staff-selected-summary');
-    if (summary) summary.textContent = `Đã chọn ${checked.length} kỹ sư tham gia đợt này`;
+    if (summary) summary.textContent = `Đã chọn: ${checkedTesters.length} Tester • ${checkedDevs.length} Dev tham gia đợt này`;
   },
 
   toggleAllStaffModalTesters(select) {
@@ -2200,19 +2355,30 @@ const LeadVersion = {
     });
   },
 
+  toggleAllStaffModalDevs(select) {
+    const cbs = document.querySelectorAll('.mcs-staff-dev-checkbox');
+    cbs.forEach(cb => {
+      cb.checked = select;
+      this.onStaffDevCheckboxChange(cb);
+    });
+  },
+
   confirmSaveCycleStaffing() {
     const cycleId = this.activeStaffingCycleId || document.getElementById('mcs-staff-cycle-id')?.value;
     if (!cycleId) return;
 
-    const cbs = document.querySelectorAll('.mcs-staff-checkbox');
-    const selectedTesters = Array.from(cbs).filter(cb => cb.checked).map(cb => cb.value);
+    const testerCbs = document.querySelectorAll('.mcs-staff-checkbox');
+    const selectedTesters = Array.from(testerCbs).filter(cb => cb.checked).map(cb => cb.value);
+
+    const devCbs = document.querySelectorAll('.mcs-staff-dev-checkbox');
+    const selectedDevs = Array.from(devCbs).filter(cb => cb.checked).map(cb => cb.value);
 
     if (typeof saveCycleStaffing === 'function') {
-      saveCycleStaffing(cycleId, selectedTesters);
+      saveCycleStaffing(cycleId, selectedTesters, selectedDevs);
     }
 
     closeModal('modal-cycle-staffing');
-    showToast(`✅ Đã phân bổ ${selectedTesters.length} kiểm thử viên tham gia đợt kiểm thử!`, 'success');
+    showToast(`✅ Đã phân bổ ${selectedTesters.length} Tester và ${selectedDevs.length} Dev tham gia đợt kiểm thử!`, 'success');
     this.renderCycleCards();
     this.renderCyclesMatrix();
     this.renderVersionOverview();

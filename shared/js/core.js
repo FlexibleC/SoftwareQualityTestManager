@@ -1470,10 +1470,11 @@ function saveCycleScope(cycleId, scopeTcIds, scopeType = 'CUSTOM') {
  * Tuân thủ nguyên tắc: Cấu hình nhân sự tham gia đợt kiểm thử tại Không gian Phiên bản / Kịch bản,
  * sau đó tại Đợt kiểm thử sẽ căn cứ vào danh sách nhân sự này để phân bổ testcase.
  */
-function saveCycleStaffing(cycleId, assignedTesters) {
+function saveCycleStaffing(cycleId, assignedTesters, assignedDevs = []) {
   if (!cycleId) return false;
 
   const validTesters = Array.from(new Set(Array.isArray(assignedTesters) ? assignedTesters.filter(Boolean) : []));
+  const validDevs = Array.from(new Set(Array.isArray(assignedDevs) ? assignedDevs.filter(Boolean) : []));
 
   // 1. Cập nhật trong state.testCycles
   if (!state.testCycles) state.testCycles = [];
@@ -1481,6 +1482,8 @@ function saveCycleStaffing(cycleId, assignedTesters) {
   if (cState) {
     cState.assignedTesters = validTesters;
     cState.testerUsernames = validTesters;
+    cState.assignedDevs = validDevs;
+    cState.devUsernames = validDevs;
   }
 
   // 2. Cập nhật trong project.testCycles
@@ -1491,6 +1494,8 @@ function saveCycleStaffing(cycleId, assignedTesters) {
     if (cProj) {
       cProj.assignedTesters = validTesters;
       cProj.testerUsernames = validTesters;
+      cProj.assignedDevs = validDevs;
+      cProj.devUsernames = validDevs;
     } else if (cState) {
       p.testCycles.push(JSON.parse(JSON.stringify(cState)));
     }
@@ -1505,7 +1510,7 @@ function saveCycleStaffing(cycleId, assignedTesters) {
   }
 
   window.dispatchEvent(new CustomEvent('cycle-staffing-updated', {
-    detail: { cycleId, testers: validTesters, count: validTesters.length }
+    detail: { cycleId, testers: validTesters, devs: validDevs, count: validTesters.length, devCount: validDevs.length }
   }));
 
   return true;
@@ -1677,6 +1682,11 @@ function getCycleMetrics(cycleId) {
   const untestedCount = Math.max(0, totalTcs - passCount - failCount - blockedCount);
   const untestedRate = totalTcs > 0 ? Math.max(0, 100 - passRate - failRate) : 0;
 
+  // Devs phụ trách đợt test
+  const assignedDevs = (Array.isArray(c.assignedDevs) && c.assignedDevs.length > 0)
+    ? c.assignedDevs
+    : (Array.isArray(c.devUsernames) && c.devUsernames.length > 0 ? c.devUsernames : []);
+
   return {
     cycle: c,
     totalTcs,
@@ -1686,6 +1696,8 @@ function getCycleMetrics(cycleId) {
     activeAssignees: assigneesWithWork,
     assignedTesters,
     assignedTestersCount: assignedTesters.length,
+    assignedDevs,
+    assignedDevsCount: assignedDevs.length,
     passCount,
     failCount,
     blockedCount,
@@ -1778,6 +1790,10 @@ function addTestCycle(cycleData) {
     ? Array.from(new Set(cycleData.assignedTesters.filter(Boolean)))
     : (Array.isArray(cycleData.testerUsernames) ? Array.from(new Set(cycleData.testerUsernames.filter(Boolean))) : []);
 
+  const assignedDevs = Array.isArray(cycleData.assignedDevs)
+    ? Array.from(new Set(cycleData.assignedDevs.filter(Boolean)))
+    : (Array.isArray(cycleData.devUsernames) ? Array.from(new Set(cycleData.devUsernames.filter(Boolean))) : []);
+
   const newCycle = {
     id,
     projectId: pId,
@@ -1790,7 +1806,9 @@ function addTestCycle(cycleData) {
     targetSuite: cycleData.targetSuite || 'REGRESSION',
     description: cycleData.description || 'Đợt kiểm thử mới tạo',
     assignedTesters,
-    testerUsernames: assignedTesters
+    testerUsernames: assignedTesters,
+    assignedDevs,
+    devUsernames: assignedDevs
   };
   
   state.testCycles.push(newCycle);
@@ -1819,6 +1837,11 @@ function updateTestCycle(cycleId, updatedData) {
     const list = Array.isArray(updatedData.assignedTesters) ? Array.from(new Set(updatedData.assignedTesters.filter(Boolean))) : [];
     cycle.assignedTesters = list;
     cycle.testerUsernames = list;
+  }
+  if (updatedData.assignedDevs !== undefined) {
+    const dList = Array.isArray(updatedData.assignedDevs) ? Array.from(new Set(updatedData.assignedDevs.filter(Boolean))) : [];
+    cycle.assignedDevs = dList;
+    cycle.devUsernames = dList;
   }
 
   saveCoreState();

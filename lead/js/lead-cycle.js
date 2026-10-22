@@ -900,6 +900,35 @@ const LeadCycle = {
     return allUsers.filter(u => u.role === 'tester' && u.status !== 'LOCKED');
   },
 
+  // Lấy danh sách lập trình viên phụ trách (Developers) được phân bổ cho đợt kiểm thử
+  getCycleDevelopers() {
+    const c = this.getCurrentCycle();
+    const allUsers = typeof getUsers === 'function' ? getUsers() : (state.users || DEFAULT_SYSTEM_USERS);
+
+    if (c && Array.isArray(c.assignedDevs) && c.assignedDevs.length > 0) {
+      const set = new Set(c.assignedDevs);
+      const matched = allUsers.filter(u => set.has(u.username) && u.status !== 'LOCKED');
+      if (matched.length > 0) return matched;
+    }
+    if (c && Array.isArray(c.devUsernames) && c.devUsernames.length > 0) {
+      const set = new Set(c.devUsernames);
+      const matched = allUsers.filter(u => set.has(u.username) && u.status !== 'LOCKED');
+      if (matched.length > 0) return matched;
+    }
+
+    // Fallback: Lấy các lập trình viên thuộc dự án
+    const p = this.getCurrentProject();
+    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p?.id) : (p?.members || []);
+    const memberDevs = members.filter(m => m.projectRole === 'dev' || m.projectRole === 'developer');
+    if (memberDevs.length > 0) {
+      const pSet = new Set(memberDevs.map(m => m.username));
+      const matched = allUsers.filter(u => pSet.has(u.username) && u.status !== 'LOCKED');
+      if (matched.length > 0) return matched;
+    }
+
+    return allUsers.filter(u => (u.role === 'dev' || u.role === 'developer') && u.status !== 'LOCKED');
+  },
+
   populateQuickDispatchTesters() {
     const selectEl = document.getElementById('c-quick-tester-select');
     if (!selectEl) return;
