@@ -427,39 +427,40 @@
 
     </div>
 
-    <!-- ==================== TAB 4: QUẢN TRỊ NHÂN SỰ VÀ PHÂN BỔ ĐỢT KIỂM THỨ ==================== -->
+    <!-- ==================== TAB 4: QUẢN TRỊ NHÂN SỰ VÀ PHÂN BỔ ĐỢT KIỂM THỬ ==================== -->
     <div id="tab-pane-v-roster" class="lead-tab-pane" style="display:none">
       
-      <!-- BÀN ĐIỀU PHỐI PHÂN BỔ NHÂN SỰ THEO ĐỢT TEST -->
+      <!-- BÀN ĐIỀU HÀNH QUẢN TRỊ NHÂN LỰC PHIÊN BẢN (VERSION WORKFORCE & STAFFING COMMAND CENTER) -->
       <div class="card" style="padding:18px 22px; margin-bottom:18px; background:var(--bg-card); border:1.5px solid var(--border)">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px">
           <div>
             <div style="font-size:11.5px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.5px">
-              👥 Trung tâm phân bổ nhân sự và điều phối đợt kiểm thử
+              👥 Trung tâm điều hành nhân lực & phân bổ đợt kiểm thử
             </div>
             <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:2px 0 0 0">
-              Phân bổ kỹ sư kiểm thử theo từng đợt tác chiến
+              Quản trị nguồn lực, phân bổ nhân sự đa đợt và cân bằng tải phiên bản
             </h2>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:3px">
+              Theo dõi toàn diện lực lượng Kiểm thử viên (Testers) và Lập trình viên (Developers) trực chiến trên toàn bộ các đợt tác chiến.
+            </div>
           </div>
 
-          <!-- Bộ Chọn Đợt Test Mục Tiêu -->
-          <div style="display:flex; align-items:center; gap:10px">
-            <span style="font-size:13px; font-weight:700; color:var(--text-primary)">🎯 Chọn đợt kiểm thử cần giao việc:</span>
-            <select id="v-roster-cycle-select" class="form-control" style="font-weight:800; color:#2563eb; min-width:240px; height:36px" onchange="LeadVersion.onRosterCycleChange()">
-              <!-- Populated by lead-version.js -->
-            </select>
+          <!-- Bộ lọc & Thao tác xuất báo cáo -->
+          <div style="display:flex; align-items:center; gap:8px">
+            <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.exportVersionStaffingExcel()" title="Xuất báo cáo phân bổ và sử dụng nhân sự ra file Excel">
+              📥 Xuất báo cáo nhân lực
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openCycleStaffingModal(LeadVersion.activeRosterCycleId || (typeof getTestCyclesForProject === 'function' ? (getTestCyclesForProject(getActiveProject()?.id, LeadVersion.currentVersion)[0]?.id) : ''))" style="font-weight:800">
+              ➕ Phân bổ nhân sự vào đợt
+            </button>
           </div>
         </div>
 
-        <!-- 4 NÚT PHÂN CÔNG TÁC CHIẾN NHANH (SMART DISPATCH TOOLBAR) -->
+        <!-- THANH CÔNG CỤ ĐIỀU PHỐI TÁC CHIẾN NHANH -->
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
-          <span style="font-size:12px; font-weight:800; color:var(--text-muted)">⚡ Thao tác phân công nhanh:</span>
+          <span style="font-size:12px; font-weight:800; color:var(--text-muted)">⚡ Công cụ điều phối nhanh:</span>
           
-          <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openCycleStaffingModal(document.getElementById('v-roster-cycle-select')?.value || LeadVersion.activeRosterCycleId)">
-            ➕ Chỉ định kiểm thử viên vào đợt này
-          </button>
-          
-          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.autoDistributeEvenly()" title="Hệ thống tự động chia đều kịch bản cho các tester trong đợt test">
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.autoDistributeEvenly()" title="Hệ thống tự động chia đều kịch bản chưa giao cho các tester trong đợt test">
             ⚡ Tự động chia đều kịch bản
           </button>
           
@@ -470,55 +471,148 @@
           <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:rgba(220,38,38,0.3)" onclick="LeadVersion.assignFailedForRetest()" title="Tự động gom toàn bộ kịch bản từng bị lỗi để giao re-test">
             ⚠️ Gom kịch bản lỗi để kiểm thử lại
           </button>
+
+          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.autoBalanceVersionStaffing()" title="Tự động phát hiện lệch tải và đề xuất cân bằng tải kịch bản giữa các kỹ sư">
+            ⚖️ Cân bằng tải phiên bản
+          </button>
         </div>
       </div>
 
-      <!-- 3 Chỉ Số Nhân Sự Đợt Test Đang Chọn -->
-      <div class="lead-kpi-grid" style="margin-bottom:18px">
+      <!-- PHÂN KHU 1: 4 CHỈ SỐ NHÂN LỰC TOÀN PHIÊN BẢN (VERSION WORKFORCE COCKPIT) -->
+      <div class="lead-kpi-grid" style="margin-bottom:18px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr))">
+        <!-- KPI 1: Tổng nhân lực huy động -->
         <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
           <div class="lead-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb">👥</div>
           <div style="flex:1">
-            <div class="lead-kpi-val" id="v-roster-cycle-testers-count">0 kỹ sư</div>
-            <div class="lead-scale-lbl">Kiểm thử viên tham gia đợt này</div>
+            <div class="lead-kpi-val" id="v-wf-kpi-headcount">0 Tester • 0 Dev</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-headcount-sub">Huy động: 0% lực lượng dự án</div>
           </div>
         </div>
 
+        <!-- KPI 2: Phạm vi kịch bản & Đã giao việc -->
         <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
           <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">📋</div>
           <div style="flex:1">
-            <div class="lead-kpi-val" id="v-roster-cycle-assigned-rate">0 / 0 bài (0%)</div>
-            <div class="lead-scale-lbl">Kịch bản đã phân công thực hiện</div>
+            <div class="lead-kpi-val" id="v-wf-kpi-workload">0 / 0 bài (0%)</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-workload-sub">Còn tồn: 0 bài chưa giao</div>
           </div>
         </div>
 
+        <!-- KPI 3: Cân bằng tải trọng -->
         <div class="lead-kpi-card" style="border-left:4px solid #7c3aed">
           <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">⚖️</div>
           <div style="flex:1">
-            <div class="lead-kpi-val" id="v-roster-cycle-avg-load">0 bài / người</div>
-            <div class="lead-scale-lbl">Định mức tải trọng bình quân</div>
+            <div class="lead-kpi-val" id="v-wf-kpi-balance">0 bài / người</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-balance-sub">0 quá tải • 0 thiếu việc</div>
+          </div>
+        </div>
+
+        <!-- KPI 4: Năng suất & Đóng góp chất lượng -->
+        <div class="lead-kpi-card" style="border-left:4px solid #0284c7">
+          <div class="lead-kpi-icon" style="background:rgba(2,132,199,0.1); color:#0284c7">🚀</div>
+          <div style="flex:1">
+            <div class="lead-kpi-val" id="v-wf-kpi-velocity">0% hoàn thành</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-velocity-sub">0 lỗi phát hiện • 0 lỗi đã fix</div>
           </div>
         </div>
       </div>
 
-      <!-- Bảng Ma Trận Phân Bổ Nhân Sự Đợt Test -->
-      <div class="lead-matrix-card">
-        <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-          <h3 style="margin:0; font-size:14.5px; font-weight:800; color:var(--text-primary)" id="v-roster-table-heading">
-            📊 Bảng phân bổ nhiệm vụ và tải trọng kỹ sư — Đợt 1
-          </h3>
-          <span style="font-size:12px; color:var(--text-muted)">Cập nhật thời gian thực</span>
+      <!-- PHÂN KHU 2: MA TRẬN PHÂN BỔ NHÂN SỰ XUYÊN ĐỢT TEST (CROSS-CYCLE STAFFING MATRIX) -->
+      <div class="lead-matrix-card" style="margin-bottom:20px">
+        <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              🎯 Ma trận phân bổ nhân sự xuyên suốt các đợt kiểm thử
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Nhấp trực tiếp vào ô để Bật / Tắt phân bổ Tester thực thi & Developer trực chiến cho từng đợt tác chiến.
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <span class="badge badge-info" id="v-matrix-cycles-count-badge" style="font-size:11px">0 đợt test</span>
+            <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px" id="v-matrix-staff-count-badge">0 nhân sự</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto; max-height:480px">
+          <table class="lead-matrix-table" id="v-staffing-matrix-table">
+            <thead id="v-staffing-matrix-thead" style="position:sticky; top:0; z-index:2; background:var(--bg-surface)">
+              <!-- Dynamic columns by lead-version.js -->
+            </thead>
+            <tbody id="v-staffing-matrix-tbody">
+              <!-- Populated by lead-version.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PHÂN KHU 3: BẢNG SO SÁNH & THỐNG KÊ HIỆU QUẢ SỬ DỤNG NHÂN LỰC GIỮA CÁC ĐỢT TEST -->
+      <div class="lead-matrix-card" style="margin-bottom:20px">
+        <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
+              📊 Thống kê tình trạng phân bổ & sử dụng nhân sự tại các đợt test
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Đối chiếu quy mô bài test, năng lực nhân sự huy động, tiến độ hoàn thành và định mức tải trọng giữa các đợt.
+            </div>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted)">
+            Tổng hợp dữ liệu thực thi theo thời gian thực
+          </div>
         </div>
         <div style="overflow-x:auto">
           <table class="lead-matrix-table">
             <thead>
               <tr>
-                <th>Kỹ sư kiểm thử</th>
-                <th style="text-align:center">Vai trò đợt</th>
+                <th>Đợt kiểm thử</th>
+                <th style="text-align:center">Trạng thái</th>
+                <th style="text-align:center">Thời hạn</th>
+                <th style="text-align:center">Lực lượng huy động</th>
+                <th style="text-align:center">Phạm vi kịch bản</th>
+                <th style="text-align:center">Đã giao việc</th>
+                <th>Tiến độ thi công</th>
+                <th style="text-align:center">Lỗi phát hiện</th>
+                <th style="text-align:center">Tải bình quân</th>
+                <th style="text-align:center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="v-cycle-comparison-tbody">
+              <!-- Populated by lead-version.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PHÂN KHU 4: BẢNG THEO DÕI NĂNG SUẤT & TẢI TRỌNG CÁ NHÂN TOÀN PHIÊN BẢN -->
+      <div class="lead-matrix-card">
+        <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+          <div>
+            <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)" id="v-roster-table-heading">
+              🏅 Bảng theo dõi năng suất, đóng góp chất lượng & tải trọng cá nhân
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Đo lường tiến độ hoàn thành kịch bản, tỷ lệ Pass/Fail và số defect xử lý của từng nhân sự toàn phiên bản.
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px">
+            <span style="font-size:12.5px; font-weight:700; color:var(--text-primary)">Lọc theo đợt test:</span>
+            <select id="v-roster-cycle-select" class="form-control" style="font-weight:700; color:#2563eb; min-width:200px; height:34px; font-size:12px" onchange="LeadVersion.onRosterCycleChange()">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="lead-matrix-table">
+            <thead>
+              <tr>
+                <th>Thành viên & Vai trò</th>
+                <th style="text-align:center">Chức danh</th>
+                <th style="text-align:center">Đợt tham gia</th>
                 <th>Phân hệ đảm nhận</th>
                 <th style="text-align:center">Số bài giao</th>
                 <th style="text-align:center">Đã thực hiện</th>
                 <th style="text-align:center">Tỷ lệ đạt</th>
-                <th style="text-align:center">Lỗi tìm thấy</th>
+                <th style="text-align:center">Đóng góp Defect</th>
                 <th style="text-align:center">Hệ số tải trọng</th>
                 <th style="text-align:center">Thao tác</th>
               </tr>
