@@ -1257,6 +1257,8 @@ const LeadSettings = {
     });
 
     if (!p.testCases) p.testCases = [];
+    const validVerSet = new Set((p.versions || []).map(v => ((v.version || v) || '').trim().toLowerCase()));
+    p.testCases = p.testCases.filter(tc => validVerSet.has(((tc.version || '')).trim().toLowerCase()));
     p.testCases.push(...taggedTcs);
 
     if (status === 'ACTIVE') {
@@ -1265,6 +1267,9 @@ const LeadSettings = {
     }
 
     saveCoreState();
+    if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+      window.pushProjectsToCloud(state.projects);
+    }
     if (typeof syncProjectsToLanServer === 'function') {
       syncProjectsToLanServer();
     }

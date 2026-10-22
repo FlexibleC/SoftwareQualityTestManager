@@ -1037,15 +1037,33 @@ function getProjectDefects(projectId) {
     if (!res) return;
     
     // Kiểm tra xem record có thuộc dự án này không
-    const isSameProject = res.projectId === pId || key.startsWith(pId + '__') || (tcMap[res.tcId || key] !== undefined);
-    if (!isSameProject) return;
+    // Tuyệt đối không lấy defect nếu record rõ ràng thuộc dự án khác
+    if (res.projectId && res.projectId !== pId) return;
 
+    // Phải khớp projectId hoặc key bắt đầu bằng `${pId}__`
+    const isExplicitProject = res.projectId === pId || key.startsWith(pId + '__');
     const actualTcId = res.tcId || key.replace(/^[A-Za-z0-9_-]+__/, '');
+    const tc = tcMap[actualTcId];
+    if (!tc) return; // Kịch bản phải thuộc dự án này!
+
+    // Lấy danh sách đợt test hợp lệ của dự án này
+    const projectCycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(pId) : (p.testCycles || []);
+    const projectCycleIds = new Set(projectCycles.map(c => c.id));
+
+    // Nếu không có explicit projectId, bắt buộc res.cycleId phải thuộc về một đợt test của dự án này
+    if (!isExplicitProject && (!res.cycleId || !projectCycleIds.has(res.cycleId))) {
+      return;
+    }
+
+    // Nếu dự án chưa có bất kỳ đợt test nào, không thể có lỗi từ thực thi kiểm thử!
+    if (projectCycles.length === 0 && !res.cycleId) {
+      return;
+    }
+
     if (seenTcIds.has(actualTcId)) return;
 
     if (res.status === 'Fail' || res.status === 'FAILED' || res.status === 'Blocked' || res.failReason || (res.defectStatus && res.defectStatus !== 'None')) {
       seenTcIds.add(actualTcId);
-      const tc = tcMap[actualTcId] || { title: actualTcId, name: actualTcId, module: 'M01', priority: 'P2' };
       defects.push({
         projectId: pId,
         projectName: p.name,
@@ -1461,6 +1479,56 @@ function getProjectVersions(projectId) {
 }
 
 /**
+ * Lấy kết quả kiểm thử thực tế của một kịch bản theo đúng Ngữ cảnh Phiên bản & Dự án
+ * Đảm bảo nguyên tắc cô lập phiên bản & dự án tuyệt đối (Strict Context Isolation)
+ */
+function getTestResultForVersion(projectId, versionTag, tcId) {
+  if (!projectId || !versionTag || !tcId) return null;
+  const pId = projectId;
+  const normVer = String(versionTag).trim().toLowerCase();
+  
+  // 1. Lấy danh sách các đợt test thực tế thuộc phiên bản này
+  const cycles = typeof getTestCyclesForProject === 'function' 
+    ? getTestCyclesForProject(pId, versionTag) 
+    : [];
+  if (!cycles || cycles.length === 0) {
+    // Nếu phiên bản chưa có đợt test nào, kịch bản chưa thể có kết quả chạy!
+    return null;
+  }
+  const cycleIds = new Set(cycles.map(c => c.id));
+
+  // 2. Ưu tiên kiểm tra trong state.cycleResults (lưu kết quả theo từng đợt test)
+  if (state.cycleResults) {
+    for (const cId of cycleIds) {
+      if (state.cycleResults[cId] && state.cycleResults[cId][tcId]) {
+        return state.cycleResults[cId][tcId];
+      }
+    }
+  }
+
+  // 3. Kiểm tra trong state.results nhưng phải thẩm tra nghiêm ngặt xuất xứ record
+  const scopedKey = `${pId}__${tcId}`;
+  const res = state.results ? (state.results[scopedKey] || state.results[tcId]) : null;
+  if (res) {
+    // Nếu record có gắn projectId, bắt buộc phải trùng khớp pId
+    if (res.projectId && res.projectId !== pId) return null;
+    
+    // Nếu record có gắn cycleId, bắt buộc phải thuộc một đợt test của phiên bản này
+    if (res.cycleId) {
+      return cycleIds.has(res.cycleId) ? res : null;
+    }
+    
+    // Nếu record có gắn version, bắt buộc phải trùng khớp versionTag
+    const resVer = (res.version || res.targetVersion || '').trim().toLowerCase();
+    if (resVer && resVer === normVer) {
+      return res;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Tính toán 4 chỉ số cốt lõi cho một Phiên bản
  */
 function getVersionMetrics(projectId, version) {
@@ -1486,21 +1554,24 @@ function getVersionMetrics(projectId, version) {
   let passCount = 0;
   let failCount = 0;
   let blockedCount = 0;
-  const results = state.results || {};
-  vTcs.forEach(tc => {
-    const r = results[tc.id];
-    if (r) {
-      const st = (r.status || '').toUpperCase();
-      if (st === 'PASS') passCount++;
-      else if (st === 'FAIL') failCount++;
-      else if (st === 'BLOCKED') blockedCount++;
-    }
-  });
+
+  // CHỈ TÍNH KẾT QUẢ KHI PHIÊN BẢN ĐÃ CÓ ÍT NHẤT 1 ĐỢT TEST (cyclesCount > 0)
+  if (cyclesCount > 0) {
+    vTcs.forEach(tc => {
+      const r = getTestResultForVersion(p.id, targetVer, tc.id);
+      if (r) {
+        const st = (r.status || '').toUpperCase();
+        if (st === 'PASS') passCount++;
+        else if (st === 'FAIL') failCount++;
+        else if (st === 'BLOCKED') blockedCount++;
+      }
+    });
+  }
 
   const passRate = totalTcs > 0 ? Math.round((passCount / totalTcs) * 100) : 0;
   const failRate = totalTcs > 0 ? Math.round((failCount / totalTcs) * 100) : 0;
   const untestedCount = Math.max(0, totalTcs - passCount - failCount - blockedCount);
-  const untestedRate = totalTcs > 0 ? Math.max(0, 100 - passRate - failRate) : 0;
+  const untestedRate = totalTcs > 0 ? (cyclesCount === 0 ? 100 : Math.max(0, 100 - passRate - failRate)) : 100;
 
   return {
     version: targetVer,

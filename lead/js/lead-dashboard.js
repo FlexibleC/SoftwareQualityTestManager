@@ -116,17 +116,21 @@ const LeadDashboard = {
       else if (prio === 'P2') p2Tcs++;
       else p3PlusTcs++;
 
-      const res = results[tc.id];
-      if (res && res.status) {
-        executed++;
-        const st = (res.status || '').toUpperCase();
-        if (st === 'PASS') {
-          passed++;
-          if (prio === 'P1') p1Passed++;
-        } else if (st === 'FAIL') {
-          failed++;
-        } else if (st === 'BLOCKED') {
-          blocked++;
+      if (allCycles.length > 0) {
+        const res = typeof getTestResultForVersion === 'function'
+          ? getTestResultForVersion(p.id, tc.version || p.activeVersion, tc.id)
+          : null;
+        if (res && res.status) {
+          executed++;
+          const st = (res.status || '').toUpperCase();
+          if (st === 'PASS') {
+            passed++;
+            if (prio === 'P1') p1Passed++;
+          } else if (st === 'FAIL') {
+            failed++;
+          } else if (st === 'BLOCKED') {
+            blocked++;
+          }
         }
       }
     });
@@ -547,7 +551,8 @@ const LeadDashboard = {
       }
     });
 
-    if (vMetrics.totalTcs === 0) {
+    const isUntestedVersion = vMetrics.totalTcs === 0 || vMetrics.cyclesCount === 0 || (vMetrics.passCount === 0 && vMetrics.failCount === 0 && openTotal === 0);
+    if (isUntestedVersion) {
       return {
         score: '--',
         scoreNumeric: 100,
@@ -886,12 +891,12 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
             stText = '⏳ Kế hoạch';
           }
 
-          const isZeroTc = vMetrics.totalTcs === 0;
+          const isZeroTc = vMetrics.totalTcs === 0 || vMetrics.cyclesCount === 0 || (vMetrics.passCount === 0 && vMetrics.failCount === 0 && vHealth.openTotal === 0);
           const hColor = isZeroTc ? '#64748b' : (vHealth.scoreNumeric >= 85 ? '#16a34a' : (vHealth.scoreNumeric >= 70 ? '#d97706' : '#dc2626'));
           const scoreDisplay = isZeroTc ? '--' : `${vHealth.score}/100`;
           const qgBadgeClass = isZeroTc ? 'badge' : (vHealth.qgOk ? 'badge-pass' : 'badge-fail');
           const qgBadgeStyle = isZeroTc ? 'style="font-size:10px; font-weight:800; background:rgba(100,116,139,0.12); color:#64748b; border:1px solid #cbd5e1"' : 'style="font-size:10px; font-weight:800"';
-          const qgBadgeText = isZeroTc ? '⚪ Chưa đánh giá' : (vHealth.qgOk ? '🟢 Đạt cổng nghiệm thu' : '🟡 Cảnh báo cổng nghiệm thu');
+          const qgBadgeText = isZeroTc ? (vMetrics.totalTcs === 0 ? '⚪ Chưa nạp kịch bản' : '⚪ Chưa kiểm thử') : (vHealth.qgOk ? '🟢 Đạt cổng nghiệm thu' : '🟡 Cảnh báo cổng nghiệm thu');
 
           return `
             <div class="lead-version-card ${isActive ? 'active-version' : ''}">
@@ -1776,6 +1781,9 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
     });
 
     if (!p.testCases) p.testCases = [];
+    // Trước khi nạp phiên bản mới, dọn dẹp các kịch bản mồ côi không thuộc phiên bản nào hợp lệ
+    const validVerSet = new Set((p.versions || []).map(v => ((v.version || v) || '').trim().toLowerCase()));
+    p.testCases = p.testCases.filter(tc => validVerSet.has(((tc.version || '')).trim().toLowerCase()));
     p.testCases.push(...taggedTcs);
 
     if (status === 'ACTIVE') {
@@ -1784,6 +1792,9 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
     }
 
     saveCoreState();
+    if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+      window.pushProjectsToCloud(state.projects);
+    }
     closeModal('modal-import-version');
     showToast(`🎉 Đã nhập thành công phiên bản [${version}] với ${taggedTcs.length} kịch bản!`, 'success');
     this.renderKpis();

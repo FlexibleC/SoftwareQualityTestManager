@@ -179,10 +179,13 @@ const LeadVersion = {
     const vTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, vStr) : [];
     const totalTcs = vTcs.length || vMetrics.totalTcs || 0;
 
+    // Đợt kiểm thử
+    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, vStr) : [];
+    const activeCycles = cycles.filter(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS');
+
     // Phân rã mức ưu tiên P1/P2/P3+
     let p1Tcs = 0, p2Tcs = 0, p3PlusTcs = 0;
     let p1Passed = 0;
-    const results = state.results || {};
 
     vTcs.forEach(tc => {
       const prio = (tc.priority || 'P2').toUpperCase();
@@ -190,9 +193,13 @@ const LeadVersion = {
       else if (prio === 'P2') p2Tcs++;
       else p3PlusTcs++;
 
-      const res = results[tc.id];
-      if (res && (res.status || '').toUpperCase() === 'PASS') {
-        if (prio === 'P1') p1Passed++;
+      if (cycles.length > 0) {
+        const res = typeof getTestResultForVersion === 'function'
+          ? getTestResultForVersion(p.id, vStr, tc.id)
+          : null;
+        if (res && (res.status || '').toUpperCase() === 'PASS') {
+          if (prio === 'P1') p1Passed++;
+        }
       }
     });
 
@@ -237,10 +244,6 @@ const LeadVersion = {
     const execRate = totalTcs > 0 ? Math.round((executedCount / totalTcs) * 100) : 0;
     const untestCount = Math.max(0, totalTcs - executedCount);
 
-    // Đợt kiểm thử
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, vStr) : [];
-    const activeCycles = cycles.filter(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS');
-
     // Helper gán text
     const setEl = (id, val) => {
       const el = document.getElementById(id);
@@ -256,6 +259,11 @@ const LeadVersion = {
       setEl('v-kpi-pass-sub', `Mục tiêu: ≥ ${minPass}% (Chưa nạp kịch bản)`);
       setEl('v-kpi-exec-val', '0%');
       setEl('v-kpi-exec-sub', 'Chưa có kịch bản trong phiên bản này');
+    } else if (cycles.length === 0) {
+      setEl('v-kpi-pass-val', '--');
+      setEl('v-kpi-pass-sub', `Mục tiêu: ≥ ${minPass}% (Chưa kích hoạt đợt kiểm thử)`);
+      setEl('v-kpi-exec-val', '0%');
+      setEl('v-kpi-exec-sub', `0 / ${totalTcs} bài đã chạy (${totalTcs} chưa kiểm thử)`);
     } else {
       setEl('v-kpi-pass-val', `${passRate}%`);
       setEl('v-kpi-pass-sub', passGap > 0 ? `Mục tiêu: ≥ ${minPass}% (Thiếu ${passGap}%)` : `🟢 Đã vượt chuẩn cổng nghiệm thu (≥ ${minPass}%)`);
