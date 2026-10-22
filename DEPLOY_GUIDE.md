@@ -54,11 +54,11 @@ git push -u origin main
 2. Trên màn hình Dashboard của Vercel, bấm nút **Add New...** > chọn **Project**.
 3. Tại danh sách repository GitHub, tìm `software-quality-test-manager` và bấm **Import**.
 4. Cấu hình Project:
-   - **Project Name**: `software-quality-test-manager`
+   - **Project Name**: `SoftwareQualityTestManager` (hoặc `software-quality-test-manager`)
    - **Framework Preset**: Chọn `Other`.
    - **Root Directory**: `./` (để mặc định).
 5. Bấm nút **Deploy**.
-6. Chờ khoảng 20-30 giây, Vercel sẽ cấp một tên miền HTTPS chính thức (ví dụ: `https://software-quality-test-manager.vercel.app`).
+6. Chờ khoảng 20-30 giây, Vercel sẽ cấp một tên miền HTTPS chính thức (ví dụ: `https://softwarequalitytestmanager.vercel.app`).
 
 ---
 

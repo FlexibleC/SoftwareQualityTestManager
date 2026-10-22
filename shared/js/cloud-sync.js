@@ -1151,9 +1151,9 @@
             <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center">
               <div>
                 <strong style="color:#166534">🌍 Online Internet (Vercel HTTPS):</strong>
-                <div style="font-size:12px; font-family:monospace; color:#15803d; margin-top:2px">https://smartvms-test-manager.vercel.app</div>
+                <div style="font-size:12px; font-family:monospace; color:#15803d; margin-top:2px">https://softwarequalitytestmanager.vercel.app</div>
               </div>
-              <a href="https://smartvms-test-manager.vercel.app" target="_blank" class="btn btn-xs btn-primary" style="text-decoration:none">Mở Link ↗</a>
+              <a href="https://softwarequalitytestmanager.vercel.app" target="_blank" class="btn btn-xs btn-primary" style="text-decoration:none">Mở Link ↗</a>
             </div>
 
             <!-- Kênh 2: Mạng LAN -->

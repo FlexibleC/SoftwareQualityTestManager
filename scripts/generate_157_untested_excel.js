@@ -416,14 +416,14 @@ async function generateExcel() {
 
   ws3.mergeCells('A1:E1');
   const ws3R1 = ws3.getCell('A1');
-  ws3R1.value = '📖 HƯỚNG DẪN NẠP FILE EXCEL VÀO HỆ THỐNG SMARTVMS TEST MANAGER';
+  ws3R1.value = '📖 HƯỚNG DẪN NẠP FILE EXCEL VÀO HỆ THỐNG SOFTWARE QUALITY TEST MANAGER';
   ws3R1.font = { name: FONT_NAME, size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
   ws3R1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4C1D95' } };
   ws3R1.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
   ws3.getRow(1).height = 36;
 
   const guideSteps = [
-    { stt: 'Bước 1', title: 'Truy cập Hệ thống Online', detail: 'Mở trình duyệt truy cập: https://smartvms-test-manager.vercel.app/admin/testcases' },
+    { stt: 'Bước 1', title: 'Truy cập Hệ thống Online', detail: 'Mở trình duyệt truy cập: https://softwarequalitytestmanager.vercel.app/lead/testcases' },
     { stt: 'Bước 2', title: 'Chọn Nạp File Excel', detail: 'Tại góc trên bên phải trang Kịch bản, bấm nút màu xanh "📗 Nhập Excel (.xlsx)" hoặc "Nhập Kịch Bản Từ Excel (.xlsx)".' },
     { stt: 'Bước 3', title: 'Chọn file kịch bản', detail: 'Chọn tệp tin "SmartVMS_157_KichBan_ChuaTest.xlsx" trên máy tính của bạn.' },
     { stt: 'Bước 4', title: 'Xác nhận Nạp', detail: 'Hộp thoại xác nhận sẽ hiển thị: "Tìm thấy 157 kịch bản kiểm thử hợp lệ trong file Excel. Bạn có muốn nạp vào hệ thống?". Chọn "OK" / "Đồng ý".' },

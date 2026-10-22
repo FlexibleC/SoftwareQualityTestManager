@@ -11,7 +11,7 @@ echo.
 echo Vui lòng chọn môi trường bạn muốn truy cập:
 echo.
 echo   [1] ONLINE CLOUD (Truy cập mọi nơi, Realtime Cloud Supabase)
-echo       👉 https://smartvms-test-manager.vercel.app
+echo       👉 https://softwarequalitytestmanager.vercel.app
 echo.
 echo   [2] MẠNG NỘI BỘ LAN (Khởi động Web Server LAN cổng 8080)
 echo       👉 Dùng cho các máy tính trạm trong mạng nội bộ cơ quan
@@ -27,7 +27,7 @@ goto online
 :online
 echo.
 echo Đang mở hệ thống Online trên trình duyệt...
-start "" "https://smartvms-test-manager.vercel.app"
+start "" "https://softwarequalitytestmanager.vercel.app"
 goto end
 
 :lan

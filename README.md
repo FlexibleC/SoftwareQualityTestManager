@@ -65,7 +65,7 @@ SoftwareQualityTestManager/
 ## 🌐 Hướng Dẫn Vận Hành Hệ Thống
 
 ### 1. Truy cập Trực tuyến Đám Mây (Cloud Realtime)
-- **Địa chỉ:** 👉 **`https://smartvms-test-manager.vercel.app`**
+- **Địa chỉ:** 👉 **`https://softwarequalitytestmanager.vercel.app`**
 - Hỗ trợ mọi thiết bị (PC, Laptop, Tablet, Mobile) có kết nối Internet với mã hóa bảo mật SSL/HTTPS.
 
 ### 2. Vận hành Mạng Nội Bộ (LAN Intranet Server)
