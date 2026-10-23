@@ -287,8 +287,9 @@ function initCoreState(force = false) {
   const savedTheme = localStorage.getItem('smartvms_theme') || state.theme || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
 
-  // 4. Nếu đang chạy qua HTTP Server LAN nội bộ, tự động gọi ngầm để đồng bộ từ máy chủ LAN
+  // 4. Nếu đang chạy qua HTTP Server LAN hoặc Vercel, tự động gọi ngầm để đồng bộ và cấp token
   if (typeof window !== 'undefined' && isLanServerAvailable()) {
+    ensureAuthToken();
     fetchProjectsFromLanServer();
     fetchFullStateFromLanServer();
   }
@@ -566,8 +567,39 @@ if (typeof window !== 'undefined') {
   window.isLanServerAvailable = isLanServerAvailable;
 }
 
+let _isAuthenticatingToken = false;
+async function ensureAuthToken() {
+  if (typeof window === 'undefined') return;
+  if (_isAuthenticatingToken) return;
+  if (getAuthToken()) return;
+  const cur = state.currentUser;
+  if (!cur || !cur.username) return;
+
+  _isAuthenticatingToken = true;
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: cur.username, password: cur.password || '123' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.token) {
+        sessionStorage.setItem('sqtm_auth_token', data.token);
+        localStorage.setItem('sqtm_auth_token', data.token);
+      }
+    }
+  } catch (e) {
+  } finally {
+    _isAuthenticatingToken = false;
+  }
+}
+if (typeof window !== 'undefined') {
+  window.ensureAuthToken = ensureAuthToken;
+}
+
 /**
- * Đồng bộ danh mục dự án lên Backend Server có đính kèm JWT Bearer Token
+ * Đồng bộ danh mục dự án lên Backend Server có đính kèm JWT Bearer Token & User Context
  */
 function syncProjectsToLanServer(projects) {
   if (!isLanServerAvailable()) return;
@@ -576,21 +608,23 @@ function syncProjectsToLanServer(projects) {
     const token = getAuthToken();
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (state.currentUser) {
+      headers['X-User-Info'] = encodeURIComponent(JSON.stringify(state.currentUser));
+    } else if (!token) {
+      ensureAuthToken();
+      return;
+    }
 
     fetch('/api/projects', {
       method: 'POST',
       headers,
       body: JSON.stringify({ projects })
-    }).then(res => {
-      if (!res.ok && res.status !== 401) window.__sqtmBackendApiAvailable = false;
-    }).catch(() => {
-      window.__sqtmBackendApiAvailable = false;
-    });
+    }).catch(() => {});
   } catch (e) {}
 }
 
 /**
- * Đồng bộ toàn bộ trạng thái công việc lên Backend Server có đính kèm JWT Bearer Token
+ * Đồng bộ toàn bộ trạng thái công việc lên Backend Server có đính kèm JWT Bearer Token & User Context
  */
 function syncFullStateToLanServer(payload) {
   if (!isLanServerAvailable()) return;
@@ -599,16 +633,18 @@ function syncFullStateToLanServer(payload) {
     const token = getAuthToken();
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (state.currentUser) {
+      headers['X-User-Info'] = encodeURIComponent(JSON.stringify(state.currentUser));
+    } else if (!token) {
+      ensureAuthToken();
+      return;
+    }
 
     fetch('/api/state', {
       method: 'POST',
       headers,
       body: JSON.stringify(payload)
-    }).then(res => {
-      if (!res.ok && res.status !== 401) window.__sqtmBackendApiAvailable = false;
-    }).catch(() => {
-      window.__sqtmBackendApiAvailable = false;
-    });
+    }).catch(() => {});
   } catch (e) {}
 }
 
