@@ -165,6 +165,36 @@ module.exports = async (req, res) => {
         console.warn('Lỗi cập nhật test_sessions khi xóa dự án:', sessErr.message);
       }
 
+      // Cascade delete phân công thuộc dự án trên Cloud
+      try {
+        const asgRows = await supabaseAdmin.query('test_sessions', '?id=eq.system_assignments');
+        if (Array.isArray(asgRows) && asgRows.length > 0 && asgRows[0].notes) {
+          const asgs = JSON.parse(asgRows[0].notes);
+          const filteredAsgs = asgs.filter(a => a.projectId !== projectId);
+          await supabaseAdmin.update('test_sessions', '?id=eq.system_assignments', {
+            notes: JSON.stringify(filteredAsgs),
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (asgErr) {
+        console.warn('Lỗi cập nhật system_assignments khi xóa dự án:', asgErr.message);
+      }
+
+      // Cascade delete đợt test thuộc dự án trên Cloud
+      try {
+        const cycRows = await supabaseAdmin.query('test_sessions', '?id=eq.system_cycles');
+        if (Array.isArray(cycRows) && cycRows.length > 0 && cycRows[0].notes) {
+          const cycs = JSON.parse(cycRows[0].notes);
+          const filteredCycs = cycs.filter(c => c.projectId !== projectId);
+          await supabaseAdmin.update('test_sessions', '?id=eq.system_cycles', {
+            notes: JSON.stringify(filteredCycs),
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (cycErr) {
+        console.warn('Lỗi cập nhật system_cycles khi xóa dự án:', cycErr.message);
+      }
+
       // Cập nhật lại đĩa
       const current = getLocalProjectsFallback().filter(p => p.id !== projectId);
       saveLocalProjectsFallback(current);

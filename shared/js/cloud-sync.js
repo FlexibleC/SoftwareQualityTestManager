@@ -549,19 +549,29 @@
         window.ensureDefaultTestCyclesForProjects();
       }
 
-      // 3. Phục hồi assignments
+      // 3. Phục hồi assignments (Đồng bộ cả mảng rỗng [] khi toàn bộ phân công bị xóa)
       const asgRow = sessionRows.find(r => r.id === 'system_assignments');
       if (asgRow && asgRow.notes) {
         try {
           const parsedAsgs = JSON.parse(asgRow.notes);
-          if (Array.isArray(parsedAsgs) && parsedAsgs.length > 0) {
+          if (Array.isArray(parsedAsgs)) {
             window.state.assignments = parsedAsgs;
+            try {
+              const rawAsgs = JSON.stringify(parsedAsgs);
+              localStorage.setItem('smartvms_system_assignments_v3', rawAsgs);
+              sessionStorage.setItem('smartvms_system_assignments_v3', rawAsgs);
+            } catch (e) {}
           }
         } catch (e) {}
       } else {
         if (window.state.assignments && window.state.assignments.length > 0) {
           pushAssignmentsToCloud(window.state.assignments);
         }
+      }
+
+      // Thanh lọc triệt để các phân công mồ côi
+      if (typeof window.cleanOrphanAssignments === 'function') {
+        window.cleanOrphanAssignments();
       }
 
       // 4. Phục hồi danh mục người dùng (Users & Roles) từ Cloud Database
@@ -706,13 +716,16 @@
   }
 
   // 5a-3. Đẩy danh mục đợt test lên Supabase Cloud
-  async function pushCyclesToCloud(cycles) {
+  async function pushCyclesToCloud(cycles, force = false) {
     if (!cloudState.client) {
       await ensureCloudClient();
       if (!cloudState.client) return false;
     }
     try {
-      if (!Array.isArray(cycles) || cycles.length === 0) {
+      if (!Array.isArray(cycles)) {
+        return true;
+      }
+      if (!force && cycles.length === 0 && (!window.state?.projects || window.state.projects.length > 0)) {
         return true;
       }
       if (sqtmBroadcast) {
@@ -735,13 +748,16 @@
   }
 
   // 5a-4. Đẩy danh mục phân công lên Supabase Cloud
-  async function pushAssignmentsToCloud(assignments) {
+  async function pushAssignmentsToCloud(assignments, force = false) {
     if (!cloudState.client) {
       await ensureCloudClient();
       if (!cloudState.client) return false;
     }
     try {
-      if (!Array.isArray(assignments) || assignments.length === 0) {
+      if (!Array.isArray(assignments)) {
+        return true;
+      }
+      if (!force && assignments.length === 0 && (!window.state?.projects || window.state.projects.length > 0)) {
         return true;
       }
       if (sqtmBroadcast) {

@@ -214,6 +214,7 @@ function initCoreState(force = false) {
 
   // Tự động đảm bảo mỗi dự án luôn có sẵn ít nhất một đợt test mặc định để phân công công việc
   ensureDefaultTestCyclesForProjects();
+  cleanOrphanAssignments();
 
   state.isCleanProjectState = state.projects.length === 0;
 
@@ -423,10 +424,56 @@ function ensureDefaultTestCyclesForProjects() {
 }
 
 /**
+ * Loại bỏ triệt để các phân công nhiệm vụ và kết quả test mồ côi (Orphan Assignment Integrity)
+ * Đảm bảo:
+ * 1. Nếu hệ thống rỗng (0 dự án), state.assignments = [].
+ * 2. Nếu một dự án có 0 kịch bản test (mới tạo hoặc trống), không được phép có bất kỳ phân công nào cho dự án đó.
+ * 3. Nếu dự án đã bị xóa, toàn bộ phân công của dự án đó bị loại bỏ hoàn toàn.
+ */
+function cleanOrphanAssignments() {
+  if (!state.projects || !Array.isArray(state.projects) || state.projects.length === 0) {
+    state.assignments = [];
+    return;
+  }
+
+  const validProjects = new Set(state.projects.map(p => p.id));
+  const validTcSet = new Set();
+  state.projects.forEach(p => {
+    const pTcs = Array.isArray(p.testCases) ? p.testCases : (typeof getTestCasesForProject === 'function' ? getTestCasesForProject(p.id) : []);
+    if (Array.isArray(pTcs)) {
+      pTcs.forEach(tc => {
+        if (tc && tc.id) {
+          validTcSet.add(`${p.id}__${tc.id}`);
+          validTcSet.add(tc.id);
+        }
+      });
+    }
+  });
+
+  if (Array.isArray(state.assignments)) {
+    state.assignments = state.assignments.filter(a => {
+      if (!a || !a.tcId) return false;
+      if (a.projectId && !validProjects.has(a.projectId)) return false;
+      const prj = state.projects.find(p => p.id === a.projectId);
+      if (prj) {
+        const prjTcs = Array.isArray(prj.testCases) ? prj.testCases : [];
+        if (prjTcs.length === 0) return false;
+        return prjTcs.some(tc => tc.id === a.tcId);
+      }
+      return validTcSet.has(a.tcId) || (a.projectId && validTcSet.has(`${a.projectId}__${a.tcId}`));
+    });
+  }
+}
+if (typeof window !== 'undefined') {
+  window.cleanOrphanAssignments = cleanOrphanAssignments;
+}
+
+/**
  * Lưu trạng thái bền vững (LocalStorage + SessionStorage + LAN Server + Cloud)
  */
 function saveCoreState(opts = {}) {
   try {
+    cleanOrphanAssignments();
     // Đồng bộ hai chiều giữa p.testCycles và state.testCycles trước khi lưu
     if (!state.testCycles) state.testCycles = [];
     const validCycleIds = new Set();
@@ -2630,6 +2677,33 @@ function deleteProject(projId) {
   if (state.activeProjectId === projId) {
     state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
   }
+
+  // 0. Cascade delete toàn bộ assignments, cycles, results và user project assignments liên quan
+  if (Array.isArray(state.assignments)) {
+    state.assignments = state.assignments.filter(a => a.projectId !== projId);
+  }
+  if (Array.isArray(state.testCycles)) {
+    state.testCycles = state.testCycles.filter(c => c.projectId !== projId);
+  }
+  if (state.results) {
+    Object.keys(state.results).forEach(k => {
+      if (k.startsWith(`${projId}__`)) delete state.results[k];
+    });
+  }
+  if (state.cycleResults) {
+    const cycleIds = new Set((state.testCycles || []).filter(c => c.projectId === projId).map(c => c.id));
+    cycleIds.forEach(cId => {
+      delete state.cycleResults[cId];
+    });
+  }
+  if (Array.isArray(state.users)) {
+    state.users.forEach(u => {
+      if (Array.isArray(u.assignedProjects)) {
+        u.assignedProjects = u.assignedProjects.filter(pid => pid !== projId);
+      }
+    });
+  }
+
   saveCoreState();
 
   // 1. Gọi Backend API DELETE để xóa vĩnh viễn khỏi Database và bộ nhớ đệm máy chủ
@@ -2651,6 +2725,15 @@ function deleteProject(projId) {
   // 2. Đồng bộ danh sách mới lên Cloud (force = true để lưu kể cả khi danh sách rỗng 0 dự án)
   if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
     window.pushProjectsToCloud(state.projects, true);
+  }
+  if (window.pushAssignmentsToCloud && typeof window.pushAssignmentsToCloud === 'function') {
+    window.pushAssignmentsToCloud(state.assignments || [], true);
+  }
+  if (window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function') {
+    window.pushCyclesToCloud(state.testCycles || [], true);
+  }
+  if (window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
+    window.pushUsersToCloud(state.users || [], true);
   }
 
   // 3. Xóa qua client Supabase trực tiếp nếu có

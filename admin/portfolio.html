@@ -435,9 +435,14 @@
       const tbody = document.getElementById('workload-heatmap-tbody');
       if (!tbody) return;
 
+      if (typeof cleanOrphanAssignments === 'function') {
+        cleanOrphanAssignments();
+      }
+
       const users = typeof getAllUsers === 'function' ? getAllUsers() : (state.users || []);
-      const assignments = state.assignments || [];
       const projects = getAllProjects();
+      const validProjectIds = new Set(projects.map(p => p.id));
+      const assignments = (state.assignments || []).filter(a => a && a.projectId && validProjectIds.has(a.projectId));
 
       let overloaded = 0;
       let balanced = 0;
@@ -448,7 +453,9 @@
         const uAsgs = assignments.filter(a => a.assigneeUsername === u.username);
         const myPrjIds = new Set(uAsgs.map(a => a.projectId).filter(Boolean));
         if (u.assignedProjects) {
-          u.assignedProjects.forEach(pid => myPrjIds.add(pid));
+          u.assignedProjects.forEach(pid => {
+            if (validProjectIds.has(pid)) myPrjIds.add(pid);
+          });
         }
         (state.projects || []).forEach(p => {
           if (p.leadUsername === u.username || (p.leadUsernames || []).includes(u.username)) {

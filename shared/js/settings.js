@@ -1514,8 +1514,13 @@ function switchProjectVersionHandler(ver) {
 // 2. USER & ACCESS CONTROL (RBAC) TAB
 // ================================================================
 function renderUsersTab() {
+  if (typeof cleanOrphanAssignments === 'function') {
+    cleanOrphanAssignments();
+  }
   const users = getUsers();
-  const tasks = state.assignments || [];
+  const allProjects = typeof getAllProjects === 'function' ? getAllProjects() : (state.projects || []);
+  const validProjectIds = new Set(allProjects.map(p => p.id));
+  const tasks = (state.assignments || []).filter(t => t && t.projectId && validProjectIds.has(t.projectId));
 
   // Update Stats Counters
   const setEl = (id, val) => {
