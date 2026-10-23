@@ -430,55 +430,34 @@
     <!-- ==================== TAB 4: QUẢN TRỊ NHÂN SỰ VÀ PHÂN BỔ ĐỢT KIỂM THỬ ==================== -->
     <div id="tab-pane-v-roster" class="lead-tab-pane" style="display:none">
       
-      <!-- BÀN ĐIỀU HÀNH QUẢN TRỊ NHÂN LỰC PHIÊN BẢN (VERSION WORKFORCE & STAFFING COMMAND CENTER) -->
+      <!-- BÀN ĐIỀU HÀNH QUẢN TRỊ NHÂN LỰC PHIÊN BẢN (VERSION WORKFORCE & STAFFING) -->
       <div class="card" style="padding:18px 22px; margin-bottom:18px; background:var(--bg-card); border:1.5px solid var(--border)">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
           <div>
             <div style="font-size:11.5px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.5px">
-              👥 Trung tâm điều hành nhân lực & phân bổ đợt kiểm thử
+              👥 Quản trị nhân sự & Phân bổ đợt kiểm thử
             </div>
             <h2 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:2px 0 0 0">
-              Quản trị nguồn lực, phân bổ nhân sự đa đợt và cân bằng tải phiên bản
+              Quản trị lực lượng nhân sự và điều phối đợt tác chiến
             </h2>
             <div style="font-size:12px; color:var(--text-muted); margin-top:3px">
-              Theo dõi toàn diện lực lượng Kiểm thử viên (Testers) và Lập trình viên (Developers) trực chiến trên toàn bộ các đợt tác chiến.
+              Chỉ định và theo dõi đội ngũ Kiểm thử viên (Testers) và Lập trình viên (Developers) trực chiến trên các đợt kiểm thử của phiên bản.
             </div>
           </div>
 
           <!-- Bộ lọc & Thao tác xuất báo cáo -->
           <div style="display:flex; align-items:center; gap:8px">
-            <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.exportVersionStaffingExcel()" title="Xuất báo cáo phân bổ và sử dụng nhân sự ra file Excel">
-              📥 Xuất báo cáo nhân lực
+            <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.exportVersionStaffingExcel()" title="Xuất danh sách phân bổ nhân sự ra file Excel">
+              📥 Xuất danh sách nhân sự
             </button>
             <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.openCycleStaffingModal(LeadVersion.activeRosterCycleId || (typeof getTestCyclesForProject === 'function' ? (getTestCyclesForProject(getActiveProject()?.id, LeadVersion.currentVersion)[0]?.id) : ''))" style="font-weight:800">
               ➕ Phân bổ nhân sự vào đợt
             </button>
           </div>
         </div>
-
-        <!-- THANH CÔNG CỤ ĐIỀU PHỐI TÁC CHIẾN NHANH -->
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border)">
-          <span style="font-size:12px; font-weight:800; color:var(--text-muted)">⚡ Công cụ điều phối nhanh:</span>
-          
-          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.autoDistributeEvenly()" title="Hệ thống tự động chia đều kịch bản chưa giao cho các tester trong đợt test">
-            ⚡ Tự động chia đều kịch bản
-          </button>
-          
-          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.openAssignByModuleModal()" title="Phân công tester phụ trách theo từng phân hệ nghiệp vụ">
-            🎯 Phân công theo phân hệ
-          </button>
-          
-          <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:rgba(220,38,38,0.3)" onclick="LeadVersion.assignFailedForRetest()" title="Tự động gom toàn bộ kịch bản từng bị lỗi để giao re-test">
-            ⚠️ Gom kịch bản lỗi để kiểm thử lại
-          </button>
-
-          <button type="button" class="btn btn-outline btn-sm" onclick="LeadVersion.autoBalanceVersionStaffing()" title="Tự động phát hiện lệch tải và đề xuất cân bằng tải kịch bản giữa các kỹ sư">
-            ⚖️ Cân bằng tải phiên bản
-          </button>
-        </div>
       </div>
 
-      <!-- PHÂN KHU 1: 4 CHỈ SỐ NHÂN LỰC TOÀN PHIÊN BẢN (VERSION WORKFORCE COCKPIT) -->
+      <!-- PHÂN KHU 1: 4 CHỈ SỐ NHÂN LỰC TOÀN PHIÊN BẢN -->
       <div class="lead-kpi-grid" style="margin-bottom:18px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr))">
         <!-- KPI 1: Tổng nhân lực huy động -->
         <div class="lead-kpi-card" style="border-left:4px solid #2563eb">
@@ -489,40 +468,40 @@
           </div>
         </div>
 
-        <!-- KPI 2: Phạm vi kịch bản & Đã giao việc -->
+        <!-- KPI 2: Quy mô đợt kiểm thử -->
         <div class="lead-kpi-card" style="border-left:4px solid #16a34a">
-          <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">📋</div>
+          <div class="lead-kpi-icon" style="background:rgba(22,163,74,0.1); color:#16a34a">🎯</div>
           <div style="flex:1">
-            <div class="lead-kpi-val" id="v-wf-kpi-workload">0 / 0 bài (0%)</div>
-            <div class="lead-scale-lbl" id="v-wf-kpi-workload-sub">Còn tồn: 0 bài chưa giao</div>
+            <div class="lead-kpi-val" id="v-wf-kpi-cycles">0 đợt test</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-cycles-sub">0 đang diễn ra • 0 kế hoạch</div>
           </div>
         </div>
 
-        <!-- KPI 3: Cân bằng tải trọng -->
+        <!-- KPI 3: Tỷ lệ phủ nhân sự các đợt -->
         <div class="lead-kpi-card" style="border-left:4px solid #7c3aed">
-          <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">⚖️</div>
+          <div class="lead-kpi-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed">📋</div>
           <div style="flex:1">
-            <div class="lead-kpi-val" id="v-wf-kpi-balance">0 bài / người</div>
-            <div class="lead-scale-lbl" id="v-wf-kpi-balance-sub">0 quá tải • 0 thiếu việc</div>
+            <div class="lead-kpi-val" id="v-wf-kpi-allocated">0% đợt đã có người</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-allocated-sub">0 / 0 đợt đã bố trí nhân sự</div>
           </div>
         </div>
 
-        <!-- KPI 4: Năng suất & Đóng góp chất lượng -->
+        <!-- KPI 4: Lập trình viên trực chiến -->
         <div class="lead-kpi-card" style="border-left:4px solid #0284c7">
-          <div class="lead-kpi-icon" style="background:rgba(2,132,199,0.1); color:#0284c7">🚀</div>
+          <div class="lead-kpi-icon" style="background:rgba(2,132,199,0.1); color:#0284c7">💻</div>
           <div style="flex:1">
-            <div class="lead-kpi-val" id="v-wf-kpi-velocity">0% hoàn thành</div>
-            <div class="lead-scale-lbl" id="v-wf-kpi-velocity-sub">0 lỗi phát hiện • 0 lỗi đã fix</div>
+            <div class="lead-kpi-val" id="v-wf-kpi-devs">0 kỹ sư Dev</div>
+            <div class="lead-scale-lbl" id="v-wf-kpi-devs-sub">Sẵn sàng trực chiến sửa lỗi</div>
           </div>
         </div>
       </div>
 
-      <!-- PHÂN KHU 2: MA TRẬN PHÂN BỔ NHÂN SỰ XUYÊN ĐỢT TEST (CROSS-CYCLE STAFFING MATRIX) -->
+      <!-- PHÂN KHU 2: MA TRẬN PHÂN BỔ NHÂN SỰ VÀO CÁC ĐỢT KIỂM THỬ -->
       <div class="lead-matrix-card" style="margin-bottom:20px">
         <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              🎯 Ma trận phân bổ nhân sự xuyên suốt các đợt kiểm thử
+              🎯 Ma trận phân bổ nhân sự vào các đợt kiểm thử
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
               Nhấp trực tiếp vào ô để Bật / Tắt phân bổ Tester thực thi & Developer trực chiến cho từng đợt tác chiến.
@@ -545,19 +524,19 @@
         </div>
       </div>
 
-      <!-- PHÂN KHU 3: BẢNG SO SÁNH & THỐNG KÊ HIỆU QUẢ SỬ DỤNG NHÂN LỰC GIỮA CÁC ĐỢT TEST -->
+      <!-- PHÂN KHU 3: BẢNG THEO DÕI PHÂN BỔ NHÂN SỰ THEO ĐỢT KIỂM THỬ -->
       <div class="lead-matrix-card" style="margin-bottom:20px">
         <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)">
-              📊 Thống kê tình trạng phân bổ & sử dụng nhân sự tại các đợt test
+              📊 Danh sách phân bổ nhân sự theo đợt kiểm thử
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Đối chiếu quy mô bài test, năng lực nhân sự huy động, tiến độ hoàn thành và định mức tải trọng giữa các đợt.
+              Theo dõi danh sách Kiểm thử viên và Lập trình viên trực chiến được chỉ định cho từng đợt kiểm thử.
             </div>
           </div>
           <div style="font-size:11.5px; color:var(--text-muted)">
-            Tổng hợp dữ liệu thực thi theo thời gian thực
+            Dữ liệu nhân sự theo thời gian thực
           </div>
         </div>
         <div style="overflow-x:auto">
@@ -567,12 +546,8 @@
                 <th>Đợt kiểm thử</th>
                 <th style="text-align:center">Trạng thái</th>
                 <th style="text-align:center">Thời hạn</th>
-                <th style="text-align:center">Lực lượng huy động</th>
-                <th style="text-align:center">Phạm vi kịch bản</th>
-                <th style="text-align:center">Đã giao việc</th>
-                <th>Tiến độ thi công</th>
-                <th style="text-align:center">Lỗi phát hiện</th>
-                <th style="text-align:center">Tải bình quân</th>
+                <th>Kiểm thử viên tham gia</th>
+                <th>Lập trình viên trực chiến</th>
                 <th style="text-align:center">Thao tác</th>
               </tr>
             </thead>
@@ -583,37 +558,27 @@
         </div>
       </div>
 
-      <!-- PHÂN KHU 4: BẢNG THEO DÕI NĂNG SUẤT & TẢI TRỌNG CÁ NHÂN TOÀN PHIÊN BẢN -->
+      <!-- PHÂN KHU 4: BẢNG DANH BẠ NHÂN SỰ PHIÊN BẢN -->
       <div class="lead-matrix-card">
         <div style="padding:14px 20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
           <div>
             <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--text-primary)" id="v-roster-table-heading">
-              🏅 Bảng theo dõi năng suất, đóng góp chất lượng & tải trọng cá nhân
+              👥 Danh sách nhân sự tham gia phiên bản
             </h3>
             <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
-              Đo lường tiến độ hoàn thành kịch bản, tỷ lệ Pass/Fail và số defect xử lý của từng nhân sự toàn phiên bản.
+              Tổng hợp toàn bộ Kiểm thử viên và Lập trình viên trong lực lượng của phiên bản.
             </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px">
-            <span style="font-size:12.5px; font-weight:700; color:var(--text-primary)">Lọc theo đợt test:</span>
-            <select id="v-roster-cycle-select" class="form-control" style="font-weight:700; color:#2563eb; min-width:200px; height:34px; font-size:12px" onchange="LeadVersion.onRosterCycleChange()">
-              <!-- Populated dynamically -->
-            </select>
           </div>
         </div>
         <div style="overflow-x:auto">
           <table class="lead-matrix-table">
             <thead>
               <tr>
-                <th>Thành viên & Vai trò</th>
-                <th style="text-align:center">Chức danh</th>
-                <th style="text-align:center">Đợt tham gia</th>
-                <th>Phân hệ đảm nhận</th>
-                <th style="text-align:center">Số bài giao</th>
-                <th style="text-align:center">Đã thực hiện</th>
-                <th style="text-align:center">Tỷ lệ đạt</th>
-                <th style="text-align:center">Đóng góp Defect</th>
-                <th style="text-align:center">Hệ số tải trọng</th>
+                <th>Thành viên & Tài khoản</th>
+                <th style="text-align:center">Vai trò dự án</th>
+                <th>Các đợt tham gia trong phiên bản</th>
+                <th>Nhiệm vụ trực chiến</th>
+                <th style="text-align:center">Trạng thái</th>
                 <th style="text-align:center">Thao tác</th>
               </tr>
             </thead>
@@ -1507,109 +1472,7 @@
     </div>
   </div>
 
-  <!-- Modal 5: Chỉ định kỹ sư vào đợt kiểm thử -->
-  <div class="modal" id="modal-assign-cycle-tester">
-    <div class="modal-box" style="max-width:540px">
-      <div class="modal-header">
-        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          👥 Chỉ định kỹ sư kiểm thử vào đợt kiểm thử
-        </h3>
-        <button type="button" class="btn-close" onclick="closeModal('modal-assign-cycle-tester')">✕</button>
-      </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
-        <div>
-          <label class="form-label" style="font-weight:700">Đợt kiểm thử mục tiêu</label>
-          <div id="mact-cycle-display" style="padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb">
-            Đợt 1
-          </div>
-          <input type="hidden" id="mact-cycle-id" />
-        </div>
 
-        <div>
-          <label class="form-label" style="font-weight:700">Chọn kỹ sư kiểm thử (*)</label>
-          <select id="mact-tester-select" class="form-control" required>
-            <!-- Populated dynamically from project members -->
-          </select>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div>
-            <label class="form-label" style="font-weight:700">Vai trò trong đợt kiểm thử</label>
-            <select id="mact-role-select" class="form-control">
-              <option value="Lead Tester">Chủ trì kiểm thử</option>
-              <option value="Senior Tester" selected>Kỹ sư kiểm thử chính</option>
-              <option value="Functional Tester">Kiểm thử viên chức năng</option>
-              <option value="Automation Tester">Kiểm thử viên tự động hóa</option>
-              <option value="UAT Specialist">Chuyên viên nghiệm thu UAT</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label" style="font-weight:700">Phân hệ phụ trách</label>
-            <select id="mact-module-select" class="form-control">
-              <option value="ALL">📦 Toàn bộ phân hệ</option>
-              <!-- Populated dynamically with M01 - M12 -->
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="form-label" style="font-weight:700">Định mức kịch bản giao kiểm thử</label>
-          <input type="number" id="mact-quota" class="form-control" value="25" min="1" placeholder="Số lượng bài giao..." />
-          <span style="font-size:11px; color:var(--text-muted)">Hệ thống sẽ tự động gán các kịch bản chưa phân công cho kỹ sư này</span>
-        </div>
-      </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-cycle-tester')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmAssignTesterToCycle()">💾 Xác nhận chỉ định</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal 6: Phân công kịch bản theo phân hệ nghiệp vụ -->
-  <div class="modal" id="modal-assign-by-module">
-    <div class="modal-box" style="max-width:540px">
-      <div class="modal-header">
-        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          🎯 Phân công kịch bản theo phân hệ nghiệp vụ
-        </h3>
-        <button type="button" class="btn-close" onclick="closeModal('modal-assign-by-module')">✕</button>
-      </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
-        <div>
-          <label class="form-label" style="font-weight:700">Đợt kiểm thử áp dụng</label>
-          <div id="mabm-cycle-display" style="padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb">
-            Đợt 1
-          </div>
-          <input type="hidden" id="mabm-cycle-id" />
-        </div>
-
-        <div>
-          <label class="form-label" style="font-weight:700">Chọn phân hệ nghiệp vụ cần giao (*)</label>
-          <select id="mabm-module-select" class="form-control" onchange="LeadVersion.onModuleAssignSelectChange()">
-            <!-- Populated with M01 - M12 -->
-          </select>
-          <div id="mabm-module-info" style="font-size:11.5px; color:#2563eb; margin-top:4px; font-weight:600">
-            Phân hệ đang chọn.
-          </div>
-        </div>
-
-        <div>
-          <label class="form-label" style="font-weight:700">Giao cho kỹ sư kiểm thử phụ trách (*)</label>
-          <select id="mabm-tester-select" class="form-control">
-            <!-- Populated with project members -->
-          </select>
-        </div>
-
-        <div style="padding:10px 14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); border-radius:8px; font-size:12px; color:var(--text-secondary)">
-          💡 <strong>Quy tắc điều phối:</strong> Toàn bộ kịch bản thuộc phân hệ này trong đợt kiểm thử sẽ được gán cho kỹ sư đã chọn, tự động ghi nhận vào bàn giao việc và cập nhật ma trận phân bổ công việc.
-        </div>
-      </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-assign-by-module')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmAssignByModule()">💾 Phân công phân hệ</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Modal 7: Nhân bản đợt kiểm thử -->
   <div class="modal" id="modal-clone-cycle">

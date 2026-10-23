@@ -1335,19 +1335,16 @@ const LeadVersion = {
     this.renderVersionRoster();
   },
 
-  // ==================== TAB 4: QUẢN TRỊ NHÂN SỰ & ĐIỀU PHỐI ĐỢT TEST (CYCLE STAFFING CENTER) ====================
-  // ==================== TAB 4: QUẢN TRỊ NHÂN LỰC PHIÊN BẢN (VERSION WORKFORCE & STAFFING COMMAND CENTER) ====================
+  // ==================== TAB 4: QUẢN TRỊ NHÂN LỰC PHIÊN BẢN (VERSION WORKFORCE & STAFFING) ====================
 
-  // Phân khu 1: KPI Cockpit — Sức khỏe & Tải trọng nhân lực toàn phiên bản
+  // Phân khu 1: 4 Chỉ số tổng quan nhân sự phiên bản
   renderVersionWorkforceKPIs() {
     const p = getActiveProject();
     if (!p) return;
 
     const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const verTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : (p.testCases || []);
     const allTesters = this.getProjectTestersList();
     const allDevs = this.getProjectDevsList();
-    const assignments = (state.assignments || []).filter(a => a.projectId === p.id && cycles.some(c => c.id === a.cycleId));
 
     // 1. Headcount & Huy động
     const activeTesterSet = new Set();
@@ -1355,15 +1352,6 @@ const LeadVersion = {
     cycles.forEach(c => {
       (c.assignedTesters || c.testerUsernames || []).forEach(u => activeTesterSet.add(u));
       (c.assignedDevs || c.devUsernames || []).forEach(u => activeDevSet.add(u));
-    });
-    assignments.forEach(a => {
-      if (a.assigneeUsername) activeTesterSet.add(a.assigneeUsername);
-    });
-
-    const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : [];
-    const verDefects = allDefects.filter(d => (d.version || d.detectedInVersion || '').trim().toLowerCase() === (this.currentVersion || '').trim().toLowerCase());
-    verDefects.forEach(d => {
-      if (d.assignedDev) activeDevSet.add(d.assignedDev);
     });
 
     const totalStaffPool = allTesters.length + allDevs.length;
@@ -1375,56 +1363,34 @@ const LeadVersion = {
     const elHeadSub = document.getElementById('v-wf-kpi-headcount-sub');
     if (elHeadSub) elHeadSub.textContent = `Huy động: ${mobRate}% nhân lực dự án (${mobilizedStaff}/${totalStaffPool})`;
 
-    // 2. Phạm vi kịch bản & Đã giao
-    const assignedTcIds = new Set(assignments.map(a => a.testCaseId || a.tcId).filter(Boolean));
-    const totalTcs = verTcs.length;
-    const assignedCount = verTcs.filter(t => assignedTcIds.has(t.id)).length;
-    const assignedPct = totalTcs > 0 ? Math.round((assignedCount / totalTcs) * 100) : 0;
-    const unassignedCount = Math.max(0, totalTcs - assignedCount);
+    // 2. Quy mô đợt kiểm thử
+    const activeCycles = cycles.filter(c => c.status === 'ACTIVE' || c.status === 'IN_PROGRESS');
+    const plannedCycles = cycles.filter(c => c.status === 'PLANNED');
+    const elCyc = document.getElementById('v-wf-kpi-cycles');
+    if (elCyc) elCyc.textContent = `${cycles.length} đợt test`;
+    const elCycSub = document.getElementById('v-wf-kpi-cycles-sub');
+    if (elCycSub) elCycSub.textContent = `${activeCycles.length} đang diễn ra • ${plannedCycles.length} kế hoạch`;
 
-    const elWork = document.getElementById('v-wf-kpi-workload');
-    if (elWork) elWork.textContent = `${assignedCount} / ${totalTcs} bài (${assignedPct}%)`;
-    const elWorkSub = document.getElementById('v-wf-kpi-workload-sub');
-    if (elWorkSub) elWorkSub.textContent = unassignedCount === 0 ? '🟢 100% kịch bản đã có người phụ trách' : `Còn tồn: ${unassignedCount} bài chưa giao`;
+    // 3. Tỷ lệ phủ nhân sự các đợt test
+    const fullyAllocatedCycles = cycles.filter(c => {
+      const tCount = (c.assignedTesters || c.testerUsernames || []).length;
+      return tCount > 0;
+    }).length;
+    const allocRate = cycles.length > 0 ? Math.round((fullyAllocatedCycles / cycles.length) * 100) : 0;
 
-    // 3. Cân bằng tải trọng
-    const avgLoad = activeTesterSet.size > 0 ? Math.round(assignedCount / activeTesterSet.size) : 0;
-    let overloadedCount = 0;
-    let idleCount = 0;
-    allTesters.forEach(u => {
-      const userAsgCount = assignments.filter(a => (a.assigneeUsername === u.username || a.username === u.username)).length;
-      if (userAsgCount === 0) idleCount++;
-      else if (avgLoad > 0 && userAsgCount > avgLoad * 1.25) overloadedCount++;
-    });
+    const elAlloc = document.getElementById('v-wf-kpi-allocated');
+    if (elAlloc) elAlloc.textContent = `${allocRate}% đợt đã có người`;
+    const elAllocSub = document.getElementById('v-wf-kpi-allocated-sub');
+    if (elAllocSub) elAllocSub.textContent = `${fullyAllocatedCycles} / ${cycles.length} đợt đã bố trí nhân sự`;
 
-    const elBal = document.getElementById('v-wf-kpi-balance');
-    if (elBal) elBal.textContent = `~${avgLoad} bài / Tester`;
-    const elBalSub = document.getElementById('v-wf-kpi-balance-sub');
-    if (elBalSub) {
-      if (overloadedCount === 0 && idleCount === 0) {
-        elBalSub.textContent = '🟢 Tải trọng phân bổ rất cân bằng';
-      } else {
-        elBalSub.textContent = `${overloadedCount} quá tải • ${idleCount} chưa có việc`;
-      }
-    }
-
-    // 4. Vận tốc & Đóng góp chất lượng
-    const allResults = state.results || {};
-    let executedTcs = 0;
-    verTcs.forEach(t => {
-      const res = allResults[t.id];
-      if (res && res.status && res.status.toUpperCase() !== 'UNTESTED') executedTcs++;
-    });
-    const execRate = totalTcs > 0 ? Math.round((executedTcs / totalTcs) * 100) : 0;
-    const closedDefects = verDefects.filter(d => ['Closed', 'Fixed', 'Resolved'].includes(d.defectStatus)).length;
-
-    const elVel = document.getElementById('v-wf-kpi-velocity');
-    if (elVel) elVel.textContent = `${execRate}% hoàn thành (${executedTcs}/${totalTcs})`;
-    const elVelSub = document.getElementById('v-wf-kpi-velocity-sub');
-    if (elVelSub) elVelSub.textContent = `${verDefects.length} lỗi phát hiện • ${closedDefects} đã sửa`;
+    // 4. Lực lượng lập trình viên trực chiến
+    const elDevs = document.getElementById('v-wf-kpi-devs');
+    if (elDevs) elDevs.textContent = `${activeDevSet.size} kỹ sư Dev trực chiến`;
+    const elDevsSub = document.getElementById('v-wf-kpi-devs-sub');
+    if (elDevsSub) elDevsSub.textContent = activeDevSet.size > 0 ? 'Sẵn sàng trực chiến sửa lỗi' : 'Chưa bố trí Dev trực chiến';
   },
 
-  // Phân khu 2: Ma trận phân bổ nhân sự xuyên đợt kiểm thử (Cross-Cycle Staffing Matrix)
+  // Phân khu 2: Ma trận phân bổ nhân sự vào các đợt kiểm thử
   renderStaffingMatrix() {
     const thead = document.getElementById('v-staffing-matrix-thead');
     const tbody = document.getElementById('v-staffing-matrix-tbody');
@@ -1436,54 +1402,51 @@ const LeadVersion = {
     const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
     const allTesters = this.getProjectTestersList();
     const allDevs = this.getProjectDevsList();
-    const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
-    const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : [];
 
     // Header Ma trận
     let headHtml = `
       <tr>
-        <th style="min-width:220px">Thành viên & Chức danh</th>
+        <th style="min-width:240px">Thành viên & Chức danh</th>
     `;
     cycles.forEach(c => {
       headHtml += `
         <th style="text-align:center; min-width:140px">
-          <div>${escapeHtml(c.name || c.id)}</div>
-          <div style="font-size:10px; font-weight:600; color:var(--text-muted)">(${escapeHtml(c.code || c.id)})</div>
+          <div style="font-weight:800">${escapeHtml(c.name || c.id)}</div>
+          <div style="font-size:10.5px; font-weight:600; color:var(--text-muted)">(${escapeHtml(c.code || c.id)})</div>
         </th>
       `;
     });
     headHtml += `
-        <th style="text-align:center; min-width:120px">Tổng bài đã giao</th>
-        <th style="text-align:center; min-width:120px">Đánh giá tải</th>
+        <th style="text-align:center; min-width:130px">Số đợt tham gia</th>
+        <th style="text-align:center; min-width:120px">Trạng thái</th>
       </tr>
     `;
     thead.innerHTML = headHtml;
 
-    // Body Ma trận
     let bodyHtml = '';
 
     // KHỐI 1: TESTERS
     bodyHtml += `
       <tr style="background:rgba(37,99,235,0.06); border-top:1.5px solid rgba(37,99,235,0.2)">
-        <td colspan="${cycles.length + 3}" style="padding:8px 14px; font-weight:800; color:#2563eb; font-size:12px">
+        <td colspan="${cycles.length + 3}" style="padding:9px 14px; font-weight:800; color:#2563eb; font-size:12.5px">
           👥 1. ĐỘI NGŨ KIỂM THỬ VIÊN (TESTERS — THỰC THI KỊCH BẢN) (${allTesters.length} kỹ sư)
         </td>
       </tr>
     `;
 
     if (allTesters.length === 0) {
-      bodyHtml += `<tr><td colspan="${cycles.length + 3}" style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px">Chưa có kiểm thử viên nào trong dự án.</td></tr>`;
+      bodyHtml += `<tr><td colspan="${cycles.length + 3}" style="text-align:center; padding:14px; color:var(--text-muted); font-size:12px">Chưa có kiểm thử viên nào trong dự án.</td></tr>`;
     } else {
       allTesters.forEach(u => {
-        const userAsgs = assignments.filter(a => (a.assigneeUsername === u.username || a.username === u.username) && cycles.some(c => c.id === a.cycleId));
-        const totalUserTcs = userAsgs.length;
+        const assignedCyclesCount = cycles.filter(c => (c.assignedTesters || c.testerUsernames || []).includes(u.username)).length;
+        const initial = (u.name || u.username || 'T').trim().charAt(0).toUpperCase();
 
         bodyHtml += `
           <tr>
             <td>
               <div style="display:flex; align-items:center; gap:10px">
-                <div style="width:32px; height:32px; border-radius:50%; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12.5px; flex-shrink:0">
-                  ${(u.name || u.username || 'T').charAt(0).toUpperCase()}
+                <div class="sqtm-member-avatar" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); width:32px; height:32px; font-size:12px">
+                  ${initial}
                 </div>
                 <div>
                   <div style="font-weight:700; font-size:13px; color:var(--text-primary)">${escapeHtml(u.name || u.username)}</div>
@@ -1495,38 +1458,30 @@ const LeadVersion = {
 
         cycles.forEach(c => {
           const isAssigned = (c.assignedTesters || c.testerUsernames || []).includes(u.username);
-          const cAsgCount = assignments.filter(a => a.cycleId === c.id && (a.assigneeUsername === u.username || a.username === u.username)).length;
-
           bodyHtml += `
-            <td style="text-align:center; vertical-align:middle; background:${isAssigned ? 'rgba(37,99,235,0.02)' : 'transparent'}">
-              <label style="cursor:pointer; display:inline-flex; flex-direction:column; align-items:center; gap:3px" title="Bật/Tắt phân bổ @${u.username} vào đợt [${c.name || c.id}]">
-                <input type="checkbox" ${isAssigned ? 'checked' : ''} onchange="LeadVersion.toggleMatrixStaffing('${c.id}', '${u.username}', 'tester', this.checked)" style="width:16px; height:16px; cursor:pointer" />
+            <td style="text-align:center; vertical-align:middle; background:${isAssigned ? 'rgba(37,99,235,0.03)' : 'transparent'}">
+              <label style="cursor:pointer; display:inline-flex; flex-direction:column; align-items:center; gap:4px" title="Bật/Tắt phân bổ @${u.username} vào đợt [${c.name || c.id}]">
+                <input type="checkbox" ${isAssigned ? 'checked' : ''} onchange="LeadVersion.toggleMatrixStaffing('${c.id}', '${u.username}', 'tester', this.checked)" style="width:16px; height:16px; cursor:pointer; accent-color:#2563eb" />
                 ${isAssigned ? `
-                  <span class="badge ${cAsgCount > 0 ? 'badge-pass' : 'badge-outline'}" style="font-size:10px; font-weight:700">
-                    ${cAsgCount > 0 ? `${cAsgCount} bài` : 'Đã gán'}
+                  <span class="badge badge-pass" style="font-size:10px; font-weight:700; padding:2px 6px">
+                    ✓ Tham gia
                   </span>
                 ` : `
-                  <span style="font-size:11px; color:var(--text-muted)">⚪</span>
+                  <span style="font-size:11px; color:var(--text-muted)">—</span>
                 `}
               </label>
             </td>
           `;
         });
 
-        // Đánh giá tải
-        let loadBadge = `<span class="badge badge-outline" style="font-size:10.5px">⚪ Chưa giao</span>`;
-        if (totalUserTcs > 50) {
-          loadBadge = `<span class="badge badge-fail" style="font-size:10.5px">🔴 Tải cao</span>`;
-        } else if (totalUserTcs > 0) {
-          loadBadge = `<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px">🟢 Cân bằng</span>`;
-        }
-
         bodyHtml += `
             <td style="text-align:center; font-weight:800; font-size:13px; color:#2563eb">
-              ${totalUserTcs} bài
+              ${assignedCyclesCount} / ${cycles.length} đợt
             </td>
             <td style="text-align:center">
-              ${loadBadge}
+              ${assignedCyclesCount > 0
+                ? '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:700">🟢 Đang tham gia</span>'
+                : '<span class="badge badge-outline" style="font-size:10.5px">⚪ Dự bị</span>'}
             </td>
           </tr>
         `;
@@ -1536,24 +1491,25 @@ const LeadVersion = {
     // KHỐI 2: DEVELOPERS
     bodyHtml += `
       <tr style="background:rgba(16,185,129,0.06); border-top:1.5px solid rgba(16,185,129,0.2)">
-        <td colspan="${cycles.length + 3}" style="padding:8px 14px; font-weight:800; color:#10b981; font-size:12px">
+        <td colspan="${cycles.length + 3}" style="padding:9px 14px; font-weight:800; color:#10b981; font-size:12.5px">
           💻 2. LẬP TRÌNH VIÊN PHỤ TRÁCH (DEVELOPERS — TRỰC CHIẾN KHẮC PHỤC LỖI) (${allDevs.length} kỹ sư)
         </td>
       </tr>
     `;
 
     if (allDevs.length === 0) {
-      bodyHtml += `<tr><td colspan="${cycles.length + 3}" style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px">Chưa có lập trình viên nào trong dự án.</td></tr>`;
+      bodyHtml += `<tr><td colspan="${cycles.length + 3}" style="text-align:center; padding:14px; color:var(--text-muted); font-size:12px">Chưa có lập trình viên nào trong dự án.</td></tr>`;
     } else {
       allDevs.forEach(u => {
         const devCyclesCount = cycles.filter(c => (c.assignedDevs || c.devUsernames || []).includes(u.username)).length;
+        const initial = (u.name || u.username || 'D').trim().charAt(0).toUpperCase();
 
         bodyHtml += `
           <tr>
             <td>
               <div style="display:flex; align-items:center; gap:10px">
-                <div style="width:32px; height:32px; border-radius:50%; background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12.5px; flex-shrink:0">
-                  ${(u.name || u.username || 'D').charAt(0).toUpperCase()}
+                <div class="sqtm-member-avatar" style="background:linear-gradient(135deg, #059669, #047857); width:32px; height:32px; font-size:12px">
+                  ${initial}
                 </div>
                 <div>
                   <div style="font-weight:700; font-size:13px; color:var(--text-primary)">${escapeHtml(u.name || u.username)}</div>
@@ -1566,15 +1522,15 @@ const LeadVersion = {
         cycles.forEach(c => {
           const isDevAssigned = (c.assignedDevs || c.devUsernames || []).includes(u.username);
           bodyHtml += `
-            <td style="text-align:center; vertical-align:middle; background:${isDevAssigned ? 'rgba(16,185,129,0.02)' : 'transparent'}">
-              <label style="cursor:pointer; display:inline-flex; flex-direction:column; align-items:center; gap:3px" title="Bật/Tắt phân bổ @${u.username} trực chiến sửa lỗi đợt [${c.name || c.id}]">
-                <input type="checkbox" ${isDevAssigned ? 'checked' : ''} onchange="LeadVersion.toggleMatrixStaffing('${c.id}', '${u.username}', 'dev', this.checked)" style="width:16px; height:16px; cursor:pointer" />
+            <td style="text-align:center; vertical-align:middle; background:${isDevAssigned ? 'rgba(16,185,129,0.03)' : 'transparent'}">
+              <label style="cursor:pointer; display:inline-flex; flex-direction:column; align-items:center; gap:4px" title="Bật/Tắt phân bổ @${u.username} trực chiến sửa lỗi đợt [${c.name || c.id}]">
+                <input type="checkbox" ${isDevAssigned ? 'checked' : ''} onchange="LeadVersion.toggleMatrixStaffing('${c.id}', '${u.username}', 'dev', this.checked)" style="width:16px; height:16px; cursor:pointer; accent-color:#059669" />
                 ${isDevAssigned ? `
-                  <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:9.5px; font-weight:700">
+                  <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:9.5px; font-weight:700; padding:2px 6px">
                     💻 Trực chiến
                   </span>
                 ` : `
-                  <span style="font-size:11px; color:var(--text-muted)">⚪</span>
+                  <span style="font-size:11px; color:var(--text-muted)">—</span>
                 `}
               </label>
             </td>
@@ -1582,12 +1538,12 @@ const LeadVersion = {
         });
 
         bodyHtml += `
-            <td style="text-align:center; font-weight:700; font-size:12.5px; color:#10b981">
+            <td style="text-align:center; font-weight:800; font-size:13px; color:#10b981">
               ${devCyclesCount} / ${cycles.length} đợt
             </td>
             <td style="text-align:center">
-              <span class="badge" style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:10.5px">
-                ${devCyclesCount > 0 ? '🟢 Sẵn sàng trực' : '⚪ Chưa gán'}
+              <span class="badge" style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:700">
+                ${devCyclesCount > 0 ? '🟢 Sẵn sàng trực' : '⚪ Dự bị'}
               </span>
             </td>
           </tr>
@@ -1645,7 +1601,7 @@ const LeadVersion = {
     this.renderCyclesMatrix();
   },
 
-  // Phân khu 3: Bảng so sánh và thống kê hiệu quả sử dụng nhân sự tại các đợt test
+  // Phân khu 3: Bảng danh sách phân bổ nhân sự theo đợt kiểm thử
   renderPerCycleComparisonTable() {
     const tbody = document.getElementById('v-cycle-comparison-tbody');
     if (!tbody) return;
@@ -1654,15 +1610,15 @@ const LeadVersion = {
     if (!p) return;
 
     const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : [];
+    const allTesters = this.getProjectTestersList();
+    const allDevs = this.getProjectDevsList();
 
     if (cycles.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:24px; color:var(--text-muted)">Chưa có đợt kiểm thử nào trong phiên bản này.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted)">Chưa có đợt kiểm thử nào trong phiên bản này.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = cycles.map(c => {
-      const cMetrics = typeof getCycleMetrics === 'function' ? getCycleMetrics(c.id) : { totalTcs: 0, assignedCount: 0, assignedRate: 0, passCount: 0, passRate: 0, assignees: [], assignedDevs: [] };
       const isActive = c.status === 'ACTIVE' || c.status === 'IN_PROGRESS';
       const isClosed = c.status === 'CLOSED' || c.status === 'COMPLETED';
       const isPaused = c.status === 'PAUSED';
@@ -1672,10 +1628,24 @@ const LeadVersion = {
       else if (isClosed) stBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b; font-size:10.5px">🔒 Đã đóng</span>';
       else if (isPaused) stBadge = '<span class="badge" style="background:#fef3c7; color:#b45309; font-size:10.5px">⏸️ Tạm dừng</span>';
 
-      const cycleBugs = allDefects.filter(d => d.cycleId === c.id);
-      const testersCount = cMetrics.assignees.length;
-      const devsCount = (c.assignedDevs || c.devUsernames || []).length;
-      const avgLoad = testersCount > 0 ? Math.round(cMetrics.assignedCount / testersCount) : 0;
+      const assignedTesters = (c.assignedTesters || c.testerUsernames || []);
+      const assignedDevs = (c.assignedDevs || c.devUsernames || []);
+
+      const testerChips = assignedTesters.length > 0
+        ? assignedTesters.map(u => {
+            const userObj = allTesters.find(t => t.username === u);
+            const name = userObj ? (userObj.name || u) : u;
+            return `<span class="badge badge-info" style="font-size:11px; margin:2px 3px 2px 0; display:inline-flex; align-items:center; gap:4px">👤 ${escapeHtml(name)}</span>`;
+          }).join('')
+        : '<span style="font-size:11.5px; color:var(--text-muted); font-style:italic">Chưa phân bổ tester</span>';
+
+      const devChips = assignedDevs.length > 0
+        ? assignedDevs.map(u => {
+            const userObj = allDevs.find(d => d.username === u);
+            const name = userObj ? (userObj.name || u) : u;
+            return `<span class="badge" style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.25); font-size:11px; margin:2px 3px 2px 0; display:inline-flex; align-items:center; gap:4px">💻 ${escapeHtml(name)}</span>`;
+          }).join('')
+        : '<span style="font-size:11.5px; color:var(--text-muted); font-style:italic">Chưa phân bổ developer</span>';
 
       const baseLink = `projectId=${encodeURIComponent(p.id)}&version=${encodeURIComponent(this.currentVersion)}&cycleId=${encodeURIComponent(c.id)}`;
 
@@ -1686,41 +1656,22 @@ const LeadVersion = {
             <div style="font-size:11px; color:var(--text-muted)">Mã: <strong>${escapeHtml(c.code || c.id)}</strong> • Loại: ${escapeHtml(c.suite || 'REGRESSION')}</div>
           </td>
           <td style="text-align:center">${stBadge}</td>
-          <td style="text-align:center; font-size:11.5px; color:var(--text-secondary)">
+          <td style="text-align:center; font-size:11.5px; color:var(--text-secondary); white-space:nowrap">
             ${escapeHtml(c.startDate || 'N/A')} ➔ ${escapeHtml(c.endDate || 'N/A')}
           </td>
-          <td style="text-align:center">
-            <span style="font-weight:700; color:#2563eb" title="Testers: ${cMetrics.assignees.join(', ')}">${testersCount} Tester</span>
-            <span style="color:var(--text-muted)"> • </span>
-            <span style="font-weight:700; color:#10b981" title="Devs: ${(c.assignedDevs || []).join(', ')}">${devsCount} Dev</span>
+          <td style="min-width:180px">
+            ${testerChips}
           </td>
-          <td style="text-align:center; font-weight:800">${cMetrics.totalTcs} bài</td>
-          <td style="text-align:center">
-            <span style="font-weight:700">${cMetrics.assignedCount} bài</span>
-            <span style="font-size:11px; color:var(--text-muted)">(${cMetrics.assignedRate}%)</span>
+          <td style="min-width:180px">
+            ${devChips}
           </td>
-          <td>
-            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-bottom:3px">
-              <span style="color:#16a34a">${cMetrics.passRate}% đạt</span>
-              <span style="color:var(--text-muted)">${cMetrics.passCount}/${cMetrics.totalTcs}</span>
-            </div>
-            <div style="height:6px; border-radius:3px; background:var(--bg-body); overflow:hidden; display:flex">
-              <div style="width:${cMetrics.passRate}%; background:#16a34a"></div>
-            </div>
-          </td>
-          <td style="text-align:center; font-weight:800; color:#dc2626">
-            ${cycleBugs.length} lỗi
-          </td>
-          <td style="text-align:center; font-weight:700; color:#7c3aed">
-            ~${avgLoad} bài/người
-          </td>
-          <td style="text-align:center">
+          <td style="text-align:center; white-space:nowrap">
             <div style="display:flex; align-items:center; justify-content:center; gap:6px">
-              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleStaffingModal('${c.id}')" title="Phân bổ nhân sự chuyên biệt cho đợt này">
+              <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleStaffingModal('${c.id}')" title="Phân bổ nhân sự cho đợt này">
                 👥 Phân bổ
               </button>
-              <a href="cycle.html?${baseLink}&tab=staffing" class="btn btn-primary btn-xs" title="Vào bàn điều phối đợt kiểm thử">
-                🚀 Tác chiến
+              <a href="cycle.html?${baseLink}" class="btn btn-primary btn-xs" title="Đến không gian tác chiến của đợt">
+                🔗 Đợt test
               </a>
             </div>
           </td>
@@ -1729,51 +1680,14 @@ const LeadVersion = {
     }).join('');
   },
 
-  // Phân khu 4: Bảng theo dõi năng suất & tải trọng cá nhân toàn phiên bản
-  populateRosterCycleSelect() {
-    const select = document.getElementById('v-roster-cycle-select');
-    if (!select) return;
-
-    const p = getActiveProject();
-    if (!p) return;
-
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    
-    let optionsHtml = `<option value="ALL" ${(!this.activeRosterCycleId || this.activeRosterCycleId === 'ALL') ? 'selected' : ''}>🌐 Tất cả các đợt kiểm thử (Toàn phiên bản)</option>`;
-    cycles.forEach(c => {
-      optionsHtml += `
-        <option value="${c.id}" ${c.id === this.activeRosterCycleId ? 'selected' : ''}>
-          🎯 ${escapeHtml(c.name)} (${c.code || c.id})
-        </option>
-      `;
-    });
-    select.innerHTML = optionsHtml;
-  },
-
-  onRosterCycleChange() {
-    const select = document.getElementById('v-roster-cycle-select');
-    if (select) {
-      this.activeRosterCycleId = select.value;
-      this.renderVersionStaffRoster();
-    }
-  },
-
-  goToStaffingForCycle(cycleId) {
-    this.activeRosterCycleId = cycleId;
-    this.switchVersionTab('roster');
-    const select = document.getElementById('v-roster-cycle-select');
-    if (select) select.value = cycleId;
-    this.renderVersionRoster();
-  },
-
   renderVersionRoster() {
     this.renderVersionWorkforceKPIs();
     this.renderStaffingMatrix();
     this.renderPerCycleComparisonTable();
-    this.populateRosterCycleSelect();
     this.renderVersionStaffRoster();
   },
 
+  // Phân khu 4: Bảng danh bạ nhân sự toàn phiên bản
   renderVersionStaffRoster() {
     const tbody = document.getElementById('v-roster-tbody');
     if (!tbody) return;
@@ -1783,105 +1697,40 @@ const LeadVersion = {
 
     const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
     const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const filterCycleId = this.activeRosterCycleId || 'ALL';
-
-    const curCycle = filterCycleId !== 'ALL' ? cycles.find(c => c.id === filterCycleId) : null;
-    const cycleName = curCycle ? curCycle.name : 'Toàn bộ phiên bản';
-
-    // Update Heading
-    const headEl = document.getElementById('v-roster-table-heading');
-    if (headEl) headEl.textContent = `🏅 Bảng theo dõi năng suất, đóng góp chất lượng & tải trọng cá nhân — ${cycleName}`;
-
-    // Lọc assignments theo cycle hoặc lấy toàn phiên bản
-    const asgs = (state.assignments || []).filter(a => {
-      if (a.projectId !== p.id) return false;
-      if (filterCycleId !== 'ALL') return a.cycleId === filterCycleId;
-      return cycles.some(c => c.id === a.cycleId);
-    });
-
-    const allResults = state.results || {};
-    const allDefects = typeof getProjectDefects === 'function' ? getProjectDefects(p.id) : [];
 
     if (members.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:24px; color:var(--text-muted)">Chưa có nhân sự nào trong dự án.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted)">Chưa có nhân sự nào trong dự án.</td></tr>`;
       return;
     }
-
-    const totalAssignedInScope = asgs.length;
-    const avgLoad = members.length > 0 ? Math.round(totalAssignedInScope / members.length) : 0;
 
     tbody.innerHTML = members.map(m => {
       const isDev = m.projectRole === 'dev' || m.projectRole === 'developer';
       const isLead = m.projectRole === 'lead';
-      const userAsgs = asgs.filter(a => (a.assigneeUsername === m.username || a.username === m.username));
-      const totalAssigned = userAsgs.length;
-
-      // Tính kết quả thực tế
-      let userPassed = 0, userFailed = 0, userBlocked = 0;
-      userAsgs.forEach(a => {
-        const tcId = a.testCaseId || a.tcId;
-        const res = tcId ? allResults[tcId] : null;
-        if (res) {
-          const st = (res.status || '').toUpperCase();
-          if (st === 'PASS') userPassed++;
-          else if (st === 'FAIL') userFailed++;
-          else if (st === 'BLOCKED') userBlocked++;
-        }
-      });
-      const userExecuted = userPassed + userFailed + userBlocked;
-      const passPct = userExecuted > 0 ? Math.round((userPassed / userExecuted) * 100) : 0;
-
-      // Đóng góp Defect: Nếu là tester: số bug tìm thấy; nếu là dev: số bug đã sửa
-      let defectText = '';
-      if (isDev) {
-        const devFixed = allDefects.filter(d => d.assignedDev === m.username && ['Fixed', 'Closed', 'Resolved'].includes(d.defectStatus)).length;
-        const devTotal = allDefects.filter(d => d.assignedDev === m.username).length;
-        defectText = `<span style="color:#10b981; font-weight:700">Đã sửa: ${devFixed}/${devTotal} bug</span>`;
-      } else {
-        defectText = `<span style="color:#dc2626; font-weight:700">Báo cáo: ${userFailed} lỗi</span>`;
-      }
+      const initial = (m.name || m.username || 'U').trim().charAt(0).toUpperCase();
 
       // Các đợt tham gia
       const memberCycles = cycles.filter(c => {
         if (isDev) return (c.assignedDevs || c.devUsernames || []).includes(m.username);
-        return (c.assignedTesters || c.testerUsernames || []).includes(m.username) || userAsgs.some(a => a.cycleId === c.id);
+        return (c.assignedTesters || c.testerUsernames || []).includes(m.username);
       });
       const cyclesBadges = memberCycles.length > 0
-        ? memberCycles.map(c => `<span class="badge badge-info" style="font-size:9.5px; margin:1px">${escapeHtml(c.code || c.id)}</span>`).join('')
-        : '<span style="font-size:11px; color:var(--text-muted)">Chưa tham gia</span>';
-
-      // Phân hệ nghiệp vụ đảm nhận
-      const assignedModSet = new Set(userAsgs.map(a => a.assignedModule).filter(Boolean));
-      const assignedMods = assignedModSet.size > 0 ? Array.from(assignedModSet).join(', ') : '—';
-
-      // Đánh giá tải trọng
-      let loadStatus;
-      if (isDev) {
-        loadStatus = memberCycles.length > 0
-          ? `<span class="badge" style="background:#dcfce7; color:#15803d; font-size:10px; font-weight:800">💻 Trực chiến ${memberCycles.length} đợt</span>`
-          : `<span class="badge badge-outline" style="font-size:10px">⚪ Dự bị</span>`;
-      } else {
-        if (totalAssigned === 0) {
-          loadStatus = '<span class="badge" style="background:#f1f5f9; color:#64748b; font-size:10px; font-weight:800">⚪ Chưa có việc</span>';
-        } else if (avgLoad > 0 && totalAssigned > avgLoad * 1.3) {
-          loadStatus = `<span class="badge badge-fail" style="font-size:10px; font-weight:800">🔴 Quá tải</span>`;
-        } else if (avgLoad > 0 && totalAssigned < avgLoad * 0.6) {
-          loadStatus = `<span class="badge badge-info" style="font-size:10px; font-weight:800">🟡 Dưới tải</span>`;
-        } else {
-          loadStatus = `<span class="badge" style="background:#dcfce7; color:#15803d; font-size:10px; font-weight:800">🟢 Cân bằng</span>`;
-        }
-      }
+        ? memberCycles.map(c => `<span class="badge badge-info" style="font-size:10px; margin:2px">${escapeHtml(c.code || c.name || c.id)}</span>`).join('')
+        : '<span style="font-size:11.5px; color:var(--text-muted); font-style:italic">Chưa phân bổ đợt nào</span>';
 
       const roleBadge = isLead
-        ? '<span class="badge badge-primary" style="font-size:10px">Chủ trì (Lead)</span>'
-        : (isDev ? '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10px">Lập trình viên</span>' : '<span class="badge badge-info" style="font-size:10px">Kiểm thử viên</span>');
+        ? '<span class="badge badge-primary" style="font-size:10.5px; font-weight:700">Chủ trì (QA Lead)</span>'
+        : (isDev ? '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:700">Lập trình viên</span>' : '<span class="badge badge-info" style="font-size:10.5px; font-weight:700">Kiểm thử viên</span>');
+
+      let taskDesc = '🧪 Thực thi kịch bản kiểm thử (Test Execution)';
+      if (isDev) taskDesc = '💻 Trực chiến phân tích & sửa lỗi (Dev Support)';
+      else if (isLead) taskDesc = '👑 Điều phối chất lượng & quản trị phiên bản';
 
       return `
         <tr>
           <td>
             <div style="display:flex; align-items:center; gap:10px">
-              <div style="width:34px; height:34px; border-radius:50%; background:${isDev ? '#10b981' : (isLead ? '#7c3aed' : '#2563eb')}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0">
-                ${(m.name || m.username || 'T').charAt(0).toUpperCase()}
+              <div class="sqtm-member-avatar" style="width:34px; height:34px; border-radius:50%; background:${isDev ? 'linear-gradient(135deg, #059669, #047857)' : (isLead ? '#7c3aed' : 'linear-gradient(135deg, #2563eb, #1d4ed8)')}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0">
+                ${initial}
               </div>
               <div>
                 <div style="font-weight:800; font-size:13px; color:var(--text-primary)">${escapeHtml(m.name || m.username)}</div>
@@ -1890,73 +1739,24 @@ const LeadVersion = {
             </div>
           </td>
           <td style="text-align:center">${roleBadge}</td>
-          <td style="text-align:center">${cyclesBadges}</td>
-          <td style="font-size:12px; font-weight:600; color:var(--text-secondary)">${assignedMods}</td>
-          <td style="text-align:center; font-weight:800; font-size:13px; color:#2563eb">${totalAssigned} bài</td>
-          <td style="text-align:center; font-size:12px">
-            ${userExecuted}/${totalAssigned}
-            <span style="font-size:10.5px; color:var(--text-muted)">(${totalAssigned > 0 ? Math.round((userExecuted / totalAssigned) * 100) : 0}%)</span>
-          </td>
-          <td style="text-align:center; font-weight:800; color:#16a34a">${passPct}%</td>
-          <td style="text-align:center; font-size:12px">${defectText}</td>
-          <td style="text-align:center">${loadStatus}</td>
+          <td>${cyclesBadges}</td>
+          <td style="font-size:12px; color:var(--text-secondary); font-weight:600">${taskDesc}</td>
           <td style="text-align:center">
-            <div style="display:flex; gap:6px; justify-content:center">
-              ${isDev ? `
-                <a href="../dev/index.html?projectId=${encodeURIComponent(p.id)}&version=${encodeURIComponent(this.currentVersion)}" class="btn btn-outline btn-xs" title="Xem không gian Dev">
-                  💻 Cổng Dev
-                </a>
-              ` : `
-                <a href="cycle.html?projectId=${encodeURIComponent(p.id)}&version=${encodeURIComponent(this.currentVersion)}&cycleId=${encodeURIComponent(filterCycleId !== 'ALL' ? filterCycleId : (cycles[0]?.id || ''))}&tester=${encodeURIComponent(m.username)}&tab=staffing" class="btn btn-outline btn-xs" title="Xem bảng phân việc cá nhân">
-                  👉 Xem việc
-                </a>
-                <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openAssignByModuleModal('${m.username}')" title="Gán thêm phân hệ cho kỹ sư này">
-                  ➕ Phân hệ
-                </button>
-              `}
-            </div>
+            <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:700">
+              🟢 Đang hoạt động
+            </span>
+          </td>
+          <td style="text-align:center">
+            <button type="button" class="btn btn-outline btn-xs" onclick="LeadVersion.openCycleStaffingModal(LeadVersion.activeRosterCycleId || (typeof getTestCyclesForProject === 'function' ? (getTestCyclesForProject(getActiveProject()?.id, LeadVersion.currentVersion)[0]?.id) : ''))" title="Phân bổ thành viên này vào đợt test">
+              👥 Phân bổ
+            </button>
           </td>
         </tr>
       `;
     }).join('');
   },
 
-  // Công cụ 5: Cân bằng tải phiên bản tự động
-  autoBalanceVersionStaffing() {
-    const p = getActiveProject();
-    if (!p) return;
-
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const allTesters = this.getProjectTestersList();
-    const assignments = (state.assignments || []).filter(a => a.projectId === p.id && cycles.some(c => c.id === a.cycleId));
-
-    if (allTesters.length <= 1) {
-      showToast('ℹ️ Phiên bản chỉ có 1 kiểm thử viên, tải trọng đã tối ưu.', 'info');
-      return;
-    }
-
-    const loads = allTesters.map(u => ({
-      username: u.username,
-      name: u.name || u.username,
-      count: assignments.filter(a => (a.assigneeUsername === u.username || a.username === u.username)).length
-    }));
-
-    const total = assignments.length;
-    const avg = Math.round(total / allTesters.length);
-    const max = Math.max(...loads.map(l => l.count));
-    const min = Math.min(...loads.map(l => l.count));
-
-    if (max - min <= 5) {
-      showToast('✅ Tải trọng kịch bản giữa các kỹ sư trong phiên bản hiện tại rất cân bằng!', 'success');
-      return;
-    }
-
-    if (confirm(`Hệ thống phát hiện chênh lệch tải trọng (${max} bài so với ${min} bài, trung bình ~${avg} bài/người). Bạn có muốn tự động san sẻ bớt kịch bản giữa các kỹ sư không?`)) {
-      this.autoDistributeEvenly();
-    }
-  },
-
-  // Công cụ 6: Xuất báo cáo nhân lực toàn phiên bản ra Excel
+  // Xuất báo cáo nhân lực toàn phiên bản ra Excel
   exportVersionStaffingExcel() {
     const p = getActiveProject();
     if (!p || typeof XLSX === 'undefined') {
@@ -1966,34 +1766,29 @@ const LeadVersion = {
 
     const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
     const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
-    const assignments = (state.assignments || []).filter(a => a.projectId === p.id && cycles.some(c => c.id === a.cycleId));
 
-    // Sheet 1: Tổng hợp nhân sự
+    // Sheet 1: Danh sách nhân sự & Đợt tham gia
     const staffRows = members.map(m => {
-      const userAsgs = assignments.filter(a => (a.assigneeUsername === m.username || a.username === m.username));
+      const assignedCycles = cycles.filter(c => (c.assignedTesters || []).includes(m.username) || (c.assignedDevs || []).includes(m.username));
       return {
         'Họ và tên': m.name || m.username,
-        'Username': m.username,
+        'Tài khoản (@username)': m.username,
         'Vai trò dự án': m.projectRole || 'tester',
-        'Tổng số bài được giao': userAsgs.length,
-        'Các đợt tham gia': cycles.filter(c => (c.assignedTesters || []).includes(m.username) || (c.assignedDevs || []).includes(m.username)).map(c => c.name || c.id).join(', ')
+        'Số đợt tham gia': assignedCycles.length,
+        'Các đợt tham gia': assignedCycles.map(c => c.name || c.id).join(', ')
       };
     });
 
-    // Sheet 2: Danh sách các đợt test
+    // Sheet 2: Danh sách các đợt test & nhân sự bố trí
     const cycleRows = cycles.map(c => {
-      const cMetrics = typeof getCycleMetrics === 'function' ? getCycleMetrics(c.id) : { totalTcs: 0, assignedCount: 0, passCount: 0 };
       return {
         'Mã đợt': c.code || c.id,
         'Tên đợt test': c.name || c.id,
         'Loại đợt': c.suite || 'REGRESSION',
         'Trạng thái': c.status || 'PLANNED',
-        'Thời gian': `${c.startDate || ''} đến ${c.endDate || ''}`,
-        'Số Tester': (c.assignedTesters || []).length,
-        'Số Dev trực chiến': (c.assignedDevs || []).length,
-        'Phạm vi kịch bản': cMetrics.totalTcs,
-        'Đã giao việc': cMetrics.assignedCount,
-        'Đã đạt': cMetrics.passCount
+        'Thời hạn': `${c.startDate || ''} đến ${c.endDate || ''}`,
+        'Kiểm thử viên tham gia': (c.assignedTesters || []).join(', '),
+        'Lập trình viên trực chiến': (c.assignedDevs || []).join(', ')
       };
     });
 
@@ -2004,305 +1799,8 @@ const LeadVersion = {
     XLSX.utils.book_append_sheet(wb, wsStaff, 'Nhan_Su_Phien_Ban');
     XLSX.utils.book_append_sheet(wb, wsCycles, 'Cac_Dot_Kiem_Thu');
 
-    XLSX.writeFile(wb, `${p.code || 'PRJ'}_${this.currentVersion}_Bao_Cao_Nhan_Luc.xlsx`);
-    showToast('📥 Đã xuất báo cáo nhân lực phiên bản ra file Excel thành công!', 'success');
-  },
-
-  // 4 Smart Dispatch Tools Implementation:
-  // Tool 1: Assign Tester to Cycle
-  openAssignTesterToCycleModal() {
-    const p = getActiveProject();
-    if (!p) return;
-
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const curCycle = cycles.find(c => c.id === this.activeRosterCycleId) || cycles[0];
-
-    const cycleDisplay = document.getElementById('mact-cycle-display');
-    const cycleIdInput = document.getElementById('mact-cycle-id');
-    if (cycleDisplay && curCycle) cycleDisplay.textContent = `${curCycle.name} (${curCycle.code || curCycle.id})`;
-    if (cycleIdInput && curCycle) cycleIdInput.value = curCycle.id;
-
-    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
-    const testerSelect = document.getElementById('mact-tester-select');
-    if (testerSelect) {
-      testerSelect.innerHTML = members.map(m => `
-        <option value="${m.username}">${escapeHtml(m.name || m.username)} (@${m.username})</option>
-      `).join('');
-    }
-
-    const modSelect = document.getElementById('mact-module-select');
-    if (modSelect) {
-      // Đọc module từ dữ liệu dự án thực — không hardcode
-      const vTcsForMod = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : [];
-      const modMapForSelect = new Map();
-      vTcsForMod.forEach(tc => {
-        const mId = tc.moduleId || tc.module || '';
-        const mName = tc.moduleName || tc.module || mId;
-        if (mId && !modMapForSelect.has(mId)) modMapForSelect.set(mId, mName);
-      });
-      // Fallback sang p.modules nếu test cases chưa có module
-      if (modMapForSelect.size === 0 && Array.isArray(p.modules)) {
-        p.modules.forEach(m => {
-          const mId = m.id || m;
-          const mName = m.name || mId;
-          if (mId) modMapForSelect.set(mId, mName);
-        });
-      }
-      const modOptions = modMapForSelect.size > 0
-        ? Array.from(modMapForSelect.entries()).map(([id, name]) =>
-            `<option value="${escapeHtml(id)}">${escapeHtml(id)}: ${escapeHtml(name)}</option>`
-          ).join('')
-        : '<option value="ALL">— Chưa có phân hệ nào —</option>';
-      modSelect.innerHTML = `<option value="ALL">📦 Toàn bộ phân hệ</option>${modOptions}`;
-    }
-
-    openModal('modal-assign-cycle-tester');
-  },
-
-  confirmAssignTesterToCycle() {
-    const cycleId = document.getElementById('mact-cycle-id')?.value;
-    const tester = document.getElementById('mact-tester-select')?.value;
-    const role = document.getElementById('mact-role-select')?.value || 'Senior Tester';
-    const mod = document.getElementById('mact-module-select')?.value || 'ALL';
-    const quota = parseInt(document.getElementById('mact-quota')?.value || '25', 10);
-
-    const p = getActiveProject();
-    if (!p || !tester) return;
-
-    // Lấy kịch bản thuộc phân hệ chỉ định
-    const allTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : [];
-    let candidates = allTcs;
-    if (mod !== 'ALL') {
-      candidates = candidates.filter(t => (t.moduleId || t.module) === mod);
-    }
-
-    if (!state.assignments) state.assignments = [];
-    const assignedIds = new Set(state.assignments.filter(a => a.cycleId === cycleId).map(a => a.testCaseId));
-    const available = candidates.filter(t => !assignedIds.has(t.id));
-
-    const toAssign = available.slice(0, quota);
-    toAssign.forEach(t => {
-      state.assignments.push({
-        id: `ASG-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        projectId: p.id,
-        version: this.currentVersion,
-        cycleId: cycleId || 'ROUND-1',
-        testCaseId: t.id,
-        assigneeUsername: tester,
-        username: tester,
-        roleInCycle: role,
-        status: 'ASSIGNED',
-        assignedDate: new Date().toISOString()
-      });
-    });
-
-    saveCoreState();
-    closeModal('modal-assign-cycle-tester');
-    showToast(`✅ Đã chỉ định @${tester} vào đợt kiểm thử với vai trò [${role}] và giao ${toAssign.length} kịch bản!`, 'success');
-    this.renderVersionRoster();
-  },
-
-  // Tool 2: Auto distribute evenly
-  autoDistributeEvenly() {
-    const p = getActiveProject();
-    if (!p) return;
-
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const curCycle = cycles.find(c => c.id === this.activeRosterCycleId) || cycles[0];
-    if (!curCycle) return;
-
-    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
-    if (members.length === 0) {
-      showToast('⚠️ Dự án chưa có kỹ sư kiểm thử nào!', 'error');
-      return;
-    }
-
-    const allTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : [];
-    let scopeTcs = allTcs;
-    if (Array.isArray(curCycle.scopeTcIds) && curCycle.scopeTcIds.length > 0) {
-      scopeTcs = allTcs.filter(t => curCycle.scopeTcIds.includes(t.id));
-    }
-
-    if (!state.assignments) state.assignments = [];
-    const alreadyAssigned = new Set(state.assignments.filter(a => a.cycleId === curCycle.id).map(a => a.testCaseId));
-    const unassigned = scopeTcs.filter(t => !alreadyAssigned.has(t.id));
-
-    if (unassigned.length === 0) {
-      showToast('ℹ️ Toàn bộ kịch bản trong đợt kiểm thử này đã được phân công đầy đủ!', 'info');
-      return;
-    }
-
-    unassigned.forEach((t, i) => {
-      const targetMember = members[i % members.length];
-      state.assignments.push({
-        id: `ASG-${Date.now()}-${i}`,
-        projectId: p.id,
-        version: this.currentVersion,
-        cycleId: curCycle.id,
-        testCaseId: t.id,
-        assigneeUsername: targetMember.username,
-        username: targetMember.username,
-        status: 'ASSIGNED',
-        assignedDate: new Date().toISOString()
-      });
-    });
-
-    saveCoreState();
-    showToast(`⚡ Đã tự động chia đều ${unassigned.length} kịch bản cho ${members.length} kỹ sư trong đợt!`, 'success');
-    this.renderVersionRoster();
-  },
-
-  // Tool 3: Assign by Module
-  openAssignByModuleModal(targetUsername) {
-    const p = getActiveProject();
-    if (!p) return;
-
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const curCycle = cycles.find(c => c.id === this.activeRosterCycleId) || cycles[0];
-
-    const cycleDisp = document.getElementById('mabm-cycle-display');
-    const cycleIdInput = document.getElementById('mabm-cycle-id');
-    if (cycleDisp && curCycle) cycleDisp.textContent = `${curCycle.name} (${curCycle.code || curCycle.id})`;
-    if (cycleIdInput && curCycle) cycleIdInput.value = curCycle.id;
-
-    const modSelect = document.getElementById('mabm-module-select');
-    if (modSelect) {
-      // Đọc module từ dữ liệu dự án thực — không hardcode
-      const vTcsForMod = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : [];
-      const modMapForSelect = new Map();
-      vTcsForMod.forEach(tc => {
-        const mId = tc.moduleId || tc.module || '';
-        const mName = tc.moduleName || tc.module || mId;
-        if (mId && !modMapForSelect.has(mId)) modMapForSelect.set(mId, mName);
-      });
-      if (modMapForSelect.size === 0 && Array.isArray(p.modules)) {
-        p.modules.forEach(m => {
-          const mId = m.id || m;
-          const mName = m.name || mId;
-          if (mId) modMapForSelect.set(mId, mName);
-        });
-      }
-      const modOptions = modMapForSelect.size > 0
-        ? Array.from(modMapForSelect.entries()).map(([id, name]) =>
-            `<option value="${escapeHtml(id)}">${escapeHtml(id)}: ${escapeHtml(name)}</option>`
-          ).join('')
-        : '<option value="">— Chưa có phân hệ nào —</option>';
-      modSelect.innerHTML = modOptions;
-    }
-
-    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
-    const testerSelect = document.getElementById('mabm-tester-select');
-    if (testerSelect) {
-      testerSelect.innerHTML = members.map(m => `
-        <option value="${m.username}" ${m.username === targetUsername ? 'selected' : ''}>
-          ${escapeHtml(m.name || m.username)} (@${m.username})
-        </option>
-      `).join('');
-    }
-
-    this.onModuleAssignSelectChange();
-    openModal('modal-assign-by-module');
-  },
-
-  onModuleAssignSelectChange() {
-    const modId = document.getElementById('mabm-module-select')?.value;
-    const info = document.getElementById('mabm-module-info');
-    if (!info || !modId) return;
-
-    const p = getActiveProject();
-    const vTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p?.id, this.currentVersion) : [];
-    const count = vTcs.filter(t => (t.moduleId || t.module) === modId).length;
-    info.textContent = `Phân hệ [${modId}] có ${count} kịch bản kiểm thử sẵn sàng được phân công.`;
-  },
-
-  confirmAssignByModule() {
-    const cycleId = document.getElementById('mabm-cycle-id')?.value;
-    const modId = document.getElementById('mabm-module-select')?.value;
-    const tester = document.getElementById('mabm-tester-select')?.value;
-
-    const p = getActiveProject();
-    if (!p || !modId || !tester) return;
-
-    const allTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : [];
-    const modTcs = allTcs.filter(t => (t.moduleId || t.module) === modId);
-
-    if (!state.assignments) state.assignments = [];
-
-    modTcs.forEach(t => {
-      // Reassign to target tester
-      state.assignments = state.assignments.filter(a => !(a.cycleId === cycleId && a.testCaseId === t.id));
-      state.assignments.push({
-        id: `ASG-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        projectId: p.id,
-        version: this.currentVersion,
-        cycleId: cycleId || 'ROUND-1',
-        testCaseId: t.id,
-        assigneeUsername: tester,
-        username: tester,
-        assignedModule: modId,
-        status: 'ASSIGNED',
-        assignedDate: new Date().toISOString()
-      });
-    });
-
-    saveCoreState();
-    closeModal('modal-assign-by-module');
-    showToast(`🎯 Đã phân công toàn bộ ${modTcs.length} kịch bản của phân hệ [${modId}] cho kỹ sư @${tester}!`, 'success');
-    this.renderVersionRoster();
-  },
-
-  // Tool 4: Gather failed test cases for retest
-  assignFailedForRetest() {
-    const p = getActiveProject();
-    if (!p) return;
-
-    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
-    const curCycle = cycles.find(c => c.id === this.activeRosterCycleId) || cycles[0];
-    if (!curCycle) return;
-
-    const allTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p.id, this.currentVersion) : [];
-    const results = state.results || {};
-
-    const failedTcs = allTcs.filter(t => {
-      const res = results[t.id];
-      return res && (res.status || '').toUpperCase().includes('FAIL');
-    });
-
-    if (failedTcs.length === 0) {
-      showToast('ℹ️ Phiên bản không có kịch bản nào bị lỗi cần kiểm thử lại!', 'info');
-      return;
-    }
-
-    // Đảm bảo các bài này có trong scope của cycle
-    if (!Array.isArray(curCycle.scopeTcIds)) curCycle.scopeTcIds = [];
-    failedTcs.forEach(t => {
-      if (!curCycle.scopeTcIds.includes(t.id)) curCycle.scopeTcIds.push(t.id);
-    });
-
-    // Giao cho các tester
-    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
-    if (!state.assignments) state.assignments = [];
-
-    failedTcs.forEach((t, i) => {
-      const assignedTester = members.length > 0 ? members[i % members.length].username : 'tester1';
-      state.assignments = state.assignments.filter(a => !(a.cycleId === curCycle.id && a.testCaseId === t.id));
-      state.assignments.push({
-        id: `ASG-RETEST-${Date.now()}-${i}`,
-        projectId: p.id,
-        version: this.currentVersion,
-        cycleId: curCycle.id,
-        testCaseId: t.id,
-        assigneeUsername: assignedTester,
-        username: assignedTester,
-        taskType: 'RETEST',
-        status: 'ASSIGNED',
-        assignedDate: new Date().toISOString()
-      });
-    });
-
-    saveCoreState();
-    showToast(`⚠️ Đã gom ${failedTcs.length} kịch bản từng không đạt và phân công kiểm thử lại trong đợt [${curCycle.name}]!`, 'success');
-    this.renderVersionRoster();
+    XLSX.writeFile(wb, `${p.code || 'PRJ'}_${this.currentVersion}_Phan_Bo_Nhan_Su.xlsx`);
+    showToast('📥 Đã xuất danh sách nhân sự phiên bản ra file Excel thành công!', 'success');
   },
 
 
