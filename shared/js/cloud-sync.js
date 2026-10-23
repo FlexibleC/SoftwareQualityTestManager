@@ -1085,174 +1085,19 @@
     }
   }
 
-  // Tự động gắn Cloud Widget vào thanh Topbar của trang hiện tại
+  // Đã gỡ bỏ hoàn toàn nút Cloud Widget thủ công trên Topbar để giao diện sạch sẽ chuẩn Enterprise
   function injectCloudWidgetToTopbar() {
-    if (document.getElementById('cloud-sync-widget')) return;
-
-    const topbarRight = document.querySelector('.vms-topbar-right') || 
-                        document.querySelector('.lead-topbar > div:last-child') ||
-                        document.querySelector('.header-right') || 
-                        document.querySelector('.login-topbar');
-    if (!topbarRight) return;
-
-    const widget = document.createElement('div');
-    widget.id = 'cloud-sync-widget';
-    widget.title = 'Bấm để quản lý đồng bộ Supabase Cloud & Mạng';
-    widget.style.cssText = 'display:inline-flex; align-items:center; gap:6px; background:var(--bg-card, #ffffff); padding:3px 10px; border-radius:20px; border:1px solid var(--border, #cbd5e1); font-size:11.5px; font-weight:700; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.06); transition:all 0.2s; margin-right:4px;';
-    widget.innerHTML = `
-      <span id="cloud-status-dot" style="width:8px; height:8px; border-radius:50%; background:#f59e0b; box-shadow:0 0 6px #f59e0b; transition:all 0.3s"></span>
-      <span id="cloud-status-text" style="color:var(--text-primary, #0f172a)">Cloud: Đang nối...</span>
-      <button type="button" id="btn-cloud-quick-sync" title="Đồng bộ 2 chiều tức thì" style="border:none; background:none; cursor:pointer; font-size:12px; padding:0 2px; color:var(--primary, #2563eb)">🔄</button>
-    `;
-
-    widget.addEventListener('click', (e) => {
-      if (e.target.id === 'btn-cloud-quick-sync') {
-        e.stopPropagation();
-        pullCloudResults({ silent: false });
-      } else {
-        openCloudManagerModal();
-      }
-    });
-
-    // Chèn vào vị trí đầu tiên của topbar-right
-    topbarRight.insertBefore(widget, topbarRight.firstChild);
-
-    // Gắn modal vào body nếu chưa có
-    injectCloudManagerModal();
+    const existing = document.getElementById('cloud-sync-widget');
+    if (existing) existing.remove();
+    const existingModal = document.getElementById('modal-cloud-manager');
+    if (existingModal) existingModal.remove();
   }
-
-  // Modal Trung Tâm Quản Lý Cloud & Mạng
-  function injectCloudManagerModal() {
-    if (document.getElementById('modal-cloud-manager')) return;
-
-    const modal = document.createElement('div');
-    modal.id = 'modal-cloud-manager';
-    modal.className = 'modal-overlay';
-    modal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center; padding:16px;';
-    modal.innerHTML = `
-      <div class="modal-dialog" style="background:var(--bg-card, #fff); border-radius:12px; max-width:620px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.25); overflow:hidden; border:1px solid var(--border, #e2e8f0); animation:fadeIn 0.2s">
-        <div style="background:linear-gradient(135deg, #1e3a8a, #2563eb); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center">
-          <div style="display:flex; align-items:center; gap:10px">
-            <span style="font-size:22px">⚡</span>
-            <div>
-              <h3 style="margin:0; font-size:16px; font-weight:800">Trung Tâm Đồng Bộ Đám Mây & Mạng (Cloud & Realtime)</h3>
-              <div style="font-size:11.5px; opacity:0.9">Đồng bộ kết quả test đa máy, realtime multi-tester theo ISO/IEC/IEEE 29119-3</div>
-            </div>
-          </div>
-          <button type="button" onclick="window.closeCloudManagerModal()" style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer">&times;</button>
-        </div>
-
-        <div style="padding:20px; max-height:75vh; overflow-y:auto; font-size:13px; color:var(--text-primary, #1e293b)">
-          
-          <!-- Hộp trạng thái hiện tại -->
-          <div style="background:var(--bg-surface, #f8fafc); border:1.5px solid var(--border, #e2e8f0); border-radius:8px; padding:12px 16px; margin-bottom:16px">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
-              <span style="font-weight:700">Trạng thái kết nối Cloud:</span>
-              <span id="modal-cloud-pill" class="badge" style="background:#dcfce7; color:#15803d; font-weight:800; padding:3px 10px; border-radius:12px">🟢 Đang hoạt động Realtime</span>
-            </div>
-            <div style="font-size:12px; color:var(--text-muted, #64748b); line-height:1.6">
-              <div>• <strong>Cơ sở dữ liệu:</strong> Supabase PostgreSQL (Singapore Region - Siêu tốc)</div>
-              <div>• <strong>Dữ liệu trên Cloud:</strong> <span id="modal-cloud-count" style="font-weight:700; color:var(--primary, #2563eb)">Đang đọc...</span> kết quả kiểm thử</div>
-              <div>• <strong>Cơ chế đồng bộ:</strong> Tự động đẩy kết quả khi Tester chấm Pass/Fail, tự động kéo và nhận thông báo Realtime không cần F5.</div>
-            </div>
-          </div>
-
-          <!-- Nút hành động đồng bộ -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px">
-            <button type="button" class="btn btn-primary" onclick="window.triggerCloudPullManual()" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px">
-              <span>⬇️</span>
-              <span><strong>Kéo dữ liệu từ Cloud (Pull)</strong><br><small style="font-size:10.5px; opacity:0.85">Nạp toàn bộ kết quả của nhóm về máy</small></span>
-            </button>
-            <button type="button" class="btn btn-outline" onclick="window.triggerCloudPushManual()" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px">
-              <span>⬆️</span>
-              <span><strong>Đẩy kết quả lên Cloud (Push)</strong><br><small style="font-size:10.5px; opacity:0.85">Đồng bộ tất cả bài test lên máy chủ</small></span>
-            </button>
-          </div>
-
-          <!-- Kênh truy cập Mạng -->
-          <div style="border-top:1px solid var(--border, #e2e8f0); padding-top:14px; margin-bottom:14px">
-            <h4 style="margin:0 0 10px 0; font-size:13.5px; font-weight:800; color:var(--text-primary, #0f172a)">🌐 Các Kênh Truy Cập Trên Môi Trường Mạng</h4>
-            
-            <!-- Kênh 1: Internet Vercel -->
-            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center">
-              <div>
-                <strong style="color:#166534">🌍 Online Internet (Vercel HTTPS):</strong>
-                <div style="font-size:12px; font-family:monospace; color:#15803d; margin-top:2px">https://softwarequalitytestmanager.vercel.app</div>
-              </div>
-              <a href="https://softwarequalitytestmanager.vercel.app" target="_blank" class="btn btn-xs btn-primary" style="text-decoration:none">Mở Link ↗</a>
-            </div>
-
-            <!-- Kênh 2: Mạng LAN -->
-            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center">
-              <div>
-                <strong style="color:#1e40af">🏢 Mạng Nội Bộ (LAN Intranet Server):</strong>
-                <div style="font-size:12px; font-family:monospace; color:#1d4ed8; margin-top:2px">http://192.168.1.58:8080 (hoặc qua Start-LAN-Server.bat)</div>
-              </div>
-              <button type="button" class="btn btn-xs btn-outline" onclick="navigator.clipboard.writeText('http://192.168.1.58:8080'); window.showToast('📋 Đã chép link mạng LAN vào Clipboard!', 'info');">Chép Link</button>
-            </div>
-          </div>
-
-          <!-- Chi tiết cấu hình Supabase (Collapsible) -->
-          <details style="margin-top:12px; border:1px solid var(--border, #e2e8f0); border-radius:6px; padding:8px 12px; background:var(--bg-surface, #f8fafc)">
-            <summary style="font-weight:700; cursor:pointer; font-size:12px; color:var(--text-muted, #64748b)">⚙️ Tùy biến Endpoint Supabase (Nâng cao)</summary>
-            <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px">
-              <div>
-                <label style="font-size:11px; font-weight:700">Project URL:</label>
-                <input type="text" id="modal-cfg-sb-url" style="width:100%; padding:6px 10px; font-size:12px; border-radius:4px; border:1px solid #cbd5e1" value="${cloudState.config.url}" />
-              </div>
-              <div>
-                <label style="font-size:11px; font-weight:700">Anon Public Key:</label>
-                <input type="password" id="modal-cfg-sb-key" style="width:100%; padding:6px 10px; font-size:12px; border-radius:4px; border:1px solid #cbd5e1" value="${cloudState.config.anonKey}" />
-              </div>
-              <div style="text-align:right; margin-top:4px">
-                <button type="button" class="btn btn-xs btn-primary" onclick="window.saveCustomSupabaseConfig()">💾 Lưu & Kết nối lại</button>
-              </div>
-            </div>
-          </details>
-
-        </div>
-
-        <div style="background:var(--bg-surface, #f8fafc); border-top:1px solid var(--border, #e2e8f0); padding:12px 20px; display:flex; justify-content:space-between; align-items:center">
-          <span style="font-size:11.5px; color:var(--text-muted, #64748b)">💡 Dữ liệu luôn được lưu đồng thời trên Cloud & Trình duyệt.</span>
-          <button type="button" class="btn btn-outline btn-sm" onclick="window.closeCloudManagerModal()">Đóng</button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-  }
-
-  function openCloudManagerModal() {
-    const modal = document.getElementById('modal-cloud-manager');
-    if (!modal) {
-      injectCloudManagerModal();
-    }
-    const m = document.getElementById('modal-cloud-manager');
-    if (m) {
-      m.style.display = 'flex';
-      const pill = document.getElementById('modal-cloud-pill');
-      const countEl = document.getElementById('modal-cloud-count');
-      if (pill) {
-        if (cloudState.status === 'connected') {
-          pill.className = 'badge badge-pass';
-          pill.textContent = '🟢 Đã kết nối Realtime';
-        } else if (cloudState.status === 'connecting') {
-          pill.className = 'badge badge-skip';
-          pill.textContent = '🟡 Đang kết nối...';
-        } else {
-          pill.className = 'badge badge-fail';
-          pill.textContent = '🔴 Lỗi / Ngoại tuyến';
-        }
-      }
-      if (countEl) {
-        countEl.textContent = cloudState.cloudRecordCount || Object.keys(window.state?.results || {}).length;
-      }
-    }
-  }
-
+  // Đã gỡ bỏ hoàn toàn Cloud Manager Modal (hệ thống đồng bộ tự động 100% ngầm)
+  function injectCloudManagerModal() {}
+  function openCloudManagerModal() {}
   function closeCloudManagerModal() {
     const m = document.getElementById('modal-cloud-manager');
-    if (m) m.style.display = 'none';
+    if (m) m.remove();
   }
 
   // Refresh UI tất cả các trang khi có dữ liệu mới đồng bộ
