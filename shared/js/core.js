@@ -603,7 +603,7 @@ if (typeof window !== 'undefined') {
  */
 function syncProjectsToLanServer(projects) {
   if (!isLanServerAvailable()) return;
-  if (!projects || !Array.isArray(projects) || projects.length === 0) return;
+  if (!projects || !Array.isArray(projects)) return;
   try {
     const token = getAuthToken();
     const headers = { 'Content-Type': 'application/json' };
@@ -730,6 +730,31 @@ function fetchProjectsFromLanServer() {
       .then(data => {
         if (!data) return;
         const serverProjects = Array.isArray(data) ? data : (data.projects || []);
+
+        // Nếu nguồn dữ liệu là Database (Single Source of Truth), đồng bộ trực tiếp danh sách (kể cả khi rỗng [])
+        if (data.source === 'database') {
+          state.projects = serverProjects;
+          if (!state.projects.some(p => p.id === state.activeProjectId)) {
+            state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
+          }
+          ensureDefaultTestCyclesForProjects();
+          saveCoreState();
+          try {
+            localStorage.setItem(SQTM_PROJECTS_STORAGE_KEY, JSON.stringify(state.projects));
+          } catch (e) {}
+
+          if (typeof renderProjectsTab === 'function') {
+            try { renderProjectsTab(); } catch(e){}
+          }
+          if (typeof AdminPortfolio !== 'undefined' && typeof AdminPortfolio.init === 'function') {
+            try { AdminPortfolio.init(); } catch(e){}
+          }
+          if (typeof LeadPortfolio !== 'undefined' && typeof LeadPortfolio.init === 'function') {
+            try { LeadPortfolio.init(); } catch(e){}
+          }
+          return;
+        }
+
         if (serverProjects.length > 0) {
           let hasChange = false;
           if (!state.projects || state.projects.length === 0) {
@@ -2551,9 +2576,33 @@ function deleteProject(projId) {
     state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
   }
   saveCoreState();
-  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
-    window.pushProjectsToCloud(state.projects);
+
+  // 1. Gọi Backend API DELETE để xóa vĩnh viễn khỏi Database và bộ nhớ đệm máy chủ
+  if (typeof window !== 'undefined' && isLanServerAvailable()) {
+    try {
+      const token = getAuthToken();
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (state.currentUser) {
+        headers['X-User-Info'] = encodeURIComponent(JSON.stringify(state.currentUser));
+      }
+      fetch(`/api/projects?id=${encodeURIComponent(projId)}`, {
+        method: 'DELETE',
+        headers
+      }).catch(err => console.warn('Lỗi gọi API xóa dự án:', err));
+    } catch (e) {}
   }
+
+  // 2. Đồng bộ danh sách mới lên Cloud (force = true để lưu kể cả khi danh sách rỗng 0 dự án)
+  if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+    window.pushProjectsToCloud(state.projects, true);
+  }
+
+  // 3. Xóa qua client Supabase trực tiếp nếu có
+  if (window.supabaseClient) {
+    window.supabaseClient.from('projects').delete().eq('id', projId).catch(() => {});
+  }
+
   return deleted;
 }
 

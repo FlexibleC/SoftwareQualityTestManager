@@ -46,8 +46,8 @@ module.exports = async (req, res) => {
   if (method === 'GET') {
     try {
       const dbProjects = await supabaseAdmin.query('projects', '?select=*&order=created_at.desc');
-      if (Array.isArray(dbProjects) && dbProjects.length > 0) {
-        // Đồng bộ cache đĩa cục bộ
+      if (Array.isArray(dbProjects)) {
+        // Đồng bộ cache đĩa cục bộ (kể cả khi mảng rỗng [] do đã xóa hết dự án)
         saveLocalProjectsFallback(dbProjects);
         return sendJson(res, 200, {
           success: true,
@@ -60,7 +60,7 @@ module.exports = async (req, res) => {
       console.warn('Lỗi đọc dự án từ Database, dùng fallback đĩa:', err.message);
     }
 
-    // Fallback nếu database trống hoặc offline
+    // Fallback chỉ khi Database bị ngắt kết nối
     const fallbackProjects = getLocalProjectsFallback();
     return sendJson(res, 200, {
       success: true,
@@ -77,10 +77,20 @@ module.exports = async (req, res) => {
 
     try {
       const body = await parseBody(req);
-      const incomingList = Array.isArray(body) ? body : (body.projects ? body.projects : [body]);
+      const incomingList = Array.isArray(body) ? body : (body.projects !== undefined ? body.projects : [body]);
 
-      if (!incomingList || incomingList.length === 0) {
+      if (!Array.isArray(incomingList)) {
         return sendJson(res, 400, { error: 'Dữ liệu dự án không hợp lệ.' });
+      }
+
+      if (incomingList.length === 0) {
+        saveLocalProjectsFallback([]);
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Đã cập nhật danh mục dự án (0 dự án).',
+          count: 0,
+          projects: []
+        });
       }
 
       // Chuẩn hóa định dạng trước khi lưu vào PostgreSQL
@@ -100,7 +110,7 @@ module.exports = async (req, res) => {
       let dbSaved = false;
       try {
         // Upsert qua PostgREST với Prefer: resolution=merge-duplicates
-        const result = await supabaseAdmin.insert('projects', formattedProjects);
+        await supabaseAdmin.upsert('projects', formattedProjects, 'id');
         dbSaved = true;
       } catch (dbErr) {
         console.warn('Không thể upsert dự án vào Supabase, lưu fallback đĩa:', dbErr.message);
@@ -122,9 +132,9 @@ module.exports = async (req, res) => {
     }
   }
 
-  // 3. DELETE: Xóa dự án (Chỉ Admin)
+  // 3. DELETE: Xóa dự án (Chỉ Admin hoặc Lead)
   if (method === 'DELETE') {
-    const user = authenticateRequest(req, res, ['admin']);
+    const user = authenticateRequest(req, res, ['admin', 'project_lead', 'lead']);
     if (!user) return;
 
     try {
@@ -138,7 +148,21 @@ module.exports = async (req, res) => {
       try {
         await supabaseAdmin.remove('projects', `?id=eq.${encodeURIComponent(projectId)}`);
       } catch (dbErr) {
-        console.warn('Lỗi xóa dự án trên Supabase:', dbErr.message);
+        console.warn('Lỗi xóa dự án trên Supabase bảng projects:', dbErr.message);
+      }
+
+      try {
+        const sessionRows = await supabaseAdmin.query('test_sessions', '?id=eq.system_projects');
+        if (Array.isArray(sessionRows) && sessionRows.length > 0 && sessionRows[0].notes) {
+          const prjs = JSON.parse(sessionRows[0].notes);
+          const filtered = prjs.filter(p => p.id !== projectId);
+          await supabaseAdmin.update('test_sessions', '?id=eq.system_projects', {
+            notes: JSON.stringify(filtered),
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (sessErr) {
+        console.warn('Lỗi cập nhật test_sessions khi xóa dự án:', sessErr.message);
       }
 
       // Cập nhật lại đĩa

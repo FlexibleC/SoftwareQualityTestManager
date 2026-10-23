@@ -1,18 +1,5 @@
 {
-  "updatedAt": "2026-10-23T13:12:37.935Z",
-  "totalProjects": 1,
-  "projects": [
-    {
-      "id": "PRJ_DEMO_01",
-      "code": "SQTM",
-      "name": "Phần mềm Quản lý Kiểm thử SQTM Enterprise",
-      "description": "Dự án mẫu khởi tạo kiểm thử chất lượng",
-      "active_version": "v1.0",
-      "versions": [],
-      "modules": [],
-      "test_cycles": [],
-      "status": "ACTIVE",
-      "updated_at": "2026-10-23T13:12:37.076Z"
-    }
-  ]
+  "updatedAt": "2026-10-23T13:50:00.000Z",
+  "totalProjects": 0,
+  "projects": []
 }

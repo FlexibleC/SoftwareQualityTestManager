@@ -454,6 +454,8 @@
         if (!window.state.activeProjectId || !window.state.projects.some(p => p.id === window.state.activeProjectId)) {
           window.state.activeProjectId = window.state.projects[0].id;
         }
+      } else {
+        window.state.activeProjectId = null;
       }
 
       // 2. Phục hồi test cycles từ Cloud

@@ -67,6 +67,27 @@ async function insert(table, data) {
 }
 
 /**
+ * Thêm mới hoặc cập nhật bản ghi (Upsert)
+ */
+async function upsert(table, data, onConflict = 'id') {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`;
+  const headers = getHeaders();
+  headers['Prefer'] = 'resolution=merge-duplicates,return=representation';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Supabase Upsert Error [${res.status}]: ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+/**
  * Cập nhật bản ghi theo điều kiện query
  */
 async function update(table, queryString, data) {
@@ -107,6 +128,7 @@ module.exports = {
   SUPABASE_URL,
   query,
   insert,
+  upsert,
   update,
   remove
 };
