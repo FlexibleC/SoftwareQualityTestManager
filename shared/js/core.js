@@ -425,7 +425,7 @@ function ensureDefaultTestCyclesForProjects() {
 /**
  * Lưu trạng thái bền vững (LocalStorage + SessionStorage + LAN Server + Cloud)
  */
-function saveCoreState() {
+function saveCoreState(opts = {}) {
   try {
     // Đồng bộ hai chiều giữa p.testCycles và state.testCycles trước khi lưu
     if (!state.testCycles) state.testCycles = [];
@@ -488,7 +488,6 @@ function saveCoreState() {
     }
 
     // 5. Lưu trạng thái công việc và kết quả
-    // 5. Lưu trạng thái công việc và kết quả
     const appPayload = {
       assignments: state.assignments || [],
       results: state.results || {},
@@ -517,7 +516,18 @@ function saveCoreState() {
 
     // 6. Gom luồng đồng bộ ngầm (Debounced Asynchronous Background Sync - 600ms)
     // Giúp giao diện phản hồi tức thì 0ms, gom bão request dồn dập thành 1 batch duy nhất
-    scheduleBackgroundSync(600);
+    if (!opts.skipSync) {
+      scheduleBackgroundSync(600);
+    }
+
+    // 7. Phát sóng tức thì cho các tab khác cùng trình duyệt (Local-First Intra-Browser Sync - 1ms)
+    if (!opts.skipBroadcast && typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('sqtm_local_sync');
+        bc.postMessage({ type: 'CORE_STATE_SAVED', timestamp: Date.now() });
+        bc.close();
+      } catch (e) {}
+    }
   } catch (e) {
     console.warn('Lỗi saveCoreState:', e);
   }

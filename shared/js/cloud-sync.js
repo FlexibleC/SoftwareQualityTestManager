@@ -19,6 +19,7 @@
     channel: null,
     status: 'disconnected', // 'disconnected' | 'connecting' | 'connected' | 'error' | 'offline'
     lastSyncTime: null,
+    lastSyncTimestamp: new Date().toISOString(),
     cloudRecordCount: 0,
     initialPullDone: false,
     config: {
@@ -56,6 +57,71 @@
     } catch (e) {
       console.error('Lỗi lưu cấu hình Cloud:', e);
     }
+  }
+
+  // 1b. Kênh truyền tin cục bộ đa tab / đa cửa sổ trên cùng máy (Tốc độ 1ms tức thì - Local-First Multi-Tab Sync)
+  const sqtmBroadcast = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('sqtm_local_sync') : null;
+  if (sqtmBroadcast) {
+    sqtmBroadcast.onmessage = (event) => {
+      const msg = event.data;
+      if (!msg) return;
+
+      if (msg.type === 'RESULT_UPDATED' && msg.tcId) {
+        if (!window.state) window.state = {};
+        if (!window.state.results) window.state.results = {};
+        window.state.results[msg.tcId] = msg.record;
+
+        const curCycleId = window.state.activeCycleId || 'CYC-SMARTVMS-01';
+        if (!window.state.cycleResults) window.state.cycleResults = {};
+        if (!window.state.cycleResults[curCycleId]) window.state.cycleResults[curCycleId] = {};
+        window.state.cycleResults[curCycleId][msg.tcId] = JSON.parse(JSON.stringify(msg.record));
+
+        if (Array.isArray(window.state.assignments)) {
+          window.state.assignments.forEach(asg => {
+            if (asg.tcId === msg.tcId) {
+              asg.status = msg.record.status;
+              asg.executedAt = msg.record.runAt;
+            }
+          });
+        }
+        if (typeof window.saveCoreState === 'function') {
+          window.saveCoreState({ skipSync: true, skipBroadcast: true });
+        }
+        if (typeof triggerUiRefresh === 'function') triggerUiRefresh(msg.tcId, msg.record);
+      } else if (msg.type === 'PROJECTS_UPDATED' && Array.isArray(msg.projects)) {
+        if (window.state) window.state.projects = msg.projects;
+        if (typeof window.saveCoreState === 'function') {
+          window.saveCoreState({ skipSync: true, skipBroadcast: true });
+        }
+        if (typeof triggerUiRefresh === 'function') triggerUiRefresh();
+      } else if (msg.type === 'CYCLES_UPDATED' && Array.isArray(msg.cycles)) {
+        if (window.state) window.state.testCycles = msg.cycles;
+        if (typeof window.saveCoreState === 'function') {
+          window.saveCoreState({ skipSync: true, skipBroadcast: true });
+        }
+        if (typeof triggerUiRefresh === 'function') triggerUiRefresh();
+      } else if (msg.type === 'ASSIGNMENTS_UPDATED' && Array.isArray(msg.assignments)) {
+        if (window.state) window.state.assignments = msg.assignments;
+        if (typeof window.saveCoreState === 'function') {
+          window.saveCoreState({ skipSync: true, skipBroadcast: true });
+        }
+        if (typeof triggerUiRefresh === 'function') triggerUiRefresh();
+      } else if (msg.type === 'COMMENT_ADDED' && msg.tcId && msg.comment) {
+        if (!window.state) window.state = {};
+        if (!window.state.comments) window.state.comments = {};
+        if (!window.state.comments[msg.tcId]) window.state.comments[msg.tcId] = [];
+        window.state.comments[msg.tcId].push(msg.comment);
+        if (window.currentSelectedTcId === msg.tcId && typeof window.renderExecDiscussionList === 'function') {
+          window.renderExecDiscussionList(msg.tcId);
+        }
+      } else if (msg.type === 'STATE_REFRESH') {
+        pullCloudProjectState({ silent: true }).then(() => {
+          if (typeof triggerUiRefresh === 'function') triggerUiRefresh();
+        });
+      } else if (msg.type === 'CORE_STATE_SAVED') {
+        if (typeof triggerUiRefresh === 'function') triggerUiRefresh();
+      }
+    };
   }
 
   // 2. Tự nạp SDK Supabase JS nếu trang chưa nhúng CDN
@@ -144,6 +210,9 @@
         // Xử lý hàng đợi Offline nếu có
         flushOfflineQueue();
 
+        // 4. Kích hoạt bộ thăm dò delta thông minh (Adaptive Delta Heartbeat Poller - 10s)
+        startDeltaHeartbeat(10000);
+
         if (!silent && window.showToast) {
           window.showToast(`⚡ Đã kết nối Supabase Cloud thành công! (${cloudState.cloudRecordCount} kết quả)`, 'success');
         }
@@ -186,9 +255,14 @@
             triggerUiRefresh();
           });
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+          pullCloudProjectState({ silent: true }).then(() => {
+            triggerUiRefresh();
+          });
+        })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_sessions, test_results, test_comments');
+            console.log('⚡ [Cloud Realtime] Đã kết nối kênh thời gian thực: test_sessions, test_results, test_comments, projects');
           }
         });
     } catch (err) {
@@ -201,9 +275,6 @@
     const { eventType, new: newRec, old: oldRec } = payload;
     if (eventType === 'INSERT' || eventType === 'UPDATE') {
       if (!newRec || !newRec.tc_id) return;
-
-      const validTcIds = new Set((window.state?.projects?.[0]?.testCases || []).map(t => t.id));
-      if (validTcIds.size > 0 && !validTcIds.has(newRec.tc_id)) return;
 
       const tcId = newRec.tc_id;
       const cur = window.state?.results ? window.state.results[tcId] : null;
@@ -235,9 +306,9 @@
         });
       }
 
-      // Lưu lại local cache
+      // Lưu lại local cache (không push ngược lại Cloud để tránh vòng lặp)
       if (typeof window.saveCoreState === 'function') {
-        window.saveCoreState();
+        window.saveCoreState({ skipSync: true, skipBroadcast: true });
       }
 
       // Báo UI Realtime
@@ -254,7 +325,7 @@
     } else if (eventType === 'DELETE') {
       if (oldRec && oldRec.tc_id && window.state?.results?.[oldRec.tc_id]) {
         delete window.state.results[oldRec.tc_id];
-        if (typeof window.saveCoreState === 'function') window.saveCoreState();
+        if (typeof window.saveCoreState === 'function') window.saveCoreState({ skipSync: true, skipBroadcast: true });
         triggerUiRefresh(oldRec.tc_id, null);
       }
     }
@@ -577,7 +648,7 @@
     }
   }
 
-  // 5a-2. Đẩy danh mục dự án lên Supabase Cloud
+  // 5a-2. Đẩy danh mục dự án lên Supabase Cloud (Local-First Realtime)
   async function pushProjectsToCloud(projects, force = false) {
     if (!cloudState.client) {
       await ensureCloudClient();
@@ -589,6 +660,13 @@
         // Tránh race-condition: Tuyệt đối không tự động xóa bảng khi mảng rỗng trước khi kéo lần đầu
         return true;
       }
+
+      // 1. Phát sóng tức thì 1ms qua RAM tới mọi tab cùng trình duyệt
+      if (sqtmBroadcast) {
+        sqtmBroadcast.postMessage({ type: 'PROJECTS_UPDATED', projects });
+      }
+
+      // 2. Lưu trạng thái tổng thể vào test_sessions (system_projects)
       const payload = {
         id: 'system_projects',
         name: 'System Projects Catalog',
@@ -598,6 +676,25 @@
         updated_at: new Date().toISOString()
       };
       const { error } = await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+
+      // 3. Đồng thời upsert vào bảng projects để kích hoạt Supabase Realtime phát sóng tới các trình duyệt khác
+      if (projects.length > 0) {
+        const prjRows = projects.map(p => ({
+          id: String(p.id),
+          code: String(p.code || 'PRJ').toUpperCase().trim(),
+          name: String(p.name || 'Dự án').trim(),
+          description: p.description || '',
+          active_version: p.activeVersion || p.active_version || 'v1.0',
+          versions: p.versions || [],
+          modules: p.modules || [],
+          test_cycles: p.testCycles || p.test_cycles || [],
+          status: p.status || 'ACTIVE',
+          updated_at: new Date().toISOString()
+        }));
+        await cloudState.client.from('projects').upsert(prjRows, { onConflict: 'id' });
+      }
+
+      cloudState.lastSyncTimestamp = new Date().toISOString();
       if (!error) {
         console.log(`⚡ [Cloud Database] Đã đồng bộ ${projects.length} dự án lên Supabase Cloud.`);
       }
@@ -618,6 +715,9 @@
       if (!Array.isArray(cycles) || cycles.length === 0) {
         return true;
       }
+      if (sqtmBroadcast) {
+        sqtmBroadcast.postMessage({ type: 'CYCLES_UPDATED', cycles });
+      }
       const payload = {
         id: 'system_cycles',
         name: 'System Test Cycles',
@@ -627,6 +727,7 @@
         updated_at: new Date().toISOString()
       };
       await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+      cloudState.lastSyncTimestamp = new Date().toISOString();
       return true;
     } catch (e) {
       return false;
@@ -643,6 +744,9 @@
       if (!Array.isArray(assignments) || assignments.length === 0) {
         return true;
       }
+      if (sqtmBroadcast) {
+        sqtmBroadcast.postMessage({ type: 'ASSIGNMENTS_UPDATED', assignments });
+      }
       const payload = {
         id: 'system_assignments',
         name: 'System Assignments',
@@ -652,6 +756,7 @@
         updated_at: new Date().toISOString()
       };
       await cloudState.client.from('test_sessions').upsert(payload, { onConflict: 'id' });
+      cloudState.lastSyncTimestamp = new Date().toISOString();
       return true;
     } catch (e) {
       return false;
@@ -860,13 +965,18 @@
     }
   }
 
-  // 7. Đồng bộ tức thời 1 kết quả bài test lên Cloud & LAN Server (Được gọi khi Tester chấm Pass/Fail)
+  // 7. Đồng bộ tức thời 1 kết quả bài test lên Cloud & LAN Server (Local-First Realtime)
   async function syncResultToCloud(tcId) {
     if (!tcId || !window.state?.results?.[tcId]) return;
     const r = window.state.results[tcId];
     const payload = mapLocalRecordToCloud(tcId, r);
 
-    // Đồng bộ tức thì tới máy chủ LAN nếu đang chạy web server nội bộ
+    // 1. Phát sóng tức thì 1ms qua RAM tới mọi tab cùng trình duyệt
+    if (sqtmBroadcast) {
+      sqtmBroadcast.postMessage({ type: 'RESULT_UPDATED', tcId, record: r });
+    }
+
+    // 2. Đồng bộ tức thì tới máy chủ LAN nếu đang chạy web server nội bộ
     const canSyncLan = typeof window.isLanServerAvailable === 'function' ? window.isLanServerAvailable() : false;
     if (canSyncLan) {
       fetch('/api/sync', {
@@ -876,13 +986,14 @@
       }).catch(() => {});
     }
 
-    // Nếu chưa có client, thêm vào offline queue và thử kết nối
+    // 3. Nếu chưa có client, thêm vào offline queue và thử kết nối
     if (!cloudState.client) {
       cloudState.offlineQueue.push(payload);
       initCloudSync(true);
       return;
     }
 
+    // 4. Đẩy thẳng lên Supabase PostgreSQL Cloud (ngầm, không block UI)
     try {
       const { error } = await cloudState.client.from('test_results').upsert(payload, {
         onConflict: 'run_id,tc_id'
@@ -893,6 +1004,7 @@
         updateCloudStatusUI('error', 'Lưu Cloud lỗi (Lưu máy OK)');
       } else {
         cloudState.lastSyncTime = new Date();
+        cloudState.lastSyncTimestamp = new Date().toISOString();
         updateCloudStatusUI('connected', `Cloud: Realtime`);
       }
     } catch (e) {
@@ -902,13 +1014,32 @@
     }
   }
 
-  // 8. Đẩy thảo luận bình luận lên Supabase
+  // 8. Đẩy thảo luận bình luận lên Supabase (Local-First Realtime)
   async function syncCommentToCloud(tcId, commentText) {
-    if (!tcId || !commentText || !cloudState.client) return;
+    if (!tcId || !commentText) return;
     const u = typeof window.getCurrentUser === 'function' ? window.getCurrentUser() : null;
     const author = u ? u.name : 'Người kiểm thử';
     const role = u ? (u.roleTitle || u.role) : 'Tester';
+    const createdAt = new Date().toISOString();
 
+    // 1. Phát sóng tức thì cho các tab cùng trình duyệt
+    if (sqtmBroadcast) {
+      sqtmBroadcast.postMessage({
+        type: 'COMMENT_ADDED',
+        tcId,
+        comment: {
+          author,
+          role,
+          text: commentText.trim(),
+          time: createdAt,
+          attachmentUrl: null
+        }
+      });
+    }
+
+    if (!cloudState.client) return;
+
+    // 2. Gửi lên Supabase Cloud ngầm
     try {
       const payload = {
         run_id: DEFAULT_RUN_ID,
@@ -916,9 +1047,10 @@
         user_name: author,
         user_role: role,
         content: commentText.trim(),
-        created_at: new Date().toISOString()
+        created_at: createdAt
       };
       await cloudState.client.from('test_comments').insert(payload);
+      cloudState.lastSyncTimestamp = new Date().toISOString();
     } catch (e) {
       console.warn('Lỗi gửi comment lên Cloud:', e);
     }
@@ -1250,6 +1382,105 @@
     }
   }
 
+  // ================================================================
+  // 10. BỘ THĂM DÒ DELTA THỜI GIAN THỰC (ADAPTIVE DELTA HEARTBEAT POLLER)
+  // Bảo đảm đồng bộ tức thì giữa các máy khác nhau & các trình duyệt khác nhau
+  // Kể cả khi WebSocket bị nghẽn/ngắt kết nối hoặc tab bị trình duyệt đưa vào chế độ ngủ
+  // ================================================================
+  let _deltaHeartbeatTimer = null;
+  let _isHeartbeatRunning = false;
+
+  async function checkCloudDeltaUpdates() {
+    if (_isHeartbeatRunning || !cloudState.client || cloudState.status === 'offline') return;
+    if (typeof document !== 'undefined' && document.hidden) return; // Không bắn query khi tab đang ẩn hoàn toàn
+    _isHeartbeatRunning = true;
+
+    try {
+      const since = cloudState.lastSyncTimestamp || new Date(Date.now() - 30000).toISOString();
+
+      // 1. Kiểm tra các kết quả kiểm thử mới được cập nhật trên Cloud (test_results)
+      const { data: deltaResults, error: resErr } = await cloudState.client
+        .from('test_results')
+        .select('*')
+        .gt('updated_at', since)
+        .order('updated_at', { ascending: true });
+
+      let hasResultChanges = false;
+      if (!resErr && Array.isArray(deltaResults) && deltaResults.length > 0) {
+        if (!window.state) window.state = {};
+        if (!window.state.results) window.state.results = {};
+        const curCycleId = window.state.activeCycleId || 'CYC-SMARTVMS-01';
+        if (!window.state.cycleResults) window.state.cycleResults = {};
+        if (!window.state.cycleResults[curCycleId]) window.state.cycleResults[curCycleId] = {};
+
+        deltaResults.forEach(rec => {
+          if (!rec.tc_id) return;
+          const cur = window.state.results[rec.tc_id];
+          if (cur && cur.status === rec.status && cur.runAt === rec.run_at) return;
+
+          const mapped = mapCloudRecordToLocal(rec);
+          window.state.results[rec.tc_id] = mapped;
+          window.state.cycleResults[curCycleId][rec.tc_id] = JSON.parse(JSON.stringify(mapped));
+
+          if (Array.isArray(window.state.assignments)) {
+            window.state.assignments.forEach(asg => {
+              if (asg.tcId === rec.tc_id) {
+                asg.status = mapped.status;
+                asg.executedAt = mapped.runAt;
+              }
+            });
+          }
+          hasResultChanges = true;
+        });
+
+        if (hasResultChanges) {
+          if (typeof window.saveCoreState === 'function') {
+            window.saveCoreState({ skipSync: true, skipBroadcast: true });
+          }
+          triggerUiRefresh();
+        }
+      }
+
+      // 2. Kiểm tra thay đổi trạng thái danh mục dự án, đợt test, phân công (test_sessions)
+      const { data: deltaSessions, error: sessErr } = await cloudState.client
+        .from('test_sessions')
+        .select('id, updated_at')
+        .gt('updated_at', since);
+
+      if (!sessErr && Array.isArray(deltaSessions) && deltaSessions.length > 0) {
+        await pullCloudProjectState({ silent: true });
+      }
+
+      cloudState.lastSyncTimestamp = new Date().toISOString();
+    } catch (e) {
+      // Bỏ qua lỗi ngầm
+    } finally {
+      _isHeartbeatRunning = false;
+    }
+  }
+
+  function startDeltaHeartbeat(intervalMs = 10000) {
+    if (_deltaHeartbeatTimer) clearInterval(_deltaHeartbeatTimer);
+    _deltaHeartbeatTimer = setInterval(checkCloudDeltaUpdates, intervalMs);
+
+    // Kích hoạt kiểm tra tức thì khi người dùng quay lại tab hoặc focus vào cửa sổ
+    if (typeof window !== 'undefined' && !window.__sqtmHeartbeatListenersAttached) {
+      window.__sqtmHeartbeatListenersAttached = true;
+      window.addEventListener('focus', () => checkCloudDeltaUpdates());
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) checkCloudDeltaUpdates();
+      });
+      window.addEventListener('online', () => {
+        updateCloudStatusUI('connecting', 'Đã có mạng...');
+        initCloudSync(true);
+        flushOfflineQueue();
+      });
+      window.addEventListener('offline', () => {
+        updateCloudStatusUI('offline', 'Ngoại tuyến (Lưu máy)');
+      });
+    }
+  }
+
   // Khởi động khi DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {
     injectCloudWidgetToTopbar();
@@ -1269,6 +1500,8 @@
   window.pushCatalogToCloud = pushCatalogToCloud;
   window.syncResultToCloud = syncResultToCloud;
   window.syncCommentToCloud = syncCommentToCloud;
+  window.checkCloudDeltaUpdates = checkCloudDeltaUpdates;
+  window.startDeltaHeartbeat = startDeltaHeartbeat;
   window.wipeCloudProjectData = wipeCloudProjectData;
   window.openCloudManagerModal = openCloudManagerModal;
   window.closeCloudManagerModal = closeCloudManagerModal;
