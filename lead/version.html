@@ -1003,122 +1003,175 @@
 
   <!-- ==================== CÁC MODAL CẤU HÌNH TRỰC TIẾP TRONG KHÔNG GIAN PHIÊN BẢN ==================== -->
 
-  <!-- Modal 1: Thêm/Sửa đợt kiểm thử -->
-  <div class="modal" id="modal-cycle-form">
-    <div class="modal-box" style="max-width:580px">
-      <div class="modal-header">
-        <h3 id="modal-cycle-title" style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary)">
-          ➕ Thêm đợt kiểm thử mới
-        </h3>
-        <button type="button" class="btn-close" onclick="closeModal('modal-cycle-form')">✕</button>
+  <!-- Modal 1: Thêm/Sửa đợt kiểm thử (Enterprise Form Modal) -->
+  <div class="modal sqtm-form-modal" id="modal-cycle-form">
+    <div class="modal-box" style="max-width:680px">
+      <!-- Header -->
+      <div class="modal-header" style="border-bottom:1px solid var(--border); padding:16px 22px; display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div class="sqtm-cycle-icon-badge">🎯</div>
+          <div>
+            <h3 id="modal-cycle-title" style="margin:0; font-size:16.5px; font-weight:800; color:var(--text-primary); letter-spacing:0.3px">
+              ➕ Thêm Đợt Kiểm Thử Mới
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              Thiết lập chu kỳ tác chiến • Khoanh vùng mục tiêu và phân bổ nguồn lực
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="closeModal('modal-cycle-form')" title="Đóng">✕</button>
       </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; padding:20px">
+
+      <!-- Body -->
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:16px; padding:20px 22px">
         <input type="hidden" id="cf-id" />
         
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <!-- Row 1: Code & Version -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
           <div>
-            <label class="form-label" style="font-weight:700">Mã đợt kiểm thử (*)</label>
-            <input type="text" id="cf-code" class="form-control" placeholder="ROUND-2 hoặc CYC-02" required />
+            <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+              Mã đợt kiểm thử <span style="color:#ef4444">*</span>
+            </label>
+            <input type="text" id="cf-code" class="form-control" placeholder="ROUND-1 hoặc CYC-01" required />
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Thuộc phiên bản</label>
-            <div style="padding:7px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb; font-size:13px; display:flex; align-items:center; gap:6px">
-              <span>📦</span>
-              <span id="cf-version-display">v2.0</span>
+            <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+              Thuộc phiên bản
+            </label>
+            <div style="padding:8px 14px; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; font-weight:800; color:#2563eb; font-size:13px; display:flex; align-items:center; justify-content:space-between">
+              <span style="display:flex; align-items:center; gap:6px">
+                <span>📦</span>
+                <span id="cf-version-display">v2.0</span>
+              </span>
+              <span class="badge badge-pass" style="font-size:10.5px">Phiên bản hiện hành</span>
             </div>
             <input type="hidden" id="cf-version" />
           </div>
         </div>
 
+        <!-- Row 2: Name -->
         <div>
-          <label class="form-label" style="font-weight:700">Tên đợt kiểm thử (*)</label>
-          <input type="text" id="cf-name" class="form-control" placeholder="Đợt 2 — Kiểm thử lại sửa lỗi và kiểm thử hồi quy" required />
+          <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+            Tên đợt kiểm thử <span style="color:#ef4444">*</span>
+          </label>
+          <input type="text" id="cf-name" class="form-control" placeholder="Đợt 1 — Kiểm thử hồi quy và tích hợp chức năng" required />
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <!-- Row 3: Suite & Status -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
           <div>
-            <label class="form-label" style="font-weight:700">Loại kiểm thử</label>
-            <select id="cf-suite" class="form-control">
-              <option value="REGRESSION" selected>🔄 Kiểm thử hồi quy</option>
-              <option value="SMOKE">💨 Kiểm thử Smoke</option>
-              <option value="SANITY">🧪 Kiểm thử Sanity</option>
-              <option value="PERF_STRESS">⚡ Hiệu năng và tải cao điểm</option>
-              <option value="SECURITY_FRAUD">🛡️ An ninh bảo mật</option>
-              <option value="ACCEPTANCE_UAT">🏆 Nghiệm thu UAT</option>
+            <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+              Loại kiểm thử
+            </label>
+            <select id="cf-suite" class="form-control" style="font-weight:600">
+              <option value="REGRESSION" selected>🔄 Kiểm thử hồi quy (Regression)</option>
+              <option value="SMOKE">💨 Kiểm thử Smoke (Smoke Test)</option>
+              <option value="SANITY">🧪 Kiểm thử Sanity (Sanity Test)</option>
+              <option value="PERF_STRESS">⚡ Hiệu năng & Tải cao điểm</option>
+              <option value="SECURITY_FRAUD">🛡️ An ninh bảo mật (Security)</option>
+              <option value="ACCEPTANCE_UAT">🏆 Nghiệm thu bàn giao (UAT)</option>
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Trạng thái đợt kiểm thử</label>
-            <select id="cf-status" class="form-control">
-              <option value="ACTIVE" selected>🟢 Đang diễn ra</option>
-              <option value="PLANNED">🟡 Kế hoạch</option>
-              <option value="CLOSED">⚪ Đã đóng</option>
+            <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+              Trạng thái đợt kiểm thử
+            </label>
+            <select id="cf-status" class="form-control" style="font-weight:600">
+              <option value="ACTIVE" selected>🟢 Đang diễn ra (Active)</option>
+              <option value="PLANNED">🟡 Kế hoạch (Planned)</option>
+              <option value="CLOSED">⚪ Đã đóng (Closed)</option>
             </select>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <!-- Row 4: Dates -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
           <div>
-            <label class="form-label" style="font-weight:700">Ngày bắt đầu</label>
+            <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+              📅 Ngày bắt đầu
+            </label>
             <input type="date" id="cf-start-date" class="form-control" />
           </div>
           <div>
-            <label class="form-label" style="font-weight:700">Hạn chót kế hoạch</label>
+            <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+              🏁 Hạn chót kế hoạch
+            </label>
             <input type="date" id="cf-end-date" class="form-control" />
           </div>
         </div>
 
+        <!-- Row 5: Description -->
         <div>
-          <label class="form-label" style="font-weight:700">Mục tiêu và phạm vi đợt kiểm thử</label>
-          <textarea id="cf-description" class="form-control" rows="2" placeholder="Mô tả phạm vi nghiệm thu, các kịch bản hoặc phân hệ trọng tâm cần kiểm thử trong đợt này..."></textarea>
+          <label class="form-label" style="font-weight:700; font-size:12.5px; margin-bottom:6px">
+            Mục tiêu và phạm vi đợt kiểm thử
+          </label>
+          <textarea id="cf-description" class="form-control" rows="2" placeholder="Mô tả phạm vi nghiệm thu, mục tiêu chất lượng hoặc phân hệ trọng tâm cần kiểm thử trong đợt này..."></textarea>
         </div>
 
-        <!-- Mục chọn nhân sự tham gia đợt kiểm thử (Tester & Dev) -->
-        <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:2px; display:flex; flex-direction:column; gap:10px">
+        <!-- Section 6: Staffing Allocation -->
+        <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:14px">
           <!-- 1. Testers -->
           <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
-              <label class="form-label" style="font-weight:800; color:var(--text-primary); margin:0; font-size:12px">
-                👥 1. Kiểm thử viên tham gia (Testers — Thực thi kịch bản)
-              </label>
-              <div style="display:flex; align-items:center; gap:8px">
-                <span id="cf-testers-count-badge" class="badge badge-info" style="font-size:10px">0 đã chọn</span>
-                <a href="javascript:void(0)" onclick="LeadVersion.toggleAllFormTesters(true)" style="font-size:11px; text-decoration:none; font-weight:700; color:#2563eb">Chọn tất cả</a>
-                <span style="color:var(--text-muted); font-size:11px">•</span>
-                <a href="javascript:void(0)" onclick="LeadVersion.toggleAllFormTesters(false)" style="font-size:11px; text-decoration:none; color:var(--text-muted)">Bỏ chọn</a>
+            <div class="sqtm-staff-toolbar">
+              <div class="sqtm-staff-title">
+                <span>👥 1. Kiểm thử viên tham gia</span>
+                <span style="font-size:11.5px; color:var(--text-muted); font-weight:500">(Thực thi kịch bản)</span>
+              </div>
+              <div class="sqtm-staff-actions">
+                <span id="cf-testers-count-badge" class="badge badge-info" style="font-size:11px; padding:3px 8px; font-weight:700">0 đã chọn</span>
+                <button type="button" class="sqtm-action-btn" onclick="LeadVersion.toggleAllFormTesters(true)">
+                  ✓ Chọn tất cả
+                </button>
+                <button type="button" class="sqtm-action-btn" onclick="LeadVersion.toggleAllFormTesters(false)">
+                  ✕ Bỏ chọn
+                </button>
               </div>
             </div>
-            <div id="cf-testers-list" style="max-height:120px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:6px 10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:4px">
+            <div id="cf-testers-list" style="max-height:140px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; padding:6px; background:var(--bg-surface); display:flex; flex-direction:column; gap:4px">
               <!-- Populated dynamically with project testers -->
             </div>
           </div>
 
           <!-- 2. Developers -->
           <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
-              <label class="form-label" style="font-weight:800; color:var(--text-primary); margin:0; font-size:12px">
-                💻 2. Lập trình viên phụ trách (Developers — Trực chiến sửa lỗi)
-              </label>
-              <div style="display:flex; align-items:center; gap:8px">
-                <span id="cf-devs-count-badge" class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10px">0 đã chọn</span>
-                <a href="javascript:void(0)" onclick="LeadVersion.toggleAllFormDevs(true)" style="font-size:11px; text-decoration:none; font-weight:700; color:#15803d">Chọn tất cả</a>
-                <span style="color:var(--text-muted); font-size:11px">•</span>
-                <a href="javascript:void(0)" onclick="LeadVersion.toggleAllFormDevs(false)" style="font-size:11px; text-decoration:none; color:var(--text-muted)">Bỏ chọn</a>
+            <div class="sqtm-staff-toolbar">
+              <div class="sqtm-staff-title">
+                <span>💻 2. Lập trình viên phụ trách</span>
+                <span style="font-size:11.5px; color:var(--text-muted); font-weight:500">(Trực chiến sửa lỗi)</span>
+              </div>
+              <div class="sqtm-staff-actions">
+                <span id="cf-devs-count-badge" class="badge" style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.25); font-size:11px; padding:3px 8px; font-weight:700">0 đã chọn</span>
+                <button type="button" class="sqtm-action-btn" onclick="LeadVersion.toggleAllFormDevs(true)">
+                  ✓ Chọn tất cả
+                </button>
+                <button type="button" class="sqtm-action-btn" onclick="LeadVersion.toggleAllFormDevs(false)">
+                  ✕ Bỏ chọn
+                </button>
               </div>
             </div>
-            <div id="cf-devs-list" style="max-height:100px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:6px 10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:4px">
+            <div id="cf-devs-list" style="max-height:120px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; padding:6px; background:var(--bg-surface); display:flex; flex-direction:column; gap:4px">
               <!-- Populated dynamically with project devs -->
             </div>
           </div>
 
-          <div style="font-size:11px; color:var(--text-muted); line-height:1.4">
-            💡 Kịch bản test sẽ được căn cứ điều phối cho các Tester, và các bug phát sinh trong đợt sẽ được giao cho các Dev được chỉ định ở trên.
+          <!-- Info Callout Banner -->
+          <div class="sqtm-info-banner">
+            <span style="font-size:16px; line-height:1; flex-shrink:0">💡</span>
+            <div>
+              <strong>Nguyên tắc phân bổ:</strong> Kịch bản kiểm thử sẽ được QA Lead chủ động phân công cho các Tester, và các lỗi phát sinh (Defects) trong đợt sẽ được định tuyến xử lý cho các Developer được chỉ định ở trên.
+            </div>
           </div>
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-form')">Hủy</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="LeadVersion.confirmSaveCycle()">💾 Lưu đợt kiểm thử</button>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="padding:14px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; background:var(--bg-surface)">
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-cycle-form')" style="padding:9px 18px; font-weight:700">
+          Hủy bỏ
+        </button>
+        <button type="button" class="btn btn-sm btn-primary-gradient" onclick="LeadVersion.confirmSaveCycle()">
+          💾 Lưu đợt kiểm thử
+        </button>
       </div>
     </div>
   </div>

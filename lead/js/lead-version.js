@@ -2383,31 +2383,43 @@ const LeadVersion = {
     const selSet = new Set(selectedUsernames);
 
     if (testers.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:12px">Chưa có kiểm thử viên nào trong dự án.</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px">Chưa có kiểm thử viên nào trong dự án.</div>`;
       this.updateFormTestersBadge();
       return;
     }
 
     container.innerHTML = testers.map(u => {
       const isChecked = selSet.has(u.username);
+      const initial = (u.name || u.username || 'T').trim().slice(0, 1).toUpperCase();
       return `
-        <label style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:6px; background:${isChecked ? 'rgba(37,99,235,0.06)' : 'transparent'}; cursor:pointer; font-size:12.5px; transition:all 0.15s ease">
-          <input type="checkbox" class="cf-tester-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onFormTesterCheckboxChange()" style="width:16px; height:16px; cursor:pointer" />
-          <div style="width:24px; height:24px; border-radius:50%; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px">
-            ${(u.name || u.username).slice(0, 1).toUpperCase()}
+        <label class="sqtm-member-card ${isChecked ? 'selected' : ''}">
+          <input type="checkbox" class="cf-tester-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onFormTesterCheckboxChange(this)" style="width:16px; height:16px; cursor:pointer; accent-color:#2563eb" />
+          <div class="sqtm-member-avatar" style="background:linear-gradient(135deg, #2563eb, #1d4ed8)">
+            ${initial}
           </div>
-          <div style="flex:1">
-            <strong>${escapeHtml(u.name || u.username)}</strong>
-            <span style="color:var(--text-muted); font-size:11px">(@${escapeHtml(u.username)})</span>
+          <div style="flex:1; min-width:0">
+            <div style="font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+              ${escapeHtml(u.name || u.username)}
+            </div>
+            <div style="color:var(--text-muted); font-size:11px">@${escapeHtml(u.username)}</div>
           </div>
-          <span class="badge badge-outline" style="font-size:10px">${escapeHtml((u.roleTitle || 'Tester').replace(/\s*\([^)]*\)/g, ''))}</span>
+          <span class="badge badge-outline" style="font-size:10.5px; padding:2px 8px; flex-shrink:0; border-color:rgba(37,99,235,0.3); color:#2563eb">
+            ${escapeHtml((u.roleTitle || 'Tester').replace(/\s*\([^)]*\)/g, ''))}
+          </span>
         </label>
       `;
     }).join('');
     this.updateFormTestersBadge();
   },
 
-  onFormTesterCheckboxChange() {
+  onFormTesterCheckboxChange(cb) {
+    if (cb) {
+      const card = cb.closest('.sqtm-member-card');
+      if (card) {
+        if (cb.checked) card.classList.add('selected');
+        else card.classList.remove('selected');
+      }
+    }
     this.updateFormTestersBadge();
   },
 
@@ -2422,8 +2434,11 @@ const LeadVersion = {
     const checkboxes = document.querySelectorAll('.cf-tester-checkbox');
     checkboxes.forEach(cb => {
       cb.checked = select;
-      const lbl = cb.closest('label');
-      if (lbl) lbl.style.background = select ? 'rgba(37,99,235,0.06)' : 'transparent';
+      const card = cb.closest('.sqtm-member-card');
+      if (card) {
+        if (select) card.classList.add('selected');
+        else card.classList.remove('selected');
+      }
     });
     this.updateFormTestersBadge();
   },
@@ -2440,31 +2455,43 @@ const LeadVersion = {
     const selSet = new Set(selectedUsernames);
 
     if (devs.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:12px">Chưa có lập trình viên nào trong dự án.</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px">Chưa có lập trình viên nào trong dự án.</div>`;
       this.updateFormDevsBadge();
       return;
     }
 
     container.innerHTML = devs.map(u => {
       const isChecked = selSet.has(u.username);
+      const initial = (u.name || u.username || 'D').trim().slice(0, 1).toUpperCase();
       return `
-        <label style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:6px; background:${isChecked ? 'rgba(2,132,199,0.08)' : 'transparent'}; cursor:pointer; font-size:12.5px; transition:all 0.15s ease">
-          <input type="checkbox" class="cf-dev-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onFormDevCheckboxChange()" style="width:16px; height:16px; cursor:pointer" />
-          <div style="width:24px; height:24px; border-radius:50%; background:#0284c7; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px">
-            ${(u.name || u.username).slice(0, 1).toUpperCase()}
+        <label class="sqtm-member-card dev-card ${isChecked ? 'selected' : ''}">
+          <input type="checkbox" class="cf-dev-checkbox" value="${escapeHtml(u.username)}" ${isChecked ? 'checked' : ''} onchange="LeadVersion.onFormDevCheckboxChange(this)" style="width:16px; height:16px; cursor:pointer; accent-color:#059669" />
+          <div class="sqtm-member-avatar" style="background:linear-gradient(135deg, #059669, #047857)">
+            ${initial}
           </div>
-          <div style="flex:1">
-            <strong>${escapeHtml(u.name || u.username)}</strong>
-            <span style="color:var(--text-muted); font-size:11px">(@${escapeHtml(u.username)})</span>
+          <div style="flex:1; min-width:0">
+            <div style="font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+              ${escapeHtml(u.name || u.username)}
+            </div>
+            <div style="color:var(--text-muted); font-size:11px">@${escapeHtml(u.username)}</div>
           </div>
-          <span class="badge badge-outline" style="font-size:10px; color:#0284c7; border-color:rgba(2,132,199,0.3)">${escapeHtml((u.roleTitle || 'Developer').replace(/\s*\([^)]*\)/g, ''))}</span>
+          <span class="badge badge-outline" style="font-size:10.5px; padding:2px 8px; flex-shrink:0; color:#059669; border-color:rgba(5,150,105,0.3)">
+            ${escapeHtml((u.roleTitle || 'Developer').replace(/\s*\([^)]*\)/g, ''))}
+          </span>
         </label>
       `;
     }).join('');
     this.updateFormDevsBadge();
   },
 
-  onFormDevCheckboxChange() {
+  onFormDevCheckboxChange(cb) {
+    if (cb) {
+      const card = cb.closest('.sqtm-member-card');
+      if (card) {
+        if (cb.checked) card.classList.add('selected');
+        else card.classList.remove('selected');
+      }
+    }
     this.updateFormDevsBadge();
   },
 
@@ -2479,8 +2506,11 @@ const LeadVersion = {
     const checkboxes = document.querySelectorAll('.cf-dev-checkbox');
     checkboxes.forEach(cb => {
       cb.checked = select;
-      const lbl = cb.closest('label');
-      if (lbl) lbl.style.background = select ? 'rgba(2,132,199,0.08)' : 'transparent';
+      const card = cb.closest('.sqtm-member-card');
+      if (card) {
+        if (select) card.classList.add('selected');
+        else card.classList.remove('selected');
+      }
     });
     this.updateFormDevsBadge();
   },
