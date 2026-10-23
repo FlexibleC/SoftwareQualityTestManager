@@ -525,15 +525,43 @@ function toggleCycleStatusHandler(cycleId) {
 function deleteCycleHandler(cycleId) {
   const c = getCycleById(cycleId);
   if (!c) return;
-  if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa đợt kiểm thử "${c.name}"?`)) return;
 
-  try {
-    deleteTestCycle(cycleId);
-    showToast(`🗑️ Đã xóa đợt kiểm thử "${c.name}"`, 'info');
-    renderProjectsTab();
-    loadSessionSettings();
-  } catch (err) {
-    showToast(`❌ ${err.message}`, 'error');
+  const executeDelete = () => {
+    try {
+      deleteTestCycle(cycleId);
+      showToast(`🗑️ Đã xóa đợt kiểm thử "${c.name}"`, 'info');
+      renderProjectsTab();
+      loadSessionSettings();
+    } catch (err) {
+      showToast(`❌ ${err.message}`, 'error');
+    }
+  };
+
+  const scopeCount = (c?.scopeTcIds || c?.testCaseIds || []).length;
+  const assignedTesters = (c?.assignedTesters || []).length;
+  const assignedDevs = (c?.assignedDevs || []).length;
+
+  if (typeof showConfirmDeleteModal === 'function') {
+    showConfirmDeleteModal({
+      title: 'XÁC NHẬN XÓA ĐỢT KIỂM THỬ',
+      subtitle: 'Thao tác cấp cao • Loại bỏ đợt test khỏi không gian dự án',
+      itemBadge: '🎯 ĐỢT KIỂM THỬ',
+      itemName: c.name || cycleId,
+      projectTitle: 'Dự án hiện tại',
+      impactStats: [
+        { label: 'Kịch bản trong đợt', value: scopeCount > 0 ? `${scopeCount} bài` : 'Toàn bộ', icon: '📄', color: '#2563eb' },
+        { label: 'Kỹ sư thực thi', value: (assignedTesters + assignedDevs) > 0 ? `${assignedTesters + assignedDevs} người` : '0 người', icon: '👥', color: '#8b5cf6' },
+        { label: 'Tiến độ & Kết quả', value: 'Dọn dẹp', icon: '⚡', color: '#ef4444' },
+        { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+      ],
+      warningText: `Cảnh báo: Toàn bộ phân công và dữ liệu thực thi của đợt "${c.name}" sẽ bị xóa vĩnh viễn khỏi hệ thống.\n\nThao tác này không thể hoàn tác!`,
+      confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+      onConfirm: executeDelete
+    });
+  } else {
+    if (confirm(`⚠️ Bạn có chắc chắn muốn xóa đợt kiểm thử "${c.name}"?`)) {
+      executeDelete();
+    }
   }
 }
 
@@ -1378,15 +1406,43 @@ function confirmSaveProjectStaff() {
 function deleteProjectHandler(projId) {
   const p = (state.projects || []).find(x => x.id === projId);
   if (!p) return;
-  if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa dự án "${p.name}"? Toàn bộ kịch bản và phân công của dự án này sẽ bị gỡ bỏ.`)) return;
 
-  try {
-    deleteProject(projId);
-    showToast(`🗑️ Đã xóa dự án "${p.name}"`, 'info');
-    renderProjectsTab();
-    if (typeof window.initCockpit === 'function') window.initCockpit();
-  } catch (err) {
-    showToast(`❌ ${err.message}`, 'error');
+  const executeDelete = () => {
+    try {
+      deleteProject(projId);
+      showToast(`🗑️ Đã xóa dự án "${p.name}"`, 'info');
+      renderProjectsTab();
+      if (typeof window.initCockpit === 'function') window.initCockpit();
+    } catch (err) {
+      showToast(`❌ ${err.message}`, 'error');
+    }
+  };
+
+  const tcCount = (p.testCases || []).length;
+  const cycleCount = (p.testCycles || []).length;
+  const verCount = (p.versions || []).length;
+
+  if (typeof showConfirmDeleteModal === 'function') {
+    showConfirmDeleteModal({
+      title: 'XÁC NHẬN XÓA DỰ ÁN',
+      subtitle: 'Thao tác nguy hiểm cấp cao nhất • Xóa toàn bộ dự án và dữ liệu liên quan',
+      itemBadge: '🏢 DỰ ÁN KIỂM THỬ',
+      itemName: p.name || projId,
+      projectTitle: p.code || projId,
+      impactStats: [
+        { label: 'Phiên bản', value: `${verCount} phiên bản`, icon: '📦', color: '#2563eb' },
+        { label: 'Kịch bản kiểm thử', value: `${tcCount} bài`, icon: '📄', color: '#d97706' },
+        { label: 'Đợt test', value: `${cycleCount} đợt`, icon: '🎯', color: '#8b5cf6' },
+        { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#ef4444' }
+      ],
+      warningText: `Cảnh báo: Toàn bộ kịch bản, phiên bản, đợt test và phân công của dự án "${p.name}" sẽ bị xóa vĩnh viễn khỏi toàn bộ hệ thống và Cloud.\n\nThao tác này KHÔNG THỂ HOÀN TÁC!`,
+      confirmText: '🗑️ Xác nhận xóa vĩnh viễn dự án',
+      onConfirm: executeDelete
+    });
+  } else {
+    if (confirm(`⚠️ Bạn có chắc chắn muốn xóa dự án "${p.name}"? Toàn bộ kịch bản và phân công của dự án này sẽ bị gỡ bỏ.`)) {
+      executeDelete();
+    }
   }
 }
 

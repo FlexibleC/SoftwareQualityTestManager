@@ -1328,54 +1328,78 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
       ? getTestCyclesForProject(p.id, versionStr) 
       : (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() === normVer)).length;
 
-    let confirmMsg = `Bạn có chắc chắn muốn xóa phiên bản [${versionStr}] khỏi dự án "${p.name}"?`;
+    let warningText = `Bạn có chắc chắn muốn xóa phiên bản [${versionStr}] khỏi dự án "${p.name}"?`;
     if (affectedTcs > 0 || affectedCycles > 0) {
-      confirmMsg += `\n\n⚠️ Cảnh báo: Phiên bản này đang chứa ${affectedTcs} kịch bản kiểm thử và ${affectedCycles} đợt test. Toàn bộ dữ liệu này sẽ bị xóa vĩnh viễn khỏi dự án và cơ sở dữ liệu Cloud!`;
+      warningText += `\n\n⚠️ Cảnh báo: Phiên bản này đang chứa ${affectedTcs} kịch bản kiểm thử và ${affectedCycles} đợt test. Toàn bộ dữ liệu này sẽ bị xóa vĩnh viễn khỏi dự án và cơ sở dữ liệu Cloud!`;
     }
-    confirmMsg += `\n\nThao tác này không thể hoàn tác!`;
+    warningText += `\n\nThao tác này không thể hoàn tác!`;
 
-    if (!confirm(confirmMsg)) return;
-
-    try {
-      if (typeof deleteProjectVersion === 'function') {
-        deleteProjectVersion(p.id, versionStr);
-      } else {
-        p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
-        p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
-        p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
-        if (state.testCycles) {
-          state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
+    const self = this;
+    const executeDelete = () => {
+      try {
+        if (typeof deleteProjectVersion === 'function') {
+          deleteProjectVersion(p.id, versionStr);
+        } else {
+          p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
+          p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
+          p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
+          if (state.testCycles) {
+            state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
+          }
+          if (p.versions.length === 0) {
+            p.testCases = [];
+            p.modules = [];
+            p.testCycles = [];
+            p.activeVersion = '';
+          } else if (((p.activeVersion || '')).trim().toLowerCase() === normVer) {
+            p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
+            state.activeVersion = p.activeVersion;
+          }
+          saveCoreState();
+          if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
+          if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
         }
-        if (p.versions.length === 0) {
-          p.testCases = [];
-          p.modules = [];
-          p.testCycles = [];
-          p.activeVersion = '';
-        } else if (((p.activeVersion || '')).trim().toLowerCase() === normVer) {
-          p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
-          state.activeVersion = p.activeVersion;
+
+        showToast(`🗑️ Đã xóa thành công phiên bản [${versionStr}]!`, 'success');
+
+        // Đóng modal form nếu đang mở
+        closeModal('modal-version-form');
+
+        // Cập nhật lại toàn bộ giao diện điều hành phiên bản
+        self.renderVersionManagementCockpit();
+        self.renderExecutiveHealth();
+        self.renderProjectRoster();
+        self.renderDevPipeline();
+        self.updateQuickActions();
+        if (window.LeadContext) {
+          LeadContext.renderCompactProjectBar();
         }
-        saveCoreState();
-        if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
-        if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+      } catch (err) {
+        showToast(`❌ Lỗi khi xóa phiên bản: ${err.message}`, 'error');
       }
+    };
 
-      showToast(`🗑️ Đã xóa thành công phiên bản [${versionStr}]!`, 'success');
-
-      // Đóng modal form nếu đang mở
-      closeModal('modal-version-form');
-
-      // Cập nhật lại toàn bộ giao diện điều hành phiên bản
-      this.renderVersionManagementCockpit();
-      this.renderExecutiveHealth();
-      this.renderProjectRoster();
-      this.renderDevPipeline();
-      this.updateQuickActions();
-      if (window.LeadContext) {
-        LeadContext.renderCompactProjectBar();
+    if (typeof showConfirmDeleteModal === 'function') {
+      showConfirmDeleteModal({
+        title: 'XÁC NHẬN XÓA PHIÊN BẢN',
+        subtitle: 'Thao tác cấp cao • Loại bỏ phiên bản khỏi không gian dự án',
+        itemBadge: '📦 PHIÊN BẢN TEST',
+        itemName: `Phiên bản [${versionStr}]`,
+        projectTitle: p.name || p.code || 'Dự án hiện tại',
+        impactStats: [
+          { label: 'Kịch bản kiểm thử', value: affectedTcs > 0 ? `${affectedTcs} bài` : '0 bài', icon: '📄', color: '#2563eb' },
+          { label: 'Đợt test liên quan', value: affectedCycles > 0 ? `${affectedCycles} đợt` : '0 đợt', icon: '🎯', color: '#d97706' },
+          { label: 'Phân công & Kết quả', value: 'Dọn dẹp', icon: '👥', color: '#8b5cf6' },
+          { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+        ],
+        warningText: warningText,
+        confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+        onConfirm: executeDelete
+      });
+    } else {
+      if (confirm(warningText)) {
+        executeDelete();
       }
-    } catch (err) {
-      showToast(`❌ Lỗi khi xóa phiên bản: ${err.message}`, 'error');
     }
   },
 

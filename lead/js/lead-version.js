@@ -2344,17 +2344,6 @@ const LeadVersion = {
     this.populateVersionSettings();
   },
 
-  deleteCurrentVersion() {
-    const p = getActiveProject();
-    if (!p) return;
-
-    if (!confirm(`Bạn có chắc chắn muốn xóa phiên bản [${this.currentVersion}]? Thao tác này không thể hoàn tác!`)) return;
-
-    p.versions = (p.versions || []).filter(v => (v.version || v) !== this.currentVersion);
-    saveCoreState();
-    showToast(`🗑️ Đã xóa phiên bản [${this.currentVersion}]!`, 'info');
-    window.location.href = `project.html?projectId=${encodeURIComponent(p.id)}&tab=versions`;
-  },
 
   // ==================== SMART BASELINE INHERITANCE ====================
   inheritBaseline() {
@@ -2889,18 +2878,64 @@ const LeadVersion = {
     const p = getActiveProject();
     if (!p) return;
 
-    if (!confirm('Bạn có chắc chắn muốn xóa đợt kiểm thử này khỏi phiên bản?')) return;
+    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
+    const c = cycles.find(x => x.id === cycleId) || (typeof getCycleById === 'function' ? getCycleById(cycleId) : null);
+    const cycleName = c ? (c.name || c.id) : cycleId;
+    const scopeCount = (c?.scopeTcIds || c?.testCaseIds || []).length;
+    const assignedTesters = (c?.assignedTesters || []).length;
+    const assignedDevs = (c?.assignedDevs || []).length;
 
-    p.testCycles = (p.testCycles || []).filter(c => c.id !== cycleId);
-    if (state.testCycles) {
-      state.testCycles = state.testCycles.filter(c => c.id !== cycleId);
+    const self = this;
+    const executeDelete = () => {
+      try {
+        if (typeof deleteTestCycle === 'function') {
+          deleteTestCycle(cycleId);
+        } else {
+          p.testCycles = (p.testCycles || []).filter(item => item.id !== cycleId);
+          if (state.testCycles) {
+            state.testCycles = state.testCycles.filter(item => item.id !== cycleId);
+          }
+          if (Array.isArray(state.assignments)) {
+            state.assignments = state.assignments.filter(a => a.cycleId !== cycleId);
+          }
+          saveCoreState();
+          if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+        }
+
+        showToast(`🗑️ Đã xóa thành công đợt kiểm thử [${cycleName}]!`, 'success');
+        self.renderCycleCards();
+        self.renderCyclesMatrix();
+        self.renderVersionOverview();
+        if (typeof LeadContext !== 'undefined' && LeadContext.renderCompactProjectBar) {
+          LeadContext.renderCompactProjectBar();
+        }
+      } catch (err) {
+        showToast(`❌ Lỗi khi xóa đợt kiểm thử: ${err.message}`, 'error');
+      }
+    };
+
+    if (typeof showConfirmDeleteModal === 'function') {
+      showConfirmDeleteModal({
+        title: 'XÁC NHẬN XÓA ĐỢT KIỂM THỬ',
+        subtitle: 'Thao tác cấp cao • Loại bỏ đợt test khỏi không gian phiên bản',
+        itemBadge: '🎯 ĐỢT KIỂM THỬ',
+        itemName: cycleName,
+        projectTitle: `${p.name || p.code || 'Dự án'} • Phiên bản [${this.currentVersion}]`,
+        impactStats: [
+          { label: 'Kịch bản trong đợt', value: scopeCount > 0 ? `${scopeCount} bài` : 'Toàn bộ', icon: '📄', color: '#2563eb' },
+          { label: 'Kỹ sư thực thi', value: (assignedTesters + assignedDevs) > 0 ? `${assignedTesters + assignedDevs} người` : '0 người', icon: '👥', color: '#8b5cf6' },
+          { label: 'Tiến độ & Kết quả', value: 'Dọn dẹp', icon: '⚡', color: '#ef4444' },
+          { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+        ],
+        warningText: `Cảnh báo: Toàn bộ phạm vi kiểm thử, phân công nhân sự và kết quả thực thi của đợt [${cycleName}] sẽ bị xóa vĩnh viễn khỏi phiên bản [${this.currentVersion}] và cơ sở dữ liệu Cloud.\n\nThao tác này không thể hoàn tác!`,
+        confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+        onConfirm: executeDelete
+      });
+    } else {
+      if (confirm(`Bạn có chắc chắn muốn xóa đợt kiểm thử [${cycleName}] khỏi phiên bản?`)) {
+        executeDelete();
+      }
     }
-    saveCoreState();
-    showToast('🗑️ Đã xóa đợt kiểm thử thành công!', 'info');
-    this.renderCycleCards();
-    this.renderCyclesMatrix();
-    this.renderVersionOverview();
-    LeadContext.renderCompactProjectBar();
   },
 
   // Modal Scope Workstation
@@ -3599,18 +3634,63 @@ const LeadVersion = {
   deleteCurrentVersion() {
     const p = getActiveProject();
     if (!p) return;
-    if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa phiên bản [${this.currentVersion}] khỏi dự án? Hành động này không thể hoàn tác!`)) {
-      return;
-    }
 
-    p.versions = (p.versions || []).filter(v => (v.version || v) !== this.currentVersion);
-    if (p.activeVersion === this.currentVersion) {
-      p.activeVersion = p.versions[0]?.version || p.versions[0] || 'v1.0';
-    }
+    const verTag = this.currentVersion;
+    const normVer = (verTag || '').trim().toLowerCase();
+    const affectedTcs = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() === normVer).length;
+    const allCycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, verTag) : (p.testCycles || []);
+    const affectedCycles = allCycles.filter(c => ((c.version || '')).trim().toLowerCase() === normVer).length;
 
-    saveCoreState();
-    showToast('🗑️ Đã xóa phiên bản thành công!', 'success');
-    window.location.href = `project.html?projectId=${encodeURIComponent(p.id)}&tab=versions`;
+    const executeDelete = () => {
+      try {
+        if (typeof deleteProjectVersion === 'function') {
+          deleteProjectVersion(p.id, verTag);
+        } else {
+          p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
+          p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
+          p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
+          if (state.testCycles) {
+            state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
+          }
+          if (p.activeVersion === verTag) {
+            p.activeVersion = p.versions[0]?.version || p.versions[0] || '';
+          }
+          saveCoreState();
+          if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
+          if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+        }
+
+        showToast(`🗑️ Đã xóa thành công phiên bản [${verTag}]!`, 'success');
+        setTimeout(() => {
+          window.location.href = `project.html?projectId=${encodeURIComponent(p.id)}&tab=versions`;
+        }, 400);
+      } catch (err) {
+        showToast(`❌ Lỗi khi xóa phiên bản: ${err.message}`, 'error');
+      }
+    };
+
+    if (typeof showConfirmDeleteModal === 'function') {
+      showConfirmDeleteModal({
+        title: 'XÁC NHẬN XÓA PHIÊN BẢN',
+        subtitle: 'Thao tác cấp cao • Loại bỏ phiên bản khỏi không gian dự án',
+        itemBadge: '📦 PHIÊN BẢN TEST',
+        itemName: `Phiên bản [${verTag}]`,
+        projectTitle: p.name || p.code || 'Dự án hiện tại',
+        impactStats: [
+          { label: 'Kịch bản kiểm thử', value: affectedTcs > 0 ? `${affectedTcs} bài` : '0 bài', icon: '📄', color: '#2563eb' },
+          { label: 'Đợt test liên quan', value: affectedCycles > 0 ? `${affectedCycles} đợt` : '0 đợt', icon: '🎯', color: '#d97706' },
+          { label: 'Phân công & Kết quả', value: 'Dọn dẹp', icon: '👥', color: '#8b5cf6' },
+          { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+        ],
+        warningText: `Cảnh báo: Toàn bộ ${affectedTcs > 0 ? affectedTcs + ' kịch bản kiểm thử, ' : ''}${affectedCycles > 0 ? affectedCycles + ' đợt test và ' : ''}cấu hình của phiên bản [${verTag}] sẽ bị xóa vĩnh viễn khỏi dự án và cơ sở dữ liệu Cloud.\n\nThao tác này không thể hoàn tác!`,
+        confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+        onConfirm: executeDelete
+      });
+    } else {
+      if (confirm(`⚠️ Bạn có chắc chắn muốn xóa phiên bản [${verTag}] khỏi dự án? Hành động này không thể hoàn tác!`)) {
+        executeDelete();
+      }
+    }
   },
 
   updateLinks() {

@@ -2623,16 +2623,57 @@ const LeadCycle = {
   deleteCycle() {
     const p = getActiveProject();
     if (!p) return;
-    if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa đợt test [${this.cycleId}]? Toàn bộ phân công của đợt này sẽ bị xóa!`)) {
-      return;
+
+    const cycId = this.cycleId;
+    const curCycle = this.getCurrentCycle();
+    const cycleName = curCycle ? (curCycle.name || curCycle.id) : cycId;
+
+    const executeDelete = () => {
+      try {
+        if (typeof deleteTestCycle === 'function') {
+          deleteTestCycle(cycId);
+        } else {
+          p.testCycles = (p.testCycles || []).filter(c => c.id !== cycId);
+          state.assignments = (state.assignments || []).filter(a => a.cycleId !== cycId);
+          saveCoreState();
+          if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+        }
+
+        showToast('🗑️ Đã xóa đợt test thành công!', 'success');
+        setTimeout(() => {
+          window.location.href = `version.html?projectId=${encodeURIComponent(p.id)}&version=${encodeURIComponent(this.version)}&tab=cycles`;
+        }, 300);
+      } catch (err) {
+        showToast(`❌ Lỗi khi xóa đợt test: ${err.message}`, 'error');
+      }
+    };
+
+    const scopeCount = (curCycle?.scopeTcIds || curCycle?.testCaseIds || []).length;
+    const assignedTesters = (curCycle?.assignedTesters || []).length;
+    const assignedDevs = (curCycle?.assignedDevs || []).length;
+
+    if (typeof showConfirmDeleteModal === 'function') {
+      showConfirmDeleteModal({
+        title: 'XÁC NHẬN XÓA ĐỢT KIỂM THỬ',
+        subtitle: 'Thao tác cấp cao • Loại bỏ đợt test khỏi không gian chiến dịch',
+        itemBadge: '🎯 ĐỢT KIỂM THỬ',
+        itemName: cycleName,
+        projectTitle: `${p.name || p.code || 'Dự án'} • Phiên bản [${this.version}]`,
+        impactStats: [
+          { label: 'Kịch bản trong đợt', value: scopeCount > 0 ? `${scopeCount} bài` : 'Toàn bộ', icon: '📄', color: '#2563eb' },
+          { label: 'Kỹ sư thực thi', value: (assignedTesters + assignedDevs) > 0 ? `${assignedTesters + assignedDevs} người` : '0 người', icon: '👥', color: '#8b5cf6' },
+          { label: 'Tiến độ & Kết quả', value: 'Dọn dẹp', icon: '⚡', color: '#ef4444' },
+          { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+        ],
+        warningText: `Cảnh báo: Toàn bộ phân công và kết quả thực thi của đợt test [${cycleName}] sẽ bị xóa vĩnh viễn khỏi hệ thống và cơ sở dữ liệu Cloud.\n\nThao tác này không thể hoàn tác!`,
+        confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+        onConfirm: executeDelete
+      });
+    } else {
+      if (confirm(`⚠️ Bạn có chắc chắn muốn xóa đợt test [${cycleName}]? Toàn bộ phân công của đợt này sẽ bị xóa!`)) {
+        executeDelete();
+      }
     }
-
-    p.testCycles = (p.testCycles || []).filter(c => c.id !== this.cycleId);
-    state.assignments = (state.assignments || []).filter(a => a.cycleId !== this.cycleId);
-    saveCoreState();
-
-    showToast('🗑️ Đã xóa đợt test thành công!', 'success');
-    window.location.href = `version.html?projectId=${encodeURIComponent(p.id)}&version=${encodeURIComponent(this.version)}&tab=cycles`;
   },
 
   // ==================== MODAL: SCOPE WORKSTATION ====================

@@ -101,35 +101,68 @@ const LeadSettings = {
   deleteVersion(ver) {
     const p = getActiveProject();
     if (!p) return;
-    if (!confirm(`Bạn có chắc chắn muốn xóa phiên bản [${ver}] khỏi dự án? Thao tác này không thể hoàn tác!`)) return;
 
-    if (typeof deleteProjectVersion === 'function') {
-      deleteProjectVersion(p.id, ver);
+    const normVer = (ver || '').trim().toLowerCase();
+    const affectedTcs = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() === normVer).length;
+    const allCycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, ver) : (p.testCycles || []);
+    const affectedCycles = allCycles.filter(c => ((c.version || '')).trim().toLowerCase() === normVer).length;
+
+    const self = this;
+    const executeDelete = () => {
+      try {
+        if (typeof deleteProjectVersion === 'function') {
+          deleteProjectVersion(p.id, ver);
+        } else {
+          p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
+          p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
+          p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
+          if (state.testCycles) {
+            state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
+          }
+          if (p.versions.length === 0) {
+            p.testCases = [];
+            p.modules = [];
+            p.testCycles = [];
+            p.activeVersion = '';
+          } else if (((p.activeVersion || '')).trim().toLowerCase() === normVer) {
+            p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
+          }
+          saveCoreState();
+          if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
+          if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+        }
+
+        showToast(`🗑️ Đã xóa thành công phiên bản [${ver}]!`, 'success');
+        self.renderVersions();
+        self.renderCycles();
+        if (window.LeadContext) LeadContext.renderCompactProjectBar();
+      } catch (err) {
+        showToast(`❌ Lỗi khi xóa phiên bản: ${err.message}`, 'error');
+      }
+    };
+
+    if (typeof showConfirmDeleteModal === 'function') {
+      showConfirmDeleteModal({
+        title: 'XÁC NHẬN XÓA PHIÊN BẢN',
+        subtitle: 'Thao tác cấp cao • Loại bỏ phiên bản khỏi không gian dự án',
+        itemBadge: '📦 PHIÊN BẢN TEST',
+        itemName: `Phiên bản [${ver}]`,
+        projectTitle: p.name || p.code || 'Dự án hiện tại',
+        impactStats: [
+          { label: 'Kịch bản kiểm thử', value: affectedTcs > 0 ? `${affectedTcs} bài` : '0 bài', icon: '📄', color: '#2563eb' },
+          { label: 'Đợt test liên quan', value: affectedCycles > 0 ? `${affectedCycles} đợt` : '0 đợt', icon: '🎯', color: '#d97706' },
+          { label: 'Phân công & Kết quả', value: 'Dọn dẹp', icon: '👥', color: '#8b5cf6' },
+          { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+        ],
+        warningText: `Cảnh báo: Toàn bộ ${affectedTcs > 0 ? affectedTcs + ' kịch bản kiểm thử, ' : ''}${affectedCycles > 0 ? affectedCycles + ' đợt test và ' : ''}cấu hình của phiên bản [${ver}] sẽ bị xóa vĩnh viễn khỏi dự án và cơ sở dữ liệu Cloud.\n\nThao tác này không thể hoàn tác!`,
+        confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+        onConfirm: executeDelete
+      });
     } else {
-      const normVer = (ver || '').trim().toLowerCase();
-      p.versions = (p.versions || []).filter(v => ((v.version || v) || '').trim().toLowerCase() !== normVer);
-      p.testCases = (p.testCases || []).filter(tc => ((tc.version || '')).trim().toLowerCase() !== normVer);
-      p.testCycles = (p.testCycles || []).filter(c => ((c.version || '')).trim().toLowerCase() !== normVer);
-      if (state.testCycles) {
-        state.testCycles = state.testCycles.filter(c => !(c.projectId === p.id && ((c.version || '')).trim().toLowerCase() === normVer));
+      if (confirm(`Bạn có chắc chắn muốn xóa phiên bản [${ver}] khỏi dự án? Thao tác này không thể hoàn tác!`)) {
+        executeDelete();
       }
-      if (p.versions.length === 0) {
-        p.testCases = [];
-        p.modules = [];
-        p.testCycles = [];
-        p.activeVersion = '';
-      } else if (((p.activeVersion || '')).trim().toLowerCase() === normVer) {
-        p.activeVersion = p.versions.length > 0 ? (p.versions[0].version || p.versions[0]) : '';
-      }
-      saveCoreState();
-      if (window.pushProjectsToCloud) window.pushProjectsToCloud(state.projects);
-      if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
     }
-
-    showToast(`🗑️ Đã xóa phiên bản [${ver}]!`, 'success');
-    this.renderVersions();
-    this.renderCycles();
-    if (window.LeadContext) LeadContext.renderCompactProjectBar();
   },
 
   openAddVersionModal() {
@@ -401,16 +434,59 @@ const LeadSettings = {
     const p = getActiveProject();
     if (!p) return;
 
-    if (!confirm('Bạn có chắc chắn muốn xóa đợt kiểm thử này khỏi dự án?')) return;
+    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id) : (p.testCycles || []);
+    const c = cycles.find(x => x.id === cycleId) || (typeof getCycleById === 'function' ? getCycleById(cycleId) : null);
+    const cycleName = c ? (c.name || c.id) : cycleId;
+    const scopeCount = (c?.scopeTcIds || c?.testCaseIds || []).length;
+    const assignedTesters = (c?.assignedTesters || []).length;
+    const assignedDevs = (c?.assignedDevs || []).length;
 
-    p.testCycles = (p.testCycles || []).filter(c => c.id !== cycleId);
-    if (state.testCycles) {
-      state.testCycles = state.testCycles.filter(c => c.id !== cycleId);
+    const self = this;
+    const executeDelete = () => {
+      try {
+        if (typeof deleteTestCycle === 'function') {
+          deleteTestCycle(cycleId);
+        } else {
+          p.testCycles = (p.testCycles || []).filter(item => item.id !== cycleId);
+          if (state.testCycles) {
+            state.testCycles = state.testCycles.filter(item => item.id !== cycleId);
+          }
+          if (Array.isArray(state.assignments)) {
+            state.assignments = state.assignments.filter(a => a.cycleId !== cycleId);
+          }
+          saveCoreState();
+          if (window.pushCyclesToCloud) window.pushCyclesToCloud(state.testCycles);
+        }
+        showToast(`🗑️ Đã xóa thành công đợt kiểm thử [${cycleName}]!`, 'info');
+        self.renderCycles();
+        if (window.LeadContext) LeadContext.renderCompactProjectBar();
+      } catch (err) {
+        showToast(`❌ Lỗi khi xóa đợt kiểm thử: ${err.message}`, 'error');
+      }
+    };
+
+    if (typeof showConfirmDeleteModal === 'function') {
+      showConfirmDeleteModal({
+        title: 'XÁC NHẬN XÓA ĐỢT KIỂM THỬ',
+        subtitle: 'Thao tác cấp cao • Loại bỏ đợt test khỏi không gian dự án',
+        itemBadge: '🎯 ĐỢT KIỂM THỬ',
+        itemName: cycleName,
+        projectTitle: p.name || p.code || 'Dự án hiện tại',
+        impactStats: [
+          { label: 'Kịch bản trong đợt', value: scopeCount > 0 ? `${scopeCount} bài` : 'Toàn bộ', icon: '📄', color: '#2563eb' },
+          { label: 'Kỹ sư thực thi', value: (assignedTesters + assignedDevs) > 0 ? `${assignedTesters + assignedDevs} người` : '0 người', icon: '👥', color: '#8b5cf6' },
+          { label: 'Tiến độ & Kết quả', value: 'Dọn dẹp', icon: '⚡', color: '#ef4444' },
+          { label: 'Database Cloud', value: 'Đồng bộ xóa', icon: '☁️', color: '#16a34a' }
+        ],
+        warningText: `Cảnh báo: Toàn bộ phân công và dữ liệu thực thi của đợt [${cycleName}] sẽ bị xóa vĩnh viễn khỏi dự án và Cloud.\n\nThao tác này không thể hoàn tác!`,
+        confirmText: '🗑️ Xác nhận xóa vĩnh viễn',
+        onConfirm: executeDelete
+      });
+    } else {
+      if (confirm('Bạn có chắc chắn muốn xóa đợt kiểm thử này khỏi dự án?')) {
+        executeDelete();
+      }
     }
-    saveCoreState();
-    showToast('🗑️ Đã xóa đợt kiểm thử!', 'info');
-    this.renderCycles();
-    LeadContext.renderCompactProjectBar();
   },
 
   // ==================== 3. MODULES ====================

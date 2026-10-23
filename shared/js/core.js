@@ -1928,26 +1928,197 @@ function updateTestCycle(cycleId, updatedData) {
   return cycle;
 }
 
-function deleteTestCycle(cycleId) {
-  if (!state.testCycles) return false;
-  const cycle = state.testCycles.find(c => c.id === cycleId);
-  if (!cycle) return false;
+/**
+ * Hộp thoại Xác Nhận Xóa Chuyên Nghiệp (Enterprise Danger Confirm Modal)
+ * Thay thế hoàn toàn window.confirm() nguyên thủy để không bao giờ bị trình duyệt chặn,
+ * giao diện trực quan chuẩn quốc tế với cảnh báo rủi ro dữ liệu rõ ràng.
+ */
+/**
+ * Hộp thoại Xác Nhận Xóa Chuyên Nghiệp (Enterprise Danger Confirm Modal)
+ * Thay thế hoàn toàn window.confirm() nguyên thủy để không bao giờ bị trình duyệt chặn,
+ * giao diện trực quan chuẩn quốc tế với bảng lượng hóa tác động dữ liệu (Impact Analysis).
+ */
+function showConfirmDeleteModal(options) {
+  const {
+    title = 'Xác nhận xóa dữ liệu',
+    subtitle = 'Thao tác quản trị cấp cao • Tác động trực tiếp lên dự án và Cloud',
+    itemBadge = '⚠️ DỮ LIỆU KIỂM THỬ',
+    itemName = '',
+    projectTitle = '',
+    impactStats = [],
+    warningText = 'Hành động này sẽ xóa dữ liệu vĩnh viễn và không thể hoàn tác.',
+    confirmText = '🗑️ Xác nhận xóa vĩnh viễn',
+    onConfirm = null
+  } = options || {};
 
-  const projectCycles = getTestCyclesForProject(cycle.projectId);
-  if (projectCycles.length <= 1) {
-    throw new Error('Không thể xóa đợt kiểm thử duy nhất của dự án! Mỗi dự án phải có tối thiểu một đợt test.');
+  let modalEl = document.getElementById('modal-sqtm-confirm-delete');
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = 'modal-sqtm-confirm-delete';
+    modalEl.className = 'modal sqtm-confirm-modal';
+    modalEl.style.zIndex = '99999';
+    document.body.appendChild(modalEl);
+  } else {
+    modalEl.className = 'modal sqtm-confirm-modal';
   }
 
+  // Render các chỉ số lượng hóa tác động (Impact Stats)
+  let impactHtml = '';
+  if (Array.isArray(impactStats) && impactStats.length > 0) {
+    impactHtml = `
+      <div style="margin-top:2px">
+        <div style="font-size:11.5px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px">
+          📊 Lượng hóa tác động dữ liệu:
+        </div>
+        <div class="sqtm-impact-grid">
+          ${impactStats.map(stat => `
+            <div class="sqtm-impact-item">
+              <span class="sqtm-impact-val" style="color:${stat.color || 'var(--text-primary)'}">
+                ${stat.icon ? `<span>${stat.icon}</span>` : ''}
+                <span>${escapeHtml(String(stat.value))}</span>
+              </span>
+              <span class="sqtm-impact-lbl">${escapeHtml(stat.label)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  modalEl.innerHTML = `
+    <div class="modal-box">
+      <!-- Header -->
+      <div class="modal-header" style="border-bottom:1px solid var(--border); padding:16px 22px; display:flex; align-items:center; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div class="sqtm-danger-badge">
+            🗑️
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:16px; font-weight:800; color:#ef4444; letter-spacing:0.3px">
+              ${escapeHtml(title)}
+            </h3>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+              ${escapeHtml(subtitle)}
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" id="btn-sqtm-confirm-close" title="Đóng">✕</button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" style="padding:20px 22px; display:flex; flex-direction:column; gap:14px">
+        <!-- Target Item Card -->
+        <div class="sqtm-target-card">
+          <div class="sqtm-target-tag">
+            <span>🔴</span>
+            <span>${escapeHtml(itemBadge)}</span>
+          </div>
+          <div class="sqtm-target-name">
+            ${escapeHtml(itemName)}
+          </div>
+          ${projectTitle ? `
+            <div class="sqtm-target-sub">
+              Thuộc dự án: <strong>${escapeHtml(projectTitle)}</strong>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Impact Dashboard Grid -->
+        ${impactHtml}
+
+        <!-- Danger Alert Banner -->
+        <div class="sqtm-danger-alert-box">
+          <div style="font-size:16px; flex-shrink:0">⚠️</div>
+          <div>
+            ${warningText.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="padding:14px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; background:var(--bg-surface)">
+        <button type="button" class="btn btn-outline btn-sm" id="btn-sqtm-confirm-cancel" style="padding:9px 18px; font-weight:700">
+          Hủy bỏ
+        </button>
+        <button type="button" class="btn btn-sm btn-danger-confirm" id="btn-sqtm-confirm-submit">
+          ${escapeHtml(confirmText)}
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Hiển thị modal
+  modalEl.classList.add('active');
+  modalEl.style.display = 'flex';
+
+  const closeFn = () => {
+    modalEl.classList.remove('active');
+    modalEl.style.display = 'none';
+  };
+
+  document.getElementById('btn-sqtm-confirm-close').onclick = closeFn;
+  document.getElementById('btn-sqtm-confirm-cancel').onclick = closeFn;
+
+  document.getElementById('btn-sqtm-confirm-submit').onclick = async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Đang xóa & đồng bộ Cloud...</span>';
+    try {
+      if (typeof onConfirm === 'function') {
+        await onConfirm();
+      }
+      closeFn();
+    } catch (err) {
+      console.error('Lỗi khi thực hiện xác nhận xóa:', err);
+      btn.disabled = false;
+      btn.innerHTML = escapeHtml(confirmText);
+      if (typeof showToast === 'function') {
+        showToast(`❌ Lỗi khi xóa: ${err.message}`, 'error');
+      } else {
+        alert(`❌ Lỗi: ${err.message}`);
+      }
+    }
+  };
+}
+if (typeof window !== 'undefined') {
+  window.showConfirmDeleteModal = showConfirmDeleteModal;
+}
+
+function deleteTestCycle(cycleId) {
+  if (!state.testCycles) state.testCycles = [];
+  const cycle = state.testCycles.find(c => c.id === cycleId);
+  const projId = cycle ? cycle.projectId : state.activeProjectId;
+  
+  // Xóa khỏi state.testCycles
   state.testCycles = state.testCycles.filter(c => c.id !== cycleId);
 
-  // Nếu đợt bị xóa đang là đợt kích hoạt, tự động chọn đợt khác
+  // Xóa khỏi p.testCycles
+  const p = (state.projects || []).find(x => 
+    x.id === projId || 
+    x.code === projId ||
+    (x.id && (projId || '').replace(/-/g, ' ').toLowerCase() === x.id.replace(/-/g, ' ').toLowerCase())
+  ) || getActiveProject();
+
+  if (p && Array.isArray(p.testCycles)) {
+    p.testCycles = p.testCycles.filter(c => c.id !== cycleId);
+  }
+
+  // Xóa phân công liên quan
+  if (Array.isArray(state.assignments)) {
+    state.assignments = state.assignments.filter(a => a.cycleId !== cycleId);
+  }
+
+  // Cập nhật đợt kích hoạt
+  const remaining = projId ? getTestCyclesForProject(projId) : [];
   if (state.activeCycleId === cycleId) {
-    const remaining = getTestCyclesForProject(cycle.projectId);
     const nextActive = remaining.find(c => c.status === 'ACTIVE') || remaining[0];
     state.activeCycleId = nextActive ? nextActive.id : null;
   }
 
   saveCoreState();
+  if (window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function') {
+    window.pushCyclesToCloud(state.testCycles);
+  }
   return true;
 }
 
@@ -2379,7 +2550,11 @@ function setProjectActiveVersion(projId, versionTag) {
 }
 
 function deleteProjectVersion(projId, versionTag) {
-  const p = (state.projects || []).find(x => x.id === projId);
+  const p = (state.projects || []).find(x => 
+    x.id === projId || 
+    x.code === projId ||
+    (x.id && (projId || '').replace(/-/g, ' ').toLowerCase() === x.id.replace(/-/g, ' ').toLowerCase())
+  ) || getActiveProject();
   if (!p) throw new Error('Không tìm thấy dự án!');
   if (!p.versions || p.versions.length === 0) {
     throw new Error('Dự án không có phiên bản nào để xóa!');
@@ -2838,6 +3013,8 @@ if (typeof window !== 'undefined') {
   window.getTestCyclesForProject = getTestCyclesForProject;
   window.getActiveCycle = getActiveCycle;
   window.getCycleById = getCycleById;
+  window.deleteTestCycle = deleteTestCycle;
+  window.deleteProject = deleteProject;
   window.getTestCasesForCycle = getTestCasesForCycle;
   window.getTestCasesForVersion = getTestCasesForVersion;
   window.saveCycleScope = saveCycleScope;
