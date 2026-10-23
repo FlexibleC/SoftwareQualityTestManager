@@ -684,7 +684,7 @@
           code: String(p.code || 'PRJ').toUpperCase().trim(),
           name: String(p.name || 'Dự án').trim(),
           description: p.description || '',
-          active_version: p.activeVersion || p.active_version || 'v1.0',
+          active_version: p.activeVersion || p.active_version || '',
           versions: p.versions || [],
           modules: p.modules || [],
           test_cycles: p.testCycles || p.test_cycles || [],

@@ -18,14 +18,17 @@ function initTestcasesModule(skipResetState = false) {
   // Populate version filter
   const verFilter = document.getElementById('filter-version');
   if (verFilter && p) {
-    const versions = (Array.isArray(p.versions) && p.versions.length > 0)
-      ? p.versions
-      : [{ version: p.activeVersion || 'v1.0', label: 'Bản phát hành chuẩn' }];
+    const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
     
-    let targetVer = urlVersion || p.activeVersion || versions[0]?.version || '';
-    verFilter.innerHTML = `<option value="">-- Tất cả phiên bản --</option>` +
-      versions.map(v => `<option value="${escapeHtml(v.version)}" ${v.version === targetVer ? 'selected' : ''}>${escapeHtml(v.version)} (${escapeHtml(v.label || 'Bản phát hành')})</option>`).join('');
-    verFilter.value = targetVer;
+    let targetVer = urlVersion || p.activeVersion || (versions[0]?.version || '');
+    if (versions.length === 0) {
+      verFilter.innerHTML = `<option value="">-- Chưa có phiên bản nào --</option>`;
+      verFilter.value = '';
+    } else {
+      verFilter.innerHTML = `<option value="">-- Tất cả phiên bản --</option>` +
+        versions.map(v => `<option value="${escapeHtml(v.version)}" ${v.version === targetVer ? 'selected' : ''}>${escapeHtml(v.version)} (${escapeHtml(v.label || 'Bản phát hành')})</option>`).join('');
+      verFilter.value = targetVer;
+    }
   }
 
   // Populate cycle filter

@@ -2465,18 +2465,21 @@ function addProject(projData) {
     lead: projData.lead || 'QA Lead',
     leadUsername: leadUn,
     standards: projData.standards || ['ISO/IEC 25010', 'ISO/IEC/IEEE 29119'],
-    activeVersion: initVer,
-    versions: initVer ? [
-      {
-        version: initVer,
-        label: `${initVer}`,
-        status: 'IN_QA',
-        targetDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
-        changelog: 'Phiên bản khởi tạo ban đầu'
-      }
-    ] : [],
+    activeVersion: initVer || '',
+    versions: Array.isArray(projData.versions) && projData.versions.length > 0
+      ? projData.versions
+      : (initVer ? [
+          {
+            version: initVer,
+            label: `${initVer}`,
+            status: 'IN_QA',
+            targetDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+            changelog: 'Phiên bản khởi tạo ban đầu'
+          }
+        ] : []),
     modules: [],
     testCases: [],
+    testCycles: [],
     members: defaultMembers
   };
   state.projects.push(newProj);

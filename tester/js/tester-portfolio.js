@@ -52,7 +52,7 @@ const TesterPortfolio = {
       const assignedVers = TesterContext.getAssignedVersionsForTester(p.id);
       const activeVer = (assignedVers.find(v => (v.version || v) === p.activeVersion) || assignedVers[0])?.version 
                      || (assignedVers[0] && (assignedVers[0].version || assignedVers[0]))
-                     || p.activeVersion || 'v1.0';
+                     || p.activeVersion || '';
       const myCycles = TesterContext.getAssignedCyclesForTester(p.id, activeVer);
       myCycles.forEach(c => {
         const rawDate = c.endDate || c.dueDate;
@@ -218,7 +218,7 @@ const TesterPortfolio = {
                 const assignedVers = TesterContext.getAssignedVersionsForTester(p.id);
                 const activeVer = (assignedVers.find(v => (v.version || v) === p.activeVersion) || assignedVers[0])?.version 
                                || (assignedVers[0] && (assignedVers[0].version || assignedVers[0]))
-                               || p.activeVersion || 'v1.0';
+                               || p.activeVersion || '';
                 const myCycles = TesterContext.getAssignedCyclesForTester(p.id, activeVer);
                 const activeCycle = myCycles.find(c => c.status === 'ACTIVE') || myCycles[0] || null;
 
@@ -341,7 +341,7 @@ const TesterPortfolio = {
           const assignedVers = TesterContext.getAssignedVersionsForTester(p.id);
           const activeVer = (assignedVers.find(v => (v.version || v) === p.activeVersion) || assignedVers[0])?.version 
                          || (assignedVers[0] && (assignedVers[0].version || assignedVers[0]))
-                         || p.activeVersion || 'v1.0';
+                         || p.activeVersion || '';
           const myCycles = TesterContext.getAssignedCyclesForTester(p.id, activeVer);
           const activeCycle = myCycles.find(c => c.status === 'ACTIVE') || myCycles[0] || null;
 
@@ -452,7 +452,7 @@ const TesterPortfolio = {
       const assignedVers = TesterContext.getAssignedVersionsForTester(p.id);
       const activeVer = (assignedVers.find(v => (v.version || v) === p.activeVersion) || assignedVers[0])?.version 
                      || (assignedVers[0] && (assignedVers[0].version || assignedVers[0]))
-                     || p.activeVersion || 'v1.0';
+                     || p.activeVersion || '';
       const myCycles = TesterContext.getAssignedCyclesForTester(p.id, activeVer);
       const curCycle = myCycles.find(c => c.status === 'ACTIVE') || myCycles[0] || null;
 
@@ -546,7 +546,7 @@ const TesterPortfolio = {
       const assignedVers = TesterContext.getAssignedVersionsForTester(p.id);
       const activeVer = (assignedVers.find(v => (v.version || v) === p.activeVersion) || assignedVers[0])?.version 
                      || (assignedVers[0] && (assignedVers[0].version || assignedVers[0]))
-                     || p.activeVersion || 'v1.0';
+                     || p.activeVersion || '';
       const myCycles = TesterContext.getAssignedCyclesForTester(p.id, activeVer);
       const curCycle = myCycles.find(c => c.status === 'ACTIVE') || myCycles[0] || null;
 
@@ -661,7 +661,7 @@ const TesterPortfolio = {
     const assignedVers = TesterContext.getAssignedVersionsForTester(p.id);
     const activeVer = (assignedVers.find(v => (v.version || v) === p.activeVersion) || assignedVers[0])?.version 
                    || (assignedVers[0] && (assignedVers[0].version || assignedVers[0]))
-                   || p.activeVersion || 'v1.0';
+                   || p.activeVersion || '';
     const myCycles = TesterContext.getAssignedCyclesForTester(p.id, activeVer);
     const curCycle = (tc.cycleId && p.testCycles?.find(cy => cy.id === tc.cycleId)) || myCycles.find(c => c.status === 'ACTIVE') || myCycles[0] || null;
     const cycleId = tc.cycleId || curCycle?.id;

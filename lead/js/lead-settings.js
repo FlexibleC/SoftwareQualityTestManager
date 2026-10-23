@@ -52,7 +52,11 @@ const LeadSettings = {
     const tbody = document.getElementById('lead-versions-tbody');
     if (!tbody) return;
 
-    const versions = p.versions || [{ version: p.activeVersion || 'v1.0', label: 'Bản phát hành chuẩn', status: 'ACTIVE' }];
+    const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
+    if (versions.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted)">Dự án chưa có phiên bản nào. Vui lòng bấm <strong>➕ Thêm Phiên Bản Mới</strong> để tạo phiên bản đầu tiên.</td></tr>`;
+      return;
+    }
     const cycles = typeof getTestCyclesForProject === 'function' 
       ? getTestCyclesForProject(p.id) 
       : (p.testCycles || (state.testCycles || []).filter(c => c.projectId === p.id));
@@ -311,12 +315,16 @@ const LeadSettings = {
 
     const verSel = document.getElementById('cf-version');
     if (verSel) {
-      const versions = p.versions || [{ version: p.activeVersion || 'v1.0' }];
-      verSel.innerHTML = versions.map(v => `
-        <option value="${v.version}" ${v.version === p.activeVersion ? 'selected' : ''}>
-          ${v.version} (${v.label || 'Phiên bản'})
-        </option>
-      `).join('');
+      const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
+      if (versions.length === 0) {
+        verSel.innerHTML = `<option value="">-- Chưa có phiên bản nào --</option>`;
+      } else {
+        verSel.innerHTML = versions.map(v => `
+          <option value="${v.version}" ${v.version === p.activeVersion ? 'selected' : ''}>
+            ${v.version} (${v.label || 'Phiên bản'})
+          </option>
+        `).join('');
+      }
     }
 
     document.getElementById('modal-cycle-title').textContent = '➕ Thêm Đợt Kiểm Thử Mới';
@@ -341,12 +349,16 @@ const LeadSettings = {
 
     const verSel = document.getElementById('cf-version');
     if (verSel) {
-      const versions = p.versions || [{ version: p.activeVersion || 'v1.0' }];
-      verSel.innerHTML = versions.map(v => `
-        <option value="${v.version}" ${v.version === (c.version || p.activeVersion) ? 'selected' : ''}>
-          ${v.version} (${v.label || 'Phiên bản'})
-        </option>
-      `).join('');
+      const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
+      if (versions.length === 0) {
+        verSel.innerHTML = `<option value="">-- Chưa có phiên bản nào --</option>`;
+      } else {
+        verSel.innerHTML = versions.map(v => `
+          <option value="${v.version}" ${v.version === (c.version || p.activeVersion) ? 'selected' : ''}>
+            ${v.version} (${v.label || 'Phiên bản'})
+          </option>
+        `).join('');
+      }
     }
 
     document.getElementById('modal-cycle-title').textContent = '✏️ Chỉnh Sửa Đợt Kiểm Thử';
@@ -1366,12 +1378,16 @@ const LeadSettings = {
     const sourceSelect = document.getElementById('mcv-source-version');
     if (!sourceSelect) return;
 
-    const versions = p.versions || [{ version: p.activeVersion || 'v1.0' }];
-    sourceSelect.innerHTML = versions.map(v => `
-      <option value="${v.version}" ${v.version === p.activeVersion ? 'selected' : ''}>
-        ${v.version} — ${v.label || 'Phiên bản'} (${getTestCasesForVersion(p.id, v.version).length} kịch bản)
-      </option>
-    `).join('');
+    const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
+    if (versions.length === 0) {
+      sourceSelect.innerHTML = `<option value="">-- Chưa có phiên bản nào --</option>`;
+    } else {
+      sourceSelect.innerHTML = versions.map(v => `
+        <option value="${v.version}" ${v.version === p.activeVersion ? 'selected' : ''}>
+          ${v.version} — ${v.label || 'Phiên bản'} (${getTestCasesForVersion(p.id, v.version).length} kịch bản)
+        </option>
+      `).join('');
+    }
 
     document.getElementById('mcv-new-version').value = `${p.activeVersion || 'v2.0'}-Patch1`;
     document.getElementById('mcv-new-label').value = `Bản kế thừa từ ${p.activeVersion || 'v2.0'}`;

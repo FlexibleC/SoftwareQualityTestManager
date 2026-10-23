@@ -138,12 +138,16 @@ function populateAsgVersionSelector(projectId) {
   const p = (state.projects || []).find(x => x.id === projectId) || getActiveProject();
   if (!p) return;
 
-  const versions = (Array.isArray(p.versions) && p.versions.length > 0)
-    ? p.versions
-    : [{ version: p.activeVersion || 'v1.0', label: p.activeVersion || 'v1.0' }];
+  const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
 
   if (!asgSelectedVersion || (!versions.some(v => v.version === asgSelectedVersion) && asgSelectedVersion !== '')) {
-    asgSelectedVersion = p.activeVersion || versions[0]?.version || 'v1.0';
+    asgSelectedVersion = p.activeVersion || (versions[0]?.version || '');
+  }
+
+  if (versions.length === 0) {
+    verSel.innerHTML = `<option value="">-- Chưa có phiên bản nào --</option>`;
+    verSel.value = '';
+    return;
   }
 
   let options = versions.map(v => `

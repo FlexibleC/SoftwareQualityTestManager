@@ -411,21 +411,25 @@ function openAddCycleModal(defaultVer) {
   const p = getActiveProject();
   if (!p) return;
 
-  const targetVer = (typeof defaultVer === 'string' && defaultVer) ? defaultVer : (selectedCycleVersionFilter || p.activeVersion || 'v1.0');
+  const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
+  const targetVer = (typeof defaultVer === 'string' && defaultVer) ? defaultVer : (selectedCycleVersionFilter || p.activeVersion || (versions[0]?.version || ''));
   const projectCycles = getTestCyclesForProject(p.id, targetVer);
   const nextSeq = projectCycles.length + 1;
 
-  document.getElementById('modal-cycle-title').textContent = `➕ Thêm Đợt Kiểm Thử Mới (${targetVer})`;
+  document.getElementById('modal-cycle-title').textContent = targetVer ? `➕ Thêm Đợt Kiểm Thử Mới (${targetVer})` : `➕ Thêm Đợt Kiểm Thử Mới`;
   document.getElementById('cf-id').value = '';
   document.getElementById('cf-code').value = `ROUND-${nextSeq}`;
-  document.getElementById('cf-name').value = `Đợt ${nextSeq} — Kiểm thử ${targetVer} ROUND-${nextSeq}`;
+  document.getElementById('cf-name').value = targetVer ? `Đợt ${nextSeq} — Kiểm thử ${targetVer} ROUND-${nextSeq}` : `Đợt ${nextSeq} — ROUND-${nextSeq}`;
   
   // Populate versions dropdown
   const verSelect = document.getElementById('cf-version');
-  const versions = p.versions || [{ version: p.activeVersion || 'v1.0' }];
-  verSelect.innerHTML = versions.map(v => 
-    `<option value="${escapeHtml(v.version)}" ${v.version === targetVer ? 'selected' : ''}>${escapeHtml(v.version)} ${v.label ? `(${v.label})` : ''}</option>`
-  ).join('');
+  if (versions.length === 0) {
+    verSelect.innerHTML = `<option value="">-- Chưa có phiên bản nào --</option>`;
+  } else {
+    verSelect.innerHTML = versions.map(v => 
+      `<option value="${escapeHtml(v.version)}" ${v.version === targetVer ? 'selected' : ''}>${escapeHtml(v.version)} ${v.label ? `(${v.label})` : ''}</option>`
+    ).join('');
+  }
 
   document.getElementById('cf-suite').value = 'REGRESSION';
   document.getElementById('cf-status').value = 'ACTIVE';
@@ -1184,7 +1188,7 @@ function openAddProjectModal() {
   setVal('pf-name', '');
   setVal('pf-domain', 'Hệ thống phần mềm');
   setVal('pf-desc', '');
-  setVal('pf-version', 'v1.0');
+  setVal('pf-version', '');
   setVal('pf-standards', 'ISO/IEC 25010, ISO/IEC/IEEE 29119');
 
   populateProjectLeadDropdown('');
@@ -1214,7 +1218,7 @@ function openEditProjectModal(projId) {
   setVal('pf-name', p.name || '');
   setVal('pf-domain', p.domain || 'Hệ thống phần mềm');
   setVal('pf-desc', p.desc || p.description || '');
-  setVal('pf-version', p.activeVersion || (p.versions && p.versions[0]?.version) || 'v1.0');
+  setVal('pf-version', p.activeVersion || (p.versions && p.versions[0]?.version) || '');
   setVal('pf-standards', Array.isArray(p.standards) ? p.standards.join(', ') : (p.standards || 'ISO/IEC 25010'));
 
   populateProjectLeadDropdown(p.leadUsername || p.lead || '');
@@ -1808,19 +1812,19 @@ function renderModulesTable() {
     return;
   }
 
-  const versions = p.versions || [{ version: p.activeVersion || 'v1.0' }];
+  const versions = (Array.isArray(p.versions) && p.versions.length > 0) ? p.versions : [];
   if (!selectedModuleVersion || !versions.some(v => v.version === selectedModuleVersion)) {
-    selectedModuleVersion = p.activeVersion || versions[0]?.version || 'v1.0';
+    selectedModuleVersion = p.activeVersion || versions[0]?.version || '';
   }
 
   const curVer = selectedModuleVersion;
-  const mods = getModules(curVer, p.id);
-  const totalVerTcs = getAllTcs(curVer, p.id).length;
+  const mods = curVer ? getModules(curVer, p.id) : [];
+  const totalVerTcs = curVer ? getAllTcs(curVer, p.id).length : 0;
   const catalog = window.SMARTVMS_DEFAULT_CATALOG || window.SMARTVMS_TEST_CATALOG;
 
   // Update title
   if (titleEl) {
-    titleEl.innerHTML = `📁 Danh Mục <strong>${mods.length} Phân Hệ Nghiệp Vụ</strong>: <span>${escapeHtml(p.name)}</span> <span class="badge badge-pass" style="font-size:11.5px; margin-left:8px">Phiên bản: ${escapeHtml(curVer)}</span>`;
+    titleEl.innerHTML = `📁 Danh Mục <strong>${mods.length} Phân Hệ Nghiệp Vụ</strong>: <span>${escapeHtml(p.name)}</span> ${curVer ? `<span class="badge badge-pass" style="font-size:11.5px; margin-left:8px">Phiên bản: ${escapeHtml(curVer)}</span>` : '<span class="badge badge-draft" style="font-size:11.5px; margin-left:8px">Chưa có phiên bản</span>'}`;
   }
 
   // Render Toolbar with Project dropdown and Version pills
@@ -1837,7 +1841,7 @@ function renderModulesTable() {
           <div style="display:flex; align-items:center; gap:6px">
             <span style="font-size:12px; font-weight:700; color:var(--text-muted)">Phiên bản:</span>
             <div style="display:inline-flex; gap:4px">
-              ${versions.map(v => {
+              ${versions.length > 0 ? versions.map(v => {
                 const isSel = curVer === v.version;
                 const isAct = v.version === p.activeVersion;
                 return `
@@ -1845,7 +1849,7 @@ function renderModulesTable() {
                     📦 ${escapeHtml(v.version)} ${isAct ? '●' : ''}
                   </button>
                 `;
-              }).join('')}
+              }).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic">Chưa có phiên bản nào</span>'}
             </div>
           </div>
         </div>

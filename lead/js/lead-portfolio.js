@@ -176,7 +176,7 @@ const LeadPortfolio = {
                       <h4 class="lead-portfolio-card-title">${escapeHtml(p.name)}</h4>
                       <div class="lead-portfolio-card-meta">
                         <span class="badge badge-info" style="font-size:10.5px">Mã: ${escapeHtml(p.code || 'PRJ')}</span>
-                        <span>Phiên bản: <strong>${escapeHtml(p.activeVersion || 'v1.0')}</strong></span>
+                        <span>Phiên bản: <strong>${escapeHtml(p.activeVersion || (p.versions && p.versions[0]?.version) || 'Chưa thiết lập')}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -282,7 +282,7 @@ const LeadPortfolio = {
                     <div style="font-weight:800; color:var(--text-primary); font-size:14px">${escapeHtml(p.name)}</div>
                   </td>
                   <td>
-                    <span class="badge badge-draft" style="font-size:11px">${escapeHtml(p.activeVersion || 'v1.0')}</span>
+                    <span class="badge badge-draft" style="font-size:11px">${escapeHtml(p.activeVersion || (p.versions && p.versions[0]?.version) || 'Chưa có')}</span>
                   </td>
                   <td style="text-align:center; font-weight:700">${totalTcs}</td>
                   <td style="text-align:center; font-weight:700">${cycles.length}</td>
