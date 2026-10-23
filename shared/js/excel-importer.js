@@ -563,8 +563,7 @@
     window.state.catalogSource = sourceName;
     window.state.catalogUpdatedAt = new Date().toISOString();
 
-    // Cập nhật Test Cycle
-    const allIds = newTcs.map(t => t.id);
+    // Cập nhật Test Cycle (TUYỆT ĐỐI KHÔNG TỰ ĐỘNG GÁN KỊCH BẢN VÀO ĐỢT TEST)
     const curPId = window.state.activeProjectId || 'PRJ-NEW';
     if (!window.state.testCycles || window.state.testCycles.length === 0) {
       window.state.testCycles = [{
@@ -577,36 +576,16 @@
         endDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
         status: 'ACTIVE',
         targetSuite: 'REGRESSION',
-        testCaseIds: allIds,
-        description: `Đợt kiểm thử nạp từ ${sourceName} (${newTcs.length} ca kiểm thử)`
+        scopeTcIds: [],
+        testCaseIds: [],
+        description: `Đợt kiểm thử khởi tạo cho ${sourceName}. Chưa cấu hình phạm vi.`
       }];
       window.state.activeCycleId = window.state.testCycles[0].id;
-    } else {
-      window.state.testCycles[0].testCaseIds = allIds;
     }
     if (window.pushCyclesToCloud) window.pushCyclesToCloud(window.state.testCycles);
 
-    // Cập nhật ma trận phân công
-    const today = new Date().toISOString().slice(0, 10);
-    window.state.assignments = newTcs.map((tc, idx) => {
-      const curRes = window.state.results?.[tc.id];
-      const curStatus = curRes ? curRes.status : 'Not Run';
-      return {
-        id: `asg-${String(idx + 1).padStart(3, '0')}`,
-        cycleId: 'CYC-SMARTVMS-01',
-        projectId: 'PRJ-SMARTVMS',
-        tcId: tc.id,
-        assigneeUsername: 'tester',
-        assigneeName: 'Nguyễn Văn Nam (Tester)',
-        assignedBy: 'Nguyễn Văn Huy (QA Lead)',
-        startDate: today,
-        dueDate: '2026-10-30',
-        status: curStatus === 'Pass' ? 'PASSED' : (curStatus === 'Fail' ? 'FAILED' : 'Not Run'),
-        priority: tc.priority || 'P2',
-        module: tc.module || 'M01',
-        assignedAt: new Date().toISOString()
-      };
-    });
+    // QUY TẮC: KHÔNG TỰ ĐỘNG PHÂN CÔNG TESTCASE CHO ĐỢT TEST KHI NẠP DỮ LIỆU
+    // Phân công sẽ do Quản trị viên (QA Lead) chủ động điều phối theo nhu cầu thực tế.
 
     // Lưu Core State
     if (typeof window.saveCoreState === 'function') {

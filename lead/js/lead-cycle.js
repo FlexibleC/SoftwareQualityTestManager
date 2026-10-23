@@ -2682,7 +2682,9 @@ const LeadCycle = {
     const verTcs = typeof getTestCasesForVersion === 'function' ? getTestCasesForVersion(p?.id, this.version) : [];
     const curCycle = this.getCurrentCycle();
 
-    const currentScope = curCycle?.scopeTcIds || curCycle?.testCaseIds || verTcs.map(t => t.id);
+    const currentScope = Array.isArray(curCycle?.scopeTcIds)
+      ? curCycle.scopeTcIds
+      : (Array.isArray(curCycle?.testCaseIds) ? curCycle.testCaseIds : []);
     this.tempScopeSelectedIds = new Set(currentScope);
     this.selectedScopeModuleId = '';
 

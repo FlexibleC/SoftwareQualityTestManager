@@ -637,11 +637,13 @@ function openCycleScopeModal(cycleId) {
   const p = (state.projects || []).find(pr => pr.id === c.projectId) || getActiveProject();
   if (!p) return;
 
-  // Lấy danh mục kịch bản đã chọn
-  if (Array.isArray(c.testCaseIds) && c.testCaseIds.length > 0) {
+  // Lấy danh mục kịch bản đã chọn (mặc định rỗng nếu chưa cấu hình)
+  if (Array.isArray(c.scopeTcIds)) {
+    selectedScopeTcIds = new Set(c.scopeTcIds);
+  } else if (Array.isArray(c.testCaseIds)) {
     selectedScopeTcIds = new Set(c.testCaseIds);
   } else {
-    selectedScopeTcIds = new Set(getTestCasesForCycle(c.id).map(t => t.id));
+    selectedScopeTcIds = new Set();
   }
 
   // Header Title, Status & Suite Badges

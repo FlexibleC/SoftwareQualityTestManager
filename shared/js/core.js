@@ -1472,31 +1472,24 @@ function getTestCasesForCycle(cycleId) {
   const targetVer = c?.version || p.activeVersion;
   const versionTcs = getTestCasesForVersion(p.id, targetVer);
 
-  if (!c) return versionTcs;
+  if (!c) return [];
 
   // Hỗ trợ cả 2 trường tên thuộc tính scopeTcIds và testCaseIds
-  const chosenIds = (Array.isArray(c.scopeTcIds) && c.scopeTcIds.length > 0)
+  // QUY TẮC CỐT LÕI: KHÔNG ĐƯỢC PHÉP TỰ ĐỘNG GÁN TEST CASE CHO ĐỢT TEST.
+  // Đợt test chỉ chứa đúng những kịch bản người dùng đã chủ động chọn.
+  // Nếu chưa cấu hình hoặc danh sách rỗng, trả về mảng rỗng [] (0 kịch bản).
+  const chosenIds = Array.isArray(c.scopeTcIds)
     ? c.scopeTcIds
-    : (Array.isArray(c.testCaseIds) && c.testCaseIds.length > 0 ? c.testCaseIds : null);
+    : (Array.isArray(c.testCaseIds) ? c.testCaseIds : null);
 
-  if (chosenIds && chosenIds.length > 0) {
+  if (chosenIds !== null && Array.isArray(chosenIds)) {
+    if (chosenIds.length === 0) return [];
     const scopeSet = new Set(chosenIds);
     return versionTcs.filter(tc => scopeSet.has(tc.id));
   }
 
-  // Fallback theo suite / targetSuite nếu có
-  const suite = (c.targetSuite || c.suite || '').toUpperCase();
-  if (suite === 'SMOKE') {
-    const p1s = versionTcs.filter(t => t.priority === 'P1' || (t.type || '').toUpperCase().includes('SMOKE'));
-    return p1s.length > 0 ? p1s : versionTcs;
-  }
-  if (suite === 'REGRESSION') {
-    const p12 = versionTcs.filter(t => t.priority === 'P1' || t.priority === 'P2');
-    return p12.length > 0 ? p12 : versionTcs;
-  }
-
-  // Mặc định toàn bộ kịch bản của phiên bản đó
-  return versionTcs;
+  // Mặc định ban đầu chưa cấu hình phạm vi: 0 kịch bản
+  return [];
 }
 
 /**
@@ -1722,19 +1715,26 @@ function getVersionMetrics(projectId, version) {
  */
 function getCycleMetrics(cycleId) {
   const c = getCycleById(cycleId);
-  if (!c) return { totalTcs: 0, assignedCount: 0, assignedRate: 0, passCount: 0, failCount: 0, untestedCount: 0, passRate: 0, failRate: 0, untestedRate: 0, assignees: [] };
+  if (!c) return { totalTcs: 0, assignedCount: 0, assignedRate: 0, passCount: 0, failCount: 0, blockedCount: 0, untestedCount: 0, passRate: 0, failRate: 0, untestedRate: 0, assignees: [] };
 
   const scopeTcs = getTestCasesForCycle(c.id);
   const totalTcs = scopeTcs.length;
 
-  // Lấy phân công thuộc đợt này
-  const asgs = (state.assignments || []).filter(a => a.cycleId === c.id || (!a.cycleId && c.status === 'ACTIVE'));
+  // Lấy phân công thuộc đợt này - CHỈ SO KHỚP CHÍNH XÁC cycleId, tuyệt đối không vơ đũa phân công không có cycleId
+  const asgs = (state.assignments || []).filter(a => a.cycleId === c.id);
   const assignedTcIds = new Set(asgs.map(a => a.tcId || a.testCaseId));
+  // Chỉ tính phân công cho những kịch bản THỰC TẾ nằm trong phạm vi đợt test
   const assignedCount = scopeTcs.filter(tc => assignedTcIds.has(tc.id)).length;
   const assignedRate = totalTcs > 0 ? Math.round((assignedCount / totalTcs) * 100) : 0;
 
-  // Tester usernames đã được giao bài thực tế
-  const assigneesWithWork = Array.from(new Set(asgs.map(a => a.username || a.assignee).filter(Boolean)));
+  // Tester usernames đã được giao bài thực tế trong phạm vi đợt test
+  const validTcIdsSet = new Set(scopeTcs.map(t => t.id));
+  const assigneesWithWork = Array.from(new Set(
+    asgs.filter(a => validTcIdsSet.has(a.tcId || a.testCaseId))
+        .map(a => a.username || a.assignee || a.assigneeUsername)
+        .filter(Boolean)
+  ));
+  
   // Tester được phân bổ tham gia đợt (từ cấu hình đợt test)
   const assignedTesters = (Array.isArray(c.assignedTesters) && c.assignedTesters.length > 0)
     ? c.assignedTesters

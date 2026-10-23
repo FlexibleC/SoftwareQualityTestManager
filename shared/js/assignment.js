@@ -81,7 +81,7 @@ function populateAsgTesterFilter() {
   const cycle = getCycleById(cycleId);
   const curVer = cycle?.version || p.activeVersion || 'v1.0';
   const cycleTcs = cycleId ? getTestCasesForCycle(cycleId) : getAllTcs(curVer, p.id);
-  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || a.cycleId === cycleId));
   const asgMap = new Map();
   assignments.forEach(a => {
     if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
@@ -258,7 +258,7 @@ function renderAsgOverviewTab() {
   const cycle = getCycleById(cycleId);
   const curVer = cycle?.version || p.activeVersion || 'v1.0';
   const allTcs = cycleId ? getTestCasesForCycle(cycleId) : getAllTcs(curVer, p.id);
-  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || a.cycleId === cycleId));
   const assignedTcIds = new Set(assignments.map(a => a.tcId));
 
   const total = allTcs.length;
@@ -313,7 +313,7 @@ function jumpToDetailForTester(username) {
 
   const p = getActiveProject();
   const cycleId = document.getElementById('detail-cycle')?.value || state.activeCycleId;
-  const assignments = (state.assignments || []).filter(a => (!p || a.projectId === p.id) && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const assignments = (state.assignments || []).filter(a => (!p || a.projectId === p.id) && (!cycleId || a.cycleId === cycleId));
   const userAsgs = assignments.filter(a => a.assigneeUsername === username);
 
   if (userAsgs.length > 0) {
@@ -367,7 +367,7 @@ function renderAsgDetailTab() {
   const curVer = cycle?.version || p.activeVersion || 'v1.0';
   const cycleTcs = cycleId ? getTestCasesForCycle(cycleId) : getAllTcs(curVer, p.id);
   const modules = getModules(curVer, p.id);
-  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || a.cycleId === cycleId));
   const asgMap = new Map();
   assignments.forEach(a => {
     if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
@@ -559,7 +559,7 @@ function applyAsgPreset(type) {
   const cycle = getCycleById(cycleId);
   const curVer = cycle?.version || p.activeVersion || 'v1.0';
   const cycleTcs = cycleId ? getTestCasesForCycle(cycleId) : getAllTcs(curVer, p.id);
-  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || a.cycleId === cycleId));
   const assignedTcIds = new Set(assignments.map(a => a.tcId));
 
   if (type === 'FAILED_RECENT') {
@@ -606,7 +606,7 @@ function renderAsgTcTable() {
   const curVer = cycle?.version || p.activeVersion || 'v1.0';
   const cycleTcs = cycleId ? getTestCasesForCycle(cycleId) : getAllTcs(curVer, p.id);
   const modules = getModules(curVer, p.id);
-  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+  const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || a.cycleId === cycleId));
   const asgMap = new Map();
   assignments.forEach(a => {
     if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
@@ -892,7 +892,7 @@ function batchSelectCurrentMod(select) {
 
   // Also respect active search/history/status/tester filters if any
   if (asgFilterSearch || asgFilterStatus || asgFilterTester || asgFilterHistory || asgFilterPriority) {
-    const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || !a.cycleId || a.cycleId === cycleId));
+    const assignments = (state.assignments || []).filter(a => a.projectId === p.id && (!cycleId || a.cycleId === cycleId));
     const asgMap = new Map();
     assignments.forEach(a => {
       if (!asgMap.has(a.tcId)) asgMap.set(a.tcId, []);
@@ -968,7 +968,7 @@ function confirmBatchDispatch() {
     const existing = state.assignments.find(a => 
       a.projectId === p.id && 
       a.tcId === tcId && 
-      (a.cycleId === cycleId || !a.cycleId) && 
+      (cycleId ? a.cycleId === cycleId : !a.cycleId) && 
       a.assigneeUsername === username
     );
 
@@ -1017,11 +1017,11 @@ function cancelTcAsg(tcId, username) {
 
   if (username) {
     // Chỉ hủy phân công cho nhân sự cụ thể được chọn
-    state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId) && a.assigneeUsername === username));
+    state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (cycleId ? a.cycleId === cycleId : !a.cycleId) && a.assigneeUsername === username));
     showToast(`✕ Đã hủy phân công kịch bản [${tcId}] của nhân sự ${username}`, 'info');
   } else {
     // Hủy toàn bộ phân công của kịch bản này trong đợt test
-    state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId)));
+    state.assignments = state.assignments.filter(a => !(a.projectId === p.id && a.tcId === tcId && (cycleId ? a.cycleId === cycleId : !a.cycleId)));
     showToast(`✕ Đã hủy toàn bộ phân công kịch bản [${tcId}] trong đợt test`, 'info');
   }
   saveCoreState();
@@ -1038,7 +1038,7 @@ function openAsgTcDetail(tcId) {
   const tc = allTcs.find(t => t.id === tcId) || (p.testCases || []).find(t => t.id === tcId);
   if (!tc) return;
 
-  const tcAsgs = (state.assignments || []).filter(a => a.projectId === p.id && a.tcId === tcId && (a.cycleId === cycleId || !a.cycleId));
+  const tcAsgs = (state.assignments || []).filter(a => a.projectId === p.id && a.tcId === tcId && (cycleId ? a.cycleId === cycleId : !a.cycleId));
   const res = state.results ? state.results[tcId] : null;
   const summary = getTcPriorExecutionSummary(tc.id, cycleId, p.id);
   const title = document.getElementById('modal-asg-tc-title');

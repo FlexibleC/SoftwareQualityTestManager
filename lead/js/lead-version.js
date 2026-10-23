@@ -846,33 +846,14 @@ const LeadVersion = {
     if (!state.testCycles) state.testCycles = [];
     state.testCycles.push(newCycle);
 
-    // Kế thừa phân công nhân sự nếu chọn
-    if (optStaff && state.assignments) {
-      const sourceAsgs = state.assignments.filter(a => a.cycleId === sourceId || a.projectId === p.id);
-      const uniqueAssignees = new Map();
-      sourceAsgs.forEach(a => {
-        if (!uniqueAssignees.has(a.assigneeUsername || a.username)) {
-          uniqueAssignees.set(a.assigneeUsername || a.username, a);
-        }
-      });
-
-      // Tự động chia bài trong newScopeIds cho các tester này
-      const testers = Array.from(uniqueAssignees.keys());
-      if (testers.length > 0 && newScopeIds.length > 0) {
-        newScopeIds.forEach((tcId, idx) => {
-          const targetTester = testers[idx % testers.length];
-          state.assignments.push({
-            id: `ASG-${Date.now()}-${idx}`,
-            projectId: p.id,
-            version: this.currentVersion,
-            cycleId: newCycleId,
-            testCaseId: tcId,
-            assigneeUsername: targetTester,
-            username: targetTester,
-            status: 'ASSIGNED',
-            assignedDate: new Date().toISOString()
-          });
-        });
+    // Kế thừa danh sách kỹ sư tham gia đợt nếu chọn (tuyệt đối không tự động gán test case)
+    if (optStaff) {
+      const sourceCyc = (p.testCycles || []).find(c => c.id === sourceId);
+      if (sourceCyc) {
+        newCycle.assignedTesters = Array.isArray(sourceCyc.assignedTesters) ? [...sourceCyc.assignedTesters] : [];
+        newCycle.testerUsernames = newCycle.assignedTesters;
+        newCycle.assignedDevs = Array.isArray(sourceCyc.assignedDevs) ? [...sourceCyc.assignedDevs] : [];
+        newCycle.devUsernames = newCycle.assignedDevs;
       }
     }
 
@@ -2957,12 +2938,12 @@ const LeadVersion = {
       ? getTestCasesForVersion(p.id, cycleVer) 
       : (p.testCases || []);
 
-    if (Array.isArray(c.scopeTcIds) && c.scopeTcIds.length > 0) {
+    if (Array.isArray(c.scopeTcIds)) {
       this.tempScopeSelectedIds = new Set(c.scopeTcIds);
-    } else if (Array.isArray(c.testCaseIds) && c.testCaseIds.length > 0) {
+    } else if (Array.isArray(c.testCaseIds)) {
       this.tempScopeSelectedIds = new Set(c.testCaseIds);
     } else {
-      this.tempScopeSelectedIds = new Set(this.currentCycleVersionTcs.map(t => t.id));
+      this.tempScopeSelectedIds = new Set();
     }
 
     const titleEl = document.getElementById('mcs-title');
