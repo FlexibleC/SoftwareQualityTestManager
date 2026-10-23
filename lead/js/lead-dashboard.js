@@ -1013,9 +1013,18 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
 
     const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
     const versions = typeof getProjectVersions === 'function' ? getProjectVersions(p.id) : (p.versions || []);
-    const allTcs = p.testCases || [];
+    if (typeof cleanOrphanAssignments === 'function') {
+      cleanOrphanAssignments();
+    }
+    const allTcs = Array.isArray(p.testCases) ? p.testCases : [];
     const totalProjectTcs = allTcs.length;
-    const assignments = (state.assignments || []).filter(a => a.projectId === p.id);
+    const validTcIds = new Set(allTcs.map(t => t.id));
+    // Chỉ lấy các phân công cho những kịch bản THỰC TẾ đang tồn tại trong dự án này
+    const assignments = totalProjectTcs > 0
+      ? (typeof getProjectAssignments === 'function' 
+          ? getProjectAssignments(p.id) 
+          : (state.assignments || []).filter(a => a.projectId === p.id && validTcIds.has(a.tcId || a.testCaseId)))
+      : [];
     const results = state.results || {};
     const defects = (typeof getProjectDefects === 'function') ? getProjectDefects(p.id) : [];
 
@@ -1151,9 +1160,9 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
         versionBadges = `<span class="badge badge-outline" style="font-size:10.5px; color:var(--text-muted)">Toàn bộ phiên bản</span>`;
       }
 
-      // Thống kê lỗi phát hiện (tính theo tester)
+      // Thống kê lỗi phát hiện (tính theo tester thực tế)
       const userDefects = defects.filter(d => d.reportedBy === uName || d.tester === uName);
-      const bugCount = userDefects.length > 0 ? userDefects.length : (assigned > 0 ? Math.max(1, Math.floor(assigned / 12)) : 0);
+      const bugCount = userDefects.length;
 
       return `
         <tr>
@@ -2280,10 +2289,13 @@ Thời điểm: ${new Date().toLocaleString('vi-VN')}
     const p = getActiveProject();
     if (!p) return;
 
-    const members = typeof getProjectMembers === 'function' ? getProjectMembers(p.id) : (p.members || []);
-    const assignments = (typeof getProjectAssignments === 'function') 
-      ? getProjectAssignments(p.id) 
-      : (state.assignments || []).filter(a => a.projectId === p.id);
+    const allTcs = Array.isArray(p.testCases) ? p.testCases : [];
+    const validTcIds = new Set(allTcs.map(t => t.id));
+    const assignments = allTcs.length > 0
+      ? ((typeof getProjectAssignments === 'function') 
+          ? getProjectAssignments(p.id) 
+          : (state.assignments || []).filter(a => a.projectId === p.id && validTcIds.has(a.tcId || a.testCaseId)))
+      : [];
 
     const testers = members.filter(m => (m.projectRole || 'tester').toLowerCase() !== 'dev');
     if (testers.length === 0) {

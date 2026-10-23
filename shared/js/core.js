@@ -433,39 +433,80 @@ function ensureDefaultTestCyclesForProjects() {
 function cleanOrphanAssignments() {
   if (!state.projects || !Array.isArray(state.projects) || state.projects.length === 0) {
     state.assignments = [];
+    try {
+      localStorage.removeItem('smartvms_system_assignments_v3');
+      sessionStorage.removeItem('smartvms_system_assignments_v3');
+      const raw = localStorage.getItem(STATE_STORAGE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        p.assignments = [];
+        localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(p));
+      }
+    } catch (e) {}
     return;
   }
 
   const validProjects = new Set(state.projects.map(p => p.id));
   const validTcSet = new Set();
   state.projects.forEach(p => {
-    const pTcs = Array.isArray(p.testCases) ? p.testCases : (typeof getTestCasesForProject === 'function' ? getTestCasesForProject(p.id) : []);
-    if (Array.isArray(pTcs)) {
-      pTcs.forEach(tc => {
-        if (tc && tc.id) {
-          validTcSet.add(`${p.id}__${tc.id}`);
-          validTcSet.add(tc.id);
-        }
-      });
-    }
+    const pTcs = Array.isArray(p.testCases) ? p.testCases : [];
+    pTcs.forEach(tc => {
+      if (tc && tc.id) {
+        validTcSet.add(`${p.id}__${tc.id}`);
+        validTcSet.add(tc.id);
+      }
+    });
   });
 
+  const beforeCount = (state.assignments || []).length;
   if (Array.isArray(state.assignments)) {
     state.assignments = state.assignments.filter(a => {
-      if (!a || !a.tcId) return false;
+      if (!a) return false;
+      const tcId = a.tcId || a.testCaseId;
+      if (!tcId) return false;
       if (a.projectId && !validProjects.has(a.projectId)) return false;
       const prj = state.projects.find(p => p.id === a.projectId);
       if (prj) {
         const prjTcs = Array.isArray(prj.testCases) ? prj.testCases : [];
         if (prjTcs.length === 0) return false;
-        return prjTcs.some(tc => tc.id === a.tcId);
+        return prjTcs.some(tc => tc.id === tcId);
       }
-      return validTcSet.has(a.tcId) || (a.projectId && validTcSet.has(`${a.projectId}__${a.tcId}`));
+      return validTcSet.has(tcId) || (a.projectId && validTcSet.has(`${a.projectId}__${tcId}`));
     });
+  }
+
+  // Nếu có bài bị thanh lọc, lưu ngay lập tức vào LocalStorage để dọn sạch rác
+  if ((state.assignments || []).length !== beforeCount) {
+    try {
+      const rawState = localStorage.getItem(STATE_STORAGE_KEY);
+      if (rawState) {
+        const parsed = JSON.parse(rawState);
+        parsed.assignments = state.assignments;
+        localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(parsed));
+      }
+      localStorage.setItem('smartvms_system_assignments_v3', JSON.stringify(state.assignments));
+      sessionStorage.setItem('smartvms_system_assignments_v3', JSON.stringify(state.assignments));
+    } catch (e) {}
   }
 }
 if (typeof window !== 'undefined') {
   window.cleanOrphanAssignments = cleanOrphanAssignments;
+}
+
+/**
+ * Lấy danh sách phân công nhiệm vụ hợp lệ thực tế của một dự án (chỉ tính kịch bản có thật)
+ */
+function getProjectAssignments(projectId) {
+  const pId = projectId || state.activeProjectId;
+  const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
+  if (!p) return [];
+  const allTcs = Array.isArray(p.testCases) ? p.testCases : [];
+  if (allTcs.length === 0) return [];
+  const validTcIds = new Set(allTcs.map(t => t.id));
+  return (state.assignments || []).filter(a => a.projectId === pId && validTcIds.has(a.tcId || a.testCaseId));
+}
+if (typeof window !== 'undefined') {
+  window.getProjectAssignments = getProjectAssignments;
 }
 
 /**
