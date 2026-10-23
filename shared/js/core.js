@@ -1511,11 +1511,7 @@ function getTestCasesForVersion(projectId, version) {
   const p = (state.projects || []).find(x => x.id === pId) || getActiveProject();
   if (!p) return [];
 
-  const allTcs = (Array.isArray(p.testCases) && p.testCases.length > 0)
-    ? p.testCases
-    : ((p.id === 'PRJ-SMARTVMS' || p.code === 'SMARTVMS') && window.SMARTVMS_DEFAULT_CATALOG && Array.isArray(window.SMARTVMS_DEFAULT_CATALOG.testCases)
-        ? window.SMARTVMS_DEFAULT_CATALOG.testCases
-        : (p.testCases || []));
+  const allTcs = Array.isArray(p.testCases) ? p.testCases : [];
 
   const targetVer = (version || p.activeVersion || '').trim().toLowerCase();
   if (!targetVer) return allTcs;
@@ -2813,7 +2809,7 @@ function addUser(userData) {
     role: role,
     roleTitle: roleTitleMap[role] || 'Thành viên',
     email: (userData.email || '').trim(),
-    assignedProjects: userData.assignedProjects || ['PRJ-SMARTVMS'],
+    assignedProjects: Array.isArray(userData.assignedProjects) ? userData.assignedProjects : [],
     status: 'ACTIVE',
     createdAt: new Date().toISOString().slice(0, 10)
   };

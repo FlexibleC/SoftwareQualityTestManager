@@ -1799,7 +1799,7 @@ function renderModulesTable() {
   const activePrj = getActiveProject();
 
   if (!selectedModuleProjectId) {
-    selectedModuleProjectId = activePrj?.id || 'PRJ-SMARTVMS';
+    selectedModuleProjectId = activePrj?.id || (allProjects[0]?.id || null);
   }
 
   const p = (state.projects || []).find(pr => pr.id === selectedModuleProjectId) || activePrj;

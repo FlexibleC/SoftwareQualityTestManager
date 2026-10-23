@@ -815,44 +815,32 @@
       }
 
       if (dbTcs && dbTcs.length > 0) {
-        const defaultVer = curPrj?.activeVersion || (curPrj?.versions?.[0]?.version || 'v1.0');
-        const mapped = dbTcs.map(rec => {
-          const item = mapCloudTestCaseToLocal(rec);
-          item.version = defaultVer;
-          item.projectId = curPrj?.id || 'PRJ-SMARTVMS';
-          return item;
-        });
-        const modIds = [...new Set(mapped.map(t => t.module || 'M01'))].sort();
-        const defaultModules = modIds.map(mId => ({
-          id: mId,
-          name: `Phân hệ ${mId}`,
-          versions: [defaultVer]
-        }));
-
-        if (!window.state.projects || window.state.projects.length === 0) {
-          window.state.projects = [{
-            id: 'PRJ-SMARTVMS',
-            code: 'SMARTVMS',
-            name: 'SmartVMS Local SingleSite 2026',
-            domain: 'Quản lý Khách & Ra vào',
-            lead: 'Nguyễn Văn Huy (QA Lead)',
-            standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
-            activeVersion: defaultVer,
-            versions: [{ version: defaultVer, label: `${defaultVer}-Base`, status: 'IN_QA' }],
-            modules: defaultModules,
-            testCases: mapped
-          }];
-          window.state.activeProjectId = 'PRJ-SMARTVMS';
-        } else {
-          window.state.projects[0].testCases = mapped;
-          if (!window.state.projects[0].modules || window.state.projects[0].modules.length === 0) {
-            window.state.projects[0].modules = defaultModules;
+        if (curPrj) {
+          const defaultVer = curPrj.activeVersion || (curPrj.versions?.[0]?.version || 'v1.0');
+          const mapped = dbTcs.map(rec => {
+            const item = mapCloudTestCaseToLocal(rec);
+            item.version = defaultVer;
+            item.projectId = curPrj.id;
+            return item;
+          });
+          const modIds = [...new Set(mapped.map(t => t.module || 'M01'))].sort();
+          const defaultModules = modIds.map(mId => ({
+            id: mId,
+            name: `Phân hệ ${mId}`,
+            versions: [defaultVer]
+          }));
+          curPrj.testCases = mapped;
+          if (!curPrj.modules || curPrj.modules.length === 0) {
+            curPrj.modules = defaultModules;
           }
+          window.state.isCustomCatalog = true;
+          window.state.isCleanProjectState = false;
+          window.state.catalogSource = 'Supabase Cloud Database';
+          console.log(`⚡ [Database Sync] Đã đồng bộ ${mapped.length} kịch bản từ Cloud Database về dự án ${curPrj.name}.`);
+        } else {
+          // TUYỆT ĐỐI KHÔNG TỰ ĐỘNG SINH DỰ ÁN MẪU/HARDCODE KHI HỆ THỐNG ĐANG RỖNG
+          console.log('⚡ [Database Sync] Hệ thống chưa có dự án nào được chọn, không tự sinh dự án mặc định.');
         }
-        window.state.isCustomCatalog = true;
-        window.state.isCleanProjectState = false;
-        window.state.catalogSource = 'Supabase Cloud Database';
-        console.log(`⚡ [Database Sync] Đã đồng bộ ${mapped.length} kịch bản từ Cloud Database về trình duyệt.`);
       } else {
         // Bảng test_cases_custom trên Cloud đang có 0 bản ghi:
         // NGUYÊN TẮC BẢO VỆ DỮ LIỆU: Tuyệt đối không xóa trắng kịch bản và kết quả của máy trạm!

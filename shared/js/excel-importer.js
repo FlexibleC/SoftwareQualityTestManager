@@ -531,15 +531,15 @@
     }));
 
     if (!window.state.projects || window.state.projects.length === 0) {
-      const cleanFileName = sourceName.replace(/^(Excel|JSON):\s*/i, '').replace(/\.[^/.]+$/, '').trim() || 'SmartVMS SingleSite';
-      const cleanCode = 'PRJ-SMARTVMS';
+      const cleanFileName = sourceName.replace(/^(Excel|JSON):\s*/i, '').replace(/\.[^/.]+$/, '').trim() || 'Dự án kiểm thử mới';
+      const cleanCode = 'PRJ-' + (cleanFileName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10) || String(Date.now()));
       const newProj = {
         id: cleanCode,
-        code: 'SMARTVMS',
-        name: cleanFileName.includes('SmartVMS') ? cleanFileName : 'SmartVMS Local SingleSite 2026',
-        domain: 'Quản lý Khách & Ra vào',
-        lead: window.state?.currentUser?.name || 'Nguyễn Văn Huy (QA Lead)',
-        standards: ['ISO 9001:2015', 'ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
+        code: cleanCode.replace('PRJ-', '') || 'PRJ',
+        name: cleanFileName,
+        domain: 'Kiểm thử phần mềm',
+        lead: window.state?.currentUser?.name || 'QA Lead',
+        standards: ['ISO/IEC/IEEE 29119', 'ISO/IEC 25010'],
         activeVersion: 'v1.0.0',
         versions: [{ version: 'v1.0.0', label: 'v1.0.0-Base', status: 'IN_QA' }],
         modules: defaultModules,
