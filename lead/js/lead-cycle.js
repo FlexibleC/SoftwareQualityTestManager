@@ -301,21 +301,51 @@ const LeadCycle = {
     this.renderCriticalDefectRadar(cycleDefects);
   },
 
+  // Lấy danh sách các phân hệ thực tế có kịch bản thuộc phạm vi đợt kiểm thử
+  getActiveCycleModules() {
+    const p = getActiveProject();
+    const modules = typeof getModules === 'function' ? getModules(this.version, p?.id) : (p?.modules || []);
+    const cycleTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(this.cycleId) : [];
+
+    const activeModMap = new Map();
+    cycleTcs.forEach(t => {
+      const mId = t.moduleId || t.module;
+      if (mId && !activeModMap.has(mId)) {
+        const found = modules.find(m => m.id === mId);
+        activeModMap.set(mId, {
+          id: mId,
+          name: found?.name || t.moduleName || t.module || mId
+        });
+      }
+    });
+
+    // Giữ nguyên thứ tự theo danh mục modules gốc nếu có
+    const activeModules = modules.filter(m => activeModMap.has(m.id));
+    // Bổ sung các phân hệ có trong test case nhưng chưa khai báo trong modules
+    activeModMap.forEach((val, key) => {
+      if (!activeModules.some(m => m.id === key)) {
+        activeModules.push(val);
+      }
+    });
+
+    return { activeModules, cycleTcs, allModules: modules };
+  },
+
   renderModuleBreakdown(cycleTcs) {
     const tbody = document.getElementById('c-module-breakdown-tbody');
     if (!tbody) return;
 
     const p = getActiveProject();
-    const modules = typeof getModules === 'function' ? getModules(this.version, p?.id) : (p?.modules || []);
+    const { activeModules } = this.getActiveCycleModules();
     const countBadge = document.getElementById('c-modules-count');
-    if (countBadge) countBadge.textContent = `${modules.length} phân hệ`;
+    if (countBadge) countBadge.textContent = `${activeModules.length} phân hệ`;
 
-    if (modules.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:18px; color:var(--text-muted)">Chưa có dữ liệu phân hệ.</td></tr>`;
+    if (activeModules.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:18px; color:var(--text-muted)">Đợt kiểm thử chưa có kịch bản thuộc phân hệ nào.</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = modules.map(m => {
+    tbody.innerHTML = activeModules.map(m => {
       const modTcs = cycleTcs.filter(t => (t.moduleId || t.module) === m.id);
       const total = modTcs.length;
       if (total === 0) return '';
@@ -434,8 +464,7 @@ const LeadCycle = {
     if (!treeEl) return;
 
     const p = getActiveProject();
-    const modules = typeof getModules === 'function' ? getModules(this.version, p?.id) : (p?.modules || []);
-    const cycleTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(this.cycleId) : [];
+    const { activeModules, cycleTcs } = this.getActiveCycleModules();
 
     // Cập nhật số đếm trên các Presets
     let failedCount = 0, blockedCount = 0, untestedCount = 0, p1Count = 0;
@@ -459,12 +488,26 @@ const LeadCycle = {
     setBadge('c-badge-untested-count', untestedCount);
     setBadge('c-badge-p1-count', p1Count);
 
-    // Render tree modules
-    treeEl.innerHTML = modules.map(m => {
+    // Bỏ chọn nếu phân hệ đã chọn trước đó không còn thuộc phạm vi đợt kiểm thử
+    if (this.selectedTreeModuleId && !activeModules.some(m => m.id === this.selectedTreeModuleId)) {
+      this.selectedTreeModuleId = '';
+    }
+
+    if (activeModules.length === 0) {
+      treeEl.innerHTML = `
+        <div style="text-align:center; padding:16px 8px; color:var(--text-muted); font-size:11.5px">
+          Đợt chưa có kịch bản nào được giao.
+        </div>
+      `;
+      return;
+    }
+
+    // Render tree modules (chỉ hiển thị các phân hệ có kịch bản trong phạm vi đợt kiểm thử)
+    treeEl.innerHTML = activeModules.map(m => {
       const modTcs = cycleTcs.filter(t => (t.moduleId || t.module) === m.id);
       const isSelected = this.selectedTreeModuleId === m.id;
       return `
-        <button type="button" class="cycle-tree-item ${isSelected ? 'active' : ''}" onclick="LeadCycle.selectTreeModule('${m.id}')">
+        <button type="button" class="cycle-tree-item ${isSelected ? 'active' : ''}" onclick="LeadCycle.selectTreeModule('${m.id}')" title="Lọc kịch bản phân hệ [${m.id}] ${escapeHtml(m.name || m.id)}">
           <div style="display:flex; align-items:center; gap:6px; overflow:hidden">
             <span>📁</span>
             <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escapeHtml(m.name || m.id)}</span>
@@ -1088,16 +1131,19 @@ const LeadCycle = {
     if (!listEl) return;
 
     const p = getActiveProject();
-    const modules = typeof getModules === 'function' ? getModules(this.version, p?.id) : (p?.modules || []);
-    const cycleTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(this.cycleId) : [];
+    const { activeModules, cycleTcs } = this.getActiveCycleModules();
     const assignments = (state.assignments || []).filter(a => a.projectId === this.projectId && (!a.cycleId || a.cycleId === this.cycleId));
     const asgTcIds = new Set(assignments.map(a => a.tcId));
 
     const modCountBadge = document.getElementById('c-alloc-mod-count');
-    if (modCountBadge) modCountBadge.textContent = `${modules.length} phân hệ`;
+    if (modCountBadge) modCountBadge.textContent = `${activeModules.length} phân hệ`;
 
-    // Calculate stats per module
-    const modStats = modules.map(m => {
+    if (this.staffingSelectedModuleId && !activeModules.some(m => m.id === this.staffingSelectedModuleId)) {
+      this.staffingSelectedModuleId = '';
+    }
+
+    // Calculate stats per active module
+    const modStats = activeModules.map(m => {
       const modTcs = cycleTcs.filter(t => (t.moduleId || t.module) === m.id);
       const total = modTcs.length;
       const assigned = modTcs.filter(t => asgTcIds.has(t.id)).length;
@@ -1140,7 +1186,7 @@ const LeadCycle = {
     if (filteredStats.length === 0) {
       html += `
         <div style="text-align:center; padding:16px 8px; color:var(--text-muted); font-size:11.5px">
-          Không tìm thấy phân hệ phù hợp.
+          ${activeModules.length === 0 ? 'Đợt chưa có kịch bản nào thuộc phân hệ.' : 'Không tìm thấy phân hệ phù hợp.'}
         </div>
       `;
     } else {
@@ -1692,15 +1738,14 @@ const LeadCycle = {
   // ==================== MASTER STRATEGY: MODULE OWNERSHIP MATRIX ====================
   openModuleMatrixModal() {
     const p = getActiveProject();
-    const modules = typeof getModules === 'function' ? getModules(this.version, p?.id) : (p?.modules || []);
-    const cycleTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(this.cycleId) : [];
+    const { activeModules, cycleTcs } = this.getActiveCycleModules();
     const assignments = (state.assignments || []).filter(a => a.projectId === this.projectId && (!a.cycleId || a.cycleId === this.cycleId));
     const asgTcIds = new Set(assignments.map(a => a.tcId));
 
     const testers = this.getCycleParticipants();
 
     const totalEl = document.getElementById('mmm-total-modules-count');
-    if (totalEl) totalEl.textContent = modules.length;
+    if (totalEl) totalEl.textContent = activeModules.length;
 
     const curCycle = this.getCurrentCycle();
     const cycleStart = curCycle?.startDate || new Date().toISOString().slice(0, 10);
@@ -1716,15 +1761,15 @@ const LeadCycle = {
     const tbody = document.getElementById('mmm-modules-tbody');
     if (!tbody) return;
 
-    if (modules.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted)">Dự án chưa cấu hình phân hệ nào.</td></tr>`;
+    if (activeModules.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted)">Đợt kiểm thử hiện tại chưa có kịch bản thuộc phân hệ nào.</td></tr>`;
       openModal('modal-module-matrix-dispatch');
       return;
     }
 
     const testerOptionsHtml = testers.map(u => `<option value="${u.username}">${escapeHtml(u.name || u.username)} (${escapeHtml((u.roleTitle || 'Kỹ sư kiểm thử').replace(/\s*\([^)]*\)/g, ''))})</option>`).join('');
 
-    tbody.innerHTML = modules.map(m => {
+    tbody.innerHTML = activeModules.map(m => {
       const modTcs = cycleTcs.filter(t => (t.moduleId || t.module) === m.id);
       const total = modTcs.length;
       const unassigned = modTcs.filter(t => !asgTcIds.has(t.id)).length;
@@ -1894,14 +1939,13 @@ const LeadCycle = {
 
   saveAllModuleMatrixAssignments() {
     const p = getActiveProject();
-    const modules = typeof getModules === 'function' ? getModules(this.version, p?.id) : (p?.modules || []);
-    const cycleTcs = typeof getTestCasesForCycle === 'function' ? getTestCasesForCycle(this.cycleId) : [];
+    const { activeModules, cycleTcs } = this.getActiveCycleModules();
     const curCycle = this.getCurrentCycle();
     const cycleStart = curCycle?.startDate || new Date().toISOString().slice(0, 10);
     const cycleEnd = curCycle?.endDate || new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
 
     // RÀNG BUỘC CHẶT CHẼ: Kiểm tra hợp lệ thời hạn tất cả các phân hệ trước khi lưu
-    for (const m of modules) {
+    for (const m of activeModules) {
       const leadSel = document.getElementById(`mmm-lead-${m.id}`);
       if (leadSel?.value) {
         const dueDate = document.getElementById(`mmm-due-${m.id}`)?.value || cycleEnd;
@@ -1914,7 +1958,7 @@ const LeadCycle = {
     let countAssignedMods = 0;
     let countAssignedTcs = 0;
 
-    modules.forEach(m => {
+    activeModules.forEach(m => {
       const leadSel = document.getElementById(`mmm-lead-${m.id}`);
       const leadUsername = leadSel?.value;
       if (!leadUsername) return; // Skip unassigned rows
