@@ -143,7 +143,7 @@
   <script src="js/dev-context.js"></script>
   <script src="js/dev-portfolio.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
       if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
         DevPortfolio.init();
@@ -161,10 +161,11 @@
       });
 
       if (typeof window.initCloudSync === 'function') {
-        await window.initCloudSync(true);
-        if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
-          DevPortfolio.init();
-        }
+        window.initCloudSync(false).then(() => {
+          if (window.DevPortfolio && typeof window.DevPortfolio.init === 'function') {
+            DevPortfolio.init();
+          }
+        }).catch(() => {});
       }
     });
   </script>

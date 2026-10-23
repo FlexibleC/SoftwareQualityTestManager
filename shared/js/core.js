@@ -515,28 +515,74 @@ function saveCoreState() {
       } catch (e2) {}
     }
 
-    // 6. Đồng bộ lên máy chủ Backend (/api/projects & /api/state) có kèm Token xác thực JWT
-    if (typeof window !== 'undefined' && isLanServerAvailable()) {
-      syncProjectsToLanServer(state.projects);
-      syncFullStateToLanServer(appPayload);
-    }
-
-    // 7. Nếu có kết nối Supabase Cloud, đồng bộ lên Cloud Database
-    if (typeof window !== 'undefined' && window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
-      window.pushProjectsToCloud(state.projects);
-    }
-    if (typeof window !== 'undefined' && window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
-      window.pushUsersToCloud(state.users);
-    }
-    if (typeof window !== 'undefined' && window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
-      window.pushCyclesToCloud(state.testCycles);
-    }
-    if (typeof window !== 'undefined' && window.pushAssignmentsToCloud && typeof window.pushAssignmentsToCloud === 'function' && state.assignments) {
-      window.pushAssignmentsToCloud(state.assignments);
-    }
+    // 6. Gom luồng đồng bộ ngầm (Debounced Asynchronous Background Sync - 600ms)
+    // Giúp giao diện phản hồi tức thì 0ms, gom bão request dồn dập thành 1 batch duy nhất
+    scheduleBackgroundSync(600);
   } catch (e) {
     console.warn('Lỗi saveCoreState:', e);
   }
+}
+
+let _bgSyncTimer = null;
+let _isBgSyncRunning = false;
+
+/**
+ * Gom luồng đồng bộ ngầm không chặn giao diện (Debounced Asynchronous Background Sync)
+ * Giúp người dùng click/chấm bài phản hồi 0ms trên màn hình.
+ * Dữ liệu đồng bộ lên Cloud/Backend sau khi người dùng dừng thao tác 600ms.
+ */
+function scheduleBackgroundSync(delayMs = 600) {
+  if (typeof window === 'undefined') return;
+  if (_bgSyncTimer) clearTimeout(_bgSyncTimer);
+
+  _bgSyncTimer = setTimeout(async () => {
+    _bgSyncTimer = null;
+    if (_isBgSyncRunning) return;
+    _isBgSyncRunning = true;
+    try {
+      const appPayload = {
+        assignments: state.assignments || [],
+        results: state.results || {},
+        cycleResults: state.cycleResults || {},
+        comments: state.comments || {},
+        evidences: state.evidences || {},
+        executionLogs: state.executionLogs || [],
+        adhocDefects: state.adhocDefects || [],
+        testCycles: state.testCycles || []
+      };
+
+      // 1. Đồng bộ lên máy chủ Backend API (/api/projects & /api/state)
+      if (isLanServerAvailable()) {
+        syncProjectsToLanServer(state.projects);
+        syncFullStateToLanServer(appPayload);
+      }
+
+      // 2. Đồng bộ ngầm lên Supabase Cloud Database (chạy song song)
+      const tasks = [];
+      if (window.pushProjectsToCloud && typeof window.pushProjectsToCloud === 'function') {
+        tasks.push(Promise.resolve(window.pushProjectsToCloud(state.projects)));
+      }
+      if (window.pushUsersToCloud && typeof window.pushUsersToCloud === 'function') {
+        tasks.push(Promise.resolve(window.pushUsersToCloud(state.users)));
+      }
+      if (window.pushCyclesToCloud && typeof window.pushCyclesToCloud === 'function' && state.testCycles) {
+        tasks.push(Promise.resolve(window.pushCyclesToCloud(state.testCycles)));
+      }
+      if (window.pushAssignmentsToCloud && typeof window.pushAssignmentsToCloud === 'function' && state.assignments) {
+        tasks.push(Promise.resolve(window.pushAssignmentsToCloud(state.assignments)));
+      }
+      if (tasks.length > 0) {
+        await Promise.allSettled(tasks);
+      }
+    } catch (err) {
+      console.warn('Lỗi background sync:', err);
+    } finally {
+      _isBgSyncRunning = false;
+    }
+  }, delayMs);
+}
+if (typeof window !== 'undefined') {
+  window.scheduleBackgroundSync = scheduleBackgroundSync;
 }
 
 /**

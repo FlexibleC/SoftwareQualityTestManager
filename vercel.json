@@ -1,6 +1,7 @@
 {
   "version": 2,
   "name": "SoftwareQualityTestManager",
+  "regions": ["sin1"],
   "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [

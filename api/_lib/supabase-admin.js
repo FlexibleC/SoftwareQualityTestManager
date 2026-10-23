@@ -36,7 +36,8 @@ async function query(table, queryString = '') {
   const url = `${SUPABASE_URL}/rest/v1/${table}${queryString}`;
   const res = await fetch(url, {
     method: 'GET',
-    headers: getHeaders()
+    headers: getHeaders(),
+    signal: AbortSignal.timeout(5000)
   });
 
   if (!res.ok) {
@@ -55,7 +56,7 @@ async function insert(table, data) {
   const res = await fetch(url, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify(data)
+    signal: AbortSignal.timeout(5000)
   });
 
   if (!res.ok) {
@@ -76,7 +77,8 @@ async function upsert(table, data, onConflict = 'id') {
   const res = await fetch(url, {
     method: 'POST',
     headers,
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
+    signal: AbortSignal.timeout(5000)
   });
 
   if (!res.ok) {
@@ -95,7 +97,8 @@ async function update(table, queryString, data) {
   const res = await fetch(url, {
     method: 'PATCH',
     headers: getHeaders(),
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
+    signal: AbortSignal.timeout(5000)
   });
 
   if (!res.ok) {
@@ -113,7 +116,8 @@ async function remove(table, queryString) {
   const url = `${SUPABASE_URL}/rest/v1/${table}${queryString}`;
   const res = await fetch(url, {
     method: 'DELETE',
-    headers: getHeaders()
+    headers: getHeaders(),
+    signal: AbortSignal.timeout(5000)
   });
 
   if (!res.ok) {

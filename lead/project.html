@@ -1442,7 +1442,7 @@
   <script src="js/lead-dashboard.js?v=3.1.0"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
       if (window.LeadContext) LeadContext.init('project');
       if (window.LeadDashboard) LeadDashboard.init();
@@ -1457,9 +1457,10 @@
       });
 
       if (typeof window.initCloudSync === 'function') {
-        await window.initCloudSync(true);
-        if (window.LeadContext) LeadContext.init('project');
-        if (window.LeadDashboard) LeadDashboard.init();
+        window.initCloudSync(false).then(() => {
+          if (window.LeadContext) LeadContext.init('project');
+          if (window.LeadDashboard) LeadDashboard.init();
+        }).catch(() => {});
       }
     });
   </script>

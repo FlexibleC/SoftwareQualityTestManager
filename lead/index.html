@@ -145,7 +145,7 @@
   <script src="js/lead-portfolio.js?v=3.1.0"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
       if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
         LeadPortfolio.init();
@@ -163,12 +163,13 @@
         }
       });
 
-      // Tự động kéo dữ liệu Cloud mới nhất về ngay khi mở trang
+      // Tự động kéo dữ liệu Cloud mới nhất về ngay khi mở trang (non-blocking)
       if (typeof window.initCloudSync === 'function') {
-        await window.initCloudSync(true);
-        if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
-          LeadPortfolio.init();
-        }
+        window.initCloudSync(false).then(() => {
+          if (window.LeadPortfolio && typeof window.LeadPortfolio.init === 'function') {
+            LeadPortfolio.init();
+          }
+        }).catch(() => {});
       }
     });
   </script>

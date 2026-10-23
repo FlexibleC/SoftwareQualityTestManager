@@ -230,7 +230,7 @@
   <script src="js/tester-context.js"></script>
   <script src="js/tester-portfolio.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       initCoreState();
       if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
         TesterPortfolio.init();
@@ -248,10 +248,11 @@
       });
 
       if (typeof window.initCloudSync === 'function') {
-        await window.initCloudSync(true);
-        if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
-          TesterPortfolio.init();
-        }
+        window.initCloudSync(false).then(() => {
+          if (window.TesterPortfolio && typeof window.TesterPortfolio.init === 'function') {
+            TesterPortfolio.init();
+          }
+        }).catch(() => {});
       }
     });
   </script>
