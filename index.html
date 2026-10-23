@@ -801,7 +801,7 @@
       if (el) el.style.display = 'none';
     }
 
-    function handleAuthSubmit(e) {
+    async function handleAuthSubmit(e) {
       e.preventDefault();
       const username = document.getElementById('auth-username').value.trim();
       const password = document.getElementById('auth-password').value;
@@ -811,10 +811,50 @@
         return;
       }
 
+      const btn = document.getElementById('btn-submit');
+      const originalBtnHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div><span>Đang xác thực...</span>';
+      }
+
+      // 1. Ưu tiên xác thực qua Backend Serverless API (/api/auth/login)
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.token) {
+          // Lưu JWT Token an toàn vào Session và LocalStorage
+          try {
+            sessionStorage.setItem('sqtm_auth_token', data.token);
+            localStorage.setItem('sqtm_auth_token', data.token);
+          } catch (e) {}
+
+          hideErrorAlert();
+          executeLoginFlow(data.user);
+          return;
+        } else if (res.status === 401 || res.status === 400 || res.status === 403) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+          }
+          showErrorAlert(data.error || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
+          return;
+        }
+      } catch (networkErr) {
+        console.warn('Backend API không phản hồi, chuyển sang chế độ dự phòng ngoại tuyến:', networkErr);
+      }
+
+      // 2. Chế độ dự phòng khi ngoại tuyến (Offline Fallback)
       const allUsers = (state && state.users && state.users.length > 0) ? state.users : DEFAULT_SYSTEM_USERS;
       const foundUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
 
       if (!foundUser) {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHtml; }
         showErrorAlert(`Không tìm thấy tài khoản "${username}"!`);
         return;
       }
@@ -823,6 +863,7 @@
       const isPassValid = !foundUser.password || foundUser.password === password || validPasswords.includes(password);
 
       if (!isPassValid) {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHtml; }
         showErrorAlert('Mật khẩu không chính xác!');
         return;
       }

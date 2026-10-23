@@ -56,168 +56,38 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 1. API QUẢN LÝ DANH MỤC DỰ ÁN BỀN VỮNG (Multi-Project Database on Disk)
+  // 0. API XÁC THỰC VÀ BẢO MẬT (Authentication & Session Guard)
+  if (req.url.startsWith('/api/auth/login')) {
+    const loginHandler = require('./api/auth/login');
+    return loginHandler(req, res);
+  }
+  if (req.url.startsWith('/api/auth/me')) {
+    const meHandler = require('./api/auth/me');
+    return meHandler(req, res);
+  }
+
+  // 1. API QUẢN LÝ DANH MỤC DỰ ÁN BỀN VỮNG (Multi-Project Database & Cloud Sync)
   if (req.url.startsWith('/api/projects')) {
-    const projectsPath = path.join(ROOT_DIR, 'data', 'projects_state.json');
-    if (req.method === 'GET') {
-      if (fs.existsSync(projectsPath)) {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        fs.createReadStream(projectsPath).pipe(res);
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ projects: [], updatedAt: new Date().toISOString() }));
-      }
-      return;
-    } else if (req.method === 'POST') {
-      let body = '';
-      req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
-        try {
-          const parsed = JSON.parse(body);
-          const projectsList = Array.isArray(parsed) ? parsed : (parsed.projects || []);
-          const statePayload = {
-            updatedAt: new Date().toISOString(),
-            totalProjects: projectsList.length,
-            projects: projectsList
-          };
-          if (!fs.existsSync(path.join(ROOT_DIR, 'data'))) {
-            fs.mkdirSync(path.join(ROOT_DIR, 'data'), { recursive: true });
-          }
-          fs.writeFileSync(projectsPath, JSON.stringify(statePayload, null, 2), 'utf8');
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, count: projectsList.length }));
-        } catch (err) {
-          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      });
-      return;
-    }
+    const projectsHandler = require('./api/projects');
+    return projectsHandler(req, res);
   }
 
-  // 2. API ENDPOINTS: Đồng bộ hóa nội bộ (LAN Mode) & Nạp Catalog động
+  // 2. API ENDPOINTS: Đồng bộ hóa nội bộ & Nạp Catalog kịch bản kiểm thử
   if (req.url.startsWith('/api/catalog')) {
-    const catalogPath = path.join(ROOT_DIR, 'data', 'smartvms_test_catalog.json');
-    const catalogJsPath = path.join(ROOT_DIR, 'data', 'smartvms_test_catalog.js');
-    if (req.method === 'GET') {
-      if (fs.existsSync(catalogPath)) {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        fs.createReadStream(catalogPath).pipe(res);
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ modules: [], testCases: [] }));
-      }
-      return;
-    } else if (req.method === 'POST') {
-      let body = '';
-      req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
-        try {
-          const parsed = JSON.parse(body);
-          const tcs = parsed.testCases || parsed;
-          const fullCatalog = {
-            schema: "https://sqtm.local/schemas/test-catalog-v4.json",
-            title: parsed.title || "Software Quality & Test Management System — Test Catalog",
-            version: parsed.version || "3.0.0",
-            exportedAt: new Date().toISOString(),
-            totalTestCases: tcs.length,
-            modules: parsed.modules || [],
-            testCases: tcs
-          };
-
-          fs.writeFileSync(catalogPath, JSON.stringify(fullCatalog, null, 2), 'utf8');
-          fs.writeFileSync(catalogJsPath, 'window.SMARTVMS_DEFAULT_CATALOG = ' + JSON.stringify(fullCatalog, null, 2) + ';', 'utf8');
-
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, count: tcs.length }));
-        } catch (err) {
-          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      });
-      return;
-    }
+    const catalogHandler = require('./api/catalog');
+    return catalogHandler(req, res);
   }
 
-  // 3. API ĐỒNG BỘ KẾT QUẢ TEST REALTIME TRONG MẠNG LAN
+  // 3. API ĐỒNG BỘ KẾT QUẢ TEST REALTIME
   if (req.url.startsWith('/api/sync')) {
-    const syncPath = path.join(ROOT_DIR, 'data', 'lan_sync_state.json');
-    if (req.method === 'GET') {
-      if (fs.existsSync(syncPath)) {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        fs.createReadStream(syncPath).pipe(res);
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ results: {}, updatedAt: new Date().toISOString() }));
-      }
-      return;
-    } else if (req.method === 'DELETE') {
-      const current = { results: {}, updatedAt: new Date().toISOString() };
-      fs.writeFileSync(syncPath, JSON.stringify(current, null, 2), 'utf8');
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ success: true, count: 0 }));
-      return;
-    } else if (req.method === 'POST') {
-      let body = '';
-      req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
-        try {
-          const payload = JSON.parse(body);
-          let current = { results: {}, updatedAt: new Date().toISOString() };
-          if (fs.existsSync(syncPath)) {
-            try { current = JSON.parse(fs.readFileSync(syncPath, 'utf8')); } catch(e){}
-          }
-          if (payload.tcId && payload.record) {
-            current.results[payload.tcId] = payload.record;
-            current.updatedAt = new Date().toISOString();
-          } else if (payload.results) {
-            current.results = { ...current.results, ...payload.results };
-            current.updatedAt = new Date().toISOString();
-          }
-          fs.writeFileSync(syncPath, JSON.stringify(current, null, 2), 'utf8');
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, count: Object.keys(current.results).length }));
-        } catch (err) {
-          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      });
-      return;
-    }
+    const syncHandler = require('./api/sync');
+    return syncHandler(req, res);
   }
 
-  // 4. API LƯU TRỮ TOÀN BỘ TRẠNG THÁI HỆ THỐNG TRÊN ĐĨA CỨNG (Assignments, Results, Defects, Test Cycles)
+  // 4. API LƯU TRỮ TRẠNG THÁI HỆ THỐNG (Assignments, Cycles, Defects)
   if (req.url.startsWith('/api/state')) {
-    const statePath = path.join(ROOT_DIR, 'data', 'app_state.json');
-    if (req.method === 'GET') {
-      if (fs.existsSync(statePath)) {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        fs.createReadStream(statePath).pipe(res);
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ assignments: [], results: {}, testCycles: [], updatedAt: new Date().toISOString() }));
-      }
-      return;
-    } else if (req.method === 'POST') {
-      let body = '';
-      req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
-        try {
-          const parsed = JSON.parse(body);
-          parsed.updatedAt = new Date().toISOString();
-          if (!fs.existsSync(path.join(ROOT_DIR, 'data'))) {
-            fs.mkdirSync(path.join(ROOT_DIR, 'data'), { recursive: true });
-          }
-          fs.writeFileSync(statePath, JSON.stringify(parsed, null, 2), 'utf8');
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, updatedAt: parsed.updatedAt }));
-        } catch (err) {
-          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      });
-      return;
-    }
+    const stateHandler = require('./api/state');
+    return stateHandler(req, res);
   }
 
   // 5. PHỤC VỤ CÁC TỆP TĨNH (STATIC FILES)

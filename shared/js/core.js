@@ -487,6 +487,7 @@ function saveCoreState() {
     }
 
     // 5. Lưu trạng thái công việc và kết quả
+    // 5. Lưu trạng thái công việc và kết quả
     const appPayload = {
       assignments: state.assignments || [],
       results: state.results || {},
@@ -497,9 +498,23 @@ function saveCoreState() {
       adhocDefects: state.adhocDefects || [],
       testCycles: state.testCycles || []
     };
-    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
 
-    // 6. Nếu đang chạy mạng LAN nội bộ, đồng bộ lên máy chủ Node.js (/api/projects & /api/state)
+    // Bọc cơ chế lưu LocalStorage chống lỗi QuotaExceededError khi dữ liệu vượt 5MB
+    try {
+      localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(appPayload));
+    } catch (quotaErr) {
+      console.warn('⚠️ [SQTM Storage] LocalStorage trình duyệt đã chạm hạn mức (QuotaExceededError). Dữ liệu được ưu tiên đồng bộ lên Backend Server.');
+      try {
+        // Chỉ lưu bản snapshot thu gọn để tránh crash giao diện
+        const compactPayload = {
+          assignments: (state.assignments || []).slice(0, 500),
+          testCycles: state.testCycles || []
+        };
+        sessionStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(compactPayload));
+      } catch (e2) {}
+    }
+
+    // 6. Đồng bộ lên máy chủ Backend (/api/projects & /api/state) có kèm Token xác thực JWT
     if (typeof window !== 'undefined' && isLanServerAvailable()) {
       syncProjectsToLanServer(state.projects);
       syncFullStateToLanServer(appPayload);
@@ -524,51 +539,27 @@ function saveCoreState() {
 }
 
 /**
- * Kiểm tra xem môi trường hiện tại có hỗ trợ máy chủ nội bộ LAN Node.js (/api/*) hay không.
- * Nếu đang chạy trên Cloud Hosting (Vercel, GitHub Pages, Netlify, Render...) hoặc file://
- * thì không kích hoạt gọi API LAN để tránh phát sinh lỗi 404 và giảm tải mạng.
+ * Lấy Token xác thực JWT từ phiên làm việc
+ */
+function getAuthToken() {
+  try {
+    return sessionStorage.getItem('sqtm_auth_token') || localStorage.getItem('sqtm_auth_token') || '';
+  } catch (e) {
+    return '';
+  }
+}
+if (typeof window !== 'undefined') {
+  window.getAuthToken = getAuthToken;
+}
+
+/**
+ * Kiểm tra xem môi trường hiện tại có hỗ trợ máy chủ Backend (/api/*) hay không.
+ * Hỗ trợ đồng bộ trên cả LAN Node.js Server và Vercel Cloud Serverless API.
  */
 function isLanServerAvailable() {
   if (typeof window === 'undefined' || !window.location) return false;
-  if (window.__sqtmLanServerAvailable === false) return false;
+  if (window.__sqtmBackendApiAvailable === false) return false;
   if (window.location.protocol === 'file:') return false;
-
-  const host = (window.location.hostname || '').toLowerCase();
-
-  // 1. Nếu đang triển khai trên các nền tảng Cloud Hosting (đã dùng Supabase Cloud Realtime)
-  if (
-    host.endsWith('.vercel.app') ||
-    host.endsWith('.github.io') ||
-    host.endsWith('.netlify.app') ||
-    host.endsWith('.pages.dev') ||
-    host.endsWith('.onrender.com') ||
-    host.endsWith('.render.com') ||
-    host.endsWith('.railway.app') ||
-    host.endsWith('.supabase.co')
-  ) {
-    window.__sqtmLanServerAvailable = false;
-    return false;
-  }
-
-  // 2. Nếu đã kiểm tra và xác nhận có máy chủ LAN hoạt động
-  if (window.__sqtmLanServerAvailable === true) return true;
-
-  // 3. Chỉ kích hoạt mặc định trên localhost và các dải địa chỉ IP mạng nội bộ (LAN)
-  const isLocalOrPrivateLan = (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '::1' ||
-    host.endsWith('.local') ||
-    /^192\.168\./.test(host) ||
-    /^10\./.test(host) ||
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)
-  );
-
-  if (!isLocalOrPrivateLan) {
-    window.__sqtmLanServerAvailable = false;
-    return false;
-  }
-
   return true;
 }
 if (typeof window !== 'undefined') {
@@ -576,39 +567,47 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Đồng bộ danh mục dự án lên máy chủ LAN Node.js (lưu file data/projects_state.json)
+ * Đồng bộ danh mục dự án lên Backend Server có đính kèm JWT Bearer Token
  */
 function syncProjectsToLanServer(projects) {
   if (!isLanServerAvailable()) return;
   if (!projects || !Array.isArray(projects) || projects.length === 0) return;
   try {
+    const token = getAuthToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     fetch('/api/projects', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ projects })
     }).then(res => {
-      if (!res.ok) window.__sqtmLanServerAvailable = false;
+      if (!res.ok && res.status !== 401) window.__sqtmBackendApiAvailable = false;
     }).catch(() => {
-      window.__sqtmLanServerAvailable = false;
+      window.__sqtmBackendApiAvailable = false;
     });
   } catch (e) {}
 }
 
 /**
- * Đồng bộ toàn bộ trạng thái công việc (kết quả, đợt test, phân công) lên máy chủ LAN (lưu data/app_state.json)
+ * Đồng bộ toàn bộ trạng thái công việc lên Backend Server có đính kèm JWT Bearer Token
  */
 function syncFullStateToLanServer(payload) {
   if (!isLanServerAvailable()) return;
   if (!payload) return;
   try {
+    const token = getAuthToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     fetch('/api/state', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(payload)
     }).then(res => {
-      if (!res.ok) window.__sqtmLanServerAvailable = false;
+      if (!res.ok && res.status !== 401) window.__sqtmBackendApiAvailable = false;
     }).catch(() => {
-      window.__sqtmLanServerAvailable = false;
+      window.__sqtmBackendApiAvailable = false;
     });
   } catch (e) {}
 }

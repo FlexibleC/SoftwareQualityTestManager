@@ -1684,7 +1684,29 @@ const LeadVersion = {
     this.renderVersionWorkforceKPIs();
     this.renderStaffingMatrix();
     this.renderPerCycleComparisonTable();
+    this.populateRosterCycleSelect();
     this.renderVersionStaffRoster();
+  },
+
+  // Nạp danh sách đợt test cho bộ chọn phân bổ nhân sự (Staffing & Roster Cycle)
+  populateRosterCycleSelect() {
+    const p = getActiveProject();
+    if (!p) return;
+    const cycles = typeof getTestCyclesForProject === 'function' ? getTestCyclesForProject(p.id, this.currentVersion) : (p.testCycles || []);
+
+    if (!this.activeRosterCycleId || !cycles.some(c => c.id === this.activeRosterCycleId)) {
+      this.activeRosterCycleId = cycles[0]?.id || '';
+    }
+
+    const selectIds = ['mbac-target-cycle', 'mbat-target-cycle', 'v-roster-cycle-select'];
+    selectIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = cycles.map(c => `<option value="${typeof escapeHtml === 'function' ? escapeHtml(c.id) : c.id}">${typeof escapeHtml === 'function' ? escapeHtml(c.name || c.id) : (c.name || c.id)} (${c.status || 'PLANNED'})</option>`).join('');
+      if (this.activeRosterCycleId) {
+        el.value = this.activeRosterCycleId;
+      }
+    });
   },
 
   // Phân khu 4: Bảng danh bạ nhân sự toàn phiên bản

@@ -1,22 +1,158 @@
 /**
- * Vercel Serverless Function: /api/projects
- * Phục vụ phản hồi chuẩn HTTP 200 cho các yêu cầu trạng thái dự án trên Vercel Cloud.
- * Khi triển khai Cloud, hệ thống tự động lưu trữ và đồng bộ hóa đa người dùng qua Supabase PostgreSQL.
+ * VERCEL SERVERLESS FUNCTION: /api/projects
+ * Quản trị danh mục Dự án phần mềm độc lập khép kín (Multi-Project Portfolio)
+ * Bảo mật: Chỉ Quản trị viên (Admin) và Trưởng nhóm (Lead) mới có quyền tạo/sửa/xóa dự án.
  */
-module.exports = (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+const fs = require('fs');
+const path = require('path');
+const { handleCors, sendJson, parseBody } = require('./_lib/response');
+const { authenticateRequest } = require('./_lib/auth-guard');
+const supabaseAdmin = require('./_lib/supabase-admin');
+
+const LOCAL_DATA_PATH = path.join(process.cwd(), 'data', 'projects_state.json');
+
+// Đọc dữ liệu dự phòng từ đĩa nếu Database không khả dụng
+function getLocalProjectsFallback() {
+  try {
+    if (fs.existsSync(LOCAL_DATA_PATH)) {
+      const raw = fs.readFileSync(LOCAL_DATA_PATH, 'utf8');
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : (parsed.projects || []);
+    }
+  } catch (e) {}
+  return [];
+}
+
+// Lưu dữ liệu dự phòng xuống đĩa
+function saveLocalProjectsFallback(projects) {
+  try {
+    const dir = path.dirname(LOCAL_DATA_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      LOCAL_DATA_PATH,
+      JSON.stringify({ updatedAt: new Date().toISOString(), totalProjects: projects.length, projects }, null, 2),
+      'utf8'
+    );
+  } catch (e) {}
+}
+
+module.exports = async (req, res) => {
+  if (handleCors(req, res)) return;
+
+  const method = req.method.toUpperCase();
+
+  // 1. GET: Lấy danh sách dự án
+  if (method === 'GET') {
+    try {
+      const dbProjects = await supabaseAdmin.query('projects', '?select=*&order=created_at.desc');
+      if (Array.isArray(dbProjects) && dbProjects.length > 0) {
+        // Đồng bộ cache đĩa cục bộ
+        saveLocalProjectsFallback(dbProjects);
+        return sendJson(res, 200, {
+          success: true,
+          source: 'database',
+          count: dbProjects.length,
+          projects: dbProjects
+        });
+      }
+    } catch (err) {
+      console.warn('Lỗi đọc dự án từ Database, dùng fallback đĩa:', err.message);
+    }
+
+    // Fallback nếu database trống hoặc offline
+    const fallbackProjects = getLocalProjectsFallback();
+    return sendJson(res, 200, {
+      success: true,
+      source: 'local_disk',
+      count: fallbackProjects.length,
+      projects: fallbackProjects
+    });
   }
 
-  return res.status(200).json({
-    success: true,
-    mode: 'cloud',
-    engine: 'supabase',
-    message: 'SQTM Cloud: Dự án được lưu trữ và đồng bộ thời gian thực qua Supabase Database.',
-    projects: []
-  });
+  // 2. POST / PUT: Tạo mới hoặc cập nhật dự án (Yêu cầu quyền Admin hoặc Lead)
+  if (method === 'POST' || method === 'PUT') {
+    const user = authenticateRequest(req, res, ['admin', 'project_lead', 'lead']);
+    if (!user) return; // Đã xử lý response 401/403
+
+    try {
+      const body = await parseBody(req);
+      const incomingList = Array.isArray(body) ? body : (body.projects ? body.projects : [body]);
+
+      if (!incomingList || incomingList.length === 0) {
+        return sendJson(res, 400, { error: 'Dữ liệu dự án không hợp lệ.' });
+      }
+
+      // Chuẩn hóa định dạng trước khi lưu vào PostgreSQL
+      const formattedProjects = incomingList.map(p => ({
+        id: String(p.id || `PRJ-${Date.now()}`),
+        code: String(p.code || 'PRJ').toUpperCase().trim(),
+        name: String(p.name || 'Dự án mới').trim(),
+        description: p.description || '',
+        active_version: p.activeVersion || p.active_version || 'v1.0',
+        versions: p.versions || [],
+        modules: p.modules || [],
+        test_cycles: p.testCycles || p.test_cycles || [],
+        status: p.status || 'ACTIVE',
+        updated_at: new Date().toISOString()
+      }));
+
+      let dbSaved = false;
+      try {
+        // Upsert qua PostgREST với Prefer: resolution=merge-duplicates
+        const result = await supabaseAdmin.insert('projects', formattedProjects);
+        dbSaved = true;
+      } catch (dbErr) {
+        console.warn('Không thể upsert dự án vào Supabase, lưu fallback đĩa:', dbErr.message);
+      }
+
+      // Luôn lưu bản sao bền vững trên đĩa máy chủ
+      saveLocalProjectsFallback(formattedProjects);
+
+      return sendJson(res, 200, {
+        success: true,
+        message: `Đã lưu thành công ${formattedProjects.length} dự án.`,
+        persistedToDatabase: dbSaved,
+        count: formattedProjects.length,
+        projects: formattedProjects
+      });
+    } catch (err) {
+      console.error('Lỗi API Projects POST:', err);
+      return sendJson(res, 500, { error: err.message || 'Lỗi lưu trữ dự án.' });
+    }
+  }
+
+  // 3. DELETE: Xóa dự án (Chỉ Admin)
+  if (method === 'DELETE') {
+    const user = authenticateRequest(req, res, ['admin']);
+    if (!user) return;
+
+    try {
+      const urlObj = new URL(req.url, 'http://localhost');
+      const projectId = urlObj.searchParams.get('id');
+
+      if (!projectId) {
+        return sendJson(res, 400, { error: 'Vui lòng cung cấp projectId cần xóa (?id=...)' });
+      }
+
+      try {
+        await supabaseAdmin.remove('projects', `?id=eq.${encodeURIComponent(projectId)}`);
+      } catch (dbErr) {
+        console.warn('Lỗi xóa dự án trên Supabase:', dbErr.message);
+      }
+
+      // Cập nhật lại đĩa
+      const current = getLocalProjectsFallback().filter(p => p.id !== projectId);
+      saveLocalProjectsFallback(current);
+
+      return sendJson(res, 200, {
+        success: true,
+        message: `Đã xóa dự án ${projectId} thành công.`
+      });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  return sendJson(res, 405, { error: `Phương thức ${method} không được hỗ trợ.` });
 };
